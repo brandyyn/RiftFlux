@@ -1,0 +1,154 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            url = "https://jitpack.io"
+        }
+    }
+    dependencies {
+        classpath('com.github.GTNewHorizons:ForgeGradle:1.2.11') {
+            // Exclude transitive dependencies that mess things up
+            exclude group: "org.eclipse.equinox"
+            exclude group: "org.eclipse.jdt"
+        }
+    }
+}
+
+apply plugin: 'forge'
+
+version = "1.0"
+group= "io.github.legacymoddingmc.example" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "RiftFixes"
+def modid = "riftfixes"
+
+minecraft {
+    version = "1.7.10-10.13.4.1614-1.7.10"
+    runDir = "run"
+}
+
+repositories {
+    maven {
+        // Fix ForgeGradle on 6+
+        name = "forge"
+        url = "http://files.minecraftforge.net/maven"
+        metadataSources {
+            artifact()
+        }
+    }
+    maven {
+        // Baubles
+		name = "Overmind forge repo mirror"
+		url = "https://gregtech.overminddl1.com/"
+	}
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+processResources
+{
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+                
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+        
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+// -- Begin UniMixins section --
+
+// -- Add UniMixins dependency --
+
+repositories {
+    maven {
+        url 'https://jitpack.io'
+    }
+}
+
+def unimixinsVersion = "0.1.14"
+
+dependencies {
+    implementation("com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:$unimixinsVersion:dev")
+    annotationProcessor("com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:$unimixinsVersion:dev")
+}
+
+// Exclude conflicting transitive dependencies.
+// Only needed if you depend on a mod that depends on one of these.
+// This may need to be at the end of the build script.
+
+configurations.compile.dependencies.each {
+    if (it instanceof ExternalModuleDependency) {
+        it.exclude module: "SpongeMixins"
+        it.exclude module: "SpongePoweredMixin"
+        it.exclude module: "00gasstation-mc1.7.10"
+        it.exclude module: "gtnhmixins"
+    }
+}
+
+// -- Generic Mixin setup --
+
+runClient {
+    args("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker")
+}
+
+runServer {
+    args("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker")
+}
+
+def outSrgFile = "${tasks.compileJava.temporaryDir}/outSrg.srg"
+def outRefMapFile = "${tasks.compileJava.temporaryDir}/mixins.${modid}.refmap.json"
+
+jar {
+    manifest {
+        attributes (
+            // This is the regular way of registering Mixin configs.
+            // Setting the tweak class allows Mixin to discover your mod.
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+            // Mixin will automatically register any configs specified here.
+            'MixinConfigs': "mixins.${modid}.json",
+            
+            // To use the IEarlyMixinLoader interface, an FML plugin needs to be
+            // registered.
+            // Note: the previous two properties aren't required for the early
+            // interface.
+            'FMLCorePlugin': 'io.github.legacymoddingmc.unimixins.example.ExampleCore',
+            
+            // If your mod also contains a Forge mod (marked by a @Mod annotation),
+            // these need to be set or it will get ignored.
+            // Note that a Forge mod is required for late mixins to work.
+            //
+            // Allow Mixin to discover the Forge mod if FMLCorePluginContainsFMLMod
+            // is also set:
+            'ForceLoadAsMod': 'true',
+            // Allow Forge to discover the Forge mod:
+            'FMLCorePluginContainsFMLMod': 'true',
+        )
+    }
+    
+    from outRefMapFile;
+}
+
+tasks.compileJava.options.compilerArgs += ["-AreobfSrgFile=${tasks.reobf.srg}", "-AoutSrgFile=${outSrgFile}", "-AoutRefMapFile=${outRefMapFile}"];
+
+reobf {
+    addExtraSrgFile outSrgFile
+}

@@ -1,0 +1,16 @@
+[
+{
+  "modid": "riftfixes",
+  "name": "RiftFixes",
+  "description": "Mixins for the Void's Rift Modpack",
+  "version": "2.0",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Excsi", "Brandyn"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

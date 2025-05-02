@@ -1,0 +1,7 @@
+{
+    "required": true,
+    "minVersion": "0.7.11",
+    "package": "com.excsi.riftfixes.mixin",
+    "refmap": "mixins.riftfixes.refmap.json",
+    "compatibilityLevel": "JAVA_8"
+}
