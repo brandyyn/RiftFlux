@@ -18,6 +18,12 @@ public class ModConfig {
 
     public static boolean disableStrataOreVeins;
 
+    public static boolean enableArmorMixin;
+
+    public static boolean changeArmorBarAmount;
+
+    public static float protectionMultiplier;
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -29,6 +35,10 @@ public class ModConfig {
         hasShader= config.getBoolean("ShaderEffect","general",false,"Toggles progression's shader effects");
         disableStrataVents = config.getBoolean("DisableStrataVents","general",false,"Toggles GeoStrata's vent spawn");
         disableStrataOreVeins = config.getBoolean("DisableStrataOreVeins","general",false,"Toggles GeoStrata's ore vein spawn");
+        enableArmorMixin = config.getBoolean("EnableArmorMixin","general",true,"Enable mixin scaling armor protections");
+        changeArmorBarAmount = config.getBoolean("ChangeArmorBarAmount","general",true,
+                "Enable mixin that changes armor bar displayed amount, may affect other things");
+        protectionMultiplier = config.getFloat("protectionMultiplier","general",0.5F,0.0F,1F,"Scales armor's protection(1.0 is unchanged armor)");
         config.save();
     }
 }

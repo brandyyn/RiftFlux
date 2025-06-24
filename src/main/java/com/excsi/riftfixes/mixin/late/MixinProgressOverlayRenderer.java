@@ -1,4 +1,4 @@
-package com.excsi.riftfixes.mixin;
+package com.excsi.riftfixes.mixin.late;
 
 import Reika.ChromatiCraft.Auxiliary.Render.ProgressOverlayRenderer;
 import Reika.ChromatiCraft.Magic.Progression.ChromaResearchManager;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ProgressOverlayRenderer.class)
 public class MixinProgressOverlayRenderer {
 
-    @Shadow private int soundCooldown;
+    @Shadow(remap = false) private int soundCooldown;
 
     @Inject(method = "addProgressionNote",at = @At(value = "INVOKE_ASSIGN",target = "Ljava/util/TreeMap;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),cancellable = true,remap = false)
     public void inject(ChromaResearchManager.ProgressElement p, CallbackInfo ci){

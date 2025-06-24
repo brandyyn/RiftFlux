@@ -1,4 +1,4 @@
-package com.excsi.riftfixes.mixin;
+package com.excsi.riftfixes.mixin.late;
 
 import net.aetherteam.aether.blocks.BlockAetherPortal;
 import net.minecraft.world.World;

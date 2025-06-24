@@ -130,7 +130,7 @@ jar {
             // registered.
             // Note: the previous two properties aren't required for the early
             // interface.
-            'FMLCorePlugin': 'io.github.legacymoddingmc.unimixins.example.ExampleCore',
+            'FMLCorePlugin': 'com.excsi.riftfixes.RFEarlyMixins',
             
             // If your mod also contains a Forge mod (marked by a @Mod annotation),
             // these need to be set or it will get ignored.

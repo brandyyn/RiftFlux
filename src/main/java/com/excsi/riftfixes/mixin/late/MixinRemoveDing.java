@@ -1,4 +1,4 @@
-package com.excsi.riftfixes.mixin;
+package com.excsi.riftfixes.mixin.late;
 
 import Reika.DragonAPI.Auxiliary.DragonAPIEventWatcher;
 import Reika.DragonAPI.DragonAPIInit;

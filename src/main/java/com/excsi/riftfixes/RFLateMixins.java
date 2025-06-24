@@ -17,21 +17,20 @@ public class RFLateMixins implements ILateMixinLoader {
 
     @Override
     public List<String> getMixins(Set<String> loadedMods) {
-        ModConfig.init(new File("config/riftfixes.cfg"));
         List<String> mixins = new ArrayList<>();
         if(loadedMods.contains("aether"))
-           mixins.add("MixinAetherPortal");
+           mixins.add("late.MixinAetherPortal");
         if(loadedMods.contains("ChromatiCraft")) {
-            mixins.add("MixinChromaOptions");
+            mixins.add("late.MixinChromaOptions");
             if(ModConfig.enableChromatiCraftMixin)
-                mixins.add("MixinProgressOverlayRenderer");
+                mixins.add("late.MixinProgressOverlayRenderer");
         }
         if(loadedMods.contains("GeoStrata") && loadedMods.contains("DragonAPI")) {
-            mixins.add("MixinGeoOptions");
-            mixins.add("MixinRetroGenController");
+            mixins.add("late.MixinGeoOptions");
+            mixins.add("late.MixinRetroGenController");
         }
         if(loadedMods.contains("DragonAPI")) {
-            mixins.add("MixinRemoveDing");
+            mixins.add("late.MixinRemoveDing");
         }
         return mixins;
     }
