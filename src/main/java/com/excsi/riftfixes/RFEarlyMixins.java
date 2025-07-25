@@ -1,5 +1,6 @@
 package com.excsi.riftfixes;
 
+import com.excsi.riftfixes.core.BasicTransformer;
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
@@ -32,7 +33,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[0];
+        return new String[]{BasicTransformer.class.getName()};
     }
 
     @Override
