@@ -29,9 +29,10 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.MixinGeoOptions");
             mixins.add("late.MixinRetroGenController");
         }
-//        if(loadedMods.contains("DragonAPI")) {
-//            mixins.add("late.MixinRemoveDing");
-//        }
+        if(loadedMods.contains("DragonAPI")) {
+            mixins.add("late.FixNullCrash");
+            mixins.add("late.MixinMTInteractionManager");
+        }
         return mixins;
     }
 }
