@@ -24,6 +24,11 @@ public class ModConfig {
 
     public static float protectionMultiplier;
 
+    public static boolean enableChestLaunch;
+    public static float chestLaunchHorizontal;
+    public static float chestLaunchUpward;
+
+    
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -39,6 +44,14 @@ public class ModConfig {
         changeArmorBarAmount = config.getBoolean("ChangeArmorBarAmount","general",true,
                 "Enable mixin that changes armor bar displayed amount, may affect other things");
         protectionMultiplier = config.getFloat("protectionMultiplier","general",0.5F,0.0F,1F,"Scales armor's protection(1.0 is unchanged armor)");
+
+        enableChestLaunch = config.getBoolean("EnableChestLaunch","general", true,
+                "Launch entities standing on top when a chest opens.");
+        chestLaunchHorizontal = config.getFloat("ChestLaunchHorizontal","general", 0.6F, -4.0F, 4.0F,
+                "Horizontal push strength when a chest opens.");
+        chestLaunchUpward = config.getFloat("ChestLaunchUpward","general", 0.4F, -2.0F, 2.0F,
+                "Upward boost when a chest opens.");
+
         config.save();
     }
 }
