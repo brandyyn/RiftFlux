@@ -28,7 +28,8 @@ public class ModConfig {
     public static float chestLaunchHorizontal;
     public static float chestLaunchUpward;
 
-    
+    public static boolean enableFullExplosionDrops;
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -51,6 +52,10 @@ public class ModConfig {
                 "Horizontal push strength when a chest opens.");
         chestLaunchUpward = config.getFloat("ChestLaunchUpward","general", 0.4F, -2.0F, 2.0F,
                 "Upward boost when a chest opens.");
+
+        enableFullExplosionDrops = config.getBoolean(
+                "EnableFullExplosionDrops", "general", true,
+                "If true, ALL explosions drop 100% of affected blocks.");
 
         config.save();
     }
