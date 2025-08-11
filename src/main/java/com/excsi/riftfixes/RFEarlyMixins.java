@@ -24,8 +24,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     @Override
     public List<String> getMixins(Set<String> loadedCoreMods) {
         List<String> mixins = new ArrayList<>();
-        mixins.add("early.MixinBlockChestLaunch");
-        mixins.add("early.MixinTNT");
+        if(ModConfig.enableChestLaunch)
+            mixins.add("early.MixinBlockChestLaunch");
+        if(ModConfig.enableFullExplosionDrops)
+            mixins.add("early.MixinTNT");
+        if(ModConfig.enableMeleeDamageTooltip)
+            mixins.add("early.MixinTooltip");
         if(ModConfig.enableArmorMixin)
             mixins.add("early.MixinArmorProperties");
         if(ModConfig.changeArmorBarAmount)

@@ -30,6 +30,8 @@ public class ModConfig {
 
     public static boolean enableFullExplosionDrops;
 
+    public static boolean enableMeleeDamageTooltip;
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -56,6 +58,11 @@ public class ModConfig {
         enableFullExplosionDrops = config.getBoolean(
                 "EnableFullExplosionDrops", "general", true,
                 "If true, ALL explosions drop 100% of affected blocks.");
+
+        enableMeleeDamageTooltip = config.getBoolean(
+                "EnableMeleeDamageTooltip", "general", true,
+                "Replace '+X Attack Damage' with a single gray 'X.X Melee Damage' line (includes +1 base and Sharpness)."
+        );
 
         config.save();
     }
