@@ -1,6 +1,5 @@
 package com.excsi.riftfixes.mixin.early;
 
-
 import com.google.common.collect.Multimap;
 import com.excsi.riftfixes.ModConfig;
 import net.minecraft.enchantment.Enchantment;
@@ -33,12 +32,11 @@ public abstract class MixinTooltip {
 
         Double dmg = computeAttackDamage(self);
         if (dmg == null) {
-            // still remove spacer gaps even if no melee line
             removeBlankSpacerLines(tip);
             return;
         }
 
-        // Strip vanilla attack-damage and any existing "Melee Damage" lines (e.g., AoA)
+        // Strip vanilla "+X Attack Damage" and any existing "Melee Damage" lines
         final String vanillaAttr = StatCollector.translateToLocal("attribute.name.generic.attackDamage");
         for (Iterator<String> it = tip.iterator(); it.hasNext();) {
             String s = it.next();
@@ -48,12 +46,13 @@ public abstract class MixinTooltip {
             }
         }
 
-        // Insert our unified gray line after enchants/CT, before meta tails
         String line = EnumChatFormatting.GRAY + String.format(Locale.ROOT, "%.1f Melee Damage", dmg);
-        int insertAt = findPostEnchantsPreMetaIndex(tip);
-        tip.add(insertAt, line);
 
-        // Remove all blank spacer lines to kill vertical gaps
+        // Prefer placing it right ABOVE EnderCore's "Durability: x/y" line
+        int durabilityIdx = findEnderCoreDurabilityIndex(tip);
+        int insertAt = (durabilityIdx >= 0) ? durabilityIdx : findPostEnchantsPreMetaIndex(tip);
+
+        tip.add(insertAt, line);
         removeBlankSpacerLines(tip);
 
         cir.setReturnValue(tip);
@@ -65,14 +64,14 @@ public abstract class MixinTooltip {
             Multimap<String, AttributeModifier> map = stack.getAttributeModifiers();
             if (map == null) return null;
 
-            String key = SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(); // "generic.attackDamage"
+            String key = SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName();
             Collection<AttributeModifier> mods = map.get(key);
             if (mods == null || mods.isEmpty()) return null;
 
-            double base = 1.0D;      // fist/base in 1.7.10
-            double add0 = 0.0D;      // op0 sum
-            double mult1 = 0.0D;     // op1 sum
-            double mult2 = 1.0D;     // op2 product
+            double base = 1.0D;   // fist/base in 1.7.10
+            double add0 = 0.0D;   // op0 sum
+            double mult1 = 0.0D;  // op1 sum
+            double mult2 = 1.0D;  // op2 product
 
             for (AttributeModifier m : mods) {
                 if (m == null) continue;
@@ -85,7 +84,7 @@ public abstract class MixinTooltip {
 
             double dmg = (base + add0) * (1.0D + mult1) * mult2;
 
-            // Sharpness adds +1.25 per level in 1.7.10
+            // Sharpness (1.7.10) +1.25 per level
             int sharp = EnchantmentHelper.getEnchantmentLevel(Enchantment.sharpness.effectId, stack);
             if (sharp > 0) dmg += 1.25D * sharp;
 
@@ -96,9 +95,25 @@ public abstract class MixinTooltip {
         }
     }
 
+    // --- placement helpers ---
+
     private static final Pattern RAW_REGISTRY = Pattern.compile("^[a-z0-9_.-]+:[a-z0-9_/.-]+$");
     private static final Pattern HAS_NUM_ID   = Pattern.compile(".*#\\d+.*"); // e.g., "#275"
+    private static final Pattern DURABILITY_RX =
+            Pattern.compile("(?i)^durability\\s*[:：]\\s*\\d+\\s*/\\s*\\d+\\s*$");
 
+    /** Find EnderCore "Durability: x/y" line index; -1 if not present. */
+    private static int findEnderCoreDurabilityIndex(List<String> tip) {
+        for (int i = 0; i < tip.size(); i++) {
+            String s = stripFmt(tip.get(i)).trim();
+            if (DURABILITY_RX.matcher(s).matches()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /** Fallback: after enchants/CT, before meta tails (mod name, IDs, NBT, etc.). */
     private static int findPostEnchantsPreMetaIndex(List<String> tip) {
         int n = tip.size();
         if (n <= 1) return n;
@@ -110,7 +125,6 @@ public abstract class MixinTooltip {
             boolean looksRegistry = RAW_REGISTRY.matcher(noFmt).matches();
             boolean hasNumId = HAS_NUM_ID.matcher(noFmt).matches();
             boolean nbtLine = noFmt.regionMatches(true, 0, "nbt:", 0, 4);
-
             boolean isMetaTail = italic || darkGray || looksRegistry || hasNumId || nbtLine;
             if (!isMetaTail) return i + 1;
         }
@@ -121,7 +135,7 @@ public abstract class MixinTooltip {
         for (Iterator<String> it = tip.iterator(); it.hasNext();) {
             String s = it.next();
             String plain = stripFmt(s).trim();
-            if (plain.isEmpty()) it.remove(); // kills "" or formatting-only spacer lines
+            if (plain.isEmpty()) it.remove();
         }
     }
 
