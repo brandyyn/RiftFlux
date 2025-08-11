@@ -1,68 +1,95 @@
 package com.excsi.riftfixes.mixin.early;
 
-import java.util.List;
-
+import com.excsi.riftfixes.ModConfig;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-
-import com.excsi.riftfixes.ModConfig;
-
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
 
 /**
- * Launch entities standing on a chest when it opens, in the lid's opening direction (toward the back/hinge).
- * Uses ModConfig.enableChestLaunch, ModConfig.chestLaunchHorizontal, ModConfig.chestLaunchUpward.
+ * Launch entities standing directly on top of a chest when it actually opens.
+ * Triggers when numPlayersUsing goes 0 -> >0. “On top” is: the block directly
+ * under the entity’s feet equals this chest’s position.
  */
-@Mixin(BlockChest.class)
+@Mixin(TileEntityChest.class)
 public abstract class MixinBlockChestLaunch {
 
-    @Inject(method = "onBlockActivated", at = @At("RETURN"))
-    private void launchOnOpen(World world, int x, int y, int z,
-                              EntityPlayer player, int side, float hitX, float hitY, float hitZ,
-                              CallbackInfoReturnable<Boolean> cir) {
-        if (!cir.getReturnValue()) return;       // only if it actually opened
-        if (world.isRemote) return;               // server-side only
-        if (!ModConfig.enableChestLaunch) return; // feature toggle
+    @Unique private boolean riftfixes$wasOpen = false;
 
-        // Vanilla chest facing meta: 2=N(-Z front), 3=S(+Z front), 4=W(-X front), 5=E(+X front).
-        // Lid opens TOWARD THE BACK (opposite of front). So invert each axis.
+    // MCP name + descriptor so it resolves in dev
+    @Inject(method = "updateEntity()V", at = @At("TAIL"))
+    private void riftfixes$onChestTick(CallbackInfo ci) {
+        if (!ModConfig.enableChestLaunch) return;
+
+        TileEntityChest te = (TileEntityChest)(Object)this;
+        World world = te.getWorldObj();
+        if (world == null || world.isRemote) return;
+
+        final boolean isOpen = te.numPlayersUsing > 0;
+        if (isOpen && !riftfixes$wasOpen) {
+            riftfixes$launchOnOpen(world, te.xCoord, te.yCoord, te.zCoord);
+        }
+        riftfixes$wasOpen = isOpen;
+    }
+
+    @Unique
+    private void riftfixes$launchOnOpen(World world, int x, int y, int z) {
+        Block block = world.getBlock(x, y, z);
+        if (!(block instanceof BlockChest)) return;
+
+        // Push toward the hinge (opposite chest "front")
         int meta = world.getBlockMetadata(x, y, z);
         double ax = 0D, az = 0D;
         switch (meta) {
-            case 2: az =  1D; break; // front -Z => push +Z (toward back)
-            case 3: az = -1D; break; // front +Z => push -Z
-            case 4: ax =  1D; break; // front -X => push +X
-            case 5: ax = -1D; break; // front +X => push -X
-            default:
-                // Fallback: push AWAY from the opener (invert sign)
-                double dx = player.posX - (x + 0.5D);
-                double dz = player.posZ - (z + 0.5D);
-                if (Math.abs(dx) > Math.abs(dz)) {
-                    ax = dx > 0 ? -1D : 1D;
-                } else {
-                    az = dz > 0 ? -1D : 1D;
-                }
-                break;
+            case 2: az =  1D; break; // front -Z -> push +Z
+            case 3: az = -1D; break; // front +Z -> push -Z
+            case 4: ax =  1D; break; // front -X -> push +X
+            case 5: ax = -1D; break; // front +X -> push -X
+            default: az = 1D; break;
         }
 
-        AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(x, y + 1, z, x + 1, y + 2, z + 1);
+        // Slightly thicker slab above the top face to gather candidates
+        AxisAlignedBB box = AxisAlignedBB.getBoundingBox(
+                x + 0.001D, y + 1.00D, z + 0.001D,
+                x + 0.999D, y + 1.40D, z + 0.999D
+        );
 
         @SuppressWarnings("unchecked")
-        List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, aabb);
+        List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, box);
         if (entities == null || entities.isEmpty()) return;
 
         final double h = ModConfig.chestLaunchHorizontal;
         final double u = ModConfig.chestLaunchUpward;
 
         for (Entity e : entities) {
+            if (!riftfixes$isStandingDirectlyOnTop(x, y, z, e)) continue;
             e.addVelocity(ax * h, u, az * h);
             e.velocityChanged = true;
         }
+    }
+
+    /** True only if the block directly under the entity's feet is this chest. */
+    @Unique
+    private static boolean riftfixes$isStandingDirectlyOnTop(int x, int y, int z, Entity e) {
+        if (e == null || e.boundingBox == null) return false;
+
+        int bx = MathHelper.floor_double(e.posX);
+        int by = MathHelper.floor_double(e.boundingBox.minY - 1.0E-3D);
+        int bz = MathHelper.floor_double(e.posZ);
+
+        if (bx != x || by != y || bz != z) return false;
+
+        // Optional stability: require grounded or near-zero vertical motion
+        return e.onGround || Math.abs(e.motionY) < 0.05D;
     }
 }

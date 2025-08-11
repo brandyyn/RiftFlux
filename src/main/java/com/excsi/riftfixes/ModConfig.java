@@ -32,6 +32,12 @@ public class ModConfig {
 
     public static boolean enableMeleeDamageTooltip;
 
+    public static boolean reworkVillageGolems;
+    public static int initialVillageGolems;
+
+    public static boolean disableSleepRainClear;
+
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -50,10 +56,10 @@ public class ModConfig {
 
         enableChestLaunch = config.getBoolean("EnableChestLaunch","general", true,
                 "Launch entities standing on top when a chest opens.");
-        chestLaunchHorizontal = (float) config.get("general", "ChestLaunchHorizontal", 0.6D,
-                "Horizontal push strength when a chest opens. (no bounds)").getDouble(0.6D);
-        chestLaunchUpward = (float) config.get("general", "ChestLaunchUpward", 0.4D,
-                "Upward boost when a chest opens. (no bounds)").getDouble(0.4D);
+        chestLaunchHorizontal = (float) config.get("general", "ChestLaunchHorizontal", 5,
+                "Horizontal push strength when a chest opens. (no bounds)").getDouble(5);
+        chestLaunchUpward = (float) config.get("general", "ChestLaunchUpward", 5,
+                "Upward boost when a chest opens. (no bounds)").getDouble(5);
 
         enableFullExplosionDrops = config.getBoolean(
                 "EnableFullExplosionDrops", "general", true,
@@ -62,6 +68,21 @@ public class ModConfig {
         enableMeleeDamageTooltip = config.getBoolean(
                 "EnableMeleeDamageTooltip", "general", true,
                 "Replace '+X Attack Damage' with a single gray 'X.X Melee Damage' line (includes +1 base and Sharpness)."
+        );
+
+
+        reworkVillageGolems = config.getBoolean(
+                "ReworkVillageGolems", "general", true,
+                "Stops villager-based iron golem farms; spawns a fixed number at village worldgen."
+        );
+        initialVillageGolems = config.getInt(
+                "InitialVillageGolems", "general", 5, 0, 64,
+                "Iron golems to spawn once per village at worldgen."
+        );
+
+        disableSleepRainClear = config.getBoolean(
+                "DisableSleepRainClear", "general", true,
+                "If true, sleeping no longer clears rain or thunder."
         );
 
         config.save();
