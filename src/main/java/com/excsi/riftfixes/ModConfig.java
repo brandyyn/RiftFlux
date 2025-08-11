@@ -48,10 +48,10 @@ public class ModConfig {
 
         enableChestLaunch = config.getBoolean("EnableChestLaunch","general", true,
                 "Launch entities standing on top when a chest opens.");
-        chestLaunchHorizontal = config.getFloat("ChestLaunchHorizontal","general", 0.6F, -4.0F, 4.0F,
-                "Horizontal push strength when a chest opens.");
-        chestLaunchUpward = config.getFloat("ChestLaunchUpward","general", 0.4F, -2.0F, 2.0F,
-                "Upward boost when a chest opens.");
+        chestLaunchHorizontal = (float) config.get("general", "ChestLaunchHorizontal", 0.6D,
+                "Horizontal push strength when a chest opens. (no bounds)").getDouble(0.6D);
+        chestLaunchUpward = (float) config.get("general", "ChestLaunchUpward", 0.4D,
+                "Upward boost when a chest opens. (no bounds)").getDouble(0.4D);
 
         enableFullExplosionDrops = config.getBoolean(
                 "EnableFullExplosionDrops", "general", true,
