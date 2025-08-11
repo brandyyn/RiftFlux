@@ -16,9 +16,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Pattern;
 
 @Mixin(ItemStack.class)
 public abstract class MixinTooltip {
@@ -32,52 +31,98 @@ public abstract class MixinTooltip {
         List<String> tip = cir.getReturnValue();
         if (self == null || tip == null) return;
 
-
-        Multimap<String, AttributeModifier> map = self.getAttributeModifiers();
-        if (map == null) return;
-
-        String key = SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(); // "generic.attackDamage"
-        Collection<AttributeModifier> mods = map.get(key);
-        if (mods == null || mods.isEmpty()) return;
-
-        // Compute total attack damage from attributes + base fist (1.0)
-        double base = 1.0D;      // base fist damage in 1.7.10
-        double add0 = 0.0D;      // op 0 sum
-        double mult1 = 0.0D;     // op 1 sum (adds to base before op2)
-        double mult2 = 1.0D;     // op 2 product
-
-        for (AttributeModifier m : mods) {
-            if (m == null) continue;
-            int op = m.getOperation();
-            if (op == 0) add0 += m.getAmount();
-            else if (op == 1) mult1 += m.getAmount();
-            else if (op == 2) mult2 *= (1.0D + m.getAmount());
+        Double dmg = computeAttackDamage(self);
+        if (dmg == null) {
+            // still remove spacer gaps even if no melee line
+            removeBlankSpacerLines(tip);
+            return;
         }
 
-        double dmg = (base + add0) * (1.0D + mult1) * mult2;
-
-        // Add Sharpness bonus (1.7.10): +1.25 per level (Smite/Bane are conditional on target, so omitted)
-        int sharp = EnchantmentHelper.getEnchantmentLevel(Enchantment.sharpness.effectId, self);
-        if (sharp > 0) dmg += 1.25D * sharp;
-
-        if (dmg < 0) dmg = 0;
-
-        // Remove vanilla "+X Attack Damage" lines and any existing melee lines
-        final String vanillaAttr = StatCollector.translateToLocal("attribute.name.generic.attackDamage"); // "Attack Damage"
+        // Strip vanilla attack-damage and any existing "Melee Damage" lines (e.g., AoA)
+        final String vanillaAttr = StatCollector.translateToLocal("attribute.name.generic.attackDamage");
         for (Iterator<String> it = tip.iterator(); it.hasNext();) {
             String s = it.next();
             String plain = stripFmt(s);
-            if (plain.contains(vanillaAttr) || plain.toLowerCase().contains("melee damage")) {
+            if (plain.contains(vanillaAttr) || plain.toLowerCase(Locale.ROOT).contains("melee damage")) {
                 it.remove();
             }
         }
 
-        // Insert our gray line near the top (after item name)
-        String line = EnumChatFormatting.GRAY + String.format("%.1f Melee Damage", dmg);
-        int insertAt = Math.min(1, tip.size());
+        // Insert our unified gray line after enchants/CT, before meta tails
+        String line = EnumChatFormatting.GRAY + String.format(Locale.ROOT, "%.1f Melee Damage", dmg);
+        int insertAt = findPostEnchantsPreMetaIndex(tip);
         tip.add(insertAt, line);
 
+        // Remove all blank spacer lines to kill vertical gaps
+        removeBlankSpacerLines(tip);
+
         cir.setReturnValue(tip);
+    }
+
+    private static Double computeAttackDamage(ItemStack stack) {
+        try {
+            @SuppressWarnings("unchecked")
+            Multimap<String, AttributeModifier> map = stack.getAttributeModifiers();
+            if (map == null) return null;
+
+            String key = SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(); // "generic.attackDamage"
+            Collection<AttributeModifier> mods = map.get(key);
+            if (mods == null || mods.isEmpty()) return null;
+
+            double base = 1.0D;      // fist/base in 1.7.10
+            double add0 = 0.0D;      // op0 sum
+            double mult1 = 0.0D;     // op1 sum
+            double mult2 = 1.0D;     // op2 product
+
+            for (AttributeModifier m : mods) {
+                if (m == null) continue;
+                switch (m.getOperation()) {
+                    case 0: add0 += m.getAmount(); break;
+                    case 1: mult1 += m.getAmount(); break;
+                    case 2: mult2 *= (1.0D + m.getAmount()); break;
+                }
+            }
+
+            double dmg = (base + add0) * (1.0D + mult1) * mult2;
+
+            // Sharpness adds +1.25 per level in 1.7.10
+            int sharp = EnchantmentHelper.getEnchantmentLevel(Enchantment.sharpness.effectId, stack);
+            if (sharp > 0) dmg += 1.25D * sharp;
+
+            if (dmg < 0) dmg = 0;
+            return dmg;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static final Pattern RAW_REGISTRY = Pattern.compile("^[a-z0-9_.-]+:[a-z0-9_/.-]+$");
+    private static final Pattern HAS_NUM_ID   = Pattern.compile(".*#\\d+.*"); // e.g., "#275"
+
+    private static int findPostEnchantsPreMetaIndex(List<String> tip) {
+        int n = tip.size();
+        if (n <= 1) return n;
+        for (int i = n - 1; i >= 1; i--) {
+            String s = tip.get(i);
+            String noFmt = stripFmt(s);
+            boolean italic = s.contains("\u00A7o");
+            boolean darkGray = s.contains("\u00A78");
+            boolean looksRegistry = RAW_REGISTRY.matcher(noFmt).matches();
+            boolean hasNumId = HAS_NUM_ID.matcher(noFmt).matches();
+            boolean nbtLine = noFmt.regionMatches(true, 0, "nbt:", 0, 4);
+
+            boolean isMetaTail = italic || darkGray || looksRegistry || hasNumId || nbtLine;
+            if (!isMetaTail) return i + 1;
+        }
+        return Math.min(1, n);
+    }
+
+    private static void removeBlankSpacerLines(List<String> tip) {
+        for (Iterator<String> it = tip.iterator(); it.hasNext();) {
+            String s = it.next();
+            String plain = stripFmt(s).trim();
+            if (plain.isEmpty()) it.remove(); // kills "" or formatting-only spacer lines
+        }
     }
 
     private static String stripFmt(String s) {
