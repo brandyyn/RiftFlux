@@ -18,8 +18,6 @@ public class RFLateMixins implements ILateMixinLoader {
     @Override
     public List<String> getMixins(Set<String> loadedMods) {
         List<String> mixins = new ArrayList<>();
-        mixins.add("late.MixinBlockChestLaunch");
-        mixins.add("late.MixinTNT");
         if(loadedMods.contains("aether"))
            mixins.add("late.MixinAetherPortal");
         if(loadedMods.contains("ChromatiCraft")) {
