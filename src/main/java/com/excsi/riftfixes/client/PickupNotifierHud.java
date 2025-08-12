@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Notifier: constant-speed slide of oldest, small pause between slides.
+ * Notifier: eased slide of oldest with jitter-free start/end and a short pause between slides.
+ * Timing is unchanged; motion uses sub-pixel rendering + epsilon clamp at both edges.
  */
 public final class PickupNotifierHud {
 
@@ -28,14 +29,25 @@ public final class PickupNotifierHud {
 
     private static final int ICON = 16, PAD = 2, TEXT_Y = 5, ROW = ICON + 2;
 
-    // Small pause (in ticks) after an entry leaves before the next starts sliding
-    private static final int CYCLE_PAUSE_TICKS = 10; // ~0.5s
-    private static int pauseTicks = 0;
+    private static final int  CYCLE_PAUSE_TICKS = 10; // ~0.5s between slides
+    private static       int  pauseTicks = 0;
 
-    private static int secToTicks(float s){ return Math.max(1, Math.round(s*20f)); }
+    // Anti-jitter tuning
+    private static final long  START_FREEZE_MS     = 16L;      // hold very first frame
+    private static final float EPS_START           = 0.006f;   // snap to 0 if below this
+    private static final float EPS_END             = 0.006f;   // snap to 1 if above 1-EPS
+    private static final float END_LATCH_THRESHOLD = 1f - EPS_END;
+
+    private static int  secToTicks(float s){ return Math.max(1, Math.round(s*20f)); }
+    private static long nowMs()              { return System.nanoTime() / 1_000_000L; }
 
     private static class Entry {
         ItemStack stack; int count; int ttl; final int slideTicks;
+        long  slideStartMs = -1L;   // stamped on first render of the slide
+        float visT         = 0f;    // monotonic eased progress (0..1)
+        boolean endLatched = false; // keep ghost-removing at the end
+        float latchedVisT  = -1f;   // exact eased progress at latch for continuity
+
         Entry(ItemStack s, int c, int total, int slide){
             stack = s.copy(); stack.stackSize = Math.max(1,c);
             count = Math.max(1,c);
@@ -43,8 +55,12 @@ public final class PickupNotifierHud {
             slideTicks = Math.max(1, Math.min(slide, total));
         }
         boolean sliding(){ return ttl <= slideTicks; }
-        // Linear 0..1 for constant speed
-        float slideT(float pt){ float t = 1f - ((ttl - pt) / (float)slideTicks); return t<0?0:t>1?1:t; }
+        float slideTFromTime(long now){
+            if (slideStartMs <= 0) return 0f;
+            float durMs = slideTicks * 50f;
+            float t = (now - slideStartMs) / durMs;
+            return t < 0 ? 0 : (t > 1 ? 1 : t);
+        }
         boolean sameKey(ItemStack o){ return o.getItem()==stack.getItem() && o.getItemDamage()==stack.getItemDamage(); }
         String text(){ String n = stack.getDisplayName(); return count>1 ? (n+" x"+count) : n; }
         int color(){
@@ -81,21 +97,40 @@ public final class PickupNotifierHud {
         FMLCommonHandler.instance().bus().register(INSTANCE);
     }
 
-    /** Oldest counts down; when it ends, insert a short pause before next slide starts. */
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent e){
         if (!ModConfig.enablePickupNotifier) return;
         if (e.phase != TickEvent.Phase.END) return;
 
         if (pauseTicks > 0) { pauseTicks--; return; }
+        if (entries.isEmpty()) return;
 
-        if (!entries.isEmpty()){
-            Entry first = entries.get(0);
-            if (--first.ttl <= 0) {
-                entries.remove(0);
-                pauseTicks = CYCLE_PAUSE_TICKS;
+        Entry first = entries.get(0);
+        if (--first.ttl <= 0) {
+            if (first.slideStartMs > 0L) {
+                long elapsed = nowMs() - first.slideStartMs;
+                long need    = (long)(first.slideTicks * 50L);
+                if (elapsed >= need) {
+                    entries.remove(0);
+                    pauseTicks = CYCLE_PAUSE_TICKS;
+                } else {
+                    first.ttl = 0; // hold until render finishes motion
+                }
+            } else {
+                first.ttl = 0;
             }
         }
+    }
+
+    private static float clamp01(float v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
+    private static float smootherstep(float t){
+        t = clamp01(t);
+        return t*t*t * (t*(t*6f - 15f) + 10f);
+    }
+    private static float epsilonSnap01(float t){
+        if (t <= EPS_START) return 0f;
+        if (t >= 1f - EPS_END) return 1f;
+        return t;
     }
 
     @SubscribeEvent
@@ -110,12 +145,36 @@ public final class PickupNotifierHud {
         ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         final int sw = sr.getScaledWidth(), sh = sr.getScaledHeight();
         final int right = sw - 4;
+        final long now = nowMs();
 
-        float t = 0f;
-        if (pauseTicks == 0 && !entries.isEmpty() && entries.get(0).sliding()) {
-            t = entries.get(0).slideT(e.partialTicks); // 0..1, linear
+        // Progress for the oldest + latching with epsilon snap
+        if (pauseTicks == 0 && !entries.isEmpty()) {
+            Entry first = entries.get(0);
+            if (first.sliding()) {
+                if (first.slideStartMs <= 0L) first.slideStartMs = now;
+                float tRaw = first.slideTFromTime(now);
+
+                // Freeze the first frame
+                if (now - first.slideStartMs <= START_FREEZE_MS) tRaw = 0f;
+
+                // Easing + epsilon clamp + monotonic
+                float eased = smootherstep(tRaw);
+                eased = epsilonSnap01(eased);
+                if (eased < first.visT) eased = first.visT;
+                first.visT = eased;
+
+                if (!first.endLatched && first.visT >= END_LATCH_THRESHOLD) {
+                    first.endLatched = true;
+                    first.latchedVisT = first.visT; // freeze others exactly here
+                }
+            }
         }
-        float rowShift = t * ROW;
+
+        final boolean ghostRemove = (!entries.isEmpty() && entries.get(0).endLatched);
+        final float   visT        = entries.isEmpty() ? 0f : entries.get(0).visT;
+        final float   rowShiftDyn = visT * ROW;
+        final float   rowShiftFrozen = (!entries.isEmpty() && entries.get(0).latchedVisT >= 0f)
+                ? entries.get(0).latchedVisT * ROW : rowShiftDyn;
 
         RenderItem ri = new RenderItem();
 
@@ -123,38 +182,77 @@ public final class PickupNotifierHud {
         try {
             GL11.glEnable(GL11.GL_BLEND);
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(true);
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 
             for (int i=0;i<entries.size();i++){
                 Entry en = entries.get(i);
+
+                // Skip drawing the oldest during latched end-phase (already off-screen)
+                if (i == 0 && ghostRemove) continue;
+
                 String text = en.text();
                 int textW = mc.fontRenderer.getStringWidth(text);
                 int w = ICON + PAD + textW;
                 int x = right - w;
 
-                int baseY = sh - 4 - i * ROW;
-                float yDraw;
+                if (!ghostRemove) {
+                    // Normal: oldest slides to off-screen; others track with rowShiftDyn
+                    if (i == 0) {
+                        int baseY = sh - 4 - i * ROW;
+                        int off   = sh + ICON + 4;
+                        float y   = baseY + (off - baseY) * visT;
+                        int yBase = (int)Math.floor(y);
+                        float yFrac = y - yBase;
 
-                if (i == 0) {
-                    // Oldest slides only during slide window (constant speed)
-                    int off = sh + ICON + 4;
-                    yDraw = baseY + (off - baseY) * t;
+                        GL11.glPushMatrix();
+                        GL11.glTranslatef(0f, yFrac, 0f);
+
+                        RenderHelper.enableGUIStandardItemLighting();
+                        ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                        RenderHelper.disableStandardItemLighting();
+                        mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
+
+                        GL11.glPopMatrix();
+                    } else {
+                        int baseY = sh - 4 - i * ROW;
+                        float y = baseY + rowShiftDyn;
+                        int yBase = (int)Math.floor(y);
+                        float yFrac = y - yBase;
+
+                        GL11.glPushMatrix();
+                        GL11.glTranslatef(0f, yFrac, 0f);
+
+                        RenderHelper.enableGUIStandardItemLighting();
+                        ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                        RenderHelper.disableStandardItemLighting();
+                        mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
+
+                        GL11.glPopMatrix();
+                    }
                 } else {
-                    // Others slide down exactly one row during that same window
-                    yDraw = baseY + rowShift;
+                    // End-latched: render as if oldest is removed, frozen at latch continuity
+                    int logicalIndex = (i > 0) ? (i - 1) : 0;
+                    int baseY = sh - 4 - logicalIndex * ROW;
+                    float y = baseY + (rowShiftFrozen - ROW);
+                    int yBase = (int)Math.floor(y);
+                    float yFrac = y - yBase;
+
+                    GL11.glPushMatrix();
+                    GL11.glTranslatef(0f, yFrac, 0f);
+
+                    RenderHelper.enableGUIStandardItemLighting();
+                    ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                    RenderHelper.disableStandardItemLighting();
+                    mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
+
+                    GL11.glPopMatrix();
                 }
-
-                RenderHelper.enableGUIStandardItemLighting();
-                ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, Math.round(yDraw) - ICON);
-                RenderHelper.disableStandardItemLighting();
-
-                mc.fontRenderer.drawString(text, x + ICON + PAD, Math.round(yDraw) - ICON + TEXT_Y, en.color(), false);
             }
 
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
             GL11.glDisable(GL11.GL_BLEND);
         } finally {
             GL11.glColor4f(1,1,1,1);
