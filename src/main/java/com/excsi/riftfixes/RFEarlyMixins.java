@@ -3,6 +3,8 @@ package com.excsi.riftfixes;
 import com.excsi.riftfixes.core.BasicTransformer;
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.Side;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,6 +29,16 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if(ModConfig.reworkVillageGolems)
             mixins.add("early.MixinVillageGolemBlock");
             mixins.add("early.MixinStructureStartVillageSpawn");
+        if (ModConfig.enableBedChill) {
+            mixins.add("early.MixinBedChill$NoSleepSkip");
+            mixins.add("early.MixinBedChill$AnyTimeSleep");
+            if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+                mixins.add("early.MixinBedChill$NoSleepFade");
+            }
+        }
+        if (ModConfig.enableItemPickupStar && FMLLaunchHandler.side() == Side.CLIENT) {
+            mixins.add("early.MixinItemPickupStar");
+        }
         if(ModConfig.enableChestLaunch)
             mixins.add("early.MixinBlockChestLaunch");
         if(ModConfig.disableSleepRainClear)

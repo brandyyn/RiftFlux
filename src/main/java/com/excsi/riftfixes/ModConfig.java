@@ -37,6 +37,17 @@ public class ModConfig {
 
     public static boolean disableSleepRainClear;
 
+    public static boolean enableBedChill;
+
+    // Item pickup star (client)
+    public static boolean enableItemPickupStar;
+    public static boolean itemPickupStarOnStackIncrease; // highlight simple count increases too?
+
+    public static boolean enablePickupNotifier;
+    public static int pickupNotifyDurationSeconds;       // e.g. 3
+    public static int pickupNotifyMergeWindowSeconds;    // e.g. 1
+    public static float pickupNotifyFadeSeconds;         // e.g. 0.6f
+    public static int pickupNotifyMaxEntries; // e.g. 50
 
     public static void init(File file){
         config = new Configuration(file);
@@ -84,6 +95,43 @@ public class ModConfig {
                 "DisableSleepRainClear", "general", true,
                 "If true, sleeping no longer clears rain or thunder."
         );
+
+        enableBedChill = config.getBoolean(
+                "EnableBedChill", "general", true,
+                "Lie in beds any time; ignore monsters & proximity; no night skip; no fade."
+        );
+
+        enableItemPickupStar = config.getBoolean(
+                "EnableItemPickupStar", "general", true,
+                "Show a small star on items you just picked up in your inventory until hovered."
+        );
+
+        itemPickupStarOnStackIncrease = config.getBoolean(
+                "ItemPickupStarOnStackIncrease", "general", true,
+                "Also show the star when a stack increases (same item, higher count). If false, only new/different stacks are highlighted."
+        );
+        enablePickupNotifier = config.getBoolean(
+                "EnablePickupNotifier", "general", true,
+                "Show a bottom-right popup (icon + name + amount) when you pick up items."
+        );
+        pickupNotifyDurationSeconds = config.getInt(
+                "PickupNotifierDurationSeconds", "general", 3, 1, 20,
+                "How long (in seconds) each popup stays on screen."
+        );
+        pickupNotifyMergeWindowSeconds = config.getInt(
+                "PickupNotifierMergeWindowSeconds", "general", 1, 0, 10,
+                "If you pick up the same item again within this window, merge into one entry."
+        );
+        pickupNotifyFadeSeconds = config.getFloat(
+                "PickupNotifierFadeSeconds", "general", 0.6f, 0.05f, 5f,
+                "Seconds to fade out the pickup notification (time-based, not FPS-based)."
+        );
+        pickupNotifyMaxEntries = config.getInt(
+                "PickupNotifierMaxEntries", "general", 50, 1, 200,
+                "Max number of pickup notifications kept on-screen at once."
+        );
+
+
 
         config.save();
     }
