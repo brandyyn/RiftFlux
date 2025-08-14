@@ -1,0 +1,17 @@
+{
+  "required": false,
+  "minVersion": "0.7.11",
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.excsi.riftfixes.mixin",
+  "refmap": "mixins.riftfixes.refmap.json",
+  "mixins": [
+    "early.MixinInventoryPlayerPickupTag"
+  ],
+  "client": [
+    "early.MixinItemPickupStar"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

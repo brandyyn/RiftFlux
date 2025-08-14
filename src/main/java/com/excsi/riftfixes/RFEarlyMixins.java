@@ -3,8 +3,6 @@ package com.excsi.riftfixes;
 import com.excsi.riftfixes.core.BasicTransformer;
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
-import cpw.mods.fml.relauncher.Side;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,10 +23,24 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public List<String> getMixins(Set<String> loadedCoreMods) {
-        List<String> mixins = new ArrayList<>();
-        if(ModConfig.reworkVillageGolems)
+        List<String> mixins = new ArrayList<String>();
+
+        if (ModConfig.reworkVillageGolems) {
             mixins.add("early.MixinVillageGolemBlock");
             mixins.add("early.MixinStructureStartVillageSpawn");
+        }
+        if (ModConfig.enableChestLaunch)
+            mixins.add("early.MixinBlockChestLaunch");
+        if (ModConfig.disableSleepRainClear)
+            mixins.add("early.DisableSleepRainClear");
+        if (ModConfig.enableFullExplosionDrops)
+            mixins.add("early.MixinTNT");
+        if (ModConfig.enableMeleeDamageTooltip)
+            mixins.add("early.MixinTooltip");
+        if (ModConfig.enableArmorMixin)
+            mixins.add("early.MixinArmorProperties");
+        if (ModConfig.changeArmorBarAmount)
+            mixins.add("early.MixinForgeHooks");
         if (ModConfig.enableBedChill) {
             mixins.add("early.MixinBedChill$NoSleepSkip");
             mixins.add("early.MixinBedChill$AnyTimeSleep");
@@ -36,21 +48,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.MixinBedChill$NoSleepFade");
             }
         }
-        if (ModConfig.enableItemPickupStar && FMLLaunchHandler.side() == Side.CLIENT) {
-            mixins.add("early.MixinItemPickupStar");
+        if (ModConfig.enableItemPickupStar) {
+            mixins.add("early.MixinItemPickupStar");           // client draw/hover-clear
+            mixins.add("early.MixinInventoryPlayerPickupTag"); // server tag-on-pickup
+            mixins.add("early.MixinItemStackTagEqual");
         }
-        if(ModConfig.enableChestLaunch)
-            mixins.add("early.MixinBlockChestLaunch");
-        if(ModConfig.disableSleepRainClear)
-            mixins.add("early.DisableSleepRainClear");
-        if(ModConfig.enableFullExplosionDrops)
-            mixins.add("early.MixinTNT");
-        if(ModConfig.enableMeleeDamageTooltip)
-            mixins.add("early.MixinTooltip");
-        if(ModConfig.enableArmorMixin)
-            mixins.add("early.MixinArmorProperties");
-        if(ModConfig.changeArmorBarAmount)
-            mixins.add("early.MixinForgeHooks");
         return mixins;
     }
 
@@ -60,22 +62,14 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     }
 
     @Override
-    public String getModContainerClass() {
-        return null;
-    }
+    public String getModContainerClass() { return null; }
 
     @Override
-    public String getSetupClass() {
-        return null;
-    }
+    public String getSetupClass() { return null; }
 
     @Override
-    public void injectData(Map<String, Object> data) {
-
-    }
+    public void injectData(Map<String, Object> data) {}
 
     @Override
-    public String getAccessTransformerClass() {
-        return null;
-    }
+    public String getAccessTransformerClass() { return null; }
 }
