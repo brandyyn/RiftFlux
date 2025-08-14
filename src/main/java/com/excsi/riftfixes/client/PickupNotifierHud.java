@@ -20,7 +20,9 @@ import java.util.List;
 
 /**
  * Notifier: eased slide of oldest with jitter-free start/end and a short pause between slides.
- * Timing is unchanged; motion uses sub-pixel rendering + epsilon clamp at both edges.
+ * Motion uses sub-pixel rendering + soft clamping at both edges.
+ *
+ * Glint fix: enable depth only during icon draw so the enchantment glint masks to the item.
  */
 public final class PickupNotifierHud {
 
@@ -32,10 +34,11 @@ public final class PickupNotifierHud {
     private static final int  CYCLE_PAUSE_TICKS = 10; // ~0.5s between slides
     private static       int  pauseTicks = 0;
 
-    // Anti-jitter tuning
-    private static final long  START_FREEZE_MS     = 16L;      // hold very first frame
-    private static final float EPS_START           = 0.006f;   // snap to 0 if below this
-    private static final float EPS_END             = 0.006f;   // snap to 1 if above 1-EPS
+    // NEW: tiny extra dwell only for the very first pickup in a burst
+    private static final int FIRST_DELAY_TICKS = 8; // ~0.4s
+    private static int firstDelayTicks = 0;
+
+    private static final float EPS_END             = 0.006f;
     private static final float END_LATCH_THRESHOLD = 1f - EPS_END;
 
     private static int  secToTicks(float s){ return Math.max(1, Math.round(s*20f)); }
@@ -54,6 +57,7 @@ public final class PickupNotifierHud {
             ttl   = Math.max(1,total);
             slideTicks = Math.max(1, Math.min(slide, total));
         }
+        // An entry becomes eligible to slide once its TTL has run down to the slide window
         boolean sliding(){ return ttl <= slideTicks; }
         float slideTFromTime(long now){
             if (slideStartMs <= 0) return 0f;
@@ -77,11 +81,13 @@ public final class PickupNotifierHud {
         final int slide = secToTicks(ModConfig.pickupNotifyFadeSeconds);
         final int merge = secToTicks(ModConfig.pickupNotifyMergeWindowSeconds);
 
+        final boolean wasEmpty = entries.isEmpty();
+
         if (!entries.isEmpty()){
             Entry last = entries.get(entries.size()-1);
             if (last.sameKey(display) && last.ttl > (total - merge)) {
                 last.count += Math.max(1, pickedCount);
-                last.ttl = total;
+                last.ttl = total; // refresh window on merge
                 return;
             }
         }
@@ -90,6 +96,9 @@ public final class PickupNotifierHud {
         while (entries.size() >= cap) entries.remove(0);
 
         entries.add(new Entry(display, Math.max(1,pickedCount), total, slide));
+
+        // Arm a tiny global dwell when this is the first in a burst
+        if (wasEmpty) firstDelayTicks = FIRST_DELAY_TICKS;
     }
 
     public static void bootstrap(){
@@ -101,12 +110,30 @@ public final class PickupNotifierHud {
     public void onClientTick(TickEvent.ClientTickEvent e){
         if (!ModConfig.enablePickupNotifier) return;
         if (e.phase != TickEvent.Phase.END) return;
-
-        if (pauseTicks > 0) { pauseTicks--; return; }
         if (entries.isEmpty()) return;
 
+        // TTL runs for ALL entries every tick so each begins sliding
+        // after (duration - fade) from its own enqueue time.
+        for (int i = 0; i < entries.size(); i++) {
+            Entry en = entries.get(i);
+            if (en.ttl > 0) en.ttl--;
+        }
+
+        // Apply the small extra dwell ONLY to the oldest entry of a new burst.
+        if (firstDelayTicks > 0) {
+            Entry first = entries.get(0);
+            // cancel that tick's TTL decrement so it dwells slightly longer
+            first.ttl++;
+            firstDelayTicks--;
+        }
+
+        // Pause between removals (TTL keeps ticking above)
+        if (pauseTicks > 0) { pauseTicks--; return; }
+
         Entry first = entries.get(0);
-        if (--first.ttl <= 0) {
+
+        // When the oldest is out of TTL, let rendering drive slide completion
+        if (first.ttl <= 0) {
             if (first.slideStartMs > 0L) {
                 long elapsed = nowMs() - first.slideStartMs;
                 long need    = (long)(first.slideTicks * 50L);
@@ -117,7 +144,7 @@ public final class PickupNotifierHud {
                     first.ttl = 0; // hold until render finishes motion
                 }
             } else {
-                first.ttl = 0;
+                first.ttl = 0; // waiting for onHud to stamp slideStartMs
             }
         }
     }
@@ -127,10 +154,24 @@ public final class PickupNotifierHud {
         t = clamp01(t);
         return t*t*t * (t*(t*6f - 15f) + 10f);
     }
-    private static float epsilonSnap01(float t){
-        if (t <= EPS_START) return 0f;
-        if (t >= 1f - EPS_END) return 1f;
+    /** Soft edge to eliminate the last few sub-pixel jitters at 0 and 1 without altering timing. */
+    private static float softClamp01(float t){
+        if (t <= 0f) return 0f;
+        if (t >= 1f) return 1f;
+        final float w = 0.016f; // slightly wider to hide quantization at high refresh rates
+        if (t < w){
+            float u = t / w; // 0..1
+            return w * (u*u*(3f - 2f*u));
+        }
+        if (t > 1f - w){
+            float u = (1f - t) / w; // 0..1
+            return 1f - w * (u*u*(3f - 2f*u));
+        }
         return t;
+    }
+    /** Floor that’s stable around integer boundaries to avoid flicker. */
+    private static int stableFloor(float y){
+        return (int)Math.floor(y + 1.0e-4f);
     }
 
     @SubscribeEvent
@@ -147,33 +188,49 @@ public final class PickupNotifierHud {
         final int right = sw - 4;
         final long now = nowMs();
 
-        // Progress for the oldest + latching with epsilon snap
+        // Progress for the oldest + latching with soft clamping
         if (pauseTicks == 0 && !entries.isEmpty()) {
             Entry first = entries.get(0);
             if (first.sliding()) {
-                if (first.slideStartMs <= 0L) first.slideStartMs = now;
-                float tRaw = first.slideTFromTime(now);
+                float tRaw;
 
-                // Freeze the first frame
-                if (now - first.slideStartMs <= START_FREEZE_MS) tRaw = 0f;
+                // Stamp slide start when slide becomes eligible
+                if (first.slideStartMs <= 0L) {
+                    first.slideStartMs = now;
+                    tRaw = 0f;
+                } else {
+                    tRaw = first.slideTFromTime(now);
+                }
 
-                // Easing + epsilon clamp + monotonic
+                // Kill the very first sub-pixel nudge entirely
+                if (tRaw < 0.008f) tRaw = 0f;
+
+                // Easing + soft clamp + monotonic
                 float eased = smootherstep(tRaw);
-                eased = epsilonSnap01(eased);
+                eased = softClamp01(eased);
                 if (eased < first.visT) eased = first.visT;
                 first.visT = eased;
 
-                if (!first.endLatched && first.visT >= END_LATCH_THRESHOLD) {
+                // Force the final non-ghost frame to land exactly on 1.0, then latch
+                if (tRaw >= 1f) {
+                    first.visT = 1f;
+                    if (!first.endLatched) {
+                        first.endLatched = true;
+                        first.latchedVisT = 1f;
+                    }
+                } else if (!first.endLatched && first.visT >= END_LATCH_THRESHOLD) {
                     first.endLatched = true;
                     first.latchedVisT = first.visT; // freeze others exactly here
                 }
             }
         }
 
-        final boolean ghostRemove = (!entries.isEmpty() && entries.get(0).endLatched);
-        final float   visT        = entries.isEmpty() ? 0f : entries.get(0).visT;
-        final float   rowShiftDyn = visT * ROW;
-        final float   rowShiftFrozen = (!entries.isEmpty() && entries.get(0).latchedVisT >= 0f)
+        // Ghost-remove exactly when the rendered progress reaches 1.0 (no time/desync pop)
+        boolean ghostRemove = !entries.isEmpty() && entries.get(0).endLatched && entries.get(0).visT >= 1f;
+
+        final float visT = entries.isEmpty() ? 0f : entries.get(0).visT;
+        final float rowShiftDyn = visT * ROW;
+        final float rowShiftFrozen = (!entries.isEmpty() && entries.get(0).latchedVisT >= 0f)
                 ? entries.get(0).latchedVisT * ROW : rowShiftDyn;
 
         RenderItem ri = new RenderItem();
@@ -189,11 +246,11 @@ public final class PickupNotifierHud {
             for (int i=0;i<entries.size();i++){
                 Entry en = entries.get(i);
 
-                // Skip drawing the oldest during latched end-phase (already off-screen)
+                // Skip drawing the oldest during ghost-remove (already off-screen)
                 if (i == 0 && ghostRemove) continue;
 
                 String text = en.text();
-                int textW = mc.fontRenderer.getStringWidth(text);
+                int textW = Minecraft.getMinecraft().fontRenderer.getStringWidth(text);
                 int w = ICON + PAD + textW;
                 int x = right - w;
 
@@ -203,32 +260,37 @@ public final class PickupNotifierHud {
                         int baseY = sh - 4 - i * ROW;
                         int off   = sh + ICON + 4;
                         float y   = baseY + (off - baseY) * visT;
-                        int yBase = (int)Math.floor(y);
+                        int yBase = stableFloor(y);
                         float yFrac = y - yBase;
 
                         GL11.glPushMatrix();
                         GL11.glTranslatef(0f, yFrac, 0f);
 
                         RenderHelper.enableGUIStandardItemLighting();
-                        ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                        // glint fix: depth only during icon draw
+                        GL11.glEnable(GL11.GL_DEPTH_TEST);
+                        ri.renderItemAndEffectIntoGUI(Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getTextureManager(), en.stack, x, yBase - ICON);
+                        GL11.glDisable(GL11.GL_DEPTH_TEST);
                         RenderHelper.disableStandardItemLighting();
-                        mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
 
+                        Minecraft.getMinecraft().fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
                         GL11.glPopMatrix();
                     } else {
                         int baseY = sh - 4 - i * ROW;
                         float y = baseY + rowShiftDyn;
-                        int yBase = (int)Math.floor(y);
+                        int yBase = stableFloor(y);
                         float yFrac = y - yBase;
 
                         GL11.glPushMatrix();
                         GL11.glTranslatef(0f, yFrac, 0f);
 
                         RenderHelper.enableGUIStandardItemLighting();
-                        ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                        GL11.glEnable(GL11.GL_DEPTH_TEST);
+                        ri.renderItemAndEffectIntoGUI(Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getTextureManager(), en.stack, x, yBase - ICON);
+                        GL11.glDisable(GL11.GL_DEPTH_TEST);
                         RenderHelper.disableStandardItemLighting();
-                        mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
 
+                        Minecraft.getMinecraft().fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
                         GL11.glPopMatrix();
                     }
                 } else {
@@ -236,16 +298,19 @@ public final class PickupNotifierHud {
                     int logicalIndex = (i > 0) ? (i - 1) : 0;
                     int baseY = sh - 4 - logicalIndex * ROW;
                     float y = baseY + (rowShiftFrozen - ROW);
-                    int yBase = (int)Math.floor(y);
+                    int yBase = stableFloor(y);
                     float yFrac = y - yBase;
 
                     GL11.glPushMatrix();
                     GL11.glTranslatef(0f, yFrac, 0f);
 
                     RenderHelper.enableGUIStandardItemLighting();
-                    ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                    GL11.glEnable(GL11.GL_DEPTH_TEST);
+                    ri.renderItemAndEffectIntoGUI(Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getTextureManager(), en.stack, x, yBase - ICON);
+                    GL11.glDisable(GL11.GL_DEPTH_TEST);
                     RenderHelper.disableStandardItemLighting();
-                    mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
+
+                    Minecraft.getMinecraft().fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
 
                     GL11.glPopMatrix();
                 }

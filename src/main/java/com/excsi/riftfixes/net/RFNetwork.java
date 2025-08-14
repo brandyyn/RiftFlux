@@ -11,6 +11,7 @@ public final class RFNetwork {
     public static void init() {
         if (CH != null) return;
         CH = NetworkRegistry.INSTANCE.newSimpleChannel(Constants.MODID);
-        CH.registerMessage(MsgPickup.ClientHandler.class, MsgPickup.class, 0, Side.CLIENT);
+        // IMPORTANT: register the actual handler class
+        CH.registerMessage(MsgPickup.Handler.class, MsgPickup.class, 0, Side.CLIENT);
     }
 }

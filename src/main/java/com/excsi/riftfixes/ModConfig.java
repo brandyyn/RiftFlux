@@ -49,6 +49,9 @@ public class ModConfig {
     public static float pickupNotifyFadeSeconds;         // e.g. 0.6f
     public static int pickupNotifyMaxEntries; // e.g. 50
 
+    public static boolean pickupRenamedItalics;
+
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -130,7 +133,12 @@ public class ModConfig {
                 "PickupNotifierMaxEntries", "general", 50, 1, 200,
                 "Max number of pickup notifications kept on-screen at once."
         );
-
+        pickupRenamedItalics = config.getBoolean(
+                "PickupRenamedItalics",
+                "pickup",
+                true,
+                "If true, items renamed in an anvil are shown in italics in the pickup notifier (like vanilla tooltips)."
+        );
 
 
         config.save();
