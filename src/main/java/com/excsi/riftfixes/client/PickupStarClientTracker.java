@@ -29,25 +29,36 @@ public final class PickupStarClientTracker {
     private static ItemStack[] baselineCont = null;
     private static Container   lastCont     = null;
 
-    // recent pickups queue (item+meta)
+    // recent pickups queue (item+meta or wildcard for damageables)
     private static final Deque<PickupKey> queue = new ArrayDeque<PickupKey>();
 
     private static final class PickupKey {
-        final Item item; final int meta; int ttl;
-        PickupKey(Item i, int m, int ttl){ item=i; meta=m; this.ttl=ttl; }
-        boolean matches(ItemStack s){ return s!=null && s.getItem()==item && s.getItemDamage()==meta; }
+        final Item item; final int meta; final boolean wildcardMeta; int ttl;
+        PickupKey(Item i, int m, boolean wildcardMeta, int ttl){
+            item=i; meta=m; this.wildcardMeta = wildcardMeta; this.ttl=ttl;
+        }
+        boolean matches(ItemStack s){
+            if (s == null) return false;
+            if (s.getItem() != item) return false;
+            if (wildcardMeta || s.isItemStackDamageable()) return true; // tools/armor
+            return s.getItemDamage() == meta;
+        }
     }
 
     /** Preferred enqueue (from packet): full stack */
     public static void enqueue(ItemStack st){
         if (st == null || st.getItem() == null) return;
-        queue.addLast(new PickupKey(st.getItem(), st.getItemDamage(), WINDOW_TICKS));
+        final boolean wildcard = st.isItemStackDamageable();
+        queue.addLast(new PickupKey(st.getItem(), st.getItemDamage(), wildcard, WINDOW_TICKS));
     }
 
     /** Legacy helpers kept for old call sites */
     public static void enqueue(String registryName, int meta){
         Item it = (Item) Item.itemRegistry.getObject(registryName);
-        if (it != null) queue.addLast(new PickupKey(it, meta, WINDOW_TICKS));
+        if (it != null) {
+            final boolean wildcard = it.isDamageable(); // 1.7.10: maxDamage > 0
+            queue.addLast(new PickupKey(it, meta, wildcard, WINDOW_TICKS));
+        }
     }
     public static void enqueue(String registryName, int meta, int ignoredLegacyId){
         enqueue(registryName, meta);
@@ -84,22 +95,31 @@ public final class PickupStarClientTracker {
 
                     boolean sameItem = (now != null && was != null && sameItem(was, now));
                     boolean grew     = sameItem && now.stackSize > was.stackSize;
+                    boolean inserted = (now != null && was == null) || (now != null && was != null && !sameItem);
 
                     boolean changed =
-                            (now != null && was == null) ||
-                                    (now != null && was != null && !sameItem) ||
+                            inserted ||
                                     (ModConfig.itemPickupStarOnStackIncrease && grew);
 
                     if (changed && now != null) {
-                        if (grew) {
-                            // Truly new pickup merged into this stack: clear SEEN and mark NEW
+                        // --- Key addition: ALWAYS star damageables on insert, no queue needed ---
+                        if (inserted && now.isItemStackDamageable()) {
                             NBTTagCompound tag = getOrCreate(now);
                             tag.removeTag(TAG_SEEN);
                             tag.setBoolean(TAG_NEW, true);
                             now.setTagCompound(tag);
-                        } else if (matchesAnyPickup(now)) {
+                        }
+                        // Merge grew (new pickup merged into stack)
+                        else if (grew) {
                             NBTTagCompound tag = getOrCreate(now);
-                            if (!tag.getBoolean(TAG_SEEN)) { // don't re-tag if you hovered it already
+                            tag.removeTag(TAG_SEEN);
+                            tag.setBoolean(TAG_NEW, true);
+                            now.setTagCompound(tag);
+                        }
+                        // Normal: correlate with pickup queue
+                        else if (matchesAnyPickup(now)) {
+                            NBTTagCompound tag = getOrCreate(now);
+                            if (!tag.getBoolean(TAG_SEEN)) {
                                 tag.setBoolean(TAG_NEW, true);
                                 now.setTagCompound(tag);
                             }
@@ -133,19 +153,27 @@ public final class PickupStarClientTracker {
 
                         boolean sameItem = (now != null && was != null && sameItem(was, now));
                         boolean grew     = sameItem && now.stackSize > was.stackSize;
+                        boolean inserted = (now != null && was == null) || (now != null && was != null && !sameItem);
 
                         boolean changed =
-                                (now != null && was == null) ||
-                                        (now != null && was != null && !sameItem) ||
+                                inserted ||
                                         (ModConfig.itemPickupStarOnStackIncrease && grew);
 
                         if (changed && now != null) {
-                            if (grew) {
+                            // --- Key addition: ALWAYS star damageables on insert in modded UIs too ---
+                            if (inserted && now.isItemStackDamageable()) {
                                 NBTTagCompound tag = getOrCreate(now);
                                 tag.removeTag(TAG_SEEN);
                                 tag.setBoolean(TAG_NEW, true);
                                 now.setTagCompound(tag);
-                            } else if (matchesAnyPickup(now)) {
+                            }
+                            else if (grew) {
+                                NBTTagCompound tag = getOrCreate(now);
+                                tag.removeTag(TAG_SEEN);
+                                tag.setBoolean(TAG_NEW, true);
+                                now.setTagCompound(tag);
+                            }
+                            else if (matchesAnyPickup(now)) {
                                 NBTTagCompound tag = getOrCreate(now);
                                 if (!tag.getBoolean(TAG_SEEN)) {
                                     tag.setBoolean(TAG_NEW, true);

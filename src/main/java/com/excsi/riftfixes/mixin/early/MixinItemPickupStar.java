@@ -1,7 +1,7 @@
 package com.excsi.riftfixes.mixin.early;
 
-import com.excsi.riftfixes.ModConfig;
 import com.excsi.riftfixes.Constants;
+import com.excsi.riftfixes.ModConfig;
 import com.excsi.riftfixes.net.MsgClearPickupTag;
 import com.excsi.riftfixes.net.RFNetwork;
 import net.minecraft.client.Minecraft;
@@ -23,8 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 /**
- * Draw pickup stars after glPopMatrix so we are in GUI absolute coords, and before tooltip.
- * Clear hovered slot locally and notify server to clear permanently.
+ * Draw pickup stars after GL11.glPopMatrix() so they render under the tooltip.
+ * On hover, send a server packet to clear the star (authoritative), instead of
+ * clearing locally (which gets overwritten by server resyncs when opening chests).
  */
 @Mixin(GuiContainer.class)
 public abstract class MixinItemPickupStar {
@@ -34,43 +35,63 @@ public abstract class MixinItemPickupStar {
     @Shadow public Container inventorySlots;
 
     @Unique private static final String TAG_NEW  = "riftfixes_new";
-    @Unique private static final String TAG_SEEN = "riftfixes_seen";
     @Unique private static final ResourceLocation TEX =
-            new ResourceLocation(Constants.MODID, "textures/gui/pickup_star.png");
+            new ResourceLocation(Constants.MODID, "textures/gui/pickup_star.png"); // 16x16
 
+    // Grace period so opening a GUI doesn't instantly clear hovered slot
+    @Unique private int rf$hoverClearDelayTicks = 0;
+
+    @Inject(method = "initGui()V", at = @At("RETURN"))
+    private void rf$onInitGui(CallbackInfo ci) {
+        rf$hoverClearDelayTicks = 5; // ~0.25s @ 20 TPS
+    }
+
+    /**
+     * HEAD: if the hovered slot has the star, ask the SERVER to clear it.
+     * Do NOT clear locally; let the server update propagate back.
+     */
     @Inject(method = "drawScreen(IIF)V", at = @At("HEAD"))
-    private void rf$clearHovered(int mouseX, int mouseY, float pt, CallbackInfo ci) {
+    private void rf$requestServerClearOnHover(int mouseX, int mouseY, float pt, CallbackInfo ci) {
         if (!ModConfig.enableItemPickupStar) return;
         if (inventorySlots == null || inventorySlots.inventorySlots == null) return;
 
+        if (rf$hoverClearDelayTicks > 0) {
+            rf$hoverClearDelayTicks--;
+            return;
+        }
+
         @SuppressWarnings("rawtypes")
         List slots = inventorySlots.inventorySlots;
-        for (int idx = 0; idx < slots.size(); idx++) {
-            Slot s = (Slot) slots.get(idx);
-            int x0 = guiLeft + s.xDisplayPosition;
-            int y0 = guiTop + s.yDisplayPosition;
+        for (Object o : slots) {
+            Slot s = (Slot) o;
+            final int x0 = guiLeft + s.xDisplayPosition;
+            final int y0 = guiTop  + s.yDisplayPosition;
+
             if (mouseX >= x0 && mouseY >= y0 && mouseX < x0 + 16 && mouseY < y0 + 16) {
                 ItemStack st = s.getStack();
-                if (st != null) {
-                    NBTTagCompound nbt = st.getTagCompound();
-                    if (nbt == null) nbt = new NBTTagCompound();
-                    if (nbt.getBoolean(TAG_NEW)) {
-                        nbt.removeTag(TAG_NEW);
+                if (st != null && st.hasTagCompound()) {
+                    NBTTagCompound tag = st.getTagCompound();
+                    if (tag.getBoolean(TAG_NEW)) {
+                        // Authoritative clear on the server
+                        RFNetwork.CH.sendToServer(new MsgClearPickupTag(inventorySlots.windowId, s.slotNumber));
                     }
-                    nbt.setBoolean(TAG_SEEN, true);
-                    st.setTagCompound(nbt);
-
-                    // server clear
-                    RFNetwork.CH.sendToServer(new MsgClearPickupTag(inventorySlots.windowId, idx));
                 }
-                break;
+                break; // only hovered slot
             }
         }
     }
 
+    /**
+     * AFTER glPopMatrix (absolute coords), BEFORE tooltip: draw stars.
+     */
     @Inject(
-        method = "drawScreen(IIF)V",
-        at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glPopMatrix()V", shift = At.Shift.AFTER, remap = false)
+            method = "drawScreen(IIF)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/opengl/GL11;glPopMatrix()V",
+                    shift = At.Shift.AFTER,
+                    remap = false
+            )
     )
     private void rf$drawStarsAfterPop(int mouseX, int mouseY, float pt, CallbackInfo ci) {
         if (!ModConfig.enableItemPickupStar) return;
@@ -85,7 +106,7 @@ public abstract class MixinItemPickupStar {
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         try {
             GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glDisable(GL11.GL_DEPTH_TEST); // under tooltip
             GL11.glEnable(GL11.GL_TEXTURE_2D);
             GL11.glEnable(GL11.GL_BLEND);
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -100,8 +121,8 @@ public abstract class MixinItemPickupStar {
                 NBTTagCompound tag = st.getTagCompound();
                 if (tag == null || !tag.getBoolean(TAG_NEW)) continue;
 
-                final int x = guiLeft + s.xDisplayPosition;
-                final int y = guiTop + s.yDisplayPosition;
+                int x = guiLeft + s.xDisplayPosition;
+                int y = guiTop  + s.yDisplayPosition;
 
                 t.startDrawingQuads();
                 t.addVertexWithUV(x    , y+16, 0, 0, 1);

@@ -16,10 +16,10 @@ public class RiftFixes {
     public void init(FMLInitializationEvent event) {
         com.excsi.riftfixes.net.RFNetwork.init();
 
-        // IMPORTANT: register ONLY ONCE, and only on the Forge event bus
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(
-                new com.excsi.riftfixes.server.PickupStarServerEvents()
-        );
+        final com.excsi.riftfixes.server.PickupStarServerEvents serverEvents =
+                new com.excsi.riftfixes.server.PickupStarServerEvents();
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(serverEvents);
+        cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(serverEvents);
 
         // Client-only bits via proxy (HUD + star tracker)
         proxy.initClientFeatures();
