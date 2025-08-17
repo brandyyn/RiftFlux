@@ -37,15 +37,22 @@ public class MsgClearPickupTag implements IMessage {
     public static class Handler implements IMessageHandler<MsgClearPickupTag, IMessage> {
         @Override
         public IMessage onMessage(MsgClearPickupTag msg, MessageContext ctx) {
-            EntityPlayerMP player = ctx.getServerHandler().playerEntity;
+            final EntityPlayerMP player = ctx.getServerHandler().playerEntity;
             if (player == null) return null;
 
+            // Prefer the container the client referenced, but if it changed
+            // (common race), fall back to whatever is currently open or the player inv.
             Container c = player.openContainer;
-            if (c == null || c.windowId != msg.windowId) return null;
+            if (c == null || c.windowId != msg.windowId) {
+                // Try player inventory container (windowId 0 in SP; safe fallback)
+                c = player.inventoryContainer != null ? player.inventoryContainer : player.openContainer;
+            }
+            if (c == null || c.inventorySlots == null) return null;
+
             if (msg.slotIndex < 0 || msg.slotIndex >= c.inventorySlots.size()) return null;
 
-            Slot s = (Slot) c.inventorySlots.get(msg.slotIndex);
-            ItemStack st = s.getStack();
+            final Slot s = (Slot) c.inventorySlots.get(msg.slotIndex);
+            final ItemStack st = s.getStack();
             if (st == null) return null;
 
             NBTTagCompound tag = st.getTagCompound();
