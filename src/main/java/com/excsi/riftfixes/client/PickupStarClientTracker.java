@@ -29,7 +29,7 @@ public final class PickupStarClientTracker {
     private static ItemStack[] baselineCont = null;
     private static Container   lastCont     = null;
 
-    // recent pickups queue (item+meta or wildcard for damageables)
+    // recent pickups queue (item+meta, wildcard for damageables)
     private static final Deque<PickupKey> queue = new ArrayDeque<PickupKey>();
 
     private static final class PickupKey {
@@ -40,7 +40,7 @@ public final class PickupStarClientTracker {
         boolean matches(ItemStack s){
             if (s == null) return false;
             if (s.getItem() != item) return false;
-            if (wildcardMeta || s.isItemStackDamageable()) return true; // tools/armor
+            if (wildcardMeta || s.isItemStackDamageable()) return true; // tools/armor: any damage value
             return s.getItemDamage() == meta;
         }
     }
@@ -97,27 +97,16 @@ public final class PickupStarClientTracker {
                     boolean grew     = sameItem && now.stackSize > was.stackSize;
                     boolean inserted = (now != null && was == null) || (now != null && was != null && !sameItem);
 
-                    boolean changed =
-                            inserted ||
-                                    (ModConfig.itemPickupStarOnStackIncrease && grew);
-
-                    if (changed && now != null) {
-                        // --- Key addition: ALWAYS star damageables on insert, no queue needed ---
-                        if (inserted && now.isItemStackDamageable()) {
+                    // IMPORTANT: do NOT tag on "inserted" for damageables here — that causes
+                    // stars to reappear on shift-click moves. We only tag on actual growth
+                    // (merge) or when correlating with the pickup queue.
+                    if (now != null) {
+                        if (ModConfig.itemPickupStarOnStackIncrease && grew) {
                             NBTTagCompound tag = getOrCreate(now);
                             tag.removeTag(TAG_SEEN);
                             tag.setBoolean(TAG_NEW, true);
                             now.setTagCompound(tag);
-                        }
-                        // Merge grew (new pickup merged into stack)
-                        else if (grew) {
-                            NBTTagCompound tag = getOrCreate(now);
-                            tag.removeTag(TAG_SEEN);
-                            tag.setBoolean(TAG_NEW, true);
-                            now.setTagCompound(tag);
-                        }
-                        // Normal: correlate with pickup queue
-                        else if (matchesAnyPickup(now)) {
+                        } else if (inserted && matchesAnyPickup(now)) {
                             NBTTagCompound tag = getOrCreate(now);
                             if (!tag.getBoolean(TAG_SEEN)) {
                                 tag.setBoolean(TAG_NEW, true);
@@ -155,25 +144,14 @@ public final class PickupStarClientTracker {
                         boolean grew     = sameItem && now.stackSize > was.stackSize;
                         boolean inserted = (now != null && was == null) || (now != null && was != null && !sameItem);
 
-                        boolean changed =
-                                inserted ||
-                                        (ModConfig.itemPickupStarOnStackIncrease && grew);
-
-                        if (changed && now != null) {
-                            // --- Key addition: ALWAYS star damageables on insert in modded UIs too ---
-                            if (inserted && now.isItemStackDamageable()) {
+                        // Same rule as main inv: no unconditional damageable tagging on insert.
+                        if (now != null) {
+                            if (ModConfig.itemPickupStarOnStackIncrease && grew) {
                                 NBTTagCompound tag = getOrCreate(now);
                                 tag.removeTag(TAG_SEEN);
                                 tag.setBoolean(TAG_NEW, true);
                                 now.setTagCompound(tag);
-                            }
-                            else if (grew) {
-                                NBTTagCompound tag = getOrCreate(now);
-                                tag.removeTag(TAG_SEEN);
-                                tag.setBoolean(TAG_NEW, true);
-                                now.setTagCompound(tag);
-                            }
-                            else if (matchesAnyPickup(now)) {
+                            } else if (inserted && matchesAnyPickup(now)) {
                                 NBTTagCompound tag = getOrCreate(now);
                                 if (!tag.getBoolean(TAG_SEEN)) {
                                     tag.setBoolean(TAG_NEW, true);
