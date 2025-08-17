@@ -1,22 +1,29 @@
 package com.excsi.riftfixes.server;
 
+import com.excsi.riftfixes.ModConfig;
+import com.excsi.riftfixes.net.MsgPickup;
+import com.excsi.riftfixes.net.RFNetwork;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
-import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * Server-authoritative, one-shot tagging:
+ * Server-authoritative, one-shot tagging + notifier:
  *  - Snapshot inventories exactly when pickup is fired
  *  - On next server tick, diff snapshot vs current
  *  - Star ONLY new stacks or stacks that grew
+ *  - Emit MsgPickup for each new/grew (respects config)
  * Clearing remains via MsgClearPickupTag (server).
  */
 public final class PickupStarServerEvents {
@@ -71,33 +78,44 @@ public final class PickupStarServerEvents {
         final State st = states.get(id);
         if (st == null || !st.pending) return;
 
+        boolean anyContainerChange = false;
+
         // ---- Diff main inventory (36 slots) ----
         final ItemStack[] curMain = e.player.inventory.mainInventory;
         if (curMain != null && st.baseMain != null && st.baseMain.length == curMain.length) {
             for (int i = 0; i < curMain.length; i++) {
-                tagIfNewOrGrew(curMain[i], st.baseMain[i]);
+                final ItemStack now = curMain[i];
+                final ItemStack was = st.baseMain[i];
+                final int added = tagIfNewOrGrew(now, was);
+                if (added > 0) sendNotify((EntityPlayerMP) e.player, now, added);
             }
         }
 
         // ---- Diff open container if it is still the same ----
         final Container cur = e.player.openContainer;
         if (cur != null && cur.inventorySlots != null && st.baseCont != null && cur.windowId == st.baseWinId) {
-            boolean changed = false;
             @SuppressWarnings("rawtypes")
             final List slots = cur.inventorySlots;
             if (st.baseCont.length == slots.size()) {
                 for (int i = 0; i < slots.size(); i++) {
                     final Slot s = (Slot) slots.get(i);
+
+                    // Skip player-inventory slots here to avoid double-accounting;
+                    // those were already handled in the main-inventory diff above.
+                    if (s.inventory == e.player.inventory) continue;
+
                     final ItemStack now = s.getStack();
                     final ItemStack was = st.baseCont[i];
 
-                    if (tagIfNewOrGrew(now, was)) {
+                    final int added = tagIfNewOrGrew(now, was);
+                    if (added > 0) {
+                        anyContainerChange = true;
                         s.onSlotChanged();
-                        changed = true;
+                        sendNotify((EntityPlayerMP) e.player, now, added);
                     }
                 }
             }
-            if (changed) cur.detectAndSendChanges();
+            if (anyContainerChange) cur.detectAndSendChanges();
         }
 
         // Consume snapshot
@@ -109,12 +127,15 @@ public final class PickupStarServerEvents {
 
     // ---------------- helpers ----------------
 
-    /** Tag as NEW (and clear SEEN) if now is a brand-new stack or a strict-growth from was. */
-    private static boolean tagIfNewOrGrew(ItemStack now, ItemStack was) {
-        if (now == null) return false;
+    /**
+     * Tag as NEW (and clear SEEN) if now is a brand-new stack or a strict-growth from was.
+     * Returns the number of items newly added to this slot (0 if none).
+     */
+    private static int tagIfNewOrGrew(ItemStack now, ItemStack was) {
+        if (now == null) return 0;
 
-        final boolean isNew  = (was == null);
-        final boolean grew   = (!isNew && sameStrict(was, now) && now.stackSize > was.stackSize);
+        final boolean isNew = (was == null);
+        final boolean grew  = (!isNew && sameStrict(was, now) && now.stackSize > was.stackSize);
 
         if (isNew || grew) {
             NBTTagCompound tag = now.getTagCompound();
@@ -122,9 +143,9 @@ public final class PickupStarServerEvents {
             tag.removeTag(TAG_SEEN);
             tag.setBoolean(TAG_NEW, true);
             now.setTagCompound(tag);
-            return true;
+            return isNew ? now.stackSize : (now.stackSize - was.stackSize);
         }
-        return false;
+        return 0;
     }
 
     /** Strict equality for “same stack” (item, meta, NBT), used to detect growth only. */
@@ -157,5 +178,15 @@ public final class PickupStarServerEvents {
             out[i] = (st != null) ? st.copy() : null;
         }
         return out;
+    }
+
+    /** Send the HUD message with the exact variant and amount picked. */
+    private static void sendNotify(EntityPlayerMP p, ItemStack now, int added) {
+        if (!ModConfig.enablePickupNotifier) return;
+        if (now == null || added <= 0) return;
+
+        ItemStack display = now.copy();
+        display.stackSize = added; // HUD shows "name xN" using this size
+        RFNetwork.CH.sendTo(new MsgPickup(display, added), p);
     }
 }
