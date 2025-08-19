@@ -4,6 +4,7 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 @Mod(modid = Constants.MODID, version = Constants.VERSION)
 public class RiftFixes {
@@ -20,6 +21,8 @@ public class RiftFixes {
                 new com.excsi.riftfixes.server.PickupStarServerEvents();
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(serverEvents);
         cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(serverEvents);
+        MinecraftForge.EVENT_BUS.register(new com.excsi.riftfixes.server.ChestLaunchEvents());
+
 
         // Client-only bits via proxy (HUD + star tracker)
         proxy.initClientFeatures();
