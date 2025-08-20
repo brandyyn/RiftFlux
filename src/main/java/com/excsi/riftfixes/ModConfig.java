@@ -10,6 +10,8 @@ public class ModConfig {
 
     public static boolean enableChromatiCraftMixin;
 
+    public static boolean DisableAether2Portal;
+
     public static boolean hasSound;
 
     public static boolean hasShader;
@@ -48,7 +50,7 @@ public class ModConfig {
     public static int pickupNotifyMergeWindowSeconds;    // e.g. 1
     public static float pickupNotifyFadeSeconds;         // e.g. 0.6f
     public static int pickupNotifyMaxEntries; // e.g. 50
-
+    
 
     public static void init(File file){
         config = new Configuration(file);
@@ -57,6 +59,7 @@ public class ModConfig {
 
     public static void syncConfig(){
         enableChromatiCraftMixin = config.getBoolean("ChromatiCraftMixin","general",true,"Toggles the progression effects");
+        DisableAether2Portal = config.getBoolean("MixinAetherPortal","general",true,"Disables Aether 2 Portal, used for Aether Legacy Departure");
         hasSound = config.getBoolean("SoundEffect","general",false,"Toggles progression's sound effects");
         hasShader= config.getBoolean("ShaderEffect","general",false,"Toggles progression's shader effects");
         disableStrataVents = config.getBoolean("DisableStrataVents","general",false,"Toggles GeoStrata's vent spawn");
@@ -65,24 +68,19 @@ public class ModConfig {
         changeArmorBarAmount = config.getBoolean("ChangeArmorBarAmount","general",true,
                 "Enable mixin that changes armor bar displayed amount, may affect other things");
         protectionMultiplier = config.getFloat("protectionMultiplier","general",0.5F,0.0F,1F,"Scales armor's protection(1.0 is unchanged armor)");
-
         enableChestLaunch = config.getBoolean("EnableChestLaunch","general", true,
                 "Launch entities standing on top when a chest opens.");
         chestLaunchHorizontal = (float) config.get("general", "ChestLaunchHorizontal", 5,
                 "Horizontal push strength when a chest opens. (no bounds)").getDouble(5);
         chestLaunchUpward = (float) config.get("general", "ChestLaunchUpward", 5,
                 "Upward boost when a chest opens. (no bounds)").getDouble(5);
-
         enableFullExplosionDrops = config.getBoolean(
                 "EnableFullExplosionDrops", "general", true,
                 "If true, ALL explosions drop 100% of affected blocks.");
-
         enableMeleeDamageTooltip = config.getBoolean(
                 "EnableMeleeDamageTooltip", "general", true,
                 "Replace '+X Attack Damage' with a single gray 'X.X Melee Damage' line (includes +1 base and Sharpness)."
         );
-
-
         reworkVillageGolems = config.getBoolean(
                 "ReworkVillageGolems", "general", true,
                 "Stops villager-based iron golem farms; spawns a fixed number at village worldgen."
@@ -131,7 +129,6 @@ public class ModConfig {
                 "PickupNotifierMaxEntries", "general", 50, 1, 200,
                 "Max number of pickup notifications kept on-screen at once."
         );
-
 
         config.save();
     }
