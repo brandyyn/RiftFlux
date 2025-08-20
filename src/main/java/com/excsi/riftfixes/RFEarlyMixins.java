@@ -29,18 +29,21 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinVillageGolemBlock");
             mixins.add("early.MixinStructureStartVillageSpawn");
         }
-        //if (ModConfig.enableChestLaunch)
-            //mixins.add("early.MixinBlockChestLaunch");
-        if (ModConfig.disableSleepRainClear)
+        if (ModConfig.disableSleepRainClear) {
             mixins.add("early.DisableSleepRainClear");
-        if (ModConfig.enableFullExplosionDrops)
+        }
+        if (ModConfig.enableFullExplosionDrops) {
             mixins.add("early.MixinTNT");
-        if (ModConfig.enableMeleeDamageTooltip)
+        }
+        if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
-        if (ModConfig.enableArmorMixin)
+        }
+        if (ModConfig.enableArmorMixin) {
             mixins.add("early.MixinArmorProperties");
-        if (ModConfig.changeArmorBarAmount)
+        }
+        if (ModConfig.changeArmorBarAmount) {
             mixins.add("early.MixinForgeHooks");
+        }
         if (ModConfig.enableBedChill) {
             mixins.add("early.MixinBedChill$NoSleepSkip");
             mixins.add("early.MixinBedChill$AnyTimeSleep");
