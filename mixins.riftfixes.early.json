@@ -2,8 +2,8 @@
   "required": false,
   "minVersion": "0.7.11",
   "compatibilityLevel": "JAVA_8",
-  "package": "com.excsi.riftfixes.mixin",
-  "refmap": "mixins.riftfixes.refmap.json",
+  "package": "com.voidsrift.riftflux.mixin",
+  "refmap": "mixins.riftflux.refmap.json",
   "mixins": [
     "early.MixinInventoryPlayerPickupTag"
   ],
