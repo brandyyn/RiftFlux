@@ -59,6 +59,7 @@ public class ModConfig {
     public static boolean enableStackOverflowGuard;
     public static int     stackOverflowMaxDepth;
 
+    public static boolean protectItemsFromExplosions;
 
     public static void init(File file){
         config = new Configuration(file);
@@ -161,6 +162,10 @@ public class ModConfig {
 
         stackOverflowMaxDepth = config.get("general", "StackOverflowMaxDepth", 512,
                 "Max recursion depth for World.getBlock before returning air.").getInt(512);
+
+        protectItemsFromExplosions = config.get("general", "protectItemsFromExplosions", true,
+                "Stops explosions from deleting items").getBoolean(true);
+
         config.save();
     }
 }
