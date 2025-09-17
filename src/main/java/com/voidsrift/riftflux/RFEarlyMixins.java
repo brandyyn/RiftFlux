@@ -42,6 +42,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableFullExplosionDrops) {
             mixins.add("early.MixinTNT");
         }
+        if (ModConfig.enableFullExplosionDrops) {
+            mixins.add("early.MixinRenderGlobal_ItemRenderDist");
+        }
         if (ModConfig.protectItemsFromExplosions) {
             mixins.add("early.MixinExplosionKeepItems");
         }

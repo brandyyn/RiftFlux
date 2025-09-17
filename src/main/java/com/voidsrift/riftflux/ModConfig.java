@@ -61,6 +61,10 @@ public class ModConfig {
 
     public static boolean protectItemsFromExplosions;
 
+    public static boolean enableItemRenderLimiter;
+    public static int droppedItemLimit;
+    public static int droppedItemMaxRenderDistance;
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -165,6 +169,19 @@ public class ModConfig {
 
         protectItemsFromExplosions = config.get("general", "protectItemsFromExplosions", true,
                 "Stops explosions from deleting items").getBoolean(true);
+
+        enableItemRenderLimiter = config.get("client", "enableItemRenderLimiter", true,
+                        "If true, dynamically limits how many dropped items are rendered each frame.")
+                .getBoolean(true);
+
+        droppedItemLimit = config.get("client", "droppedItemLimit", 512,
+                        "Maximum number of dropped items to render per frame. Use 2048 for 'unlimited'.")
+                .getInt(512);
+
+        droppedItemMaxRenderDistance = config.get("client", "droppedItemMaxRenderDistance", 64,
+                        "Maximum render distance for dropped items (in blocks). " +
+                                "Set to 0 or negative to disable this extra cutoff.")
+                .getInt(64);
 
         config.save();
     }
