@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,9 +32,9 @@ import java.util.UUID;
 public final class PickupStarServerEvents {
 
     private static final String TAG_NEW  = "riftflux_new";
+    private static final int    MAX_PER_TICK_KEYS = 8;
 
-    /** (item, meta) bucket ignoring NBT, used for aggregate counting */
-    static final class Key {
+    private static final class Key {
         final Item item;
         final int  meta;
         Key(Item i, int m){ item = i; meta = m; }
@@ -47,16 +48,18 @@ public final class PickupStarServerEvents {
             return (System.identityHashCode(item) * 31) ^ meta;
         }
         ItemStack toStack(int count){ return new ItemStack(item, Math.max(1, count), meta); }
-        static Key of(ItemStack s){ return new Key(s.getItem(), s.getItemDamage()); }
+
+        // >>> CHANGE: treat damageable items as damage-insensitive so durability changes
+        // don't appear as a new "added" stack during the pickup window.
+        static Key of(ItemStack s){ return new Key(s.getItem(), s.isItemStackDamageable() ? 0 : s.getItemDamage()); }
     }
 
-    /** Per-player state */
-    static final class State {
-        Map<Key,Integer> lastTotals = null;    // snapshot from END of previous tick
-        Map<Key,Integer> baseTotals = null;    // baseline used for current pending pickup window
-        final Map<Key,Integer> expect = new HashMap<Key,Integer>(); // expected adds from the pickup event
-        int retryTicks = 0;                    // how many ticks left to watch for merges
-        boolean pending = false;
+    private static final class State {
+        Map<Key,Integer> lastTotals;         // rolling snapshot (prev tick)
+        Map<Key,Integer> baseTotals;         // snapshot captured at pickup start
+        Map<Key,Integer> expect = new HashMap<Key,Integer>();  // expected adds (from the entity's stackSize)
+        boolean pending;
+        int retryTicks;
     }
 
     private final Map<UUID, State> states = new HashMap<UUID, State>();
@@ -105,12 +108,13 @@ public final class PickupStarServerEvents {
             final Map<Key,Integer> cur = totalsNow(player.openContainer, player);
 
             if (st.baseTotals != null) {
-                // Compute positive deltas by key
-                for (Map.Entry<Key,Integer> en : cur.entrySet()) {
-                    final Key k = en.getKey();
-                    final int now = en.getValue();
-                    final int was = st.baseTotals.containsKey(k) ? st.baseTotals.get(k) : 0;
-                    int delta = now - was;
+                int sent = 0;
+                for (Map.Entry<Key,Integer> ent : cur.entrySet()) {
+                    if (sent >= MAX_PER_TICK_KEYS) break;
+                    final Key k = ent.getKey();
+                    final int now = ent.getValue();
+                    final int before = st.baseTotals.containsKey(k) ? st.baseTotals.get(k) : 0;
+                    int delta = now - before;
                     if (delta <= 0) continue;
 
                     // Cap by what we expect from the pickup event (if present)
@@ -123,16 +127,17 @@ public final class PickupStarServerEvents {
                     if (delta > 0) {
                         RFNetwork.CH.sendTo(new MsgPickup(k.toStack(delta), delta), (EntityPlayerMP) player);
                         sentAny = true;
+                        sent++;
                     }
                 }
             }
 
-            // If we sent anything or we ran out of retries, finalize and clean up tags once
-            st.retryTicks--;
-            if (sentAny || st.retryTicks <= 0) {
-                stripOurTags(player.openContainer, player); // remove our server-side tag so stacks continue to merge
+            // If we sent nothing and still have retries left, wait another tick
+            if (!sentAny && st.retryTicks > 0) {
+                st.retryTicks--;
+            } else {
+                // End the pickup window and clear expectations
                 st.pending = false;
-                st.baseTotals = null;
                 st.expect.clear();
             }
 
@@ -157,7 +162,8 @@ public final class PickupStarServerEvents {
                 final Slot s = (Slot) slots.get(i);
                 if (s.inventory == p.inventory) continue; // already counted
                 final ItemStack st = s.getStack();
-                if (st != null && st.getItem() != null) accum(m, Key.of(st), st.stackSize);
+                if (st == null || st.getItem() == null || st.stackSize <= 0) continue;
+                addOne(m, st);
             }
         }
         return m;
@@ -167,13 +173,15 @@ public final class PickupStarServerEvents {
         if (arr == null) return;
         for (int i = 0; i < arr.length; i++) {
             final ItemStack st = arr[i];
-            if (st != null && st.getItem() != null) accum(m, Key.of(st), st.stackSize);
+            if (st == null || st.getItem() == null || st.stackSize <= 0) continue;
+            addOne(m, st);
         }
     }
 
-    private static void accum(Map<Key,Integer> m, Key k, int add){
-        final Integer prev = m.get(k);
-        m.put(k, prev == null ? add : (prev + add));
+    private static void addOne(Map<Key,Integer> m, ItemStack st){
+        final Key k = Key.of(st);
+        final int c = m.containsKey(k) ? m.get(k) : 0;
+        m.put(k, c + st.stackSize);
     }
 
     /** Never write tags; only remove our tag so stacks remain combinable */
@@ -192,19 +200,17 @@ public final class PickupStarServerEvents {
             for (int i = 0; i < slots.size(); i++) {
                 final Slot s = (Slot) slots.get(i);
                 final ItemStack st = s.getStack();
-                if (st != null && removeOurTag(st)) { s.onSlotChanged(); any = true; }
+                if (st != null && removeOurTag(st)) any = true;
             }
         }
-        if (any && cur != null) cur.detectAndSendChanges();
+        if (any && p.openContainer != null) p.openContainer.detectAndSendChanges();
     }
 
     private static boolean removeOurTag(ItemStack st){
-        final NBTTagCompound t = st.getTagCompound();
-        if (t != null && t.hasKey(TAG_NEW)) {
-            t.removeTag(TAG_NEW);
-            if (t.hasNoTags()) st.setTagCompound(null);
-            return true;
-        }
-        return false;
+        final NBTTagCompound tag = st.getTagCompound();
+        if (tag == null) return false;
+        if (!tag.hasKey(TAG_NEW)) return false;
+        tag.removeTag(TAG_NEW);
+        return true;
     }
 }
