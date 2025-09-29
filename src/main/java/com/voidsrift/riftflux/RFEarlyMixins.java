@@ -24,6 +24,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     @Override
     public List<String> getMixins(Set<String> loadedCoreMods) {
         List<String> mixins = new ArrayList<String>();
+        if (ModConfig.shearsDamageOnAnyBlock) {
+            mixins.add("early.MixinItemShears_DamageAnyBlock");
+        }
+        if (ModConfig.woolRequireShears) {
+            mixins.add("early.MixinBlock_WoolShearsOnly");
+        }
         if (ModConfig.enableStackOverflowGuard) {
             mixins.add("early.MixinCrashReportCategory_NoRecurse");
             mixins.add("early.MixinWorld_GetBlockDepthLimit");
