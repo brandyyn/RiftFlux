@@ -78,7 +78,7 @@ public class ModConfig {
 
         DisableAether2Portal = config.getBoolean("MixinAetherPortal","general",true,"Disables Aether 2 Portal, used for Aether Legacy Departure");
 
-        hasSound = config.getBoolean("SoundEffect","general",false,"Toggles progression's sound effects");
+        hasSound = config.getBoolean("SoundEffect","general",true,"Toggles progression's sound effects");
 
         hasShader= config.getBoolean("ShaderEffect","general",false,"Toggles progression's shader effects");
 
