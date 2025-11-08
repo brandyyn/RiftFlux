@@ -19,8 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinInventoryPlayerMergeIgnoreStarTags {
 
     private static final String TAG_NEW  = "riftflux_new";
-    private static final String TAG_SEEN = "riftflux_seen";
-
     @Shadow public ItemStack[] mainInventory;
 
     @Inject(
@@ -77,7 +75,7 @@ public abstract class MixinInventoryPlayerMergeIgnoreStarTags {
         if (tag == null) return null;
         NBTTagCompound c = (NBTTagCompound) tag.copy();
         c.removeTag(TAG_NEW);
-        c.removeTag(TAG_SEEN);
+        
         return c.hasNoTags() ? null : c;
     }
 }

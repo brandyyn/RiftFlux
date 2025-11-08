@@ -45,7 +45,7 @@ public abstract class MixinInventoryPlayerPickupTag {
             if (s != null && after > before) {
                 NBTTagCompound tag = s.getTagCompound();
                 if (tag == null) tag = new NBTTagCompound();
-                tag.removeTag("riftflux_seen");
+                
                 tag.setBoolean("riftflux_new", true);
                 s.setTagCompound(tag);
             }

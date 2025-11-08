@@ -19,7 +19,6 @@ import java.util.List;
 public final class PickupStarClientTracker {
 
     private static final String TAG_NEW  = "riftflux_new";
-    private static final String TAG_SEEN = "riftflux_seen";
     private static final int WINDOW_TICKS = 40; // ~2s
 
     // 36-slot main inv baseline
@@ -103,12 +102,12 @@ public final class PickupStarClientTracker {
                     if (now != null) {
                         if (ModConfig.itemPickupStarOnStackIncrease && grew) {
                             NBTTagCompound tag = getOrCreate(now);
-                            tag.removeTag(TAG_SEEN);
+                            
                             tag.setBoolean(TAG_NEW, true);
                             now.setTagCompound(tag);
                         } else if (inserted && matchesAnyPickup(now)) {
                             NBTTagCompound tag = getOrCreate(now);
-                            if (!tag.getBoolean(TAG_SEEN)) {
+                            if (!tag.getBoolean(TAG_NEW)) {
                                 tag.setBoolean(TAG_NEW, true);
                                 now.setTagCompound(tag);
                             }
@@ -148,12 +147,12 @@ public final class PickupStarClientTracker {
                         if (now != null) {
                             if (ModConfig.itemPickupStarOnStackIncrease && grew) {
                                 NBTTagCompound tag = getOrCreate(now);
-                                tag.removeTag(TAG_SEEN);
+                                
                                 tag.setBoolean(TAG_NEW, true);
                                 now.setTagCompound(tag);
                             } else if (inserted && matchesAnyPickup(now)) {
                                 NBTTagCompound tag = getOrCreate(now);
-                                if (!tag.getBoolean(TAG_SEEN)) {
+                                if (!tag.getBoolean(TAG_NEW)) {
                                     tag.setBoolean(TAG_NEW, true);
                                     now.setTagCompound(tag);
                                 }

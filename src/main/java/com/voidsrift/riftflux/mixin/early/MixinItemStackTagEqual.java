@@ -15,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinItemStackTagEqual {
 
     private static final String TAG_NEW  = "riftflux_new";
-    private static final String TAG_SEEN = "riftflux_seen";
-
     @Inject(
             method = "areItemStackTagsEqual(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;)Z",
             at = @At("HEAD"),
@@ -42,7 +40,7 @@ public abstract class MixinItemStackTagEqual {
         if (tag == null) return null;
         NBTTagCompound c = (NBTTagCompound) tag.copy();
         c.removeTag(TAG_NEW);
-        c.removeTag(TAG_SEEN);
+        
         return c.hasNoTags() ? null : c;
     }
 }

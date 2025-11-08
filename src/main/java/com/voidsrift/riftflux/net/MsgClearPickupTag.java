@@ -58,7 +58,7 @@ public class MsgClearPickupTag implements IMessage {
             NBTTagCompound tag = st.getTagCompound();
             if (tag == null) tag = new NBTTagCompound();
             tag.removeTag("riftflux_new");
-            tag.setBoolean("riftflux_seen", true);
+            
             st.setTagCompound(tag);
 
             s.onSlotChanged();

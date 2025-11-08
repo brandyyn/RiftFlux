@@ -39,7 +39,6 @@ public abstract class MixinItemPickupStar {
     @Shadow public Container inventorySlots;
 
     @Unique private static final String TAG_NEW  = "riftflux_new";
-    @Unique private static final String TAG_SEEN = "riftflux_seen";
     @Unique private static final ResourceLocation TEX =
             new ResourceLocation(Constants.MODID, "textures/gui/pickup_star.png"); // 16x16
 
@@ -68,7 +67,7 @@ public abstract class MixinItemPickupStar {
 
                         // 2) Local UX: clear immediately so the star vanishes this frame
                         nbt.removeTag(TAG_NEW);
-                        nbt.setBoolean(TAG_SEEN, true);
+                        
                         if (nbt.hasNoTags()) st.setTagCompound(null);
                     }
                 }
