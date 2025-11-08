@@ -33,6 +33,9 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.FixNullCrash");
             mixins.add("late.MixinMTInteractionManager");
         }
+        if(loadedMods.contains("Hats")) {
+            mixins.add("late.MixinHatsEventHandler");
+        }
         return mixins;
     }
 }
