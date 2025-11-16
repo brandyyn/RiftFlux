@@ -68,6 +68,15 @@ public class ModConfig {
     public static boolean woolRequireShears;
     public static boolean shearsDamageOnAnyBlock;
 
+    public static boolean enableNewBlockHighlight;
+
+    public static float THICKNESS;
+
+    public static float ALPHA_BASE;
+    public static boolean PULSE_ENABLED;
+    public static float PULSE_SPEED_HZ;
+
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -214,6 +223,44 @@ public class ModConfig {
         shearsDamageOnAnyBlock = config.get("general", "shearsDamageOnAnyBlock", true,
                         "If true, shears lose 1 durability when breaking any block (excluding the vanilla shears targets to avoid double damage).")
                 .getBoolean(true);
+
+        enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,
+                        "If true, replaces the original block highlight with a white pulsating cuboid highlight.")
+                .getBoolean(true);
+
+        THICKNESS = config.getFloat(
+                "BlockHighlightThickness",
+                "client",
+                0.033F,
+                0.0F,
+                1.0F,
+                "Edge thickness in world units (half in / half out around the block edges)."
+        );
+
+        ALPHA_BASE = config.getFloat(
+                "BlockHighlightBaseAlpha",
+                "client",
+                1.0F,
+                0.0F,
+                1.0F,
+                "Base alpha for the block highlight (1.0 = fully opaque)."
+        );
+
+        PULSE_ENABLED = config.get(
+                "client",
+                "BlockHighlightPulseEnabled",
+                true,
+                "If false, the block highlight will not pulsate (constant alpha)."
+        ).getBoolean(true);
+
+        PULSE_SPEED_HZ = config.getFloat(
+                "BlockHighlightPulseSpeedHz",
+                "client",
+                0.44F,
+                0.0F,
+                5.0F,
+                "Pulse speed in cycles per second. 0 = no pulsation (but PULSE_ENABLED must also be false to fully disable)."
+        );
 
         config.save();
     }

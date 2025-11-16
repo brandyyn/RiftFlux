@@ -77,6 +77,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinInventoryPlayerMergeIgnoreStarTags");
             mixins.add("early.MixinInventoryPlayerPickupTagStorePartial");
         }
+        if (ModConfig.enableNewBlockHighlight) {
+            mixins.add("early.MixinBlockHighlight");
+        }
         return mixins;
     }
 
