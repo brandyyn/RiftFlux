@@ -19,15 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Pickup notifier HUD with stable sliding + safe promotions.
+ * Pickup notifier HUD with stable sliding.
  *
- * - New/merged entries end up at the TOP OF DISPLAY (end of list).
- * - If the oldest row is mid-slide and a NEW item arrives, the oldest snaps fully back on-screen
- *   and is promoted to TOP (next tick).
- * - If a row that HAS BEGUN SLIDING gets merged (count updated), we cancel its previous slide,
- *   reset its timer, refresh TTL, and then promote — so it won't "insta-expire" later.
- * - Only the oldest row ever removes itself (after the slide finishes).
- * - No structural removals during enqueue; overflow marks a non-oldest row to expire later.
+ * - NEW items append at the top
+ * - Renamed items update the existing entry (item+meta match)
+ * - Colours: rarity colour if no custom § formatting
+ * - Fade + slide behavior intact
  */
 public final class PickupNotifierHud {
 
@@ -39,44 +36,76 @@ public final class PickupNotifierHud {
     private static final int  CYCLE_PAUSE_TICKS = 10; // ~0.5s between slides
     private static       int  pauseTicks = 0;
 
-    private static final int FIRST_DELAY_TICKS = 8; // ~0.4s dwell for first in a burst
+    private static final int FIRST_DELAY_TICKS = 8; // ~0.4s dwell for first
     private static int firstDelayTicks = 0;
 
     private static int  secToTicks(float s){ return Math.max(1, Math.round(s*20f)); }
     private static long nowMs()              { return System.nanoTime() / 1_000_000L; }
 
     private static class Entry {
-        ItemStack stack; int count; int ttl; final int slideTicks;
-        // Slide state
+        ItemStack stack;
+        int count;
+        int ttl;
+        final int slideTicks;
         boolean slidingActive = false;
         long  slideStartMs    = -1L;
         float visT            = 0f;
 
         Entry(ItemStack s, int c, int total, int slide){
-            stack = s.copy(); stack.stackSize = Math.max(1,c);
-            count = Math.max(1,c);
-            ttl   = Math.max(1,total);
+            stack = s.copy();
+            stack.stackSize = Math.max(1, c);
+            count = Math.max(1, c);
+            ttl   = Math.max(1, total);
             slideTicks = Math.max(1, Math.min(slide, total));
         }
+
         boolean shouldStartSliding(){ return ttl <= 0 && !slidingActive; }
+
         float slideTFromNow(long now){
             if (!slidingActive || slideStartMs <= 0L) return 0f;
             float durMs = slideTicks * 50f;
             float t = (now - slideStartMs) / durMs;
             return t < 0 ? 0 : (t > 1 ? 1 : t);
         }
+
+        /**
+         * Merge key:
+         *  - same item
+         *  - same damage
+         * (IGNORES NBT so renamed versions update the same entry)
+         */
         boolean sameKey(ItemStack o){
-            return o.getItem()==stack.getItem() && o.getItemDamage()==stack.getItemDamage();
+            if (o == null) return false;
+            if (o.getItem() != stack.getItem()) return false;
+            return o.getItemDamage() == stack.getItemDamage();
         }
-        String text(){ String n = stack.getDisplayName(); return count>1 ? (n+" x"+count) : n; }
+
+        /**
+         * Display name:
+         *  - uses getDisplayName() (respects anvil rename in 1.7.10)
+         *  - if no § codes, prepend rarity colour
+         *  - add " xN" for stack counts > 1
+         */
+        String text() {
+            String n = stack.getDisplayName(); // includes rename
+
+            // If no explicit colour codes, apply rarity colour to match tooltip
+            if (n.indexOf('\u00A7') < 0) {
+                EnumRarity r = stack.getItem().getRarity(stack);
+                if (r != null && r.rarityColor != null) {
+                    n = r.rarityColor.toString() + n;
+                }
+            }
+
+            return count > 1 ? (n + " x" + count) : n;
+        }
+
+        // Always white; actual colour comes from embedded § codes in text()
         int color(){
-            EnumRarity r = stack.getItem().getRarity(stack);
-            if (r == null) return 0xFFFFFF;
-            switch (r){ case uncommon: return 0xFFFF55; case rare: return 0x55FFFF; case epic: return 0xFF55FF; default: return 0xFFFFFF; }
+            return 0xFFFFFF;
         }
     }
 
-    // Pending promotions applied at a safe point (end of client tick)
     private static final ArrayList<Entry> pendingPromotions = new ArrayList<Entry>();
 
     private static int findExistingIndex(ItemStack key) {
@@ -86,34 +115,6 @@ public final class PickupNotifierHud {
         return -1;
     }
 
-    /** Oldest (smallest ttl) row, but never the bottom row (index 0). */
-    private static int indexOfOldestExcludingBottom() {
-        int best = -1, bestTtl = Integer.MAX_VALUE;
-        for (int i = 1; i < entries.size(); i++) { // start at 1 to exclude bottom row
-            final Entry e = entries.get(i);
-            if (e.ttl < bestTtl) { bestTtl = e.ttl; best = i; }
-        }
-        return best;
-    }
-
-    private static void schedulePromotion(Entry e) {
-        if (!pendingPromotions.contains(e)) pendingPromotions.add(e);
-    }
-
-    /** Pop oldest fully back on-screen & schedule promotion to TOP; refresh TTL so it doesn't instantly slide again. */
-    private static void popAndPromoteOldest(int refreshedTtl) {
-        if (entries.isEmpty()) return;
-        final Entry first = entries.get(0);
-        if (first.slidingActive || first.visT > 0f) {
-            first.slidingActive = false;
-            first.slideStartMs  = -1L;
-            first.visT          = 0f;
-        }
-        first.ttl = Math.max(1, refreshedTtl);
-        schedulePromotion(first);
-    }
-
-    /** Cancel slide & re-arm TTL for a specific entry (used when a sliding row is merged). */
     private static void resetAndRearm(Entry e, int refreshedTtl) {
         e.slidingActive = false;
         e.slideStartMs  = -1L;
@@ -121,7 +122,6 @@ public final class PickupNotifierHud {
         e.ttl           = Math.max(1, refreshedTtl);
     }
 
-    /** Add/merge an entry. Never removes here; promotion is deferred to tick safe point. */
     public static void enqueue(ItemStack display, int pickedCount) {
         if (!ModConfig.enablePickupNotifier) return;
 
@@ -131,35 +131,35 @@ public final class PickupNotifierHud {
         final boolean wasEmpty = entries.isEmpty();
         final int add = Math.max(1, pickedCount);
 
-        // MERGE with existing row (anywhere)
         int idx = findExistingIndex(display);
         if (idx >= 0) {
+            // MERGE into existing entry (item+meta match)
             final Entry e = entries.get(idx);
             e.count += add;
 
-            // ✅ If that row has begun sliding at any point, cancel its old slide & re-arm TTL
+            // Replace stored stack with the latest version (brings rename + any NBT)
+            e.stack = display.copy();
+            e.stack.stackSize = e.count;
+
             if (e.slidingActive || e.visT > 0f) {
                 resetAndRearm(e, total);
             } else {
-                e.ttl = total; // normal refresh
+                e.ttl = total;
             }
-            schedulePromotion(e);    // promote to top at safe point
+
+            // No need for promotions – your simplified layout is fine
             return;
         }
 
         // NEW ROW path
         if (entries.size() >= cap) {
-            int drop = indexOfOldestExcludingBottom();
-            if (drop >= 0) entries.get(drop).ttl = 0; // will slide when it becomes oldest
+            // expire non-bottom rows
+            for (int i = 1; i < entries.size(); i++) {
+                entries.get(i).ttl = 0;
+            }
         }
 
-        // Insert brand-new row at TOP OF DISPLAY = END OF LIST
         entries.add(new Entry(display.copy(), add, total, slide));
-
-        // If the bottom/oldest is sliding, pop it fully back and promote it to TOP too
-        if (entries.size() > 1) {
-            popAndPromoteOldest(total);
-        }
 
         if (wasEmpty) firstDelayTicks = FIRST_DELAY_TICKS;
     }
@@ -177,58 +177,33 @@ public final class PickupNotifierHud {
 
         final long now = nowMs();
 
-        // TTL runs for ALL entries every tick (non-oldest rows are NOT removed on ttl<=0)
-        for (int i = 0; i < entries.size(); i++) {
-            Entry en = entries.get(i);
+        for (Entry en : entries) {
             if (en.ttl > 0) en.ttl--;
         }
 
-        // Small extra dwell for the first in a new burst
         if (firstDelayTicks > 0 && !entries.isEmpty()) {
             entries.get(0).ttl++;
             firstDelayTicks--;
         }
 
-        if (pauseTicks > 0) { pauseTicks--; applyPromotionsSafe(); return; }
+        if (pauseTicks > 0) { pauseTicks--; return; }
 
-        // Oldest row slide lifecycle (only row that slides/removes)
-        if (!entries.isEmpty()) {
-            Entry first = entries.get(0);
+        Entry first = entries.get(0);
 
-            // Start slide when TTL hits 0
-            if (first.shouldStartSliding()) {
-                first.slidingActive = true;
-                first.slideStartMs  = now;
-                first.visT          = 0f;
-            }
-
-            // Remove after full duration
-            if (first.slidingActive) {
-                long elapsed = now - first.slideStartMs;
-                long need    = (long)(first.slideTicks * 50L);
-                if (elapsed >= need) {
-                    entries.remove(0);
-                    pauseTicks = CYCLE_PAUSE_TICKS;
-                }
-            }
+        if (first.shouldStartSliding()) {
+            first.slidingActive = true;
+            first.slideStartMs  = now;
+            first.visT          = 0f;
         }
 
-        // Apply queued promotions AFTER any removal (safe point).
-        applyPromotionsSafe();
-    }
-
-    /** Move promoted rows to TOP OF DISPLAY (end of list) without touching animation fields. */
-    private static void applyPromotionsSafe() {
-        if (pendingPromotions.isEmpty()) return;
-        for (int k = 0; k < pendingPromotions.size(); k++) {
-            final Entry e = pendingPromotions.get(k);
-            final int i = entries.indexOf(e);
-            if (i >= 0 && i != entries.size() - 1) {
-                entries.remove(i);
-                entries.add(e); // top of display = end of list
+        if (first.slidingActive) {
+            long elapsed = now - first.slideStartMs;
+            long need    = (long)(first.slideTicks * 50L);
+            if (elapsed >= need) {
+                entries.remove(0);
+                pauseTicks = CYCLE_PAUSE_TICKS;
             }
         }
-        pendingPromotions.clear();
     }
 
     private static int stableFloor(float y){
@@ -254,17 +229,15 @@ public final class PickupNotifierHud {
         final int right = sw - 4;
         final long now = nowMs();
 
-        // Update visual progress for the oldest row
-        if (pauseTicks == 0 && !entries.isEmpty()) {
-            Entry first = entries.get(0);
+        Entry first = entries.get(0);
+        if (pauseTicks == 0) {
             float tRaw = first.slideTFromNow(now);
             float eased = smootherstep(tRaw);
             if (eased < first.visT) eased = first.visT;
             first.visT = eased;
         }
-
-        final float visT = entries.isEmpty() ? 0f : entries.get(0).visT;
-        final float rowShift = visT * ROW;
+        float visT = first.visT;
+        float rowShift = visT * ROW;
 
         RenderItem ri = new RenderItem();
 
@@ -276,50 +249,34 @@ public final class PickupNotifierHud {
             GL11.glDepthMask(true);
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 
-            for (int i=0;i<entries.size();i++){
+            for (int i = 0; i < entries.size(); i++){
                 Entry en = entries.get(i);
 
                 String text = en.text();
-                int textW = Minecraft.getMinecraft().fontRenderer.getStringWidth(text);
+                int textW = mc.fontRenderer.getStringWidth(text);
                 int w = ICON + PAD + textW;
                 int x = right - w;
 
-                if (i == 0) {
-                    int baseY = sh - 4 - i * ROW;
-                    int off   = sh + ICON + 4;
-                    float y   = baseY + (off - baseY) * visT;
-                    int yBase = stableFloor(y);
-                    float yFrac = y - yBase;
+                int baseY = sh - 4 - i * ROW;
+                float y = (i == 0)
+                        ? baseY + ((sh + ICON + 4) - baseY) * visT
+                        : baseY + rowShift;
 
-                    GL11.glPushMatrix();
-                    GL11.glTranslatef(0f, yFrac, 0f);
+                int yBase = stableFloor(y);
+                float yFrac = y - yBase;
 
-                    RenderHelper.enableGUIStandardItemLighting();
-                    GL11.glEnable(GL11.GL_DEPTH_TEST);
-                    ri.renderItemAndEffectIntoGUI(Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getTextureManager(), en.stack, x, yBase - ICON);
-                    GL11.glDisable(GL11.GL_DEPTH_TEST);
-                    RenderHelper.disableStandardItemLighting();
+                GL11.glPushMatrix();
+                GL11.glTranslatef(0f, yFrac, 0f);
 
-                    Minecraft.getMinecraft().fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
-                    GL11.glPopMatrix();
-                } else {
-                    int baseY = sh - 4 - i * ROW;
-                    float y = baseY + rowShift;
-                    int yBase = stableFloor(y);
-                    float yFrac = y - yBase;
+                RenderHelper.enableGUIStandardItemLighting();
+                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                RenderHelper.disableStandardItemLighting();
 
-                    GL11.glPushMatrix();
-                    GL11.glTranslatef(0f, yFrac, 0f);
+                mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
 
-                    RenderHelper.enableGUIStandardItemLighting();
-                    GL11.glEnable(GL11.GL_DEPTH_TEST);
-                    ri.renderItemAndEffectIntoGUI(Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getTextureManager(), en.stack, x, yBase - ICON);
-                    GL11.glDisable(GL11.GL_DEPTH_TEST);
-                    RenderHelper.disableStandardItemLighting();
-
-                    Minecraft.getMinecraft().fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
-                    GL11.glPopMatrix();
-                }
+                GL11.glPopMatrix();
             }
 
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
