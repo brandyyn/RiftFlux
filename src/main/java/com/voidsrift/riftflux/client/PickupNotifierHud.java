@@ -18,14 +18,6 @@ import org.lwjgl.opengl.GL12;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Pickup notifier HUD with stable sliding.
- *
- * - NEW items append at the top
- * - Renamed items update the existing entry (item+meta match)
- * - Colours: rarity colour if no custom § formatting
- * - Fade + slide behavior intact
- */
 public final class PickupNotifierHud {
 
     private static final PickupNotifierHud INSTANCE = new PickupNotifierHud();
@@ -33,20 +25,17 @@ public final class PickupNotifierHud {
 
     private static final int ICON = 16, PAD = 2, TEXT_Y = 5, ROW = ICON + 2;
 
-    private static final int  CYCLE_PAUSE_TICKS = 10; // ~0.5s between slides
+    private static final int  CYCLE_PAUSE_TICKS = 10;
     private static       int  pauseTicks = 0;
 
-    private static final int FIRST_DELAY_TICKS = 8; // ~0.4s dwell for first
+    private static final int FIRST_DELAY_TICKS = 8;
     private static int firstDelayTicks = 0;
 
     private static int  secToTicks(float s){ return Math.max(1, Math.round(s*20f)); }
     private static long nowMs()              { return System.nanoTime() / 1_000_000L; }
 
     private static class Entry {
-        ItemStack stack;
-        int count;
-        int ttl;
-        final int slideTicks;
+        ItemStack stack; int count; int ttl; final int slideTicks;
         boolean slidingActive = false;
         long  slideStartMs    = -1L;
         float visT            = 0f;
@@ -68,28 +57,16 @@ public final class PickupNotifierHud {
             return t < 0 ? 0 : (t > 1 ? 1 : t);
         }
 
-        /**
-         * Merge key:
-         *  - same item
-         *  - same damage
-         * (IGNORES NBT so renamed versions update the same entry)
-         */
         boolean sameKey(ItemStack o){
             if (o == null) return false;
             if (o.getItem() != stack.getItem()) return false;
-            return o.getItemDamage() == stack.getItemDamage();
+            if (o.getItemDamage() != stack.getItemDamage()) return false;
+            return ItemStack.areItemStackTagsEqual(o, stack);
         }
 
-        /**
-         * Display name:
-         *  - uses getDisplayName() (respects anvil rename in 1.7.10)
-         *  - if no § codes, prepend rarity colour
-         *  - add " xN" for stack counts > 1
-         */
         String text() {
-            String n = stack.getDisplayName(); // includes rename
+            String n = stack.getDisplayName();
 
-            // If no explicit colour codes, apply rarity colour to match tooltip
             if (n.indexOf('\u00A7') < 0) {
                 EnumRarity r = stack.getItem().getRarity(stack);
                 if (r != null && r.rarityColor != null) {
@@ -100,13 +77,10 @@ public final class PickupNotifierHud {
             return count > 1 ? (n + " x" + count) : n;
         }
 
-        // Always white; actual colour comes from embedded § codes in text()
         int color(){
             return 0xFFFFFF;
         }
     }
-
-    private static final ArrayList<Entry> pendingPromotions = new ArrayList<Entry>();
 
     private static int findExistingIndex(ItemStack key) {
         for (int i = entries.size() - 1; i >= 0; i--) {
@@ -133,11 +107,9 @@ public final class PickupNotifierHud {
 
         int idx = findExistingIndex(display);
         if (idx >= 0) {
-            // MERGE into existing entry (item+meta match)
             final Entry e = entries.get(idx);
             e.count += add;
 
-            // Replace stored stack with the latest version (brings rename + any NBT)
             e.stack = display.copy();
             e.stack.stackSize = e.count;
 
@@ -147,20 +119,24 @@ public final class PickupNotifierHud {
                 e.ttl = total;
             }
 
-            // No need for promotions – your simplified layout is fine
+            // 🔥 IMPORTANT FIX —
+            // When a merged item jumps to top, force a delay like a new pickup
+            firstDelayTicks = FIRST_DELAY_TICKS;
+            pauseTicks = CYCLE_PAUSE_TICKS;
+
+            // Move to top
+            entries.remove(idx);
+            entries.add(e);
             return;
         }
 
-        // NEW ROW path
         if (entries.size() >= cap) {
-            // expire non-bottom rows
             for (int i = 1; i < entries.size(); i++) {
                 entries.get(i).ttl = 0;
             }
         }
 
         entries.add(new Entry(display.copy(), add, total, slide));
-
         if (wasEmpty) firstDelayTicks = FIRST_DELAY_TICKS;
     }
 
@@ -177,11 +153,9 @@ public final class PickupNotifierHud {
 
         final long now = nowMs();
 
-        for (Entry en : entries) {
-            if (en.ttl > 0) en.ttl--;
-        }
+        for (Entry en : entries) if (en.ttl > 0) en.ttl--;
 
-        if (firstDelayTicks > 0 && !entries.isEmpty()) {
+        if (firstDelayTicks > 0) {
             entries.get(0).ttl++;
             firstDelayTicks--;
         }
@@ -230,13 +204,14 @@ public final class PickupNotifierHud {
         final long now = nowMs();
 
         Entry first = entries.get(0);
+        float visT;
         if (pauseTicks == 0) {
             float tRaw = first.slideTFromNow(now);
             float eased = smootherstep(tRaw);
             if (eased < first.visT) eased = first.visT;
             first.visT = eased;
         }
-        float visT = first.visT;
+        visT = first.visT;
         float rowShift = visT * ROW;
 
         RenderItem ri = new RenderItem();
@@ -249,7 +224,7 @@ public final class PickupNotifierHud {
             GL11.glDepthMask(true);
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 
-            for (int i = 0; i < entries.size(); i++){
+            for (int i=0;i<entries.size();i++){
                 Entry en = entries.get(i);
 
                 String text = en.text();
