@@ -73,6 +73,8 @@ public class ModConfig {
 
     public static boolean allowPlantsOnAnyBlock;
 
+    public static boolean strictMobSpawnsZeroBlockLight;
+
     public static boolean enableNewBlockHighlight;
 
     public static float THICKNESS;
@@ -251,9 +253,18 @@ public class ModConfig {
                 "AllowPlantsOnAnyBlock",
                 "general",
                 true,
-                "If true, tall grass and all BlockBush-based plants can be placed on any block,\n" +
-                        "instead of only on grass/dirt/farmland."
+                "If true, tall grass and all BlockBush-based plants can be placed on any block instead of only on grass/dirt/farmland\n" +
+                        "Note: It does make foliage generate in the desert as a quirk of the system."
         );
+
+        strictMobSpawnsZeroBlockLight = config.getBoolean(
+                "StrictMobSpawnsZeroBlockLight",
+                "general",
+                true,
+                "If true, hostile mobs (EntityMob) may only spawn when BLOCK light level is 0.\n" +
+                        "Sky light is only used for the vanilla daytime check. Torches etc. fully prevent spawns."
+        );
+
 
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,
                         "If true, replaces the original block highlight with a white pulsating cuboid highlight.")

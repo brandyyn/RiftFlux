@@ -1,8 +1,10 @@
 package com.voidsrift.riftflux.util;
 
 /**
- * Simple shared flag to distinguish between normal placement
- * and bonemeal-driven growth.
+ * Simple shared flags to distinguish between:
+ * - bonemeal-driven growth
+ * - world generation
+ * - normal placement / survival
  */
 public class RFPlantContext {
     public static boolean bonemealPlacementActive = false;
