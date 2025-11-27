@@ -54,6 +54,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.protectItemsFromExplosions) {
             mixins.add("early.MixinExplosionKeepItems");
         }
+        if (ModConfig.disableBonemeal) {
+            mixins.add("early.MixinItemDye_DisableBonemeal");
+        }
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
         }

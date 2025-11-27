@@ -68,6 +68,9 @@ public class ModConfig {
     public static boolean woolRequireShears;
     public static boolean shearsDamageOnAnyBlock;
 
+    public static boolean disableBonemeal;
+    public static double bonemealFlowerChance;
+
     public static boolean enableNewBlockHighlight;
 
     public static float THICKNESS;
@@ -223,6 +226,24 @@ public class ModConfig {
         shearsDamageOnAnyBlock = config.get("general", "shearsDamageOnAnyBlock", true,
                         "If true, shears lose 1 durability when breaking any block (excluding the vanilla shears targets to avoid double damage).")
                 .getBoolean(true);
+
+        disableBonemeal = config.getBoolean(
+                "OverrideBonemealBehavior",
+                "general",
+                true,
+                "If true, overrides bonemeal so that it only works on grass and doesn't grow crops or trees anymore, " +
+                        "it also now spawns biome-correct foliage instead of just tall grass."
+        );
+
+        bonemealFlowerChance = config.getFloat(
+                "BonemealFlowerChance",
+                "general",
+                0.11F,   // default
+                0.0F,    // min
+                1.0F,    // max
+                "Chance between 0.0 and 1.0 that bonemeal on grass will spawn flowers.\n" +
+                        "0.0 = never, 1.0 = always when used on grass."
+        );
 
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,
                         "If true, replaces the original block highlight with a white pulsating cuboid highlight.")
