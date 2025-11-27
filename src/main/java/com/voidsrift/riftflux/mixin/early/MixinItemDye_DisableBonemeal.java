@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.RFPlantContext;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.player.EntityPlayer;
@@ -23,6 +24,7 @@ import java.util.Random;
  * - When used on grass, it has a configurable chance to trigger a vanilla-style
  *   patch growth (tall grass + biome/modded foliage).
  * - Spawns bonemeal particles in a wide area over the grass patch.
+ * - Plants grown by bonemeal still obey vanilla "must be on grass/etc." rules.
  *
  * In 1.7.10, ItemDye damage value 15 = bonemeal.
  */
@@ -53,7 +55,7 @@ public abstract class MixinItemDye_DisableBonemeal {
             return;
         }
 
-        // IMPORTANT: use the block that was actually clicked.
+        // Use the block that was actually clicked.
         Block block = world.getBlock(x, y, z);
 
         // Completely block bonemeal on anything that isn't a grass block
@@ -65,22 +67,26 @@ public abstract class MixinItemDye_DisableBonemeal {
         if (!world.isRemote) {
             Random rand = world.rand;
 
-            // NEW: spawn particles in a wider area over the grass patch
+            // Wide-area bonemeal particles, all on a single Y level and never inside blocks
             riftflux$spawnWideBonemealParticles(world, x, y, z, rand);
 
-            boolean grewSomething = false;
+            // 🔹 Consume bonemeal on EVERY valid grass use (except in creative),
+            // regardless of RNG or whether anything actually grows.
+            if (!player.capabilities.isCreativeMode) {
+                stack.stackSize--;
+            }
 
             // Only attempt growth if chance > 0
             if (ModConfig.bonemealFlowerChance > 0.0F) {
-                // Roll RNG; if it fails, we still showed particles but nothing grows
                 if (rand.nextFloat() < ModConfig.bonemealFlowerChance) {
-                    grewSomething = riftflux$growFromGrass(world, x, y, z, rand);
+                    // During bonemeal growth, use vanilla placement rules for plants.
+                    RFPlantContext.bonemealPlacementActive = true;
+                    try {
+                        riftflux$growFromGrass(world, x, y, z, rand);
+                    } finally {
+                        RFPlantContext.bonemealPlacementActive = false;
+                    }
                 }
-            }
-
-            // Only consume bonemeal if something actually grew
-            if (grewSomething && !player.capabilities.isCreativeMode) {
-                stack.stackSize--;
             }
         }
 
@@ -91,13 +97,21 @@ public abstract class MixinItemDye_DisableBonemeal {
     /**
      * Spawn bonemeal particles in a wider area above the grass patch so the
      * player can see the approximate growth range.
+     *
+     * All particles are spawned on the same Y level (y + 1), and only in air,
+     * so none end up underground / inside blocks.
      */
     private void riftflux$spawnWideBonemealParticles(World world, int x, int y, int z, Random rand) {
-        // Center-ish cloud plus some scattered around in a 7x7 area
+        int py = y + 1; // single height level for all particles
+
         for (int i = 0; i < 16; ++i) {
             int px = x + rand.nextInt(7) - 3; // -3 .. +3
             int pz = z + rand.nextInt(7) - 3;
-            int py = y + 1; // just above the grass
+
+            // Only spawn the effect if this position is air at that Y level
+            if (!world.isAirBlock(px, py, pz)) {
+                continue;
+            }
 
             world.playAuxSFX(2005, px, py, pz, 0);
         }
@@ -106,15 +120,15 @@ public abstract class MixinItemDye_DisableBonemeal {
     /**
      * Vanilla-style patch growth from a grass block:
      * - Random walk around the clicked grass.
-     * - At each valid air spot above grass/dirt:
+     * - At each valid air spot above *grass only*:
      *   * ~90%: use biome.getRandomWorldGenForGrass(...) for tall grass / modded grasslike foliage.
      *   * ~10%: use biome's flower string (func_150572_a) for flowers / modded decorations.
      *
-     * This mirrors how vanilla bonemeal on grass behaves, but restricted to grass only.
+     * Because RFPlantContext.bonemealPlacementActive = true while this runs,
+     * BlockBush uses vanilla canPlaceBlockOn, so foliage only grows on blocks
+     * vanilla would allow (e.g. grass/dirt), not stone or floating.
      */
-    private boolean riftflux$growFromGrass(World world, int x, int y, int z, Random rand) {
-        boolean placedAny = false;
-
+    private void riftflux$growFromGrass(World world, int x, int y, int z, Random rand) {
         // Similar to vanilla's 128-attempt loop
         attempts:
         for (int i = 0; i < 128; ++i) {
@@ -128,6 +142,7 @@ public abstract class MixinItemDye_DisableBonemeal {
                 gy += (rand.nextInt(3) - 1) * rand.nextInt(3) / 2;
                 gz += rand.nextInt(3) - 1;
 
+                // BELOW MUST BE GRASS, not just anything
                 if (world.getBlock(gx, gy - 1, gz) != Blocks.grass ||
                         world.getBlock(gx, gy, gz).isNormalCube()) {
                     // Skip to the next outer attempt
@@ -139,9 +154,9 @@ public abstract class MixinItemDye_DisableBonemeal {
                 continue;
             }
 
-            // We only grow on top of grass/dirt, like vanilla
+            // We only grow on top of grass (extra safety)
             Block below = world.getBlock(gx, gy - 1, gz);
-            if (below != Blocks.grass && below != Blocks.dirt) {
+            if (below != Blocks.grass) {
                 continue;
             }
 
@@ -156,7 +171,6 @@ public abstract class MixinItemDye_DisableBonemeal {
                 WorldGenerator grassGen = biome.getRandomWorldGenForGrass(rand);
                 if (grassGen != null) {
                     grassGen.generate(world, rand, gx, gy, gz);
-                    placedAny = true;
                 }
             } else {
                 // Flower/decorative path -> use biome's flower string system (supports modded flowers)
@@ -168,12 +182,9 @@ public abstract class MixinItemDye_DisableBonemeal {
 
                     if (flowerBlock.canBlockStay(world, gx, gy, gz)) {
                         world.setBlock(gx, gy, gz, flowerBlock, meta, 3);
-                        placedAny = true;
                     }
                 }
             }
         }
-
-        return placedAny;
     }
 }

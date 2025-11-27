@@ -71,6 +71,8 @@ public class ModConfig {
     public static boolean disableBonemeal;
     public static double bonemealFlowerChance;
 
+    public static boolean allowPlantsOnAnyBlock;
+
     public static boolean enableNewBlockHighlight;
 
     public static float THICKNESS;
@@ -243,6 +245,14 @@ public class ModConfig {
                 1.0F,    // max
                 "Chance between 0.0 and 1.0 that bonemeal on grass will spawn flowers.\n" +
                         "0.0 = never, 1.0 = always when used on grass."
+        );
+
+        allowPlantsOnAnyBlock = config.getBoolean(
+                "AllowPlantsOnAnyBlock",
+                "general",
+                true,
+                "If true, tall grass and all BlockBush-based plants can be placed on any block,\n" +
+                        "instead of only on grass/dirt/farmland."
         );
 
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,

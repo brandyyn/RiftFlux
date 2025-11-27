@@ -57,6 +57,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.disableBonemeal) {
             mixins.add("early.MixinItemDye_DisableBonemeal");
         }
+        if (ModConfig.allowPlantsOnAnyBlock) {
+            mixins.add("early.MixinBlockBush_AnySupport");
+        }
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
         }
