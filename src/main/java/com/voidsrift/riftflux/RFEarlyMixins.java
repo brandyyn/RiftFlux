@@ -59,6 +59,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.allowPlantsOnAnyBlock) {
             mixins.add("early.MixinBlockBush_AnySupport");
+            mixins.add("early.MixinBlock_PlayerPlacedBushMarker");
             mixins.add("early.MixinBiomeGenBase_WorldGenContext");
         }
         if (ModConfig.strictMobSpawnsZeroBlockLight) {
