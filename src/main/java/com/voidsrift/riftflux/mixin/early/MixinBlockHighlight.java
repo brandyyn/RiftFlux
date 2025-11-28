@@ -20,7 +20,7 @@ import com.voidsrift.riftflux.ModConfig;
 @Mixin(RenderGlobal.class)
 public abstract class MixinBlockHighlight {
 
-    /** Uniform polygon offset so the outline sits “on top” consistently. */
+    /** Uniform polygon offset so the outline sits on top consistently. */
     private static final float POLY_FACTOR = -2.0e-3f;
     private static final float POLY_UNITS  = -2.0e-3f;
 

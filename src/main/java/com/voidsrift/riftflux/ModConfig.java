@@ -253,8 +253,7 @@ public class ModConfig {
                 "AllowPlantsOnAnyBlock",
                 "general",
                 true,
-                "If true, tall grass and all BlockBush-based plants can be placed on any block instead of only on grass/dirt/farmland\n" +
-                        "Note: It does make foliage generate in the desert as a quirk of the system."
+                "If true, tall grass and all BlockBush-based plants can be placed on any block instead of only on grass/dirt/farmland."
         );
 
         strictMobSpawnsZeroBlockLight = config.getBoolean(

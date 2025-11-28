@@ -18,8 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 /**
- * Launch entities standing directly on top of a chest as soon as it’s activated,
- * i.e., before the GUI opens. No “must be still / onGround” requirement.
+ * Launch entities standing directly on top of a chest as soon as it’s activated
  */
 @Mixin(BlockChest.class)
 public abstract class MixinBlockChestLaunch {
@@ -41,7 +40,7 @@ public abstract class MixinBlockChestLaunch {
         final int meta = world.getBlockMetadata(x, y, z);
         double ax = 0D, az = 0D;
         switch (meta) {
-            case 2: az =  1D; break; // chest front faces -Z → push +Z (lid “opens” toward -Z, hinge at +Z)
+            case 2: az =  1D; break; // chest front faces -Z → push +Z (lid opens toward -Z, hinge at +Z)
             case 3: az = -1D; break; // front +Z → push -Z
             case 4: ax =  1D; break; // front -X → push +X
             case 5: ax = -1D; break; // front +X → push -X

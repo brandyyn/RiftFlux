@@ -16,9 +16,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Bed “chill mode” (single toggle: ModConfig.enableBedChill):
  *  - Sleep any time (ignore day)
- *  - Ignore “monsters nearby”
+ *  - Ignore monsters nearby
  *  - Ignore proximity to bed
  *  - Never skip night
  *  - No fade-to-black
@@ -41,7 +40,7 @@ public final class MixinBedChill {
     @Mixin(EntityPlayer.class)
     public static abstract class AnyTimeSleep {
 
-        /** Treat world as “not daytime” inside sleepInBedAt so bed is allowed. */
+        /** Treat world as not daytime inside sleepInBedAt so bed is allowed. */
         @Redirect(
                 method = "sleepInBedAt(III)Lnet/minecraft/entity/player/EntityPlayer$EnumStatus;",
                 at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isDaytime()Z")
@@ -80,7 +79,7 @@ public final class MixinBedChill {
         private boolean riftflux$stayInBedDuringDay(World world) {
             if (ModConfig.enableBedChill) {
                 EntityPlayer self = (EntityPlayer)(Object)this;
-                if (self.isPlayerSleeping()) return false; // “not daytime” -> don’t auto-wake
+                if (self.isPlayerSleeping()) return false;
             }
             return world.isDaytime();
         }
