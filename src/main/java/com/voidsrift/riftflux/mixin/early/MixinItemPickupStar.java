@@ -12,6 +12,8 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,8 +22,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
 /**
  * Draw pickup stars right after GL11.glPopMatrix() inside drawScreen:
  *  • Always runs (even if a subclass overrides foreground)
@@ -29,7 +29,8 @@ import java.util.List;
  *  • Tooltip renders after this, so tooltip is always on top
  *
  * Also: at HEAD, if mouse hovers a slot that has the star tag, send a server packet to clear it,
- * and clear locally for instant visual feedback.
+ * and clear locally for instant visual feedback – but only after a short, deliberate hover with
+ * no mouse buttons or modifiers held.
  */
 @Mixin(GuiContainer.class)
 public abstract class MixinItemPickupStar {
@@ -42,9 +43,19 @@ public abstract class MixinItemPickupStar {
     @Unique private static final ResourceLocation TEX =
             new ResourceLocation(Constants.MODID, "textures/gui/pickup_star.png"); // 16x16
 
+    // For "intentional hover" detection
+    @Unique private static final long HOVER_CLEAR_DELAY_MS = 20L;
+    @Unique private int rf$lastHoverIndex = -1;
+    @Unique private long rf$hoverStartMs  = 0L;
+
     /**
      * If hovering a starred slot, clear it: send MsgClearPickupTag(windowId, slotIndex) and
      * remove the tag locally to avoid any one-frame flicker.
+     *
+     * Requires:
+     *  - same slot hovered for HOVER_CLEAR_DELAY_MS
+     *  - no mouse buttons pressed
+     *  - no Shift (or Ctrl) held, so shift-clicking doesn't insta-clear stars
      */
     @Inject(method = "drawScreen(IIF)V", at = @At("HEAD"))
     private void rf$sendClearIfHovered(int mouseX, int mouseY, float pt, CallbackInfo ci) {
@@ -53,27 +64,76 @@ public abstract class MixinItemPickupStar {
 
         @SuppressWarnings("rawtypes")
         final java.util.List slots = inventorySlots.inventorySlots;
+        if (slots.isEmpty()) return;
+
+        // Find which slot (if any) is currently hovered
+        int hoveredIndex = -1;
+        Slot hoveredSlot = null;
         for (int i = 0; i < slots.size(); i++) {
             final Slot s = (Slot) slots.get(i);
             final int x0 = guiLeft + s.xDisplayPosition;
             final int y0 = guiTop  + s.yDisplayPosition;
             if (mouseX >= x0 && mouseY >= y0 && mouseX < x0 + 16 && mouseY < y0 + 16) {
-                final ItemStack st = s.getStack();
-                if (st != null && st.hasTagCompound()) {
-                    final NBTTagCompound nbt = st.getTagCompound();
-                    if (nbt.getBoolean(TAG_NEW)) {
-                        // 1) Server-authoritative clear (robust even if windowId races)
-                        RFNetwork.CH.sendToServer(new MsgClearPickupTag(inventorySlots.windowId, i));
-
-                        // 2) Local UX: clear immediately so the star vanishes this frame
-                        nbt.removeTag(TAG_NEW);
-                        
-                        if (nbt.hasNoTags()) st.setTagCompound(null);
-                    }
-                }
-                break; // only the hovered slot matters
+                hoveredIndex = i;
+                hoveredSlot = s;
+                break;
             }
         }
+
+        if (hoveredIndex < 0 || hoveredSlot == null) {
+            // Not hovering any slot; reset tracking
+            rf$lastHoverIndex = -1;
+            rf$hoverStartMs = 0L;
+            return;
+        }
+
+        final long now = Minecraft.getSystemTime();
+
+        // If we just moved onto a different slot, start a new hover timer
+        if (hoveredIndex != rf$lastHoverIndex) {
+            rf$lastHoverIndex = hoveredIndex;
+            rf$hoverStartMs = now;
+            return;
+        }
+
+        // If not hovered long enough, don't clear yet
+        if (now - rf$hoverStartMs < HOVER_CLEAR_DELAY_MS) {
+            return;
+        }
+
+        // Don't clear while actively interacting: any mouse button or modifier keys
+        if (Mouse.isButtonDown(0) || Mouse.isButtonDown(1) || Mouse.isButtonDown(2)
+                || Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)
+                || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)
+                || Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
+                || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)) {
+            // Keep bumping the timer so clear only happens after you release them
+            rf$hoverStartMs = now;
+            return;
+        }
+
+        final ItemStack st = hoveredSlot.getStack();
+        if (st == null || !st.hasTagCompound()) {
+            return;
+        }
+
+        final NBTTagCompound nbt = st.getTagCompound();
+        if (!nbt.getBoolean(TAG_NEW)) {
+            return;
+        }
+
+        // 1) Server-authoritative clear
+        RFNetwork.CH.sendToServer(new MsgClearPickupTag(inventorySlots.windowId, hoveredIndex));
+
+        // 2) Local UX: clear immediately so the star vanishes this frame
+        nbt.removeTag(TAG_NEW);
+        if (nbt.hasNoTags()) {
+            st.setTagCompound(null);
+        }
+
+        // After clearing, reset hover tracking so we don't spam packets
+        rf$lastHoverIndex = -1;
+        rf$hoverStartMs = 0L;
     }
 
     /**

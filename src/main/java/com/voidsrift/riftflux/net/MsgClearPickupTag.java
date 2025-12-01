@@ -17,49 +17,70 @@ public class MsgClearPickupTag implements IMessage {
     private int slotIndex;
 
     public MsgClearPickupTag() {}
+
     public MsgClearPickupTag(int windowId, int slotIndex) {
         this.windowId = windowId;
         this.slotIndex = slotIndex;
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
-        buf.writeInt(windowId);
-        buf.writeInt(slotIndex);
+    public void fromBytes(ByteBuf buf) {
+        this.windowId = buf.readInt();
+        this.slotIndex = buf.readInt();
     }
 
     @Override
-    public void fromBytes(ByteBuf buf) {
-        windowId = buf.readInt();
-        slotIndex = buf.readInt();
+    public void toBytes(ByteBuf buf) {
+        buf.writeInt(this.windowId);
+        buf.writeInt(this.slotIndex);
     }
 
     public static class Handler implements IMessageHandler<MsgClearPickupTag, IMessage> {
+
         @Override
         public IMessage onMessage(MsgClearPickupTag msg, MessageContext ctx) {
             final EntityPlayerMP player = ctx.getServerHandler().playerEntity;
-            if (player == null) return null;
 
-            // Prefer the container the client referenced, but if it changed
-            // (common race), fall back to whatever is currently open or the player inv.
-            Container c = player.openContainer;
-            if (c == null || c.windowId != msg.windowId) {
-                // Try player inventory container (windowId 0 in SP; safe fallback)
-                c = player.inventoryContainer != null ? player.inventoryContainer : player.openContainer;
+            // Sanity: window id must match
+            if (player == null || player.openContainer == null) {
+                return null;
             }
-            if (c == null || c.inventorySlots == null) return null;
 
-            if (msg.slotIndex < 0 || msg.slotIndex >= c.inventorySlots.size()) return null;
+            final Container c = player.openContainer;
+            if (c.windowId != msg.windowId) {
+                return null;
+            }
+
+            // Sanity: slot index must be in bounds
+            if (msg.slotIndex < 0 || msg.slotIndex >= c.inventorySlots.size()) {
+                return null;
+            }
 
             final Slot s = (Slot) c.inventorySlots.get(msg.slotIndex);
+            if (s == null) {
+                return null;
+            }
+
             final ItemStack st = s.getStack();
-            if (st == null) return null;
+            if (st == null) {
+                return null;
+            }
 
             NBTTagCompound tag = st.getTagCompound();
-            if (tag == null) tag = new NBTTagCompound();
+            // If there is no tag at all, don't create an empty one – that would leave
+            // items as <item>.withTag({}), which breaks very strict NBT mods.
+            if (tag == null) {
+                return null;
+            }
+
             tag.removeTag("riftflux_new");
-            
-            st.setTagCompound(tag);
+
+            // If removing our key leaves the compound empty, strip NBT entirely.
+            if (tag.hasNoTags()) {
+                st.setTagCompound(null);
+            } else {
+                st.setTagCompound(tag);
+            }
 
             s.onSlotChanged();
             c.detectAndSendChanges();
