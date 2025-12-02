@@ -65,6 +65,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.strictMobSpawnsZeroBlockLight) {
             mixins.add("early.MixinEntityMob_ZeroBlockLightSpawn");
         }
+        if (ModConfig.wrongUseSingleDurability) {
+            mixins.add("early.MixinItemStack_WrongUseDurability");
+        }
+        if (ModConfig.invincibleOwnedMobs ) {
+            mixins.add("early.MixinEntityLivingBase_PetInvincibility");
+        }
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
         }
@@ -90,6 +96,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.enableNewBlockHighlight) {
             mixins.add("early.MixinBlockHighlight");
+        }
+        if (ModConfig.disableSpecificPotions) {
+            mixins.add("early.MixinEntityLivingBase_DisablePotions");
         }
         return mixins;
     }

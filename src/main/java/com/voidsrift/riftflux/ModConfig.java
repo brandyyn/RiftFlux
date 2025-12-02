@@ -1,7 +1,8 @@
 package com.voidsrift.riftflux;
 
 import net.minecraftforge.common.config.Configuration;
-
+import java.util.HashSet;
+import java.util.Set;
 import java.io.File;
 
 public class ModConfig {
@@ -75,6 +76,14 @@ public class ModConfig {
 
     public static boolean strictMobSpawnsZeroBlockLight;
 
+    public static boolean wrongUseSingleDurability;
+
+    public static boolean invincibleOwnedMobs;
+
+    public static boolean invincibleOwnedAllMobs;
+
+    public static boolean invincibleRideableEntities;
+
     public static boolean enableNewBlockHighlight;
 
     public static float THICKNESS;
@@ -83,6 +92,10 @@ public class ModConfig {
     public static boolean PULSE_ENABLED;
     public static float PULSE_SPEED_HZ;
 
+    public static boolean disableSpecificPotions;
+
+    // parsed set of disabled potion IDs (e.g. 14 for invisibility)
+    private static final Set<Integer> disabledPotionIdsSet = new HashSet<Integer>();
 
     public static void init(File file){
         config = new Configuration(file);
@@ -264,6 +277,36 @@ public class ModConfig {
                         "Sky light is only used for the vanilla daytime check. Torches etc. fully prevent spawns."
         );
 
+        wrongUseSingleDurability = config.getBoolean(
+                "wrongUseSingleDurability",
+                "general",
+                true,
+                "If true, items only lose 1 durability instead of 2 " +
+                        "when used for the wrong purpose (e.g. tools hitting mobs, swords breaking blocks)."
+        );
+
+        invincibleOwnedMobs = config.getBoolean(
+                "invincibleOwnedMobs",
+                "general",
+                false,
+                "If true, all pets owned by players (IEntityOwnable with a player owner) " +
+                        "are completely invincible."
+        );
+
+        invincibleOwnedAllMobs  = config.getBoolean(
+                "invincibleOwnedAllMobs",
+                "general",
+                false,
+                "If true, ALL IEntityOwnable mobs with a player owner are invincible (includes modded summons).\n" +
+                        "If false, ONLY tamed pets (EntityTameable.isTamed and EntityHorse.isTame) owned by players are invincible."
+        );
+
+        invincibleRideableEntities  = config.getBoolean(
+                "invincibleRideableEntities",
+                "general",
+                true,
+                "If true, any entity currently being ridden by a player is completely invincible."
+        );
 
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,
                         "If true, replaces the original block highlight with a white pulsating cuboid highlight.")
@@ -303,6 +346,52 @@ public class ModConfig {
                 "Pulse speed in cycles per second. 0 = no pulsation (but PULSE_ENABLED must also be false to fully disable)."
         );
 
+        // disable specific potions on players
+        disableSpecificPotions = config.getBoolean(
+                "DisableSpecificPotions",
+                "general",
+                true,
+                "If true, potion effects IDs that are listed in 'DisabledPotionIds' will never be applied to players."
+        );
+
+        String disabledPotionIdsRaw = config.get(
+                "general",
+                "DisabledPotionIds",
+                "",
+                "Comma-separated list of potion IDs to block on players.\n" +
+                        "Example: 14 disables invisibility; '14,12' disables invisibility and fire resistance."
+        ).getString();
+
+        parseDisabledPotionIds(disabledPotionIdsRaw);
         config.save();
     }
+
+    // parse the string of IDs into a set
+    private static void parseDisabledPotionIds(String raw) {
+        disabledPotionIdsSet.clear();
+        if (raw == null) {
+            return;
+        }
+
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) {
+            return;
+        }
+
+        String[] parts = trimmed.split("[,; ]+"); // commas / semicolons / spaces
+        for (String part : parts) {
+            try {
+                int id = Integer.parseInt(part.trim());
+                disabledPotionIdsSet.add(id);
+            } catch (NumberFormatException ignored) {
+                // ignore invalid entries
+            }
+        }
+    }
+
+    // helper used by the mixin
+    public static boolean isPotionIdDisabled(int id) {
+        return disabledPotionIdsSet.contains(id);
+    }
+
 }
