@@ -36,6 +36,13 @@ public class RFLateMixins implements ILateMixinLoader {
         if(loadedMods.contains("Hats")) {
             mixins.add("late.MixinHatsEventHandler");
         }
+        if(loadedMods.contains("chocolateQuest")) {
+            mixins.add("late.MixinGameRegistry_CatchCQDivZero");
+        }
+        if(loadedMods.contains("LambdaLib")) {
+            mixins.add("late.MixinRenderImagPhaseLiquid_Optimize");
+            mixins.add("late.MixinPhaseLiquidGenerator_ChunkAligned");
+        }
         return mixins;
     }
 }
