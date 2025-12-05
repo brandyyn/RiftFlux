@@ -102,11 +102,7 @@ public abstract class MixinItemPickupStar {
         }
 
         // Don't clear while actively interacting: any mouse button or modifier keys
-        if (Mouse.isButtonDown(0) || Mouse.isButtonDown(1) || Mouse.isButtonDown(2)
-                || Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)
-                || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)
-                || Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
-                || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)) {
+        if (Mouse.isButtonDown(0) || Mouse.isButtonDown(1) || Mouse.isButtonDown(2)) {
             // Keep bumping the timer so clear only happens after you release them
             rf$hoverStartMs = now;
             return;
