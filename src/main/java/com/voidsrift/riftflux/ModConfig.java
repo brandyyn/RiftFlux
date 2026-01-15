@@ -84,6 +84,10 @@ public class ModConfig {
 
     public static boolean invincibleRideableEntities;
 
+    public static boolean disableTintedSugarcane;
+
+    public static boolean enableNetherrackTweak;
+
     public static boolean enableNewBlockHighlight;
 
     public static float THICKNESS;
@@ -344,6 +348,21 @@ public class ModConfig {
                 0.0F,
                 5.0F,
                 "Pulse speed in cycles per second. 0 = no pulsation (but PULSE_ENABLED must also be false to fully disable)."
+        );
+
+
+        disableTintedSugarcane = config.getBoolean(
+                "disableTintedSugarcane",
+                "general",
+                true,
+                "If true, disables the tinting of sugarcane, returning them to how they look in beta minecraft."
+        );
+
+        enableNetherrackTweak = config.getBoolean(
+                "enableNetherrackTweak",
+                "general",
+                true,
+                "If true, Netherrack ONLY drops when you're in the Nether."
         );
 
         // disable specific potions on players

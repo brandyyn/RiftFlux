@@ -100,6 +100,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.disableSpecificPotions) {
             mixins.add("early.MixinEntityLivingBase_DisablePotions");
         }
+        if (ModConfig.disableTintedSugarcane) {
+            mixins.add("early.MixinBlockReed");
+        }
+        if (ModConfig.enableNetherrackTweak) {
+            mixins.add("early.MixinBlock_NoNetherrackDropsOutsideNether");
+        }
         return mixins;
     }
 
