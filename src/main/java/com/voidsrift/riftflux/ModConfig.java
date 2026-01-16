@@ -98,6 +98,10 @@ public class ModConfig {
 
     public static boolean disableSpecificPotions;
 
+    public static boolean legacyBoatBuoyancy;
+    public static float legacyBoatBuoyancyStrength;
+    public static float boatsFallBreakDistance;
+
     // parsed set of disabled potion IDs (e.g. 14 for invisibility)
     private static final Set<Integer> disabledPotionIdsSet = new HashSet<Integer>();
 
@@ -363,6 +367,32 @@ public class ModConfig {
                 "general",
                 true,
                 "If true, Netherrack ONLY drops when you're in the Nether."
+        );
+        // --- Boats: configurable legacy buoyancy + fall-breaking ---
+        // Used by Rift Flux's boat mixins and intended to apply to vanilla and modded boats.
+        legacyBoatBuoyancy = config.getBoolean(
+                "legacyBoatBuoyancy",
+                "tweaks",
+                true,
+                "Restores the old Minecraft boat buoyancy; boats will not dismount riders when submerged and will try to rise back up to the water surface if pushed underwater. (applies to modded boats too)"
+        );
+
+        legacyBoatBuoyancyStrength = config.getFloat(
+                "legacyBoatBuoyancyStrength",
+                "tweaks",
+                0.33F,
+                0.0F,
+                Float.MAX_VALUE,
+                "When legacyBoatBuoyancy is enabled, controls how strongly boats rise back up toward the water surface. 0 disables the extra buoyancy strength; higher values rise faster."
+        );
+
+        boatsFallBreakDistance = config.getFloat(
+                "boatsFallBreakDistance",
+                "tweaks",
+                33.0F,
+                0.0F,
+                Float.MAX_VALUE,
+                "Fall distance (in blocks, roughly) at which boats break when landing on a solid block. Set to 0 to disable fall-breaking."
         );
 
         // disable specific potions on players

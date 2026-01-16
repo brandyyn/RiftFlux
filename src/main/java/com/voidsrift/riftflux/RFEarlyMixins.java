@@ -106,6 +106,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableNetherrackTweak) {
             mixins.add("early.MixinBlock_NoNetherrackDropsOutsideNether");
         }
+        if (ModConfig.legacyBoatBuoyancy || ModConfig.boatsFallBreakDistance > 0.0F) {
+            mixins.add("early.MixinEntityBoat_WaterClimb");
+        }
         return mixins;
     }
 
