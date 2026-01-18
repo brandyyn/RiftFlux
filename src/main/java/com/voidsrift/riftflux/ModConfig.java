@@ -102,6 +102,11 @@ public class ModConfig {
     public static float legacyBoatBuoyancyStrength;
     public static float boatsFallBreakDistance;
 
+    // Hanging ladders (place ladders downward by right-clicking an existing ladder with a ladder item)
+    public static boolean enableHangingLadders;
+    public static boolean floatingLaddersRequireSneak;
+    public static int floatingLaddersMaxScan;
+
     // parsed set of disabled potion IDs (e.g. 14 for invisibility)
     private static final Set<Integer> disabledPotionIdsSet = new HashSet<Integer>();
 
@@ -393,6 +398,30 @@ public class ModConfig {
                 0.0F,
                 Float.MAX_VALUE,
                 "Fall distance (in blocks, roughly) at which boats break when landing on a solid block. Set to 0 to disable fall-breaking."
+        );
+
+        // --- Hanging ladders & ladder movement tweaks ---
+        enableHangingLadders = config.getBoolean(
+                "enableHangingLadders",
+                "tweaks",
+                true,
+                "Enables Hanging Ladders, extend a ladder downward by right-clicking an existing ladder with another ladder also enables holding jump to climb ladders."
+        );
+
+        floatingLaddersRequireSneak = config.getBoolean(
+                "floatingLaddersRequireSneak",
+                "tweaks",
+                false,
+                "If true, you must be sneaking while right-clicking the ladder to extend it downward."
+        );
+
+        floatingLaddersMaxScan = config.getInt(
+                "floatingLaddersMaxScan",
+                "tweaks",
+                256,
+                0,
+                256,
+                "Maximum number of ladder blocks to scan downward when finding the bottom of a ladder column."
         );
 
         // disable specific potions on players

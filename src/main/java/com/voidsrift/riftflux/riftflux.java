@@ -17,14 +17,16 @@ public class riftflux {
     public void init(FMLInitializationEvent event) {
         com.voidsrift.riftflux.net.RFNetwork.init();
 
+        com.voidsrift.riftflux.tweaks.ladder.RiftFluxLadderContent.init();
+
         final com.voidsrift.riftflux.server.PickupStarServerEvents serverEvents =
                 new com.voidsrift.riftflux.server.PickupStarServerEvents();
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(serverEvents);
         cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(serverEvents);
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
 
+        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.tweaks.ladder.FloatingLadderEvents());
 
-        // Client-only bits via proxy (HUD + star tracker)
         proxy.initClientFeatures();
     }
 }
