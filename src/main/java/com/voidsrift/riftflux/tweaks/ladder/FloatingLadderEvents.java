@@ -45,87 +45,49 @@ public class FloatingLadderEvents {
         final World world = ent.worldObj;
         if (world == null) return;
 
-        // --- New behavior: require holding jump (space) to climb upward on ladders ---
-        // This avoids "climbing" just because you're inside the ladder block space.
-        if (ModConfig.enableHangingLadders) {
-            // Only apply to players; mob pathing expects vanilla ladder behavior.
-            if (!(ent instanceof EntityPlayer)) return;
-            // Enforce this only on the client. Player input (SPACE) is a client concept,
-            // and trying to gate ladder motion server-side causes desync and "can't climb" bugs.
-            if (!world.isRemote) return;
-            if (!ent.isOnLadder()) return;
-
-            final boolean jumping = riftflux.proxy != null && riftflux.proxy.isJumpKeyDown();
-
-            // Always reset fall distance when on ladders.
-            ent.fallDistance = 0.0F;
-
-            // Keep the vanilla ladder slide clamp.
-            if (ent.motionY < -0.15D) {
-                ent.motionY = -0.15D;
-            }
-
-            // Sneak to stick in place (vanilla behavior).
-            if (ent.isSneaking()) {
-                if (ent.motionY < 0.0D) ent.motionY = 0.0D;
-                // If they're sneaking and not jumping, we definitely don't want upward motion.
-                if (!jumping && ent.motionY > 0.0D) ent.motionY = 0.0D;
-                return;
-            }
-
-            if (jumping) {
-                // Holding jump ascends.
-                if (ent.motionY < 0.2D) {
-                    ent.motionY = 0.2D;
-                }
-            } else {
-                // Not holding jump: cancel any upward motion the vanilla ladder code may have applied.
-                if (ent.motionY > 0.0D) {
-                    ent.motionY = 0.0D;
-                }
-            }
-            return;
-        }
-
-        // --- Legacy behavior: allow climbing ladders from any side by "touching" the ladder plane ---
+        // Hanging ladder + ladder climbing tweak:
+        // - No horizontal slowdown ever (do NOT damp motionX/motionZ)
+        // - You only climb UP when holding SPACE
+        // - "Contact" can be either: vanilla isOnLadder() OR touching the ladder plane (back/sides)
         if (!ModConfig.enableHangingLadders) return;
 
-        // If vanilla already thinks we're on a ladder, let vanilla handle it.
-        if (ent.isOnLadder()) return;
+        // Players only (avoid breaking mob ladder AI).
+        if (!(ent instanceof EntityPlayer)) return;
 
-        // Quick reject: if they're not moving vertically and on ground, avoid work.
-        if (ent.motionY >= 0.0D && ent.onGround) return;
+        // Input exists only on the client.
+        if (!world.isRemote) return;
 
-        if (!isTouchingAnyLadder(ent)) return;
+        // Consider the player "on a ladder" if vanilla thinks so OR if they're touching any ladder plane.
+        // This restores back/side climbing without turning the entire 1x1x1 cube into a ladder.
+        final boolean contactingLadder = ent.isOnLadder() || isTouchingAnyLadder(ent);
+        if (!contactingLadder) return;
 
-        // Emulate the core ladder physics from EntityLivingBase#moveEntityWithHeading.
+        final boolean jumping = riftflux.proxy != null && riftflux.proxy.isJumpKeyDown();
+
+        // Always reset fall distance when interacting with ladders.
         ent.fallDistance = 0.0F;
 
-        // Damp horizontal drift so it feels like you're attached to the ladder.
-        ent.motionX *= 0.15D;
-        ent.motionZ *= 0.15D;
-
-        // Limit slide speed downwards.
+        // Limit slide speed downwards (vanilla ladder behavior).
         if (ent.motionY < -0.15D) {
             ent.motionY = -0.15D;
         }
 
         // Sneak to "stick" in place like vanilla ladders.
-        if (ent.isSneaking() && ent.motionY < 0.0D) {
-            ent.motionY = 0.0D;
+        if (ent.isSneaking()) {
+            if (ent.motionY < 0.0D) ent.motionY = 0.0D;
+            if (!jumping && ent.motionY > 0.0D) ent.motionY = 0.0D;
             return;
         }
 
-        // Climb by pressing forward into the ladder (mirrors how players usually climb ladders).
-        // moveForward is synced to the server for players.
-        if (ent.moveForward > 0.0F) {
+        if (jumping) {
+            // Holding SPACE climbs upward.
             if (ent.motionY < 0.2D) {
                 ent.motionY = 0.2D;
             }
-        } else if (ent.moveForward < 0.0F) {
-            // Backing away acts like descending.
-            if (ent.motionY > -0.15D) {
-                ent.motionY = -0.15D;
+        } else {
+            // Not holding SPACE: never apply upward motion.
+            if (ent.motionY > 0.0D) {
+                ent.motionY = 0.0D;
             }
         }
     }
