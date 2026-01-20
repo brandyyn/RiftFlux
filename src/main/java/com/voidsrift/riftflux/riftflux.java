@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux;
 
+import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.SidedProxy;
@@ -26,6 +27,8 @@ public class riftflux {
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
 
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.tweaks.ladder.FloatingLadderEvents());
+
+        MinecraftForge.EVENT_BUS.register(new StickTooltipHandler());
 
         proxy.initClientFeatures();
     }

@@ -35,6 +35,12 @@ public class ModConfig {
 
     public static boolean enableMeleeDamageTooltip;
 
+    // Combat tweaks
+    public static boolean enableFistDamageBoost;
+    public static float fistDamageAmount;
+    public static boolean enableStickDamageBonus;
+    public static float stickDamageBonus;
+
     public static boolean reworkVillageGolems;
     public static int initialVillageGolems;
 
@@ -151,6 +157,26 @@ public class ModConfig {
                 "EnableMeleeDamageTooltip", "general", true,
                 "Replace '+X Attack Damage' with a single gray 'X.X Melee Damage' line (includes +1 base and Sharpness)."
         );
+
+        enableFistDamageBoost = config.getBoolean(
+                "EnableFistDamageBoost", "combat", true,
+                "If true, empty-hand melee hits are boosted to at least FistDamageAmount (does not lower crit/strength hits)."
+        );
+
+        fistDamageAmount = (float) config.get(
+                "combat", "FistDamageAmount", 2.0D,
+                "Minimum damage for empty-hand melee hits when EnableFistDamageBoost is true. (no bounds)"
+        ).getDouble(2.0D);
+
+        enableStickDamageBonus = config.getBoolean(
+                "EnableStickDamageBonus", "combat", true,
+                "If true, sticks deal extra melee damage added on top of vanilla damage."
+        );
+
+        stickDamageBonus = (float) config.get(
+                "combat", "StickDamageBonus", 1.0D,
+                "Additional damage added to stick melee hits when EnableStickDamageBonus is true. (no bounds)"
+        ).getDouble(1.0D);
 
         reworkVillageGolems = config.getBoolean(
                 "ReworkVillageGolems", "general", true,

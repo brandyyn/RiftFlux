@@ -97,6 +97,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableNewBlockHighlight) {
             mixins.add("early.MixinBlockHighlight");
         }
+        if (ModConfig.enableFistDamageBoost || ModConfig.enableStickDamageBonus) {
+            mixins.add("early.MixinEntityPlayer_FistStickDamage");
+        }
         if (ModConfig.disableSpecificPotions) {
             mixins.add("early.MixinEntityLivingBase_DisablePotions");
         }
