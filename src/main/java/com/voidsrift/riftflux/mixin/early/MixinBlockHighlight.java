@@ -12,19 +12,33 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.voidsrift.riftflux.ModConfig;
 
-@Mixin(RenderGlobal.class)
+/**
+ * RiftFlux custom block outline.
+ *
+ * Angelica/Iris wraps {@code RenderGlobal#drawSelectionBox} in an outline pass (begin/end). If we cancel the
+ * method, Iris never gets to run its matching "end" call and will crash with a re-entrancy/state error.
+ *
+ * To keep the visual style identical while staying compatible, we:
+ *  - render our outline at the very start of the method (same GL state as before)
+ *  - DO NOT cancel the method
+ *  - suppress vanilla's outlined AABB call so we don't get a double outline
+ *
+ * We also use a high mixin priority so this runs before Angelica's own HEAD injections.
+ */
+@Mixin(value = RenderGlobal.class, priority = 2000)
 public abstract class MixinBlockHighlight {
 
     /** Uniform polygon offset so the outline sits on top consistently. */
     private static final float POLY_FACTOR = -2.0e-3f;
     private static final float POLY_UNITS  = -2.0e-3f;
 
-    @Inject(method = "drawSelectionBox", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "drawSelectionBox", at = @At("HEAD"))
     private void rf$continuousBeams(EntityPlayer player, MovingObjectPosition mop, int pass, float pt, CallbackInfo ci) {
         if (pass != 0 || mop == null || mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
 
@@ -99,7 +113,22 @@ public abstract class MixinBlockHighlight {
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glColor4f(1F, 1F, 1F, 1F);
 
-        ci.cancel();
+    }
+
+    /**
+     * Prevent vanilla from drawing its thin outlined AABB (we draw our own style instead).
+     * Keeping the rest of {@code drawSelectionBox} running is important for Angelica/Iris outline pass balance.
+     */
+    @Redirect(
+            method = "drawSelectionBox",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/RenderGlobal;drawOutlinedBoundingBox(Lnet/minecraft/util/AxisAlignedBB;I)V"
+            ),
+            require = 0
+    )
+    private void rf$skipVanillaOutlinedAabb(AxisAlignedBB aabb, int color) {
+        // no-op
     }
 
     /** 12 rectangular prisms centered on original edges, EXTENDED through corners → no seams. */
