@@ -199,6 +199,11 @@ public class FloatingLadderEvents {
         int y = mop.blockY;
         int z = mop.blockZ;
 
+        // Play the placement sound at the interacted ladder position
+        final int soundX = x;
+        final int soundY = y;
+        final int soundZ = z;
+
         Block target = world.getBlock(x, y, z);
         if (!(target instanceof BlockLadder)) return;
 
@@ -243,7 +248,7 @@ public class FloatingLadderEvents {
         }
 
         // Small placement sound for feedback.
-        world.playSoundEffect(x + 0.5D, placeY + 0.5D, z + 0.5D,
+        world.playSoundEffect(soundX + 0.5D, soundY + 0.5D, soundZ + 0.5D,
                 Blocks.ladder.stepSound.getStepResourcePath(),
                 (Blocks.ladder.stepSound.getVolume() + 1.0F) / 2.0F,
                 Blocks.ladder.stepSound.getPitch() * 0.8F);
