@@ -3,8 +3,8 @@ package com.voidsrift.riftflux.mixin.early;
 import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import com.voidsrift.riftflux.util.StickUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -22,7 +22,7 @@ public class MixinEntityPlayer_FistStickDamage {
         
         if (ModConfig.enableStickDamageBonus) {
             final ItemStack held = self.getHeldItem();
-            if (held != null && held.getItem() == Items.stick) {
+            if (held != null && StickUtil.isStick(held)) {
                 final float bonus = ModConfig.stickDamageBonus;
                 if (bonus != 0.0F) {
                     baseDamage += bonus;

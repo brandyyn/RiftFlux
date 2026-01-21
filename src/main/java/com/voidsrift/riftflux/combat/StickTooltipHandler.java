@@ -4,7 +4,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraft.init.Items;
+import com.voidsrift.riftflux.util.StickUtil;
 
 import com.voidsrift.riftflux.ModConfig;
 
@@ -15,7 +15,7 @@ public class StickTooltipHandler {
         ItemStack stack = event.itemStack;
         if (stack == null) return;
 
-        if (stack.getItem() != Items.stick) return;
+        if (!StickUtil.isStick(stack)) return;
         if (!ModConfig.enableStickDamageBonus) return;
 
         float bonus = ModConfig.stickDamageBonus;
@@ -24,7 +24,7 @@ public class StickTooltipHandler {
         event.toolTip.add(
                 EnumChatFormatting.GRAY + "+" +
                         (bonus % 1 == 0 ? Integer.toString((int) bonus) : Float.toString(bonus)) +
-                        " Melee Damage"
+                        " Attack Damage"
         );
     }
 }
