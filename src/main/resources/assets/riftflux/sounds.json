@@ -1,0 +1,19 @@
+{
+  "player_hurt": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "player/hit1",
+        "stream": false
+      },
+      {
+        "name": "player/hit2",
+        "stream": false
+      },
+      {
+        "name": "player/hit3",
+        "stream": false
+      }
+    ]
+  }
+}

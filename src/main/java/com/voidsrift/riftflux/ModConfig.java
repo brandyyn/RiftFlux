@@ -15,6 +15,8 @@ public class ModConfig {
 
     public static boolean hasSound;
 
+
+    public static boolean playerOnlyHurtSound;
     public static boolean hasShader;
 
     public static boolean disableStrataVents;
@@ -127,6 +129,8 @@ public class ModConfig {
         DisableAether2Portal = config.getBoolean("MixinAetherPortal","general",true,"Disables Aether 2 Portal, used for Aether Legacy Departure");
 
         hasSound = config.getBoolean("SoundEffect","general",true,"Toggles progression's sound effects");
+
+        playerOnlyHurtSound = config.getBoolean("PlayerOnlyHurtSound","general",true,"Uses RiftFlux's custom hurt sound, this uses the original OOF hurt sound but was made so that modded mobs and player hurt sound are separated.");
 
         hasShader= config.getBoolean("ShaderEffect","general",false,"Toggles progression's shader effects");
 

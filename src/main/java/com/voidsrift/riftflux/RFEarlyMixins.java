@@ -115,6 +115,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.legacyBoatBuoyancy || ModConfig.boatsFallBreakDistance > 0.0F) {
             mixins.add("early.MixinEntityBoat_WaterClimb");
         }
+        if (ModConfig.playerOnlyHurtSound && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            mixins.add("early.MixinEntityPlayer_CustomHurtSound");
+        }
         return mixins;
     }
 
