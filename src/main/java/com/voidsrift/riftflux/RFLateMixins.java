@@ -43,6 +43,27 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.MixinRenderImagPhaseLiquid_Optimize");
             mixins.add("late.MixinPhaseLiquidGenerator_ChunkAligned");
         }
+
+        // --- Unconfigurable late mixins (disable third-party network checks / log spam) ---
+        if (loadedMods.contains("iChunUtil")) {
+            mixins.add("late.ichun.ichunutil.MixinThreadGetPatrons");
+            mixins.add("late.ichun.ichunutil.MixinModVersionChecker");
+        }
+
+        if (loadedMods.contains("XaeroMinimap") || loadedMods.contains("XaeroWorldMap")) {
+            mixins.add("late.xaero.patreon.MixinPatreon7");
+        }
+        if (loadedMods.contains("XaeroMinimap")) {
+            mixins.add("late.xaero.minimap.MixinInternet");
+        }
+        if (loadedMods.contains("XaeroWorldMap")) {
+            mixins.add("late.xaero.worldmap.MixinInternet");
+        }
+
+        if (loadedMods.contains("ExtraUtilities")) {
+            mixins.add("late.extrautilities.MixinEnderConstructorRecipesHandler");
+        }
+
         return mixins;
     }
 }
