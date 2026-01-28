@@ -16,6 +16,9 @@ public class ClientProxy extends CommonProxy {
     }
     @Override
     public void initClientFeatures() {
+        // Register NEI handler tab icon
+        com.voidsrift.riftflux.nei.GTNHNeiHandlerInfo.register();
+
         // Hanging ladders: double-sided renderer (used by Hanging Ladder block)
         if (ModConfig.enableHangingLadders && RFRenderIds.doubleSidedLadderRenderId < 0) {
             RFRenderIds.doubleSidedLadderRenderId = RenderingRegistry.getNextAvailableRenderId();
