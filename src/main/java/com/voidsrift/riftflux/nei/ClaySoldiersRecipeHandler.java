@@ -85,6 +85,18 @@ public class ClaySoldiersRecipeHandler extends TemplateRecipeHandler {
         String wantTeam = getTeamNameForStack(result);
         Item dollSoldier = registryItem("dollSoldier");
 
+        // Always show the base Clay Soldiers recipe (Soul Sand + Clay Block -> 4x clay soldiers)
+        // even when pressing R on a specific dyed/team-colored doll.
+        if (dollSoldier != null && result.getItem() == dollSoldier) {
+            if (wantTeam == null || !"clay".equals(wantTeam)) {
+                CachedRecipe base = buildBaseClaySoldiersRecipe(dollSoldier);
+                if (base != null) {
+                    this.arecipes.add(base);
+                }
+            }
+        }
+
+
         for (CachedRecipe r : buildAllRecipes()) {
             PositionedStack psOut = r.getResult();
             ItemStack out = psOut != null ? psOut.item : null;
@@ -159,6 +171,7 @@ public void loadUsageRecipes(String inputId, Object... ingredients) {
         if (this.cachedAll != null) {
             return this.cachedAll;
         }
+
         if (!isClaySoldiersPresent()) {
             this.cachedAll = Collections.emptyList();
             return this.cachedAll;
@@ -225,8 +238,24 @@ public void loadUsageRecipes(String inputId, Object... ingredients) {
         return this.cachedAll;
     }
 
+    private CachedRecipe buildBaseClaySoldiersRecipe(Item dollSoldier) {
+        if (dollSoldier == null) {
+            return null;
+        }
+
+        // Soul Sand + Clay Block -> 4x Clay Soldiers (team: clay)
+        ItemStack out = new ItemStack(dollSoldier, 4, 0);
+        out = setTeamForItem("clay", out);
+
+        ItemStack soulSand = new ItemStack(Blocks.soul_sand, 1, 0);
+        ItemStack clayBlock = new ItemStack(Blocks.clay, 1, 0);
+
+        return buildShapeless(out, soulSand, clayBlock);
+    }
+
     private void addSoldierDyeRecipes(List<CachedRecipe> out) {
         Item dollSoldier = registryItem("dollSoldier");
+
         if (dollSoldier == null) return;
 
         ItemStack baseDoll = stack(dollSoldier, 1, OreDictionary.WILDCARD_VALUE);
