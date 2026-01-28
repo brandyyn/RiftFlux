@@ -44,7 +44,7 @@ public abstract class MixinItemPickupStar {
             new ResourceLocation(Constants.MODID, "textures/gui/pickup_star.png"); // 16x16
 
     // For "intentional hover" detection
-    @Unique private static final long HOVER_CLEAR_DELAY_MS = 20L;
+    @Unique private static final long HOVER_CLEAR_DELAY_MS = 10L;
     @Unique private int rf$lastHoverIndex = -1;
     @Unique private long rf$hoverStartMs  = 0L;
 
