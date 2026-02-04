@@ -99,6 +99,8 @@ public class ModConfig {
     public static boolean disableTintedSugarcane;
 
     public static boolean enableNetherrackTweak;
+    public static boolean enableDoorAirPlacement;
+    public static boolean enablePodzolDirtTexture;
 
     public static boolean enableNewBlockHighlight;
 
@@ -439,6 +441,20 @@ public class ModConfig {
                 "general",
                 true,
                 "If true, Netherrack ONLY drops when you're in the Nether."
+        );
+
+        enableDoorAirPlacement = config.getBoolean(
+                "enableDoorAirPlacement",
+                "general",
+                false,
+                "If true, doors can be placed without a solid block below and will not break if their support is removed, this allows you to place doors ontop of things like stairs."
+        );
+
+        enablePodzolDirtTexture = config.getBoolean(
+                "enablePodzolDirtTexture",
+                "general",
+                false,
+                "If true, podzol uses riftflux:dirt on the bottom, and when a podzol block is below another podzol it uses riftflux:dirt on all faces. Mycelium also uses riftflux:dirt on the bottom."
         );
         // --- Boats: configurable legacy buoyancy + fall-breaking ---
         // Used by Rift Flux's boat mixins and intended to apply to vanilla and modded boats.

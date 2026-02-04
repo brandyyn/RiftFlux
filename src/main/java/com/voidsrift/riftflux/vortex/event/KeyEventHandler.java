@@ -34,7 +34,6 @@ public class KeyEventHandler {
     private static int lastCycleIndex = -1;
     private static boolean registered = false;
 
-    /** Registers OA keybindings. Safe to call multiple times. */
     public static void registerKeyBindings() {
         if (registered) return;
         try {

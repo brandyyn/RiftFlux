@@ -110,6 +110,14 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableNetherrackTweak) {
             mixins.add("early.MixinBlock_NoNetherrackDropsOutsideNether");
         }
+        if (ModConfig.enableDoorAirPlacement) {
+            mixins.add("early.MixinBlockDoor_AirPlacement");
+            mixins.add("early.MixinItemDoor_ReplaceTallGrass");
+        }
+        if (ModConfig.enablePodzolDirtTexture && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            mixins.add("early.MixinBlockDirt_PodzolTextures");
+            mixins.add("early.MixinBlockMycelium_BottomDirtTexture");
+        }
         if (ModConfig.enableHangingLadders) {
             mixins.add("early.MixinEntityLivingBase_NoLadderWalkSlowdown");
         }

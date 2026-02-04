@@ -14,7 +14,6 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraftforge.common.MinecraftForge;
@@ -57,10 +56,6 @@ public final class vortexContent {
         }
     }
 
-    /**
-     * Called from RiftFlux' client proxy to register OA client-only hooks.
-     * Safe to call multiple times.
-     */
     public static void initClient() {
         if (clientHooksRegistered) {
             return;
