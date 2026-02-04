@@ -115,6 +115,14 @@ public final class PickupStarServerEvents {
         }
 
         st.lastTotals = cur; // always update
+
+        if (ModConfig.itemPickupStarClearHeldItem) {
+            clearStarTag(player.getCurrentEquippedItem());
+        }
+
+        if (ModConfig.itemPickupStarClearOnLeaveInventory) {
+            clearStarsInNonPlayerSlots(player.openContainer, player);
+        }
     }
 
     // ---- inventory aggregation ----
@@ -148,5 +156,28 @@ public final class PickupStarServerEvents {
     private static void addOne(Map<Key,Integer> m, ItemStack st){
         final Key k = Key.of(st);
         m.put(k, m.getOrDefault(k, 0) + st.stackSize);
+    }
+
+    private static void clearStarsInNonPlayerSlots(Container cont, EntityPlayer p) {
+        if (cont == null || cont.inventorySlots == null) return;
+        @SuppressWarnings("rawtypes")
+        final List slots = cont.inventorySlots;
+        for (int i = 0; i < slots.size(); i++) {
+            final Slot s = (Slot) slots.get(i);
+            if (s.inventory == p.inventory) continue;
+            clearStarTag(s.getStack());
+        }
+    }
+
+    private static void clearStarTag(ItemStack st) {
+        if (st == null) return;
+        NBTTagCompound tag = st.getTagCompound();
+        if (tag == null || !tag.getBoolean(TAG_NEW)) return;
+        tag.removeTag(TAG_NEW);
+        if (tag.hasNoTags()) {
+            st.setTagCompound(null);
+        } else {
+            st.setTagCompound(tag);
+        }
     }
 }

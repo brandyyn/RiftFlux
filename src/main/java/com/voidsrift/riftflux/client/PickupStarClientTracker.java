@@ -138,6 +138,13 @@ public final class PickupStarClientTracker {
                         Slot s = (Slot) slots.get(i);
                         ItemStack now = s.getStack();
                         ItemStack was = baselineCont[i];
+                        boolean isPlayerSlot = (s.inventory == p.inventory);
+
+                        if (!isPlayerSlot && ModConfig.itemPickupStarClearOnLeaveInventory) {
+                            clearStarTagLocal(now);
+                            baselineCont[i] = copy(now);
+                            continue;
+                        }
 
                         boolean sameItem = (now != null && was != null && sameItem(was, now));
                         boolean grew     = sameItem && now.stackSize > was.stackSize;
@@ -170,6 +177,13 @@ public final class PickupStarClientTracker {
             baselineCont = null;
             lastCont = null;
         }
+
+        if (ModConfig.itemPickupStarClearHeldItem) {
+            int heldIndex = p.inventory.currentItem;
+            if (heldIndex >= 0 && heldIndex < p.inventory.mainInventory.length) {
+                clearStarTagLocal(p.inventory.mainInventory[heldIndex]);
+            }
+        }
     }
 
     private static boolean matchesAnyPickup(ItemStack s){
@@ -182,6 +196,18 @@ public final class PickupStarClientTracker {
         NBTTagCompound tag = st.getTagCompound();
         if (tag == null) tag = new NBTTagCompound();
         return tag;
+    }
+
+    private static void clearStarTagLocal(ItemStack st) {
+        if (st == null) return;
+        NBTTagCompound tag = st.getTagCompound();
+        if (tag == null || !tag.getBoolean(TAG_NEW)) return;
+        tag.removeTag(TAG_NEW);
+        if (tag.hasNoTags()) {
+            st.setTagCompound(null);
+        } else {
+            st.setTagCompound(tag);
+        }
     }
 
     private static ItemStack copy(ItemStack in){ return in!=null ? in.copy() : null; }

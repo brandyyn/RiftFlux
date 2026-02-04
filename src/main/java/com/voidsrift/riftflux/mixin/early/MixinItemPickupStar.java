@@ -132,6 +132,33 @@ public abstract class MixinItemPickupStar {
         rf$hoverStartMs = 0L;
     }
 
+    @Inject(method = "onGuiClosed()V", at = @At("HEAD"))
+    private void rf$clearStarsOnClose(CallbackInfo ci) {
+        if (!ModConfig.enableItemPickupStar) return;
+        if (!ModConfig.itemPickupStarClearOnInventoryClose) return;
+        if (inventorySlots == null || inventorySlots.inventorySlots == null) return;
+
+        @SuppressWarnings("rawtypes")
+        final java.util.List slots = inventorySlots.inventorySlots;
+        if (slots.isEmpty()) return;
+
+        for (int i = 0; i < slots.size(); i++) {
+            final Slot s = (Slot) slots.get(i);
+            final ItemStack st = s.getStack();
+            if (st == null || !st.hasTagCompound()) continue;
+
+            final NBTTagCompound nbt = st.getTagCompound();
+            if (!nbt.getBoolean(TAG_NEW)) continue;
+
+            RFNetwork.CH.sendToServer(new MsgClearPickupTag(inventorySlots.windowId, i));
+
+            nbt.removeTag(TAG_NEW);
+            if (nbt.hasNoTags()) {
+                st.setTagCompound(null);
+            }
+        }
+    }
+
     /**
      * Draw ALL stars immediately AFTER the GUI pops its matrix (i.e., back to absolute coords)
      * and BEFORE vanilla renders the tooltip. This is robust across overrides/OptiFine.

@@ -53,6 +53,9 @@ public class ModConfig {
     // Item pickup star (client)
     public static boolean enableItemPickupStar;
     public static boolean itemPickupStarOnStackIncrease; // highlight simple count increases too?
+    public static boolean itemPickupStarClearHeldItem;
+    public static boolean itemPickupStarClearOnLeaveInventory;
+    public static boolean itemPickupStarClearOnInventoryClose;
 
     public static boolean enablePickupNotifier;
     public static int pickupNotifyDurationSeconds;       // e.g. 3
@@ -223,6 +226,21 @@ public class ModConfig {
         itemPickupStarOnStackIncrease = config.getBoolean(
                 "ItemPickupStarOnStackIncrease", "general", true,
                 "Also show the star when a stack increases (same item, higher count). If false, only new/different stacks are highlighted."
+        );
+
+        itemPickupStarClearHeldItem = config.getBoolean(
+                "ItemPickupStarClearHeldItem", "general", true,
+                "If true, items currently held in your hand (selected hotbar slot) immediately lose the pickup star."
+        );
+
+        itemPickupStarClearOnLeaveInventory = config.getBoolean(
+                "ItemPickupStarClearOnLeaveInventory", "general", true,
+                "If true, pickup stars are removed as soon as items leave your inventory (moved to other containers or dropped)."
+        );
+
+        itemPickupStarClearOnInventoryClose = config.getBoolean(
+                "ItemPickupStarClearOnInventoryClose", "general", false,
+                "If true, closing an inventory GUI clears pickup stars for items in that container."
         );
 
         enablePickupNotifier = config.getBoolean(
@@ -517,7 +535,7 @@ public class ModConfig {
         butterflyKnifeBackstabDamage = config.getFloat(
                 "butterflyKnifeBackstabDamage",
                 "vortex",
-                454.0F,
+                45.0F,
                 0.0F,
                 Float.MAX_VALUE,
                 "Damage dealt on a successful backstab (sneak attack from behind, ignores armor)."
