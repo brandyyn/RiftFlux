@@ -27,6 +27,11 @@ public abstract class MixinArmorProperties {
       remap = false
    )
    private static void onApplyArmor(EntityLivingBase entity, ItemStack[] inventory, DamageSource source, double damage, CallbackInfoReturnable<Float> ci, ArrayList dmgVals, ArmorProperties[] props, int level, double ratio, ArmorProperties[] var10, int var11, int var12, ArmorProperties prop, double absorb, ItemStack stack, int itemDamage) {
-      MinecraftForge.EVENT_BUS.post(new LivingDestroyArmorEvent(entity, stack));
+      if (stack != null) {
+         int max = stack.getMaxDamage();
+         if (max > 0 && itemDamage > 0 && stack.getItemDamage() + itemDamage >= max) {
+            MinecraftForge.EVENT_BUS.post(new LivingDestroyArmorEvent(entity, stack));
+         }
+      }
    }
 }

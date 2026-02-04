@@ -18,6 +18,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
+import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerUseItemEvent.Finish;
 import net.minecraftforge.event.entity.player.PlayerUseItemEvent.Tick;
@@ -31,6 +32,7 @@ import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
 import com.voidsrift.riftflux.vortex.lib.helper.WorldHelper;
 import com.voidsrift.riftflux.vortex.network.ModPackets;
 import com.voidsrift.riftflux.vortex.network.PacketWorldDataSync;
+import com.voidsrift.riftflux.ModConfig;
 
 /**
  * Event handler ported from vortex.
@@ -42,6 +44,7 @@ public class EntityEventHandler {
 
     private static final float bandTrigger = 8.0F;
     private static final float bandSave = 1.0F;
+    private static final String TAG_DROPPED_ON_BREAK = "rf_bp_dropped";
 
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
@@ -94,7 +97,11 @@ public class EntityEventHandler {
     public void onLivingDestroyArmor(LivingDestroyArmorEvent event) {
         EntityLivingBase wearer = event.entityLiving;
         ItemStack armor = event.armor;
-        if (armor != null && armor.getItem() == ModItems.backpack) {
+        if (armor != null && armor.getItem() == ModItems.backpack && ModConfig.backpackDurability) {
+            NBTTagCompound tag = armor.getTagCompound();
+            if (tag != null && tag.getBoolean(TAG_DROPPED_ON_BREAK)) {
+                return;
+            }
             InventoryBackpack backpack = ContainerHelper.getBackpackInventory(armor);
 
             for (int i = 0; i < backpack.getSizeInventory(); ++i) {
@@ -104,6 +111,36 @@ public class EntityEventHandler {
                     backpack.setInventorySlotContents(i, (ItemStack) null);
                 }
             }
+            if (tag == null) {
+                tag = new NBTTagCompound();
+                armor.setTagCompound(tag);
+            }
+            tag.setBoolean(TAG_DROPPED_ON_BREAK, true);
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerDestroyItem(PlayerDestroyItemEvent event) {
+        if (event == null || event.entityPlayer == null) return;
+        ItemStack stack = event.original;
+        if (stack != null && stack.getItem() == ModItems.backpack && ModConfig.backpackDurability) {
+            NBTTagCompound tag = stack.getTagCompound();
+            if (tag != null && tag.getBoolean(TAG_DROPPED_ON_BREAK)) {
+                return;
+            }
+            InventoryBackpack backpack = ContainerHelper.getBackpackInventory(stack);
+            for (int i = 0; i < backpack.getSizeInventory(); ++i) {
+                ItemStack itemStack = backpack.getStackInSlot(i);
+                if (itemStack != null) {
+                    event.entityPlayer.entityDropItem(itemStack.copy(), 0.0F);
+                    backpack.setInventorySlotContents(i, (ItemStack) null);
+                }
+            }
+            if (tag == null) {
+                tag = new NBTTagCompound();
+                stack.setTagCompound(tag);
+            }
+            tag.setBoolean(TAG_DROPPED_ON_BREAK, true);
         }
     }
 

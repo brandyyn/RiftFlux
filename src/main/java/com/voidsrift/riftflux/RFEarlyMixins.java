@@ -138,6 +138,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         mixins.add("early.vortex.MixinEntityPlayer");
         mixins.add("early.vortex.MixinInventoryPlayerBackpackPickup");
         mixins.add("early.vortex.MixinItemStackCustomGlint");
+        mixins.add("early.vortex.MixinItemStack_BackpackBreakDrop");
         mixins.add("early.vortex.MixinRenderItem");
         mixins.add("early.vortex.MixinWorld");
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
