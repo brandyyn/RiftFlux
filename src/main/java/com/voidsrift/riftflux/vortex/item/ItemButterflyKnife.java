@@ -48,10 +48,10 @@ public class ItemButterflyKnife extends ItemSword {
    public ItemStack onItemRightClick(ItemStack p_77659_1_, World p_77659_2_, EntityPlayer p_77659_3_) {
       if (p_77659_2_ != null) {
          long until = p_77659_2_.getTotalWorldTime() + FLICK_TICKS;
-         if (p_77659_1_.stackTagCompound == null) {
-            p_77659_1_.setTagCompound(new net.minecraft.nbt.NBTTagCompound());
-         }
-         p_77659_1_.stackTagCompound.setLong(TAG_FLICK_UNTIL, until);
+         net.minecraft.nbt.NBTTagCompound tag = p_77659_1_.getTagCompound();
+         tag = (tag == null) ? new net.minecraft.nbt.NBTTagCompound() : (net.minecraft.nbt.NBTTagCompound) tag.copy();
+         tag.setLong(TAG_FLICK_UNTIL, until);
+         p_77659_1_.setTagCompound(tag);
          if (!p_77659_2_.isRemote) {
             p_77659_2_.playSoundAtEntity(p_77659_3_, "riftflux:butterflyknife_flick", 0.6F, 1.0F);
          }
@@ -111,14 +111,18 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
 
    @SideOnly(Side.CLIENT)
    private static boolean isFlickActive(ItemStack stack) {
-      if (stack == null || stack.stackTagCompound == null) return false;
-      if (!stack.stackTagCompound.hasKey(TAG_FLICK_UNTIL, 4)) return false;
+      if (stack == null) return false;
+      net.minecraft.nbt.NBTTagCompound tag = stack.getTagCompound();
+      if (tag == null || !tag.hasKey(TAG_FLICK_UNTIL, 4)) return false;
       if (Minecraft.getMinecraft() == null || Minecraft.getMinecraft().theWorld == null) return false;
       long now = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
-      if (now > stack.stackTagCompound.getLong(TAG_FLICK_UNTIL)) {
-         stack.stackTagCompound.removeTag(TAG_FLICK_UNTIL);
-         if (stack.stackTagCompound.hasNoTags()) {
-            stack.stackTagCompound = null;
+      if (now > tag.getLong(TAG_FLICK_UNTIL)) {
+         net.minecraft.nbt.NBTTagCompound copy = (net.minecraft.nbt.NBTTagCompound) tag.copy();
+         copy.removeTag(TAG_FLICK_UNTIL);
+         if (copy.hasNoTags()) {
+            stack.setTagCompound(null);
+         } else {
+            stack.setTagCompound(copy);
          }
          return false;
       }
@@ -126,13 +130,17 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
    }
 
    private static void clearFlickTagIfExpired(ItemStack stack, World world) {
-      if (stack.stackTagCompound == null) return;
-      if (!stack.stackTagCompound.hasKey(TAG_FLICK_UNTIL, 4)) return;
+      if (stack == null) return;
+      net.minecraft.nbt.NBTTagCompound tag = stack.getTagCompound();
+      if (tag == null || !tag.hasKey(TAG_FLICK_UNTIL, 4)) return;
       long now = world.getTotalWorldTime();
-      if (now > stack.stackTagCompound.getLong(TAG_FLICK_UNTIL)) {
-         stack.stackTagCompound.removeTag(TAG_FLICK_UNTIL);
-         if (stack.stackTagCompound.hasNoTags()) {
-            stack.stackTagCompound = null;
+      if (now > tag.getLong(TAG_FLICK_UNTIL)) {
+         net.minecraft.nbt.NBTTagCompound copy = (net.minecraft.nbt.NBTTagCompound) tag.copy();
+         copy.removeTag(TAG_FLICK_UNTIL);
+         if (copy.hasNoTags()) {
+            stack.setTagCompound(null);
+         } else {
+            stack.setTagCompound(copy);
          }
       }
    }
