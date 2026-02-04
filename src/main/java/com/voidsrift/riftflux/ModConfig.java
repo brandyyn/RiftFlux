@@ -540,9 +540,9 @@ public class ModConfig {
                 "butterflyKnifeDurability",
                 "vortex",
                 333,
-                1,
+                0,
                 32767,
-                "Max durability for the butterfly knife."
+                "Max durability for the butterfly knife. Set to 0 for infinite durability."
         );
 
         butterflyKnifeDamage = config.getFloat(

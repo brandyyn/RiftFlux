@@ -113,6 +113,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableDoorAirPlacement) {
             mixins.add("early.MixinBlockDoor_AirPlacement");
             mixins.add("early.MixinItemDoor_ReplaceTallGrass");
+            mixins.add("early.MixinBlock_DoorShiftOnReplaceable");
         }
         if (ModConfig.enablePodzolDirtTexture && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("early.MixinBlockDirt_PodzolTextures");

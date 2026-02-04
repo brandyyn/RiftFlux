@@ -21,7 +21,10 @@ public class ModItems {
    public static ArmorMaterial BACKPACK;
 
    public static final void init() {
-      int knifeDurability = Math.max(1, com.voidsrift.riftflux.ModConfig.butterflyKnifeDurability);
+      int knifeDurability = com.voidsrift.riftflux.ModConfig.butterflyKnifeDurability;
+      if (knifeDurability < 0) {
+         knifeDurability = 0;
+      }
       float knifeDamage = com.voidsrift.riftflux.ModConfig.butterflyKnifeDamage;
       float materialDamage = knifeDamage - 4.0F;
       BUTTERFLYKNIFE = EnumHelper.addToolMaterial("butterflyknife", 3, knifeDurability, 15.0F, materialDamage, 7);
