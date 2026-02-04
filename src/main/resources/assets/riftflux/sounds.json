@@ -15,5 +15,92 @@
         "stream": false
       }
     ]
-  }
+  },
+
+ "backstab": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "backstab",
+      "stream": false
+    }
+  ]
+},
+
+  "horn": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "horn",
+      "stream": false
+    }
+  ]
+},
+
+  "shield_block": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "shield_block",
+      "stream": false
+    }
+  ]
+},
+
+  "heartbeat": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "heartbeat",
+      "stream": false
+    }
+  ]
+},
+  "craftstart": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "craftstart",
+      "stream": false
+    }
+  ]
+},
+  "hhon": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "hhon",
+      "stream": false
+    }
+  ]
+},
+  "shock1": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "shock1",
+      "stream": false
+    }
+  ]
+},
+
+  "butterflyknife_flick": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "butterflyknife_flick",
+      "stream": false
+    }
+  ]
+},
+
+  "static": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "static",
+      "stream": true
+    }
+  ]
+}
 }

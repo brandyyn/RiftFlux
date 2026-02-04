@@ -118,6 +118,19 @@ public class ModConfig {
     // parsed set of disabled potion IDs (e.g. 14 for invisibility)
     private static final Set<Integer> disabledPotionIdsSet = new HashSet<Integer>();
 
+    // vortex configs
+    public static boolean enableUnloader;
+    public static int unloaderSeconds;
+    public static int[] unloaderBlacklistedDimensions;
+    public static int butterflyKnifeDurability;
+    public static float butterflyKnifeDamage;
+    public static float butterflyKnifeBackstabDamage;
+    public static boolean backpackStorage;
+    public static boolean backpackDurability;
+    public static int backpackDurabilityAmount;
+    public static int backpackArmorPoints;
+    public static boolean GluttonyCharm;
+
     public static void init(File file){
         config = new Configuration(file);
         syncConfig();
@@ -471,6 +484,61 @@ public class ModConfig {
         ).getString();
 
         parseDisabledPotionIds(disabledPotionIdsRaw);
+
+        //vortex configs
+
+        enableUnloader = config.getBoolean("EnableUnloader", "vortex", true,
+                "Enable the Unloader port.");
+        unloaderSeconds = config.getInt("UnloaderSeconds", "vortex", 120, 10, 1800,
+                "Number of seconds for Unloader to unload unused dimensions.");
+
+        unloaderBlacklistedDimensions = config.get("vortex", "UnloaderBlacklistedDimensions",
+                new int[]{-1, 0, 1},
+                "Dimension IDs that should never be unloaded. Default: -1 (Nether), 0 (Overworld), 1 (End)").getIntList();
+
+        butterflyKnifeDurability = config.getInt(
+                "butterflyKnifeDurability",
+                "vortex",
+                333,
+                1,
+                32767,
+                "Max durability for the butterfly knife."
+        );
+
+        butterflyKnifeDamage = config.getFloat(
+                "butterflyKnifeDamage",
+                "vortex",
+                4.0F,
+                0.0F,
+                Float.MAX_VALUE,
+                "Normal melee damage dealt by the butterfly knife (+1 base damage before enchantments)."
+        );
+
+        butterflyKnifeBackstabDamage = config.getFloat(
+                "butterflyKnifeBackstabDamage",
+                "vortex",
+                454.0F,
+                0.0F,
+                Float.MAX_VALUE,
+                "Damage dealt on a successful backstab (sneak attack from behind, ignores armor)."
+        );
+
+        backpackStorage = config.getBoolean("backpackStorage", "vortex", true,
+                "Allows the backpack to be unequipped while containing items.");
+
+        backpackDurability = config.getBoolean("backpackDurability", "vortex", false,
+                "If true, the backpack uses durability. The max durability is exactly backpackDurabilityAmount.\n" +
+                        "If false, the backpack has no durability.");
+
+        backpackDurabilityAmount = config.getInt("backpackDurabilityAmount", "vortex", 512, 1, 4096,
+                "Exact max durability for the backpack when backpackDurability is true (e.g., 1234). Default: 512.");
+
+        backpackArmorPoints = config.getInt("backpackArmorPoints", "vortex", 2, 0, 20,
+                "Armor points granted by the backpack (0 = no armor).");
+
+        GluttonyCharm = config.getBoolean("GluttonyCharm", "vortex", false,
+                "Gives the gluttony charm an autofeeding functionality. Right-click to put in food items.");
+
         config.save();
     }
 

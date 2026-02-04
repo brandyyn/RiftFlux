@@ -1,0 +1,159 @@
+package com.voidsrift.riftflux.vortex.event;
+
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+
+import java.util.Random;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
+import net.minecraft.item.EnumAction;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerDropsEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerUseItemEvent.Finish;
+import net.minecraftforge.event.entity.player.PlayerUseItemEvent.Tick;
+
+import com.voidsrift.riftflux.vortex.entity.EntityDeathRune;
+import com.voidsrift.riftflux.vortex.item.ModItems;
+import com.voidsrift.riftflux.vortex.lib.container.InventoryBackpack;
+import com.voidsrift.riftflux.vortex.lib.event.LivingDestroyArmorEvent;
+import com.voidsrift.riftflux.vortex.lib.helper.ContainerHelper;
+import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
+import com.voidsrift.riftflux.vortex.lib.helper.WorldHelper;
+import com.voidsrift.riftflux.vortex.network.ModPackets;
+import com.voidsrift.riftflux.vortex.network.PacketWorldDataSync;
+
+/**
+ * Event handler ported from vortex.
+ *
+ * Nutrition functionality was intentionally removed.
+ */
+public class EntityEventHandler {
+    private final Random rand = new Random();
+
+    private static final float bandTrigger = 8.0F;
+    private static final float bandSave = 1.0F;
+
+    @SubscribeEvent
+    public void onLivingHurt(LivingHurtEvent event) {
+        if (!event.entity.worldObj.isRemote) {
+            Entity target = event.entity;
+            Entity attacker = event.source.getEntity();
+
+
+            if (target instanceof EntityPlayer) {
+                EntityPlayer player = (EntityPlayer) target;
+                float currentHealth = player.getHealth();
+                if (ItemHelper.hasBauble(player, ModItems.focusBand)
+                        && currentHealth >= bandTrigger
+                        && event.ammount >= currentHealth) {
+                    event.ammount = currentHealth - bandSave;
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onLivingDeath(LivingDeathEvent event) {
+        if (!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.entityLiving;
+            boolean consumed = player.inventory.consumeInventoryItem(ModItems.runeThanatos)
+                    || ItemHelper.consumeBauble(player, ModItems.runeThanatos);
+            if (consumed) {
+                if (player.worldObj.getWorldInfo().isHardcoreModeEnabled()) {
+                    WorldHelper.setPlayerHCRevive(player, true);
+                    ModPackets.instance.sendTo(
+                            new PacketWorldDataSync(WorldHelper.getGlobalCustomData(player.worldObj).getData()),
+                            (EntityPlayerMP) player);
+                }
+
+                // Prevent death and 'consume' the lethal hit.
+                event.setCanceled(true);
+                player.setHealth(Math.max(1.0F, player.getMaxHealth() * 0.25F));
+                player.extinguish();
+                player.fallDistance = 0.0F;
+                player.hurtResistantTime = 40;
+
+                EntityDeathRune rune = new EntityDeathRune(player);
+                rune.setPosition(player.posX, player.posY + 1.6D, player.posZ);
+                player.worldObj.spawnEntityInWorld(rune);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onLivingDestroyArmor(LivingDestroyArmorEvent event) {
+        EntityLivingBase wearer = event.entityLiving;
+        ItemStack armor = event.armor;
+        if (armor != null && armor.getItem() == ModItems.backpack) {
+            InventoryBackpack backpack = ContainerHelper.getBackpackInventory(armor);
+
+            for (int i = 0; i < backpack.getSizeInventory(); ++i) {
+                ItemStack itemStack = backpack.getStackInSlot(i);
+                if (itemStack != null) {
+                    wearer.entityDropItem(itemStack.copy(), 0.0F);
+                    backpack.setInventorySlotContents(i, (ItemStack) null);
+                }
+            }
+        }
+    }
+
+
+    @SubscribeEvent
+    public void onPlayerDrops(PlayerDropsEvent event) {
+        if (!event.entity.worldObj.isRemote && event.source.getEntity() instanceof EntityPlayer) {
+            EntityPlayer attacker = (EntityPlayer) event.source.getEntity();
+            EntityPlayer target = event.entityPlayer;
+            if (ItemHelper.hasArmor(attacker, ModItems.highlandSpirit, 1)) {
+                attacker.heal(20.0F);
+                event.entity.worldObj.playSoundAtEntity(attacker, "mob.wither.shoot", 0.5F, 0.4F);
+                int n = this.rand.nextInt(5);
+                if (n == 0) {
+                    ItemStack head = new ItemStack(Items.skull, 1, 3);
+                    NBTTagCompound name = new NBTTagCompound();
+                    name.setString("SkullOwner", target.getDisplayName());
+                    head.setTagCompound(name);
+                    EntityItem headDrop = new EntityItem(target.getEntityWorld(), target.posX, target.posY, target.posZ, head);
+                    event.drops.add(headDrop);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedIn(PlayerLoggedInEvent event) {
+        if (!event.player.worldObj.isRemote) {
+            EntityPlayer player = event.player;
+            ModPackets.instance.sendTo(
+                    new PacketWorldDataSync(WorldHelper.getGlobalCustomData(player.worldObj).getData()),
+                    (EntityPlayerMP) player);
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerUseItemEventTick(Tick event) {
+        EntityPlayer player = event.entityPlayer;
+        ItemStack itemStack = event.item;
+        if (ItemHelper.hasBauble(player, ModItems.gluttonyCharm)
+                && (itemStack.getItemUseAction() == EnumAction.eat || itemStack.getItemUseAction() == EnumAction.drink)) {
+            event.duration = 0;
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerUseItemFinish(Finish event) {
+    }
+
+    @SubscribeEvent
+    public void onPlayerInteract(PlayerInteractEvent event) {
+    }
+}

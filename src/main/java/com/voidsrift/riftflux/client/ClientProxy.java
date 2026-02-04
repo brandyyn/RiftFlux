@@ -33,5 +33,7 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enableItemPickupStar) {
             PickupStarClientTracker.bootstrap();
         }
+        com.voidsrift.riftflux.vortex.vortexContent.initClient();
+
     }
 }

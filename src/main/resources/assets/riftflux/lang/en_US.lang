@@ -1,3 +1,34 @@
-# RiftFlux
+item.butterflyknife.name=Butterfly Knife
+item.focusband.name=Focus Band
+item.highlandspirit.name=The Highland Spirit
+item.toolbelt.name=Toolbelt
+item.runethanatos.name=Rune of Thanatos
+item.partyhat.name=Party Hat
+item.backpack.name=Backpack
+item.gluttonycharm.name=Gluttony Charm
+item.glintrune_0.name=White Rune
+item.glintrune_1.name=Orange Rune	
+item.glintrune_2.name=Magenta Rune
+item.glintrune_3.name=Light Blue Rune
+item.glintrune_4.name=Yellow Rune
+item.glintrune_5.name=Lime Rune
+item.glintrune_6.name=Pink Rune
+item.glintrune_7.name=Gray Rune
+item.glintrune_8.name=Light Gray Rune
+item.glintrune_9.name=Cyan Rune
+item.glintrune_10.name=Purple Rune
+item.glintrune_11.name=Blue Rune
+item.glintrune_12.name=Brown Rune
+item.glintrune_13.name=Green Rune
+item.glintrune_14.name=Red Rune
+item.glintrune_15.name=Black Rune
+item.glintrune_16.name=Null Rune
+
+potion.headbuff=Highlander
+
+entity.riftflux.RuneThanatos.name=Rune of Thanatos
+
+gui.runegameover.blurb1=...or can you?
+gui.runegameover.blurb2=You feel the anchor of the rune...
 
 tile.riftflux.floating_ladder.name=Hanging Ladder

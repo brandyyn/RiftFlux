@@ -1,0 +1,130 @@
+package com.voidsrift.riftflux.mixin.early.vortex;
+
+import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemDye;
+import net.minecraft.item.ItemStack;
+import com.voidsrift.riftflux.vortex.lib.helper.EnchantHelper;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Pseudo
+@Mixin(targets = {"ItemRendererOF"}, remap = false)
+public abstract class MixinItemRendererOF {
+   private static boolean hasCustomGlint;
+   private static int customGlint;
+   private static float[] customColors = new float[3];
+   private static boolean doSubtract;
+   private static boolean doNull;
+
+   @Inject(
+      method = {"ItemRendererOF.renderItem(Lnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;I)V", "func_78443_a"},
+      at = {@At("HEAD")},
+      remap = false
+   )
+   public void onRenderItem(EntityLivingBase par1EntityLivingBase, ItemStack par2ItemStack, int par3, CallbackInfo ci) {
+      hasCustomGlint = false;
+      doSubtract = false;
+      doNull = false;
+      if (par2ItemStack != null && par2ItemStack.hasTagCompound() && par2ItemStack.getTagCompound().hasKey("customGlint")) {
+         hasCustomGlint = par2ItemStack.getTagCompound().hasKey("customGlint");
+         if (hasCustomGlint) {
+            customGlint = par2ItemStack.getTagCompound().getInteger("customGlint");
+            switch(customGlint) {
+            case 7:
+               customColors[0] = 0.36F;
+               customColors[1] = 0.36F;
+               customColors[2] = 0.36F;
+               doSubtract = true;
+               break;
+            case 8:
+               customColors[0] = 0.36F;
+               customColors[1] = 0.36F;
+               customColors[2] = 0.36F;
+               break;
+            case 9:
+            case 10:
+            case 14:
+            default:
+               if (customGlint >= 0 && customGlint <= 15) {
+                  customColors = EnchantHelper.generateColorsForGlint(ItemDye.field_150922_c[15 - customGlint]);
+               } else {
+                  customColors = EnchantHelper.generateColorsForGlint(customGlint);
+               }
+               break;
+            case 11:
+               customColors[0] = 0.72F;
+               customColors[1] = 0.39F;
+               customColors[2] = 0.02F;
+               doSubtract = true;
+               break;
+            case 12:
+               customColors[0] = 0.35F;
+               customColors[1] = 0.48F;
+               customColors[2] = 0.57F;
+               doSubtract = true;
+               break;
+            case 13:
+               customColors[0] = 0.54F;
+               customColors[1] = 0.22F;
+               customColors[2] = 0.57F;
+               doSubtract = true;
+               break;
+            case 15:
+               customColors[0] = 0.52F;
+               customColors[1] = 0.52F;
+               customColors[2] = 0.52F;
+               doSubtract = true;
+               break;
+            case 16:
+               customColors[0] = 0.0F;
+               customColors[1] = 0.0F;
+               customColors[2] = 0.0F;
+               doNull = true;
+            }
+         }
+      }
+
+   }
+
+   @Redirect(
+      slice = @Slice(
+   from = @At(
+   value = "INVOKE",
+   target = "org/lwjgl/opengl/GL11.glColor4f(FFFF)V"
+)
+),
+      method = {"ItemRendererOF.renderItem(Lnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;I)V", "func_78443_a"},
+      at = @At(
+   value = "INVOKE",
+   target = "func_78439_a"
+),
+      remap = false
+   )
+   public void onRenderItemIn2D(Tessellator p_78439_0_, float p_78439_1_, float p_78439_2_, float p_78439_3_, float p_78439_4_, int p_78439_5_, int p_78439_6_, float p_78439_7_) {
+      if (hasCustomGlint) {
+         if (!doNull) {
+            if (doSubtract) {
+               GL14.glBlendEquation(32779);
+            }
+
+            GL11.glColor4f(customColors[0], customColors[1], customColors[2], 1.0F);
+            ItemRenderer.renderItemIn2D(p_78439_0_, p_78439_1_, p_78439_2_, p_78439_3_, p_78439_4_, p_78439_5_, p_78439_6_, p_78439_7_);
+            if (doSubtract) {
+               GL14.glBlendEquation(32774);
+            }
+         }
+      } else {
+         ItemRenderer.renderItemIn2D(p_78439_0_, p_78439_1_, p_78439_2_, p_78439_3_, p_78439_4_, p_78439_5_, p_78439_6_, p_78439_7_);
+      }
+
+   }
+}

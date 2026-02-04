@@ -64,6 +64,11 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.extrautilities.MixinEnderConstructorRecipesHandler");
         }
 
+        // vortex mixins
+        if (loadedMods.contains("Thaumcraft")) {
+            mixins.add("late.vortex.MixinInfusionEnchantmentRecipe");
+        }
+
         return mixins;
     }
 }

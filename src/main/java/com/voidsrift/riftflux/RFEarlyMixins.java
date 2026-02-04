@@ -118,6 +118,27 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.playerOnlyHurtSound && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("early.MixinEntityPlayer_CustomHurtSound");
         }
+
+        // vortex mixins (always enabled)
+        mixins.add("early.vortex.MixinArmorProperties");
+        mixins.add("early.vortex.MixinBlockLiquid");
+        mixins.add("early.vortex.MixinContainer");
+        mixins.add("early.vortex.MixinEnchantmentHelper");
+        mixins.add("early.vortex.MixinEntityItemBackpackPickup");
+        mixins.add("early.vortex.MixinEntityPlayer");
+        mixins.add("early.vortex.MixinInventoryPlayerBackpackPickup");
+        mixins.add("early.vortex.MixinItemStackCustomGlint");
+        mixins.add("early.vortex.MixinRenderItem");
+        mixins.add("early.vortex.MixinWorld");
+        if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            mixins.add("early.vortex.MixinGuiContainer");
+            mixins.add("early.vortex.MixinGuiInventory");
+            mixins.add("early.vortex.MixinGuiScreen");
+            mixins.add("early.vortex.MixinItemRenderer");
+            mixins.add("early.vortex.MixinItemRendererOF");
+            mixins.add("early.vortex.MixinRendererLivingEntity");
+        }
+
         return mixins;
     }
 
