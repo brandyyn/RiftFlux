@@ -32,6 +32,9 @@ public class ClientProxy extends CommonProxy {
         // Stars (tag new items so the GUI mixin can draw)
         if (ModConfig.enableItemPickupStar) {
             PickupStarClientTracker.bootstrap();
+            if (ModConfig.itemPickupStarShowHotbarHud) {
+                PickupStarHotbarHud.bootstrap();
+            }
         }
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
 

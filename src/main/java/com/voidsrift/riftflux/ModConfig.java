@@ -56,6 +56,7 @@ public class ModConfig {
     public static boolean itemPickupStarClearHeldItem;
     public static boolean itemPickupStarClearOnLeaveInventory;
     public static boolean itemPickupStarClearOnInventoryClose;
+    public static boolean itemPickupStarShowHotbarHud;
 
     public static boolean enablePickupNotifier;
     public static int pickupNotifyDurationSeconds;       // e.g. 3
@@ -241,6 +242,11 @@ public class ModConfig {
         itemPickupStarClearOnInventoryClose = config.getBoolean(
                 "ItemPickupStarClearOnInventoryClose", "general", false,
                 "If true, closing an inventory GUI clears pickup stars for items in that container."
+        );
+
+        itemPickupStarShowHotbarHud = config.getBoolean(
+                "ItemPickupStarShowHotbarHud", "general", true,
+                "If true, show pickup stars on the in-game hotbar HUD."
         );
 
         enablePickupNotifier = config.getBoolean(
