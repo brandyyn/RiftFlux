@@ -84,6 +84,7 @@ public class ModConfig {
     public static String zyinItemSelectorMode;
     public static boolean zyinItemSelectorSideButtons;
     public static int zyinItemSelectorHudOffsetY;
+    public static boolean zyinItemSelectorIncludeHotbar;
 
     // Dual Hotbar
     public static boolean dualHotbarEnable;
@@ -446,10 +447,10 @@ public class ModConfig {
         zyinItemSelectorTimeout = config.getInt(
                 "ItemSelectorTimeout",
                 "itemselector",
-                900,
+                1200,
                 0,
                 2000,
-                "How many ticks until the item selector confirms your choice and performs the item swap."
+                "How many ticks the item selector overlay stays visible before it disappears."
         );
 
         zyinItemSelectorMode = config.getString(
@@ -469,10 +470,17 @@ public class ModConfig {
         zyinItemSelectorHudOffsetY = config.getInt(
                 "ItemSelectorHudOffsetY",
                 "itemselector",
-                0,
+                24,
                 -2000,
                 2000,
                 "Pixels to move the item selector overlay up (positive moves up)."
+        );
+
+        zyinItemSelectorIncludeHotbar = config.getBoolean(
+                "ItemSelectorIncludeHotbar",
+                "itemselector",
+                true,
+                "If true, include hotbar rows in the item selector overlay and selection."
         );
 
         dualHotbarEnable = config.getBoolean(

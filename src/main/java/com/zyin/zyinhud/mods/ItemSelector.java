@@ -80,6 +80,7 @@ public class ItemSelector extends ZyinHUDModBase
 	 */
 	public static boolean UseMouseSideButtons;
 	public static int HudYOffset;
+	public static boolean IncludeHotbar;
 
 	private static final ResourceLocation widgetTexture = new ResourceLocation("textures/gui/widgets.png");
 
@@ -88,8 +89,8 @@ public class ItemSelector extends ZyinHUDModBase
 
 	protected static int timeout;
 	public static final int defaultTimeout = 900;
-	public static final int minTimeout = 900;
-	public static final int maxTimeout = 900;
+	public static final int minTimeout = 0;
+	public static final int maxTimeout = 2000;
 
 	private static int[] slotMemory = new int[InventoryPlayer.getHotbarSize()];
 	private static int ticksToShow = 0;
@@ -115,13 +116,15 @@ public class ItemSelector extends ZyinHUDModBase
 			currentInventory = mc.thePlayer.inventory.mainInventory.clone();
 		}
 
+		int hotbarColumn = getHotbarColumn(currentHotbarSlot);
+
 		if (!AdjustSlot(direction))
 		{
 			Done();
 			return;
 		}
 
-		slotMemory[currentHotbarSlot] = targetInvSlot;
+		slotMemory[hotbarColumn] = targetInvSlot;
 
 		scrollAmount++;
 		ticksToShow = timeout;
@@ -137,10 +140,11 @@ public class ItemSelector extends ZyinHUDModBase
 	{
 		currentHotbarSlot = mc.thePlayer.inventory.currentItem;
 		currentInventory = mc.thePlayer.inventory.mainInventory.clone();
+		int hotbarColumn = getHotbarColumn(currentHotbarSlot);
 
 		if (AdjustSlot(direction))
 		{
-			slotMemory[currentHotbarSlot] = targetInvSlot;
+			slotMemory[hotbarColumn] = targetInvSlot;
 			SelectItem();
 		}
 		else
@@ -165,41 +169,53 @@ public class ItemSelector extends ZyinHUDModBase
 			}
 		}
 
-		int memory = slotMemory[currentHotbarSlot];	//'memory' is where the cursor was last located for this particular hotbar slot
+		int hotbarColumn = getHotbarColumn(currentHotbarSlot);
+		int memory = slotMemory[hotbarColumn];	//'memory' is where the cursor was last located for this particular hotbar slot
+		int[] displayOrder = buildDisplayOrder(currentInventory);
+		if (displayOrder.length == 0)
+		{
+			return false;
+		}
 
-		int hotbarColumn = currentHotbarSlot % 9;
-		for (int i = 0; i < 36; i++)
+		int position = findDisplayIndex(displayOrder, memory);
+		if (position < 0 || position >= displayOrder.length)
+			position = direction == WHEEL_DOWN ? 0 : displayOrder.length - 1;
+
+		targetInvSlot = -1;
+		for (int i = 0; i < displayOrder.length; i++)
 		{
 			// This complicated bit of logic allows for side button mechanism to
 			// go back and forth without skipping
 			// slots
 			if (scrollAmount != 0 || previousDir == direction)
-				memory += direction;
+				position += direction;
 
-			if (memory < 9 || memory >= 36)
-				memory = direction == WHEEL_DOWN ? 9 : 35;
+			if (position < 0 || position >= displayOrder.length)
+				position = direction == WHEEL_DOWN ? 0 : displayOrder.length - 1;
 
 			previousDir = direction;
 
-			if (Mode == Modes.SAME_COLUMN && memory % 9 != hotbarColumn)
+			int candidate = displayOrder[position];
+
+			if (Mode == Modes.SAME_COLUMN && candidate % 9 != hotbarColumn)
 				continue;
 
-			if (currentInventory[memory] == null)
+			if (candidate == currentHotbarSlot)
+				continue;
+
+			if (currentInventory[candidate] == null)
 				continue;
 
 			if (!mc.isSingleplayer()
-					&& currentInventory[memory].isItemEnchanted())
+					&& currentInventory[candidate].isItemEnchanted())
 				continue;
 
-			targetInvSlot = memory;
+			targetInvSlot = candidate;
 			break;
 		}
 
 		if (targetInvSlot == -1)
-		{
-			ZyinHUDUtil.DisplayNotification(Localization.get("itemselector.error.empty"));
 			return false;
-		}
 		else
 			return true;
 	}
@@ -225,11 +241,33 @@ public class ItemSelector extends ZyinHUDModBase
 		if (!isCurrentlySelecting)
 			return;
 
+		if (currentInventory == null || targetInvSlot < 0 || targetInvSlot >= currentInventory.length)
+		{
+			Done();
+			return;
+		}
+
+		int displayHotbarSize = getDisplayHotbarSize(currentInventory);
+		if (!IncludeHotbar && targetInvSlot < displayHotbarSize)
+		{
+			Done();
+			return;
+		}
+
 		ScaledResolution scaledresolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
 		int screenWidth = scaledresolution.getScaledWidth();
 		int screenHeight = scaledresolution.getScaledHeight();
 		int invWidth = 182;
-		int invHeight = 22 * 3;
+		int inventoryRows = Math.max(0, (currentInventory.length - displayHotbarSize) / 9);
+		int hotbarRows = IncludeHotbar ? Math.max(0, displayHotbarSize / 9) : 0;
+		int totalRows = inventoryRows + hotbarRows;
+		if (totalRows <= 0)
+		{
+			Done();
+			return;
+		}
+
+		int invHeight = 22 * totalRows;
 		int originX = (screenWidth / 2) - (invWidth / 2);
 		int originZ = screenHeight - invHeight - 48 - HudYOffset;
 
@@ -244,8 +282,8 @@ public class ItemSelector extends ZyinHUDModBase
 		OpenGlHelper.glBlendFunc(770, 771, 1, 0);
 
 		int idx = 0;
-		int hotbarColumn = currentHotbarSlot % 9;
-		for (int z = 0; z < 3; z++) // 3 rows of the inventory
+		int hotbarColumn = getHotbarColumn(currentHotbarSlot);
+		for (int z = 0; z < totalRows; z++) // inventory rows + optional hotbar rows
 		{
 			for (int x = 0; x < 9; x++) // 9 cols of the inventory
 			{
@@ -259,8 +297,25 @@ public class ItemSelector extends ZyinHUDModBase
 
 				OpenGlHelper.glBlendFunc(770, 771, 1, 0); // so the selection graphic renders properly
 
+				int inventoryIndex;
+				if (z < inventoryRows)
+				{
+					inventoryIndex = displayHotbarSize + (z * 9 + x);
+				}
+				else
+				{
+					int hotbarRow = (hotbarRows - 1) - (z - inventoryRows);
+					inventoryIndex = hotbarRow * 9 + x;
+				}
+
+				if (inventoryIndex < 0 || inventoryIndex >= currentInventory.length)
+				{
+					idx++;
+					continue;
+				}
+
 				// Draws the selection
-				if (idx + 9 == targetInvSlot)
+				if (inventoryIndex == targetInvSlot)
 				{
 					GL11.glEnable(GL11.GL_BLEND);
 					GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.5F);
@@ -269,7 +324,7 @@ public class ItemSelector extends ZyinHUDModBase
 					GL11.glDisable(GL11.GL_BLEND);
 				}
 
-				ItemStack itemStack = currentInventory[idx + 9];
+				ItemStack itemStack = currentInventory[inventoryIndex];
 
 				if (itemStack != null)
 				{
@@ -313,9 +368,10 @@ public class ItemSelector extends ZyinHUDModBase
 	{
 		ItemStack currentStack = mc.thePlayer.inventory.mainInventory[currentHotbarSlot];
 		ItemStack targetStack = mc.thePlayer.inventory.mainInventory[targetInvSlot];
+		int displayHotbarSize = getDisplayHotbarSize(mc.thePlayer.inventory.mainInventory);
 
 		// Check if what was actually selected still exists in player's inventory
-		if (targetStack != null)
+		if (targetStack != null && (IncludeHotbar || targetInvSlot >= displayHotbarSize))
 		{
 			if (!mc.isSingleplayer())
 			{
@@ -329,6 +385,7 @@ public class ItemSelector extends ZyinHUDModBase
 			}
 
 			int currentInvSlot = InventoryUtil.TranslateHotbarIndexToInventoryIndex(currentHotbarSlot);
+			int targetInvContainerSlot = InventoryUtil.TranslateHotbarIndexToInventoryIndex(targetInvSlot);
 			
 			if(currentInvSlot < 0)
 			{
@@ -338,7 +395,7 @@ public class ItemSelector extends ZyinHUDModBase
 				return;
 			}
 			
-			InventoryUtil.Swap(currentInvSlot, targetInvSlot);
+			InventoryUtil.Swap(currentInvSlot, targetInvContainerSlot);
 		}
 		else
 			ZyinHUDUtil.DisplayNotification(Localization.get("itemselector.error.emptyslot"));
@@ -367,6 +424,76 @@ public class ItemSelector extends ZyinHUDModBase
 	public static void SetTimeout(int value)
 	{
 		timeout = MathHelper.clamp_int(value, minTimeout, maxTimeout);
+	}
+
+	private static int getHotbarSize(ItemStack[] inventory)
+	{
+		int size = InventoryPlayer.getHotbarSize();
+		if (size <= 0)
+			size = 9;
+		if (inventory != null && size > inventory.length)
+			size = inventory.length;
+		return size;
+	}
+
+	private static int getDisplayHotbarSize(ItemStack[] inventory)
+	{
+		int size = getHotbarSize(inventory);
+		return Math.min(size, 9);
+	}
+
+	private static int[] buildDisplayOrder(ItemStack[] inventory)
+	{
+		if (inventory == null || inventory.length == 0)
+			return new int[0];
+
+		int displayHotbarSize = getDisplayHotbarSize(inventory);
+		int inventoryRows = Math.max(0, (inventory.length - displayHotbarSize) / 9);
+		int hotbarRows = IncludeHotbar ? Math.max(0, displayHotbarSize / 9) : 0;
+		int totalSlots = inventoryRows * 9 + hotbarRows * 9;
+		if (totalSlots <= 0)
+			return new int[0];
+
+		int[] order = new int[totalSlots];
+		int idx = 0;
+
+		for (int z = 0; z < inventoryRows; z++)
+		{
+			for (int x = 0; x < 9; x++)
+			{
+				order[idx++] = displayHotbarSize + (z * 9 + x);
+			}
+		}
+
+		for (int z = 0; z < hotbarRows; z++)
+		{
+			int hotbarRow = (hotbarRows - 1) - z;
+			for (int x = 0; x < 9; x++)
+			{
+				order[idx++] = hotbarRow * 9 + x;
+			}
+		}
+
+		return order;
+	}
+
+	private static int findDisplayIndex(int[] order, int value)
+	{
+		for (int i = 0; i < order.length; i++)
+		{
+			if (order[i] == value)
+				return i;
+		}
+		return -1;
+	}
+
+	private static int getHotbarColumn(int slotIndex)
+	{
+		if (slotIndex < 0)
+		{
+			return 0;
+		}
+		return slotIndex % 9;
 	}
 
     /**

@@ -37,6 +37,7 @@ public class ZyinHUDConfig {
         ItemSelector.Mode = ItemSelector.Modes.GetMode(ModConfig.zyinItemSelectorMode);
         ItemSelector.UseMouseSideButtons = ModConfig.zyinItemSelectorSideButtons;
         ItemSelector.HudYOffset = ModConfig.zyinItemSelectorHudOffsetY;
+        ItemSelector.IncludeHotbar = ModConfig.zyinItemSelectorIncludeHotbar;
     }
 
     private static void saveToModConfig() {
@@ -56,6 +57,7 @@ public class ZyinHUDConfig {
         ModConfig.zyinItemSelectorMode = ItemSelector.Mode.name();
         ModConfig.zyinItemSelectorSideButtons = ItemSelector.UseMouseSideButtons;
         ModConfig.zyinItemSelectorHudOffsetY = ItemSelector.HudYOffset;
+        ModConfig.zyinItemSelectorIncludeHotbar = ItemSelector.IncludeHotbar;
 
         Configuration config = ModConfig.config;
         if (config == null) {
@@ -93,6 +95,8 @@ public class ZyinHUDConfig {
                 .set(ItemSelector.UseMouseSideButtons);
         config.get(CATEGORY_ITEMSELECTOR, "ItemSelectorHudOffsetY", 0)
                 .set(ItemSelector.HudYOffset);
+        config.get(CATEGORY_ITEMSELECTOR, "ItemSelectorIncludeHotbar", true)
+                .set(ItemSelector.IncludeHotbar);
 
         config.save();
     }
