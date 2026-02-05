@@ -73,13 +73,14 @@ public class MsgClearPickupTag implements IMessage {
                 return null;
             }
 
-            tag.removeTag("riftflux_new");
+            NBTTagCompound copy = (NBTTagCompound) tag.copy();
+            copy.removeTag("riftflux_new");
 
             // If removing our key leaves the compound empty, strip NBT entirely.
-            if (tag.hasNoTags()) {
+            if (copy.hasNoTags()) {
                 st.setTagCompound(null);
             } else {
-                st.setTagCompound(tag);
+                st.setTagCompound(copy);
             }
 
             s.onSlotChanged();

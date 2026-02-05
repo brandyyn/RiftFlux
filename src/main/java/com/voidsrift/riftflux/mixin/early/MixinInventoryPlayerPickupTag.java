@@ -34,7 +34,6 @@ public abstract class MixinInventoryPlayerPickupTag {
 
     @Inject(method = "addItemStackToInventory(Lnet/minecraft/item/ItemStack;)Z", at = @At("RETURN"))
     private void rf$tagIncreased(ItemStack incoming, CallbackInfoReturnable<Boolean> cir) {
-        if (!cir.getReturnValue()) { rf$beforeCounts = null; return; }
         if (mainInventory == null || rf$beforeCounts == null) return;
 
         for (int i = 0; i < mainInventory.length; i++) {
@@ -44,8 +43,11 @@ public abstract class MixinInventoryPlayerPickupTag {
 
             if (s != null && after > before) {
                 NBTTagCompound tag = s.getTagCompound();
-                if (tag == null) tag = new NBTTagCompound();
-                
+                if (tag == null) {
+                    tag = new NBTTagCompound();
+                } else {
+                    tag = (NBTTagCompound) tag.copy();
+                }
                 tag.setBoolean("riftflux_new", true);
                 s.setTagCompound(tag);
             }

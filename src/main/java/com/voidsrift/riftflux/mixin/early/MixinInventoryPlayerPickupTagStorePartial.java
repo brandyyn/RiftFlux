@@ -42,8 +42,11 @@ public abstract class MixinInventoryPlayerPickupTagStorePartial {
             int after  = (s != null ? s.stackSize : 0);
             if (s != null && after > before) {
                 NBTTagCompound tag = s.getTagCompound();
-                if (tag == null) tag = new NBTTagCompound();
-                
+                if (tag == null) {
+                    tag = new NBTTagCompound();
+                } else {
+                    tag = (NBTTagCompound) tag.copy();
+                }
                 tag.setBoolean("riftflux_new", true);
                 s.setTagCompound(tag);
             }

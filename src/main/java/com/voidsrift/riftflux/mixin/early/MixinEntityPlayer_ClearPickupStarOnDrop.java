@@ -30,11 +30,12 @@ public abstract class MixinEntityPlayer_ClearPickupStarOnDrop {
         if (st == null) return;
         NBTTagCompound tag = st.getTagCompound();
         if (tag == null || !tag.getBoolean(TAG_NEW)) return;
-        tag.removeTag(TAG_NEW);
-        if (tag.hasNoTags()) {
+        NBTTagCompound copy = (NBTTagCompound) tag.copy();
+        copy.removeTag(TAG_NEW);
+        if (copy.hasNoTags()) {
             st.setTagCompound(null);
         } else {
-            st.setTagCompound(tag);
+            st.setTagCompound(copy);
         }
     }
 }

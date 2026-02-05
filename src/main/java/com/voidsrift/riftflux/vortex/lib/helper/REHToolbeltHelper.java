@@ -178,7 +178,7 @@ public class REHToolbeltHelper {
       this.lastMouseDown = mouseDown;
       for(int i = 0; i < this.buttonList.size(); ++i) {
          ButtonToolbeltRadial button = (ButtonToolbeltRadial)this.buttonList.get(i);
-         if (valid && button.itemstack != null && button.isHovered(mX, mY)) {
+         if (valid && button.itemstack != null && (button.isHovered(mX, mY) || button.isItemHovered(mX, mY))) {
             button.drawButton(mc, ri, tessellator, 1.0F, 1.0F, 1.0F, 0.25F);
             this.buttonHover.put(button, true);            if (heldItem == null) {
                RenderHelper.drawCenteredString(mc.fontRenderer, "Withdraw", event.resolution.getScaledWidth() / 2, (event.resolution.getScaledHeight() - mc.fontRenderer.FONT_HEIGHT) / 2, -1);
@@ -214,10 +214,10 @@ public class REHToolbeltHelper {
 
    private void doTrade(EntityPlayer player, ItemStack heldItem, int id) {
       byte mode;
+      ItemStack toolbeltStack = null;
       if (heldItem == null) {
          mode = (byte)ContainerHelper.toolbeltWithdraw;
       } else {
-         ItemStack toolbeltStack = null;
          try {
             toolbeltStack = BaublesApi.getBaubles(player).getStackInSlot(3);
          } catch (Throwable ignored) {
@@ -230,6 +230,15 @@ public class REHToolbeltHelper {
          }
       }
 
-      ModPackets.instance.sendToServer(new PacketToolbeltSwap(player, mode, id, null));
+      ItemStack slotStack = null;
+      if (toolbeltStack != null) {
+         try {
+            InventoryToolbelt toolbelt = ContainerHelper.getToolbeltInventory(toolbeltStack);
+            slotStack = toolbelt.getStackInSlot(id);
+         } catch (Throwable ignored) {
+         }
+      }
+
+      ModPackets.instance.sendToServer(new PacketToolbeltSwap(player, mode, id, slotStack));
    }
 }

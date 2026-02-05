@@ -19,7 +19,10 @@ import net.minecraft.world.World;
 public class ItemButterflyKnife extends ItemSword {
    public IIcon icon;
    public IIcon iconFlick;
+   public IIcon iconAlt;
    private static final String TAG_FLICK_UNTIL = "rf_flick_until";
+   private static final String TAG_FLICK_ALT = "rf_flick_alt";
+   private static final String TAG_FLICK_PENDING = "rf_flick_pending";
    private static final int FLICK_TICKS = 12;
 
    public ItemButterflyKnife(ToolMaterial material) {
@@ -30,6 +33,7 @@ public class ItemButterflyKnife extends ItemSword {
    public void registerIcons(IIconRegister p_94581_1_) {
       this.icon = p_94581_1_.registerIcon("riftflux:butterflyknife");
       this.iconFlick = p_94581_1_.registerIcon("riftflux:butterflyknife_flick");
+      this.iconAlt = p_94581_1_.registerIcon("riftflux:butterflyknifealt");
    }
 
    @SideOnly(Side.CLIENT)
@@ -38,9 +42,18 @@ public class ItemButterflyKnife extends ItemSword {
    }
 
    @SideOnly(Side.CLIENT)
+   public IIcon getIconIndex(ItemStack stack) {
+      // Keep GUI/inventory rendering on the base icon.
+      return this.icon;
+   }
+
+   @SideOnly(Side.CLIENT)
    public IIcon getIcon(ItemStack stack, int pass) {
       if (this.iconFlick != null && isFlickActive(stack)) {
          return this.iconFlick;
+      }
+      if (this.iconAlt != null && isAltActive(stack) && isEquipped(stack)) {
+         return this.iconAlt;
       }
       return this.icon;
    }
@@ -51,6 +64,7 @@ public class ItemButterflyKnife extends ItemSword {
          net.minecraft.nbt.NBTTagCompound tag = p_77659_1_.getTagCompound();
          tag = (tag == null) ? new net.minecraft.nbt.NBTTagCompound() : (net.minecraft.nbt.NBTTagCompound) tag.copy();
          tag.setLong(TAG_FLICK_UNTIL, until);
+         tag.setBoolean(TAG_FLICK_PENDING, true);
          p_77659_1_.setTagCompound(tag);
          if (!p_77659_2_.isRemote) {
             p_77659_2_.playSoundAtEntity(p_77659_3_, "riftflux:butterflyknife_flick", 0.6F, 1.0F);
@@ -116,17 +130,7 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
       if (tag == null || !tag.hasKey(TAG_FLICK_UNTIL, 4)) return false;
       if (Minecraft.getMinecraft() == null || Minecraft.getMinecraft().theWorld == null) return false;
       long now = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
-      if (now > tag.getLong(TAG_FLICK_UNTIL)) {
-         net.minecraft.nbt.NBTTagCompound copy = (net.minecraft.nbt.NBTTagCompound) tag.copy();
-         copy.removeTag(TAG_FLICK_UNTIL);
-         if (copy.hasNoTags()) {
-            stack.setTagCompound(null);
-         } else {
-            stack.setTagCompound(copy);
-         }
-         return false;
-      }
-      return true;
+      return now <= tag.getLong(TAG_FLICK_UNTIL);
    }
 
    private static void clearFlickTagIfExpired(ItemStack stack, World world) {
@@ -135,13 +139,40 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
       if (tag == null || !tag.hasKey(TAG_FLICK_UNTIL, 4)) return;
       long now = world.getTotalWorldTime();
       if (now > tag.getLong(TAG_FLICK_UNTIL)) {
-         net.minecraft.nbt.NBTTagCompound copy = (net.minecraft.nbt.NBTTagCompound) tag.copy();
-         copy.removeTag(TAG_FLICK_UNTIL);
-         if (copy.hasNoTags()) {
-            stack.setTagCompound(null);
-         } else {
-            stack.setTagCompound(copy);
-         }
+         endFlick(stack, tag);
+      }
+   }
+
+   @SideOnly(Side.CLIENT)
+   private static boolean isEquipped(ItemStack stack) {
+      Minecraft mc = Minecraft.getMinecraft();
+      if (mc == null || mc.thePlayer == null) return false;
+      return mc.thePlayer.getCurrentEquippedItem() == stack;
+   }
+
+   @SideOnly(Side.CLIENT)
+   private static boolean isAltActive(ItemStack stack) {
+      if (stack == null) return false;
+      net.minecraft.nbt.NBTTagCompound tag = stack.getTagCompound();
+      return tag != null && tag.getBoolean(TAG_FLICK_ALT);
+   }
+
+   private static void endFlick(ItemStack stack, net.minecraft.nbt.NBTTagCompound tag) {
+      if (stack == null || tag == null) return;
+      if (!tag.getBoolean(TAG_FLICK_PENDING)) return;
+      net.minecraft.nbt.NBTTagCompound copy = (net.minecraft.nbt.NBTTagCompound) tag.copy();
+      copy.removeTag(TAG_FLICK_UNTIL);
+      copy.removeTag(TAG_FLICK_PENDING);
+      boolean alt = !tag.getBoolean(TAG_FLICK_ALT);
+      if (alt) {
+         copy.setBoolean(TAG_FLICK_ALT, true);
+      } else {
+         copy.removeTag(TAG_FLICK_ALT);
+      }
+      if (copy.hasNoTags()) {
+         stack.setTagCompound(null);
+      } else {
+         stack.setTagCompound(copy);
       }
    }
 }

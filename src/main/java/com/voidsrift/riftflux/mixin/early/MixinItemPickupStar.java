@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.client.PickupStarClientTracker;
 import com.voidsrift.riftflux.net.MsgClearPickupTag;
 import com.voidsrift.riftflux.net.RFNetwork;
 import net.minecraft.client.Minecraft;
@@ -122,9 +123,15 @@ public abstract class MixinItemPickupStar {
         RFNetwork.CH.sendToServer(new MsgClearPickupTag(inventorySlots.windowId, hoveredIndex));
 
         // 2) Local UX: clear immediately so the star vanishes this frame
-        nbt.removeTag(TAG_NEW);
-        if (nbt.hasNoTags()) {
+        NBTTagCompound copy = (NBTTagCompound) nbt.copy();
+        copy.removeTag(TAG_NEW);
+        if (copy.hasNoTags()) {
             st.setTagCompound(null);
+        } else {
+            st.setTagCompound(copy);
+        }
+        if (hoveredSlot.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
+            PickupStarClientTracker.clearRecentMain(hoveredSlot.getSlotIndex());
         }
 
         // After clearing, reset hover tracking so we don't spam packets
@@ -152,9 +159,15 @@ public abstract class MixinItemPickupStar {
 
             RFNetwork.CH.sendToServer(new MsgClearPickupTag(inventorySlots.windowId, i));
 
-            nbt.removeTag(TAG_NEW);
-            if (nbt.hasNoTags()) {
+            NBTTagCompound copy = (NBTTagCompound) nbt.copy();
+            copy.removeTag(TAG_NEW);
+            if (copy.hasNoTags()) {
                 st.setTagCompound(null);
+            } else {
+                st.setTagCompound(copy);
+            }
+            if (s.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
+                PickupStarClientTracker.clearRecentMain(s.getSlotIndex());
             }
         }
     }

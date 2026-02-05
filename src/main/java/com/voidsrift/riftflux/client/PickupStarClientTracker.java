@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import java.util.Locale;
 
 public final class PickupStarClientTracker {
 
@@ -23,6 +24,7 @@ public final class PickupStarClientTracker {
 
     // 36-slot main inv baseline
     private static ItemStack[] baselineMain = null;
+    private static int[] recentMainTtl = null;
 
     // Any open container baseline (for modded inventories)
     private static ItemStack[] baselineCont = null;
@@ -85,32 +87,55 @@ public final class PickupStarClientTracker {
         // --- MAIN INVENTORY (36) ---
         ItemStack[] cur = p.inventory.mainInventory;
         if (cur != null) {
-            if (baselineMain == null || baselineMain.length != cur.length){
+            if (baselineMain == null || baselineMain.length != cur.length || recentMainTtl == null || recentMainTtl.length != cur.length){
                 baselineMain = new ItemStack[cur.length];
+                recentMainTtl = new int[cur.length];
                 for (int i=0;i<cur.length;i++) baselineMain[i] = copy(cur[i]);
             } else {
+                for (int i=0;i<recentMainTtl.length;i++){
+                    if (recentMainTtl[i] > 0) recentMainTtl[i]--;
+                }
                 for (int i=0;i<cur.length;i++){
                     ItemStack now = cur[i], was = baselineMain[i];
+
+                    if (now == null) {
+                        recentMainTtl[i] = 0;
+                        baselineMain[i] = null;
+                        continue;
+                    }
 
                     boolean sameItem = (now != null && was != null && sameItem(was, now));
                     boolean grew     = sameItem && now.stackSize > was.stackSize;
                     boolean inserted = (now != null && was == null) || (now != null && was != null && !sameItem);
 
+                    if (!sameItem) {
+                        recentMainTtl[i] = 0;
+                    }
+
                     // IMPORTANT: do NOT tag on "inserted" for damageables here — that causes
                     // stars to reappear on shift-click moves. We only tag on actual growth
                     // (merge) or when correlating with the pickup queue.
-                    if (now != null) {
-                        if (ModConfig.itemPickupStarOnStackIncrease && grew) {
-                            NBTTagCompound tag = getOrCreate(now);
-                            
+                    if (ModConfig.itemPickupStarOnStackIncrease && grew) {
+                        NBTTagCompound tag = getOrCreate(now);
+                        
+                        tag.setBoolean(TAG_NEW, true);
+                        now.setTagCompound(tag);
+                        recentMainTtl[i] = WINDOW_TICKS;
+                    } else if (inserted && matchesAnyPickup(now)) {
+                        NBTTagCompound tag = getOrCreate(now);
+                        if (!tag.getBoolean(TAG_NEW)) {
                             tag.setBoolean(TAG_NEW, true);
                             now.setTagCompound(tag);
-                        } else if (inserted && matchesAnyPickup(now)) {
-                            NBTTagCompound tag = getOrCreate(now);
-                            if (!tag.getBoolean(TAG_NEW)) {
-                                tag.setBoolean(TAG_NEW, true);
-                                now.setTagCompound(tag);
-                            }
+                        }
+                        recentMainTtl[i] = WINDOW_TICKS;
+                    }
+
+                    if (recentMainTtl[i] > 0) {
+                        NBTTagCompound tag = now.getTagCompound();
+                        if (tag == null || !tag.getBoolean(TAG_NEW)) {
+                            tag = getOrCreate(now);
+                            tag.setBoolean(TAG_NEW, true);
+                            now.setTagCompound(tag);
                         }
                     }
 
@@ -138,7 +163,7 @@ public final class PickupStarClientTracker {
                         Slot s = (Slot) slots.get(i);
                         ItemStack now = s.getStack();
                         ItemStack was = baselineCont[i];
-                        boolean isPlayerSlot = (s.inventory == p.inventory);
+                        boolean isPlayerSlot = isPlayerOwnedSlot(s, p);
 
                         if (!isPlayerSlot && ModConfig.itemPickupStarClearOnLeaveInventory) {
                             clearStarTagLocal(now);
@@ -181,7 +206,7 @@ public final class PickupStarClientTracker {
         if (ModConfig.itemPickupStarClearHeldItem) {
             int heldIndex = p.inventory.currentItem;
             if (heldIndex >= 0 && heldIndex < p.inventory.mainInventory.length) {
-                clearStarTagLocal(p.inventory.mainInventory[heldIndex]);
+                clearStarTagLocal(p.inventory.mainInventory[heldIndex], heldIndex);
             }
         }
     }
@@ -194,24 +219,49 @@ public final class PickupStarClientTracker {
 
     private static NBTTagCompound getOrCreate(ItemStack st){
         NBTTagCompound tag = st.getTagCompound();
-        if (tag == null) tag = new NBTTagCompound();
-        return tag;
+        if (tag == null) return new NBTTagCompound();
+        return (NBTTagCompound) tag.copy();
     }
 
     private static void clearStarTagLocal(ItemStack st) {
         if (st == null) return;
         NBTTagCompound tag = st.getTagCompound();
         if (tag == null || !tag.getBoolean(TAG_NEW)) return;
-        tag.removeTag(TAG_NEW);
-        if (tag.hasNoTags()) {
+        NBTTagCompound copy = (NBTTagCompound) tag.copy();
+        copy.removeTag(TAG_NEW);
+        if (copy.hasNoTags()) {
             st.setTagCompound(null);
         } else {
-            st.setTagCompound(tag);
+            st.setTagCompound(copy);
         }
+    }
+
+    private static void clearStarTagLocal(ItemStack st, int mainIndex) {
+        clearStarTagLocal(st);
+        clearRecentMain(mainIndex);
+    }
+
+    public static void clearRecentMain(int mainIndex) {
+        if (recentMainTtl == null) return;
+        if (mainIndex < 0 || mainIndex >= recentMainTtl.length) return;
+        recentMainTtl[mainIndex] = 0;
     }
 
     private static ItemStack copy(ItemStack in){ return in!=null ? in.copy() : null; }
     private static boolean sameItem(ItemStack a, ItemStack b){
         return a.getItem()==b.getItem() && a.getItemDamage()==b.getItemDamage();
+    }
+
+    private static boolean isPlayerOwnedSlot(Slot s, EntityPlayer p) {
+        if (s == null || s.inventory == null) return false;
+        if (s.inventory == p.inventory) return true;
+        String name = null;
+        try {
+            name = s.inventory.getInventoryName();
+        } catch (Throwable ignored) {
+        }
+        if (name == null) return false;
+        String lower = name.toLowerCase(Locale.ROOT);
+        return lower.contains("satchel") || lower.contains("backpack");
     }
 }
