@@ -146,6 +146,10 @@ public class ModConfig {
     public static int butterflyKnifeDurability;
     public static float butterflyKnifeDamage;
     public static float butterflyKnifeBackstabDamage;
+    public static boolean butterflyKnifeShowBackstabCounter;
+    public static String butterflyKnifeBackstabCounterLabel;
+    public static String[] butterflyKnifeFlickBoostEffects;
+    public static int butterflyKnifeFlickBoostWindowTicks;
     public static boolean backpackStorage;
     public static boolean backpackDurability;
     public static int backpackDurabilityAmount;
@@ -655,6 +659,39 @@ public class ModConfig {
                 Float.MAX_VALUE,
                 "Damage dealt on a successful backstab (sneak attack from behind, ignores armor)."
         );
+
+        butterflyKnifeShowBackstabCounter = config.getBoolean(
+                "butterflyKnifeShowBackstabCounter",
+                "vortex",
+                true,
+                "If true, show a BackTrak counter tooltip on the butterfly knife."
+        );
+
+        butterflyKnifeBackstabCounterLabel = config.getString(
+                "butterflyKnifeBackstabCounterLabel",
+                "vortex",
+                "BackTrak: %d",
+                "Tooltip format for the backstab counter. Use %d for the number."
+        );
+
+        butterflyKnifeFlickBoostEffects = config.getStringList(
+                "butterflyKnifeFlickBoostEffects",
+                "vortex",
+                new String[]{"speed,5,0.5"},
+                "Potion effects applied when flicking shortly after a successful backstab.\n" +
+                        "Format per entry: potionNameOrId,amplifier,durationSeconds (or durationTicks).\n" +
+                        "Example: speed,5,0.5"
+        );
+
+        float flickWindowSeconds = config.getFloat(
+                "butterflyKnifeFlickBoostWindowSeconds",
+                "vortex",
+                0.5F,
+                0.0F,
+                60.0F,
+                "Time window (in seconds) after a successful backstab in which a flick grants the boost."
+        );
+        butterflyKnifeFlickBoostWindowTicks = Math.max(0, Math.round(flickWindowSeconds * 20.0F));
 
         backpackStorage = config.getBoolean("backpackStorage", "vortex", true,
                 "Allows the backpack to be unequipped while containing items.");
