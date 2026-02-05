@@ -3,6 +3,8 @@ package com.voidsrift.riftflux;
 import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.vortex.vortexContent;
+import zelda.Core;
+import com.zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
@@ -11,6 +13,7 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkCheckHandler;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraftforge.common.MinecraftForge;
@@ -30,6 +33,10 @@ public class riftflux {
     public void preInit(FMLPreInitializationEvent event) {
         vortexContent.preInit(event);
         makamys.satchels.Satchels.preInit(event);
+        Core.preInit(event);
+        if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+            ZyinHUD.preInit(event);
+        }
     }
 
     @EventHandler
@@ -50,6 +57,10 @@ public class riftflux {
 
         vortexContent.init(event);
         makamys.satchels.Satchels.init(event);
+        Core.init(event);
+        if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+            ZyinHUD.init(event);
+        }
 
         proxy.initClientFeatures();
     }
@@ -58,6 +69,17 @@ public class riftflux {
     public void postInit(FMLPostInitializationEvent event) {
         vortexContent.postInit(event);
         makamys.satchels.Satchels.postInit(event);
+        Core.postInit(event);
+        if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+            ZyinHUD.postInit(event);
+        }
+    }
+
+    @EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+        if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+            ZyinHUD.serverStarting(event);
+        }
     }
 
     @NetworkCheckHandler

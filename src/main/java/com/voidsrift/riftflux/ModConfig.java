@@ -60,6 +60,31 @@ public class ModConfig {
     public static boolean itemPickupStarClearOnInventoryClose;
     public static boolean itemPickupStarShowHotbarHud;
 
+    // Zelda
+    public static boolean zeldaDisableRegen;
+    public static int zeldaHeartPieceRarity;
+    public static int zeldaStartingHearts;
+    public static int zeldaMaximumHearts;
+    public static int zeldaMobDrop;
+    public static int zeldaBlockDrop;
+
+    // Zyin's HUD
+    public static boolean zyinQuickDepositEnabled;
+    public static boolean zyinQuickDepositIgnoreHotbar;
+    public static boolean zyinQuickDepositCloseChest;
+    public static boolean zyinQuickDepositBlacklistTorch;
+    public static boolean zyinQuickDepositBlacklistWeapons;
+    public static boolean zyinQuickDepositBlacklistArrow;
+    public static boolean zyinQuickDepositBlacklistEnderPearl;
+    public static boolean zyinQuickDepositBlacklistFood;
+    public static boolean zyinQuickDepositBlacklistWaterBucket;
+    public static boolean zyinQuickDepositBlacklistClockCompass;
+    public static boolean zyinItemSelectorEnabled;
+    public static int zyinItemSelectorTimeout;
+    public static String zyinItemSelectorMode;
+    public static boolean zyinItemSelectorSideButtons;
+    public static int zyinItemSelectorHudOffsetY;
+
     // Dual Hotbar
     public static boolean dualHotbarEnable;
     public static boolean dualHotbarLongHotbar;
@@ -287,6 +312,167 @@ public class ModConfig {
         itemPickupStarShowHotbarHud = config.getBoolean(
                 "ItemPickupStarShowHotbarHud", "general", true,
                 "If true, show pickup stars on the in-game hotbar HUD."
+        );
+
+        zeldaDisableRegen = config.getBoolean(
+                "disableRegen",
+                "zelda",
+                false,
+                "False if you want to enable natural health regen."
+        );
+
+        zeldaHeartPieceRarity = config.getInt(
+                "heartPieceRarity",
+                "zelda",
+                10,
+                0,
+                Integer.MAX_VALUE,
+                "The higher the number, the more common the heart pieces will generate in chests. 0 to disable."
+        );
+
+        zeldaStartingHearts = config.getInt(
+                "startingHearts",
+                "zelda",
+                3,
+                1,
+                Integer.MAX_VALUE,
+                "The amount of hearts you will initially spawn with."
+        );
+
+        zeldaMaximumHearts = config.getInt(
+                "maximumHearts",
+                "zelda",
+                10,
+                1,
+                Integer.MAX_VALUE,
+                "The maximum amount of hearts you can have."
+        );
+
+        zeldaMobDrop = config.getInt(
+                "mobDrop",
+                "zelda",
+                3,
+                0,
+                Integer.MAX_VALUE,
+                "The higher the number, the rarer the hearts will drop from mobs. 0 to disable."
+        );
+
+        zeldaBlockDrop = config.getInt(
+                "blockDrop",
+                "zelda",
+                20,
+                0,
+                Integer.MAX_VALUE,
+                "The higher the number, the rarer the hearts will drop from tall grass. 0 to disable."
+        );
+
+        zyinQuickDepositEnabled = config.getBoolean(
+                "EnableQuickDeposit",
+                "quickdeposit",
+                true,
+                "Enables Quick Deposit."
+        );
+
+        zyinQuickDepositIgnoreHotbar = config.getBoolean(
+                "IgnoreItemsInHotbar",
+                "quickdeposit",
+                false,
+                "Determines if items in your hotbar will be deposited into chests."
+        );
+
+        zyinQuickDepositCloseChest = config.getBoolean(
+                "CloseChestAfterDepositing",
+                "quickdeposit",
+                false,
+                "Closes the chest GUI after you deposit your items in it."
+        );
+
+        zyinQuickDepositBlacklistTorch = config.getBoolean(
+                "BlacklistTorch",
+                "quickdeposit",
+                false,
+                "Stop Quick Deposit from putting torches in chests?"
+        );
+
+        zyinQuickDepositBlacklistWeapons = config.getBoolean(
+                "BlacklistWeapons",
+                "quickdeposit",
+                false,
+                "Stop Quick Deposit from putting swords and bows in chests?"
+        );
+
+        zyinQuickDepositBlacklistArrow = config.getBoolean(
+                "BlacklistArrow",
+                "quickdeposit",
+                false,
+                "Stop Quick Deposit from putting arrows in chests?"
+        );
+
+        zyinQuickDepositBlacklistEnderPearl = config.getBoolean(
+                "BlacklistEnderPearl",
+                "quickdeposit",
+                false,
+                "Stop Quick Deposit from putting ender pearls in chests?"
+        );
+
+        zyinQuickDepositBlacklistFood = config.getBoolean(
+                "BlacklistFood",
+                "quickdeposit",
+                false,
+                "Stop Quick Deposit from putting food in chests?"
+        );
+
+        zyinQuickDepositBlacklistWaterBucket = config.getBoolean(
+                "BlacklistWaterBucket",
+                "quickdeposit",
+                false,
+                "Stop Quick Deposit from putting water buckets in chests?"
+        );
+
+        zyinQuickDepositBlacklistClockCompass = config.getBoolean(
+                "BlacklistClockCompass",
+                "quickdeposit",
+                false,
+                "Stop Quick Deposit from putting clocks and compasses in chests?"
+        );
+
+        zyinItemSelectorEnabled = config.getBoolean(
+                "EnableItemSelector",
+                "itemselector",
+                true,
+                "Enable/disable using mouse wheel scrolling to swap the selected hotbar item."
+        );
+
+        zyinItemSelectorTimeout = config.getInt(
+                "ItemSelectorTimeout",
+                "itemselector",
+                900,
+                0,
+                2000,
+                "How many ticks until the item selector confirms your choice and performs the item swap."
+        );
+
+        zyinItemSelectorMode = config.getString(
+                "ItemSelectorMode",
+                "itemselector",
+                "ALL",
+                "Sets the Item Selector mode."
+        );
+
+        zyinItemSelectorSideButtons = config.getBoolean(
+                "ItemSelectorSideButtons",
+                "itemselector",
+                false,
+                "Enable/disable use of side buttons for item selection."
+        );
+
+        zyinItemSelectorHudOffsetY = config.getInt(
+                "ItemSelectorHudOffsetY",
+                "itemselector",
+                0,
+                -2000,
+                2000,
+                "Pixels to move the item selector overlay up (positive moves up)."
         );
 
         dualHotbarEnable = config.getBoolean(
@@ -779,6 +965,7 @@ public class ModConfig {
                 "Gives the gluttony charm an autofeeding functionality. Right-click to put in food items.");
 
         DualHotbarConfig.syncFromModConfig();
+        zelda.Config.syncFromModConfig();
 
         config.save();
     }
