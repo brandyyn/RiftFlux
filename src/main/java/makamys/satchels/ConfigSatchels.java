@@ -30,6 +30,8 @@ public class ConfigSatchels {
     public static boolean hotSwap;
     
     public static int pouchUpgradeWeight;
+    public static boolean enablePouchUpgrades;
+    public static boolean enablePouchUpgradeLoot;
     
     public static boolean drawSatchel;
     public static boolean drawSatchelStrap;
@@ -80,6 +82,8 @@ public class ConfigSatchels {
         satchelBgColor = getColor(ModConfig.satchelsSatchelBgColor, "FFBF99");
         
         pouchUpgradeWeight = ModConfig.satchelsPouchUpgradeWeight;
+        enablePouchUpgrades = ModConfig.satchelsEnablePouchUpgrades;
+        enablePouchUpgradeLoot = ModConfig.satchelsEnablePouchUpgradeLoot;
         
         drawSatchel = ModConfig.satchelsDrawSatchel;
         drawSatchelStrap = ModConfig.satchelsDrawSatchelStrap;

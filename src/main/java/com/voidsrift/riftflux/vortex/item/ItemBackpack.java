@@ -115,9 +115,7 @@ public class ItemBackpack extends ItemArmor implements IBaubleExpanded, IBauble 
    public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
       if (!world.isRemote && stack != null) {
          if (BaublesCompat.equipToFirstEmpty(player, stack, BaublesCompat.TYPE_BACKPACK)) {
-            if (stack.stackSize <= 0) {
-               return null;
-            }
+            return stack;
          }
       }
       return stack;

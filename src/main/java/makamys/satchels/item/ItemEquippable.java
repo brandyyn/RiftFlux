@@ -22,9 +22,7 @@ public class ItemEquippable extends Item implements TooltippedItem {
             String type = stack.getItem() instanceof ItemSatchel ? BaublesCompat.TYPE_SATCHEL :
                     (stack.getItem() instanceof ItemPouch ? BaublesCompat.TYPE_POUCH : null);
             if(type != null && BaublesCompat.equipToFirstEmpty(player, stack, type)) {
-                if(stack.stackSize <= 0) {
-                    return null;
-                }
+                return stack;
             }
         }
         return stack;

@@ -64,6 +64,8 @@ public class ModConfig {
     public static String satchelsPouchBgColor;
     public static String satchelsSatchelBgColor;
     public static int satchelsPouchUpgradeWeight;
+    public static boolean satchelsEnablePouchUpgrades;
+    public static boolean satchelsEnablePouchUpgradeLoot;
     public static boolean satchelsDrawSatchel;
     public static boolean satchelsDrawSatchelStrap;
     public static boolean satchelsDrawLeftPouch;
@@ -301,10 +303,22 @@ public class ModConfig {
         satchelsPouchUpgradeWeight = config.getInt(
                 "SatchelsPouchUpgradeWeight", "satchels_worldgen", 7, 0, Integer.MAX_VALUE,
                 "The weight of the pouch upgrade in the dungeon loot table.\n" +
-                        "Increase this to make them more common, or decrease to make them rarer.\n" +
-                        "For reference, saddles have a weight of 10 while golden apples have a weight of 1.\n" +
-                        "Based on testing, a weight of 10 with no other mods present roughly corresponds to an average of 1 item per dungeon, and it scales linearly from there.\n" +
-                        "You might want to bump this up if you have many other mods adding loot, or if this is a multiplayer server."
+                "Increase this to make them more common, or decrease to make them rarer.\n" +
+                "For reference, saddles have a weight of 10 while golden apples have a weight of 1.\n" +
+                "Based on testing, a weight of 10 with no other mods present roughly corresponds to an average of 1 item per dungeon, and it scales linearly from there.\n" +
+                "You might want to bump this up if you have many other mods adding loot, or if this is a multiplayer server.\n" +
+                "Ignored if SatchelsEnablePouchUpgradeLoot is false."
+        );
+
+        satchelsEnablePouchUpgrades = config.getBoolean(
+                "SatchelsEnablePouchUpgrades", "satchels", true,
+                "If false, pouch upgrades no longer increase pouch slot count.\n" +
+                        "Existing upgrades can still be removed."
+        );
+
+        satchelsEnablePouchUpgradeLoot = config.getBoolean(
+                "SatchelsEnablePouchUpgradeLoot", "satchels_worldgen", true,
+                "If false, pouch upgrades will not appear in dungeon loot."
         );
 
         satchelsDrawSatchel = config.getBoolean(

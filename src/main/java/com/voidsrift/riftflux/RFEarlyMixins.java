@@ -143,6 +143,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.backhand.MixinGuiInventory_BackhandSlot");
             }
         }
+        mixins.add("early.baubles.MixinContainerPlayerExpanded_BackpackShiftClick");
 
         // vortex mixins (always enabled)
         mixins.add("early.vortex.MixinArmorProperties");

@@ -134,8 +134,8 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
    }
 
    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_) {
-      list.add("Backstabs while sneaking");
-      list.add("Right click to flip, flipping after a successful backstab gives a boost");
+      list.add("Backstabs while sneaking, Right click to flip");
+      list.add("Flipping after a successful backstab gives a boost");
       if (com.voidsrift.riftflux.ModConfig.butterflyKnifeShowBackstabCounter) {
          int count = getBackstabCount(stack);
          String label = com.voidsrift.riftflux.ModConfig.butterflyKnifeBackstabCounterLabel;

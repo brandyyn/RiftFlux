@@ -13,6 +13,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import makamys.satchels.EntityPropertiesSatchels;
 import makamys.satchels.GuiHandler;
 import makamys.satchels.Satchels;
+import makamys.satchels.ConfigSatchels;
 import makamys.satchels.compat.BaublesCompat;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.resources.I18n;
@@ -62,6 +63,9 @@ public class ItemPouch extends ItemEquippable implements IBaubleExpanded, IBaubl
    public static int getSlotCount(ItemStack stack) {
        if(stack == null || !(stack.getItem() instanceof ItemPouch)) {
            return 0;
+       }
+       if(!ConfigSatchels.enablePouchUpgrades) {
+           return EntityPropertiesSatchels.POUCH_INITIAL_SLOTS;
        }
        IInventory inventory = getInventory(stack, null);
        int slots = EntityPropertiesSatchels.POUCH_INITIAL_SLOTS;
@@ -117,7 +121,9 @@ public class ItemPouch extends ItemEquippable implements IBaubleExpanded, IBaubl
         
         @Override
         public boolean isItemValidForSlot(int i, ItemStack itemstack) {
-            return itemstack != null && itemstack.getItem() instanceof ItemPouchUpgrade;
+            return ConfigSatchels.enablePouchUpgrades
+                    && itemstack != null
+                    && itemstack.getItem() instanceof ItemPouchUpgrade;
         }
    }
 

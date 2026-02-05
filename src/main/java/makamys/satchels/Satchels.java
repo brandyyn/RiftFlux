@@ -43,7 +43,9 @@ public class Satchels
     
     public static void init(FMLInitializationEvent event)
     {
-        ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(new ItemStack(SatchelsItems.pouch_upgrade), 1, 1, ConfigSatchels.pouchUpgradeWeight));
+        if (ConfigSatchels.enablePouchUpgradeLoot && ConfigSatchels.pouchUpgradeWeight > 0) {
+            ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(new ItemStack(SatchelsItems.pouch_upgrade), 1, 1, ConfigSatchels.pouchUpgradeWeight));
+        }
         
         proxy = createProxy();
         MinecraftForge.EVENT_BUS.register(proxy);
