@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.core.BasicTransformer;
+import com.voidsrift.riftflux.dualhotbar.DualHotbarTransformer;
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
@@ -180,7 +181,10 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{BasicTransformer.class.getName()};
+        return new String[]{
+                BasicTransformer.class.getName(),
+                DualHotbarTransformer.class.getName()
+        };
     }
 
     @Override

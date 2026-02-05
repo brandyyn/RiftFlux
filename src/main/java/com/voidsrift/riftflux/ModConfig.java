@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.io.File;
 import makamys.mclib.config.item.BackpackConfigHelper;
+import com.voidsrift.riftflux.dualhotbar.DualHotbarConfig;
 
 public class ModConfig {
 
@@ -58,6 +59,14 @@ public class ModConfig {
     public static boolean itemPickupStarClearOnLeaveInventory;
     public static boolean itemPickupStarClearOnInventoryClose;
     public static boolean itemPickupStarShowHotbarHud;
+
+    // Dual Hotbar
+    public static boolean dualHotbarEnable;
+    public static boolean dualHotbarLongHotbar;
+    public static boolean dualHotbarDoubleTap;
+    public static boolean dualHotbarKeyCombo;
+    public static int dualHotbarDoubleTapTime;
+    public static int dualHotbarNumHotbars;
 
     // Satchels
     public static boolean satchelsHotSwap;
@@ -278,6 +287,52 @@ public class ModConfig {
         itemPickupStarShowHotbarHud = config.getBoolean(
                 "ItemPickupStarShowHotbarHud", "general", true,
                 "If true, show pickup stars on the in-game hotbar HUD."
+        );
+
+        dualHotbarEnable = config.getBoolean(
+                "Enable",
+                "dualhotbar",
+                true,
+                "Enable DualHotbar."
+        );
+
+        dualHotbarLongHotbar = config.getBoolean(
+                "Long Hotbar",
+                "dualhotbar",
+                false,
+                "If enabled, it will render all 18 slots in one row (not available for 3 hotbar rows)."
+        );
+
+        dualHotbarDoubleTap = config.getBoolean(
+                "Enable Double Tap",
+                "dualhotbar",
+                true,
+                "Double tap the inventory key to select the upper layer item."
+        );
+
+        dualHotbarKeyCombo = config.getBoolean(
+                "Enable Key Combo",
+                "dualhotbar",
+                false,
+                "Use key combo to select the upper layer item."
+        );
+
+        dualHotbarDoubleTapTime = config.getInt(
+                "Double Tap Time",
+                "dualhotbar",
+                900,
+                0,
+                2000,
+                "Time (in milliseconds) for double tapping."
+        );
+
+        dualHotbarNumHotbars = config.getInt(
+                "Number of Hotbars",
+                "dualhotbar",
+                2,
+                1,
+                4,
+                "How many hotbar rows (9 slots each)."
         );
 
         // --- Satchels ---
@@ -722,6 +777,8 @@ public class ModConfig {
 
         GluttonyCharm = config.getBoolean("GluttonyCharm", "vortex", false,
                 "Gives the gluttony charm an autofeeding functionality. Right-click to put in food items.");
+
+        DualHotbarConfig.syncFromModConfig();
 
         config.save();
     }

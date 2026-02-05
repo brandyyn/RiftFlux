@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.combat.StickTooltipHandler;
+import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
@@ -10,8 +11,10 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.network.NetworkCheckHandler;
+import cpw.mods.fml.relauncher.Side;
 import net.minecraftforge.common.MinecraftForge;
+import java.util.Map;
 
 @Mod(modid = Constants.MODID, version = Constants.VERSION)
 public class riftflux {
@@ -55,6 +58,14 @@ public class riftflux {
     public void postInit(FMLPostInitializationEvent event) {
         vortexContent.postInit(event);
         makamys.satchels.Satchels.postInit(event);
+    }
+
+    @NetworkCheckHandler
+    public boolean checkRemote(Map<String, String> modList, Side side) {
+        if (side == Side.CLIENT) {
+            DualHotbarState.installedOnServer = modList != null && modList.containsKey(Constants.MODID);
+        }
+        return true;
     }
     
 }

@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.CommonProxy;
+import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
 import cpw.mods.fml.client.registry.RenderingRegistry;
@@ -36,6 +37,7 @@ public class ClientProxy extends CommonProxy {
                 PickupStarHotbarHud.bootstrap();
             }
         }
+        DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
 
     }
