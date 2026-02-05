@@ -11,6 +11,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
+import com.voidsrift.riftflux.vortex.item.ItemBackpack;
 import com.voidsrift.riftflux.vortex.item.ModItems;
 
 /**
@@ -60,7 +61,7 @@ public class PacketBackpackSync implements IMessage, IMessageHandler<PacketBackp
                 if (!(e instanceof EntityPlayer)) return;
 
                 EntityPlayer p = (EntityPlayer) e;
-                ItemStack armor = p.getCurrentArmor(2);
+                ItemStack armor = ItemBackpack.getEquippedBackpack(p);
                 if (armor == null || armor.getItem() != ModItems.backpack) return;
 
                 NBTTagCompound tag = armor.getTagCompound();

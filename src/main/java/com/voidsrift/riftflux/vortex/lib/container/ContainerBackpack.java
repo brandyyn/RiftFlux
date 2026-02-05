@@ -25,7 +25,7 @@ public class ContainerBackpack extends ContainerPlayer {
    public ContainerBackpack(final EntityPlayer player) {
       super(player.inventory, !player.worldObj.isRemote, player);
       this.player = player;
-      ItemStack backpack = player.getCurrentArmor(2);
+      ItemStack backpack = com.voidsrift.riftflux.vortex.item.ItemBackpack.getEquippedBackpack(player);
       this.inventoryBackpack = ContainerHelper.getBackpackInventory(backpack);
       if (!player.worldObj.isRemote) {
          this.ensureBackpackGuiId(backpack);

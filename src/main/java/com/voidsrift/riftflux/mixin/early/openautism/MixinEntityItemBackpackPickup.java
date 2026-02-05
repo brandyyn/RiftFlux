@@ -9,7 +9,7 @@ import com.voidsrift.riftflux.vortex.item.ModItems;
 import com.voidsrift.riftflux.vortex.lib.container.ContainerBackpack;
 import com.voidsrift.riftflux.vortex.lib.container.InventoryBackpack;
 import com.voidsrift.riftflux.vortex.lib.helper.ContainerHelper;
-import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
+import makamys.satchels.inventory.ContainerSatchels;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,7 +24,8 @@ public abstract class MixinEntityItemBackpackPickup {
     )
     private void rf$storeInBackpack(EntityPlayer player, CallbackInfo ci) {
         if (player == null || player.worldObj == null || player.worldObj.isRemote) return;
-        if (!ItemHelper.hasArmor(player, ModItems.backpack, 2)) return;
+        ItemStack equipped = com.voidsrift.riftflux.vortex.item.ItemBackpack.getEquippedBackpack(player);
+        if (equipped == null || equipped.getItem() != ModItems.backpack) return;
 
         EntityItem self = (EntityItem) (Object) this;
         if (self.isDead || self.delayBeforeCanPickup > 0) return;
@@ -34,10 +35,13 @@ public abstract class MixinEntityItemBackpackPickup {
         InventoryBackpack backpack;
         if (player.openContainer instanceof ContainerBackpack) {
             backpack = ((ContainerBackpack) player.openContainer).inventoryBackpack;
+        } else if (player.openContainer instanceof ContainerSatchels) {
+            backpack = ((ContainerSatchels) player.openContainer).inventoryBackpack;
+            if (backpack == null) {
+                backpack = ContainerHelper.getBackpackInventory(equipped);
+            }
         } else {
-            ItemStack backpackStack = player.getCurrentArmor(2);
-            if (backpackStack == null) return;
-            backpack = ContainerHelper.getBackpackInventory(backpackStack);
+            backpack = ContainerHelper.getBackpackInventory(equipped);
         }
         if (backpack == null) return;
 

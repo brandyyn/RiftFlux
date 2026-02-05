@@ -1,0 +1,258 @@
+package makamys.satchels.gui;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.opengl.GL11;
+
+import makamys.satchels.ConfigSatchels;
+import makamys.satchels.Satchels;
+import makamys.satchels.inventory.ContainerSatchels;
+import com.voidsrift.riftflux.vortex.item.ItemBackpack;
+import com.voidsrift.riftflux.vortex.item.ModItems;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+
+public class GuiSatchelsInventory extends GuiInventory {
+
+    boolean movedButtons = false;
+    
+    ContainerSatchels satchelsSlots;
+    
+    private int originalXSize, originalYSize;
+    private int baseYSize;
+    private int extendedYSize;
+    Map<GuiButton, Pair<Integer, Integer>> originalButtonPositions = new HashMap<>();
+
+    private boolean lastHasSatchel;
+    private boolean lastHasBackpack;
+    private int lastLeftPouchSlots;
+    private int lastRightPouchSlots;
+    
+    public static final int playerX = 25,
+                            playerY = 7,
+                            playerW = 54,
+                            playerH = 72;
+    
+    protected static final ResourceLocation sidebar_corners = new ResourceLocation(Satchels.MODID, "textures/gui/container/sidebar_corners.png"); 
+    protected static final ResourceLocation backpack_overlay = new ResourceLocation("riftflux", "textures/gui/inventorybackpack_overlay.png");
+    private static final int BACKPACK_EXTRA_HEIGHT = 58;
+    private static final int BACKPACK_OVERLAY_HEIGHT = 76;
+    
+    
+    public GuiSatchelsInventory(EntityPlayer p_i1094_1_) {
+        super(p_i1094_1_);
+        this.satchelsSlots = (ContainerSatchels)p_i1094_1_.inventoryContainer;
+        
+        originalXSize = this.xSize;
+        originalYSize = this.ySize;
+        baseYSize = this.ySize;
+        extendedYSize = this.ySize;
+        
+        this.xSize += 2*16;
+    }
+    
+    @Override
+    public void initGui() {
+        super.initGui();
+        //if(satchelsSlots.dirty) {
+        redoGui();
+        //}
+    }
+
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        boolean equippedBackpack = hasEquippedBackpack();
+        boolean hasSatchel = satchelsSlots.getSatchelProps().hasSatchel();
+        int leftSlots = satchelsSlots.getSatchelProps().getLeftPouchSlotCount();
+        int rightSlots = satchelsSlots.getSatchelProps().getRightPouchSlotCount();
+        boolean needsRedoSlots = equippedBackpack != satchelsSlots.hasBackpack()
+                || hasSatchel != lastHasSatchel
+                || leftSlots != lastLeftPouchSlots
+                || rightSlots != lastRightPouchSlots;
+        if (needsRedoSlots) {
+            satchelsSlots.redoSlots();
+        }
+        boolean hasBackpack = satchelsSlots.hasBackpack();
+        if (hasSatchel != lastHasSatchel || hasBackpack != lastHasBackpack) {
+            redoGui();
+        } else {
+            lastLeftPouchSlots = leftSlots;
+            lastRightPouchSlots = rightSlots;
+        }
+    }
+    
+    private void redoGui() {
+        boolean hasSatchel = satchelsSlots.getSatchelProps().hasSatchel();
+        boolean hasBackpack = satchelsSlots.hasBackpack();
+        this.ySize = originalYSize + (hasSatchel ? 16 : 0);
+        this.baseYSize = this.ySize;
+        this.extendedYSize = this.ySize + (hasBackpack ? BACKPACK_EXTRA_HEIGHT : 0);
+        this.lastHasSatchel = hasSatchel;
+        this.lastHasBackpack = hasBackpack;
+        this.lastLeftPouchSlots = satchelsSlots.getSatchelProps().getLeftPouchSlotCount();
+        this.lastRightPouchSlots = satchelsSlots.getSatchelProps().getRightPouchSlotCount();
+    }
+    
+    @Override
+    protected void drawGuiContainerForegroundLayer(int p_146979_1_, int p_146979_2_) {
+        this.fontRendererObj.drawString(I18n.format("container.crafting", new Object[0]), 86 + 16, 16, 4210752);
+    }
+    
+    @Override
+    protected void drawGuiContainerBackgroundLayer(float p_146976_1_, int p_146976_2_, int p_146976_3_) {
+        boolean hasSatchel = satchelsSlots.getSatchelProps().hasSatchel();
+        
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.mc.getTextureManager().bindTexture(field_147001_a);
+        int k = this.guiLeft + 16;
+        int l = this.guiTop;
+        
+        int playerXOff = satchelsSlots.getArmorXOffset();
+        
+        this.drawTexturedModalRect(k, l, 0, 0, originalXSize, playerY);
+        
+        this.drawTexturedModalRect(k, l + playerY, 0, playerY, 7, playerH);
+        this.drawTexturedModalRect(k + 7, l + playerY, 3, playerY, playerXOff, playerH);
+        this.drawTexturedModalRect(k + 7 + playerXOff, l + playerY, 7, playerY, 18, playerH);
+        this.drawTexturedModalRect(k + playerX + playerXOff, l + playerY, playerX, playerY, playerW / 2, playerH);
+        this.drawTexturedModalRect(k + playerX + playerXOff + playerW / 2, l + playerY, playerX + playerW / 2 + playerXOff, playerY, playerW - playerW / 2 - playerXOff, playerH);
+        this.drawTexturedModalRect(k + playerX + playerW, l + playerY, playerX + playerW, playerY, originalXSize - (playerX + playerW), playerH);
+        
+        this.drawTexturedModalRect(k, l + playerY + playerH, 0, playerY + playerH, originalXSize, 2);
+        
+        if(hasSatchel) {
+            GL11.glPushAttrib(GL11.GL_CURRENT_BIT);
+            ConfigSatchels.satchelBgColor.glColour();
+            this.drawTexturedModalRect(k, l+80+1, 0, 80+1, originalXSize, 18+2);
+            GL11.glPopAttrib();
+        }
+        
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.drawTexturedModalRect(k, l + 80 + (hasSatchel ? 18 + 3 : 0), 0, 80 + (hasSatchel ? 3 : 0), originalXSize, this.ySize - 80 - (hasSatchel ? 16 + 3 : 0));
+        
+        GL11.glPushAttrib(GL11.GL_CURRENT_BIT);
+        ConfigSatchels.pouchBgColor.glColour();
+        for(int side = 0; side < 2; side++) {
+            List<Slot> pouchSlots = side == 0 ? satchelsSlots.getEnabledLeftPouchSlots() : satchelsSlots.getEnabledRightPouchSlots();
+            if(!pouchSlots.isEmpty()) {
+                Slot first = pouchSlots.get(0);
+                int no = pouchSlots.size();
+                
+                boolean left = side == 0;
+                
+                int xOff = left ? -24 : -17;
+                
+                int firstX = k+first.xDisplayPosition+xOff;
+                int firstY = l+first.yDisplayPosition-1;
+                
+                int u = left ? 0 : 151;
+                int uOff = left ? 0 : 7;
+                int edgeXOff = left ? 18 : 0;
+                
+                int bottomCornerU = left ? 0 : 7;
+                int bottomCornerV = 0;
+                int topCornerU = left ? 0 : 7;
+                int topCornerV = no == 3 ? 7 : 14;
+                
+                this.drawTexturedModalRect(firstX+uOff, firstY-18*no+11, u + uOff, 0, 18, 7);
+                
+                for(int i = 0; i < no; i++) {
+                    this.drawTexturedModalRect(firstX, firstY-18*i, u, 141, 25, 18);
+                }
+                this.drawTexturedModalRect(firstX+uOff, firstY+18, u + uOff, 141+18, 18, 7);
+                
+                if(no == 8 && !hasSatchel) {
+                    this.drawTexturedModalRect(firstX+edgeXOff, firstY-18*no+11, left ? 169 : 0, 0, 7, 7);
+                }
+                
+                GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
+                this.mc.getTextureManager().bindTexture(sidebar_corners);
+                this.drawTexturedModalRect(firstX+edgeXOff, firstY-18*no+11, topCornerU, topCornerV, 7, 7);
+                this.drawTexturedModalRect(firstX+edgeXOff, firstY+18, bottomCornerU, bottomCornerV, 7, 7);
+                GL11.glPopAttrib();
+            }
+        }
+        
+        GL11.glPopAttrib();
+
+        if (satchelsSlots.hasBackpack() && !satchelsSlots.getBackpackSlots().isEmpty()) {
+            Slot first = satchelsSlots.getBackpackSlots().get(0);
+            int overlayX = this.guiLeft + first.xDisplayPosition - 3;
+            int overlayY = this.guiTop + first.yDisplayPosition - 3;
+            ItemStack backpack = ItemBackpack.getEquippedBackpack(this.mc.thePlayer);
+            int color = backpack != null ? backpack.getItem().getColorFromItemStack(backpack, 0) : 0xFFFFFF;
+            float red = (float)(color >> 16 & 255) / 255.0F;
+            float green = (float)(color >> 8 & 255) / 255.0F;
+            float blue = (float)(color & 255) / 255.0F;
+            GL11.glColor4f(red, green, blue, 1.0F);
+            this.mc.getTextureManager().bindTexture(backpack_overlay);
+            this.drawTexturedModalRect(overlayX, overlayY, 0, 0, originalXSize, BACKPACK_OVERLAY_HEIGHT);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+        
+        func_147046_a(k + playerX + 26, l + playerY + 68, 30, (float)(k + 51) - (float)p_146976_2_, (float)(l + 75 - 50) - (float)p_146976_3_, this.mc.thePlayer);
+        
+        for(int i = 0; i < this.buttonList.size(); i++) {
+            GuiButton button = (GuiButton)this.buttonList.get(i);
+            int supposedTop = (this.height - this.originalYSize) / 2;
+            button.yPosition = getOriginalButtonPosition(button).getRight() + (guiTop - supposedTop);
+        }
+    }
+    
+    private Pair<Integer, Integer> getOriginalButtonPosition(GuiButton button) {
+        Pair<Integer, Integer> originalPos = originalButtonPositions.get(button);
+        if(originalPos == null) {
+            originalButtonPositions.put(button, (originalPos = Pair.of(button.xPosition, button.yPosition)));
+        }
+        return originalPos;
+    }
+
+    private boolean hasEquippedBackpack() {
+        ItemStack stack = this.mc != null && this.mc.thePlayer != null ? ItemBackpack.getEquippedBackpack(this.mc.thePlayer) : null;
+        return stack != null && stack.getItem() == ModItems.backpack;
+    }
+
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        int prev = this.ySize;
+        this.ySize = extendedYSize;
+        try {
+            super.mouseClicked(mouseX, mouseY, mouseButton);
+        } finally {
+            this.ySize = prev;
+        }
+    }
+
+    @Override
+    protected void mouseMovedOrUp(int mouseX, int mouseY, int state) {
+        int prev = this.ySize;
+        this.ySize = extendedYSize;
+        try {
+            super.mouseMovedOrUp(mouseX, mouseY, state);
+        } finally {
+            this.ySize = prev;
+        }
+    }
+
+    @Override
+    protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+        int prev = this.ySize;
+        this.ySize = extendedYSize;
+        try {
+            super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+        } finally {
+            this.ySize = prev;
+        }
+    }
+
+}

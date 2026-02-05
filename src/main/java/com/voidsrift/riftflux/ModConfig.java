@@ -4,6 +4,7 @@ import net.minecraftforge.common.config.Configuration;
 import java.util.HashSet;
 import java.util.Set;
 import java.io.File;
+import makamys.mclib.config.item.BackpackConfigHelper;
 
 public class ModConfig {
 
@@ -57,6 +58,20 @@ public class ModConfig {
     public static boolean itemPickupStarClearOnLeaveInventory;
     public static boolean itemPickupStarClearOnInventoryClose;
     public static boolean itemPickupStarShowHotbarHud;
+
+    // Satchels
+    public static boolean satchelsHotSwap;
+    public static String satchelsPouchBgColor;
+    public static String satchelsSatchelBgColor;
+    public static int satchelsPouchUpgradeWeight;
+    public static boolean satchelsDrawSatchel;
+    public static boolean satchelsDrawSatchelStrap;
+    public static boolean satchelsDrawLeftPouch;
+    public static boolean satchelsDrawRightPouch;
+    public static boolean satchelsCompatTechguns;
+    public static String satchelsIngredient1;
+    public static String satchelsIngredient2;
+    public static String[] satchelsItemBlacklist;
 
     public static boolean enablePickupNotifier;
     public static int pickupNotifyDurationSeconds;       // e.g. 3
@@ -139,6 +154,14 @@ public class ModConfig {
 
     public static void init(File file){
         config = new Configuration(file);
+        syncConfig();
+    }
+
+    public static void reload() {
+        if (config == null) {
+            return;
+        }
+        config.load();
         syncConfig();
     }
 
@@ -249,6 +272,76 @@ public class ModConfig {
         itemPickupStarShowHotbarHud = config.getBoolean(
                 "ItemPickupStarShowHotbarHud", "general", true,
                 "If true, show pickup stars on the in-game hotbar HUD."
+        );
+
+        // --- Satchels ---
+        satchelsHotSwap = config.getBoolean(
+                "SatchelsHotSwap", "satchels", false,
+                "Apply changes made in the config file immediately.\n" +
+                        "Off by default because it could potentially cause poor performance on certain platforms.\n" +
+                        "Useful for tweaking the GUI."
+        );
+
+
+        satchelsPouchBgColor = config.getString(
+                "SatchelsPouchBgColor", "satchels_gui", "FFB266",
+                ""
+        );
+
+
+        satchelsSatchelBgColor = config.getString(
+                "SatchelsSatchelBgColor", "satchels_gui", "FFBF99",
+                ""
+        );
+
+        satchelsPouchUpgradeWeight = config.getInt(
+                "SatchelsPouchUpgradeWeight", "satchels_worldgen", 7, 0, Integer.MAX_VALUE,
+                "The weight of the pouch upgrade in the dungeon loot table.\n" +
+                        "Increase this to make them more common, or decrease to make them rarer.\n" +
+                        "For reference, saddles have a weight of 10 while golden apples have a weight of 1.\n" +
+                        "Based on testing, a weight of 10 with no other mods present roughly corresponds to an average of 1 item per dungeon, and it scales linearly from there.\n" +
+                        "You might want to bump this up if you have many other mods adding loot, or if this is a multiplayer server."
+        );
+
+        satchelsDrawSatchel = config.getBoolean(
+                "SatchelsDrawSatchel", "satchels_player_model", true,
+                "Draw the satchel on the player model."
+        );
+
+        satchelsDrawSatchelStrap = config.getBoolean(
+                "SatchelsDrawSatchelStrap", "satchels_player_model", true,
+                "Draw the satchel strap on the player model."
+        );
+
+        satchelsDrawLeftPouch = config.getBoolean(
+                "SatchelsDrawLeftPouch", "satchels_player_model", true,
+                "Draw the left pouch on the player model."
+        );
+
+        satchelsDrawRightPouch = config.getBoolean(
+                "SatchelsDrawRightPouch", "satchels_player_model", true,
+                "Draw the right pouch on the player model."
+        );
+
+        satchelsIngredient1 = config.getString(
+                "SatchelsIngredient1", "satchels_recipes", "diamond_block",
+                "The ingredient in the center of the bottom row of the satchel crafting recipe."
+        );
+
+        satchelsIngredient2 = config.getString(
+                "SatchelsIngredient2", "satchels_recipes", "slime_ball",
+                "The ingredient in the left and right of the center row of the satchel crafting recipe."
+        );
+
+        satchelsCompatTechguns = config.getBoolean(
+                "SatchelsCompatTechguns", "satchels_compat", true,
+                "Force Techguns to use vertical tabs (using TConstruct's API) even if TConstruct is not present."
+        );
+
+        satchelsItemBlacklist = config.getStringList(
+                "SatchelsItemBlacklist", "satchels_inventory",
+                BackpackConfigHelper.NON_NESTABLE_BACKPACK_BLACKLIST,
+                "Items that aren't allowed in satchels or pouches" + BackpackConfigHelper.CONFIG_DESCRIPTION_SUFFIX
         );
 
         enablePickupNotifier = config.getBoolean(

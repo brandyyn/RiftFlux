@@ -8,7 +8,6 @@ import net.minecraft.item.ItemStack;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.vortex.item.ModItems;
 import com.voidsrift.riftflux.vortex.lib.helper.ContainerHelper;
-import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,9 +28,9 @@ public abstract class MixinGuiContainer {
       // Avoid @Shadow'ing GuiScreen#mc as it is remapped/obfuscated in 1.7.10.
       // Using the singleton is stable in both dev and production.
       EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-      if (!player.capabilities.isCreativeMode && !ModConfig.backpackStorage && ItemHelper.hasArmor(player, ModItems.backpack, 2)) {
-         ItemStack backpack = player.getCurrentArmor(2);
-         if (!ContainerHelper.getBackpackInventory(backpack).isEmpty() && slot.getHasStack() && slot.getStack() == backpack) {
+      if (!player.capabilities.isCreativeMode && !ModConfig.backpackStorage) {
+         ItemStack backpack = com.voidsrift.riftflux.vortex.item.ItemBackpack.getEquippedBackpack(player);
+         if (backpack != null && !ContainerHelper.getBackpackInventory(backpack).isEmpty() && slot.getHasStack() && slot.getStack() == backpack) {
             ci.cancel();
          }
       }

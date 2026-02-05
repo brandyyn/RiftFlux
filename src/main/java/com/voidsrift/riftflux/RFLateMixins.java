@@ -69,6 +69,10 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.vortex.MixinInfusionEnchantmentRecipe");
         }
 
+        if (loadedMods.contains("Baubles|Expanded") || loadedMods.contains("Baubles")) {
+            mixins.add("late.baubles.MixinContainerPlayerExpanded_BackpackShiftClick");
+        }
+
         return mixins;
     }
 }

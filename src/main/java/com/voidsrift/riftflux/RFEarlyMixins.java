@@ -95,6 +95,13 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinInventoryPlayerPickupTagStorePartial");
             mixins.add("early.MixinEntityPlayer_ClearPickupStarOnDrop");
         }
+        // Satchels
+        mixins.add("early.satchels.MixinEntityPlayer");
+        mixins.add("early.satchels.MixinInventoryPlayer");
+        mixins.add("early.satchels.MixinItemInWorldManager");
+        if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            mixins.add("early.satchels.MixinPlayerControllerMP");
+        }
         if (ModConfig.enableNewBlockHighlight) {
             mixins.add("early.MixinBlockHighlight");
         }
@@ -129,6 +136,14 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityPlayer_CustomHurtSound");
         }
 
+        if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            boolean hasBackhand = loadedCoreMods.contains("xonin.backhand.coremod.BackhandLoadingPlugin")
+                    || classExists("xonin.backhand.Backhand");
+            if (hasBackhand) {
+                mixins.add("early.backhand.MixinGuiInventory_BackhandSlot");
+            }
+        }
+
         // vortex mixins (always enabled)
         mixins.add("early.vortex.MixinArmorProperties");
         mixins.add("early.vortex.MixinBlockLiquid");
@@ -151,6 +166,15 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
 
         return mixins;
+    }
+
+    private static boolean classExists(String name) {
+        try {
+            Class.forName(name, false, RFEarlyMixins.class.getClassLoader());
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     @Override

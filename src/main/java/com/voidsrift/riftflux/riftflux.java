@@ -26,6 +26,7 @@ public class riftflux {
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         vortexContent.preInit(event);
+        makamys.satchels.Satchels.preInit(event);
     }
 
     @EventHandler
@@ -45,6 +46,7 @@ public class riftflux {
         MinecraftForge.EVENT_BUS.register(new StickTooltipHandler());
 
         vortexContent.init(event);
+        makamys.satchels.Satchels.init(event);
 
         proxy.initClientFeatures();
     }
@@ -52,6 +54,7 @@ public class riftflux {
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         vortexContent.postInit(event);
+        makamys.satchels.Satchels.postInit(event);
     }
     
 }

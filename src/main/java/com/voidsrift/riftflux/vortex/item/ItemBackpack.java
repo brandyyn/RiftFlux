@@ -1,5 +1,9 @@
 package com.voidsrift.riftflux.vortex.item;
 
+import baubles.api.BaublesApi;
+import baubles.api.BaubleType;
+import baubles.api.IBauble;
+import baubles.api.expanded.IBaubleExpanded;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.model.ModelBiped;
@@ -8,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
@@ -19,8 +24,9 @@ import com.voidsrift.riftflux.vortex.client.model.item.ModelBackpack;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.vortex.entity.EntityItemBackpack;
 import com.voidsrift.riftflux.vortex.item.ModItems;
+import makamys.satchels.compat.BaublesCompat;
 
-public class ItemBackpack extends ItemArmor {
+public class ItemBackpack extends ItemArmor implements IBaubleExpanded, IBauble {
    private static final Random GUI_ID_RANDOM = new Random();
 
    @SideOnly(Side.CLIENT)
@@ -105,6 +111,18 @@ public class ItemBackpack extends ItemArmor {
       }
    }
 
+   @Override
+   public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
+      if (!world.isRemote && stack != null) {
+         if (BaublesCompat.equipToFirstEmpty(player, stack, BaublesCompat.TYPE_BACKPACK)) {
+            if (stack.stackSize <= 0) {
+               return null;
+            }
+         }
+      }
+      return stack;
+   }
+
    public int getColor(ItemStack p_82814_1_) {
       NBTTagCompound nbttagcompound = p_82814_1_.getTagCompound();
       if (nbttagcompound == null) {
@@ -148,6 +166,63 @@ public class ItemBackpack extends ItemArmor {
 
    }
 
+   @Override
+   public boolean isValidArmor(ItemStack stack, int armorType, Entity entity) {
+      return false;
+   }
+
+   @Override
+   public String[] getBaubleTypes(ItemStack stack) {
+      return new String[]{BaublesCompat.TYPE_BACKPACK};
+   }
+
+   @Override
+   public BaubleType getBaubleType(ItemStack stack) {
+      return BaubleType.UNIVERSAL;
+   }
+
+   @Override
+   public void onWornTick(ItemStack stack, EntityLivingBase player) {
+      if (stack != null && player instanceof EntityPlayer && !player.worldObj.isRemote) {
+         ensureBackpackId(stack, (EntityPlayer) player);
+      }
+   }
+
+   @Override
+   public void onEquipped(ItemStack stack, EntityLivingBase player) {
+      if (stack != null && player instanceof EntityPlayer && !player.worldObj.isRemote) {
+         ensureBackpackId(stack, (EntityPlayer) player);
+      }
+   }
+
+   @Override
+   public void onUnequipped(ItemStack stack, EntityLivingBase player) {
+   }
+
+   @Override
+   public boolean canEquip(ItemStack stack, EntityLivingBase player) {
+      return true;
+   }
+
+   @Override
+   public boolean canUnequip(ItemStack stack, EntityLivingBase player) {
+      if (!ModConfig.backpackStorage && stack != null) {
+         com.voidsrift.riftflux.vortex.lib.container.InventoryBackpack inv = com.voidsrift.riftflux.vortex.lib.helper.ContainerHelper.getBackpackInventory(stack);
+         if (inv != null && !inv.isEmpty()) {
+            return false;
+         }
+      }
+      return true;
+   }
+
+   @Override
+   public void onPlayerLoad(ItemStack stack, EntityLivingBase player) {
+   }
+
+   public static ItemStack getEquippedBackpack(EntityPlayer player) {
+      return BaublesCompat.getBaubleStack(player, BaublesCompat.TYPE_BACKPACK, 0);
+   }
+
    private static void ensureBackpackId(ItemStack stack, EntityPlayer player) {
       if (stack == null) return;
       NBTTagCompound tag = stack.getTagCompound();
@@ -165,8 +240,11 @@ public class ItemBackpack extends ItemArmor {
          id = tag.getInteger("backpackGuiId");
       }
 
+      ItemStack equipped = player != null ? getEquippedBackpack(player) : null;
+      boolean isEquipped = equipped == stack;
+
       // If the equipped backpack shares an ID with another backpack, reassign to keep IDs unique.
-      if (player != null && player.getCurrentArmor(2) == stack) {
+      if (isEquipped) {
          if (hasDuplicateBackpackId(player, stack, id)) {
             id = GUI_ID_RANDOM.nextInt();
             tag.setInteger("backpackGuiId", id);
@@ -182,7 +260,7 @@ public class ItemBackpack extends ItemArmor {
             try {
                // Only sync via PacketBackpackSync when this stack is actually equipped.
                // Otherwise, rely on normal inventory syncing to avoid overwriting the equipped backpack's ID.
-               if (player.getCurrentArmor(2) == stack) {
+               if (isEquipped) {
                   com.voidsrift.riftflux.vortex.network.ModPackets.instance
                           .sendTo(new com.voidsrift.riftflux.vortex.network.PacketBackpackSync(player, id), mp);
                }
@@ -208,6 +286,18 @@ public class ItemBackpack extends ItemArmor {
       ItemStack[] armor = player.inventory.armorInventory;
       if (armor != null) {
          for (ItemStack stack : armor) {
+            if (stack == null || stack == self) continue;
+            if (stack.getItem() != ModItems.backpack) continue;
+            NBTTagCompound tag = stack.getTagCompound();
+            if (tag != null && tag.hasKey("backpackGuiId", 3) && tag.getInteger("backpackGuiId") == id) {
+               return true;
+            }
+         }
+      }
+      IInventory baubles = BaublesApi.getBaubles(player);
+      if (baubles != null) {
+         for (int i = 0; i < baubles.getSizeInventory(); i++) {
+            ItemStack stack = baubles.getStackInSlot(i);
             if (stack == null || stack == self) continue;
             if (stack.getItem() != ModItems.backpack) continue;
             NBTTagCompound tag = stack.getTagCompound();

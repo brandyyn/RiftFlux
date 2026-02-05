@@ -5,9 +5,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import com.voidsrift.riftflux.vortex.item.ItemBackpack;
 import com.voidsrift.riftflux.vortex.item.ModItems;
 import com.voidsrift.riftflux.vortex.lib.container.ContainerBackpack;
-import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
 import com.voidsrift.riftflux.vortex.network.ModPackets;
 import com.voidsrift.riftflux.vortex.network.PacketBackpackGuiHandle;
 import org.lwjgl.opengl.GL11;
@@ -26,7 +26,7 @@ public class GuiInventoryBackpack extends GuiInventory {
    public GuiInventoryBackpack(EntityPlayer player) {
       super(player);
       this.player = player;
-      this.backpack = player.getCurrentArmor(2);
+      this.backpack = ItemBackpack.getEquippedBackpack(player);
       this.inventorySlots = new ContainerBackpack(player);
       this.backpackIdentityId = getBackpackGuiId(this.backpack);
    }
@@ -47,7 +47,7 @@ public class GuiInventoryBackpack extends GuiInventory {
       if (this.syncRequestCooldown > 0) {
          --this.syncRequestCooldown;
       }
-      ItemStack armor = this.player.getCurrentArmor(2);
+      ItemStack armor = ItemBackpack.getEquippedBackpack(this.player);
       boolean hasBackpack = armor != null && armor.getItem() == ModItems.backpack;
       if (!hasBackpack) {
          this.closeBackpackGui();

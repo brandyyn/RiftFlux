@@ -5,7 +5,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import com.voidsrift.riftflux.vortex.item.ModItems;
-import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,7 +24,8 @@ public abstract class MixinContainer {
       if ((Object)this == player.inventoryContainer) {
          InventoryPlayer inventoryPlayer = player.inventory;
          ItemStack itemStack = inventoryPlayer.getItemStack();
-         if (itemStack != null && ItemHelper.hasArmor(player, ModItems.backpack, 2) && itemStack.getItem().isValidArmor(itemStack, 1, player)) {
+         if (itemStack != null && com.voidsrift.riftflux.vortex.item.ItemBackpack.getEquippedBackpack(player) != null
+                 && itemStack.getItem().isValidArmor(itemStack, 1, player)) {
             ci.cancel();
          }
       }

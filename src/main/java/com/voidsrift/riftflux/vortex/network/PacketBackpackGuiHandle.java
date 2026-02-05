@@ -48,11 +48,10 @@ public class PacketBackpackGuiHandle implements IMessage, IMessageHandler<Packet
          if (entity != null && entity instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)entity;
             if (message.open) {
-               if (ItemHelper.hasArmor(player, ModItems.backpack, 2)) {
+               ItemStack armor = com.voidsrift.riftflux.vortex.item.ItemBackpack.getEquippedBackpack(player);
+               if (armor != null && armor.getItem() == ModItems.backpack) {
                   try {
-                     ItemStack armor = player.getCurrentArmor(2);
-                     if (armor != null) {
-                        NBTTagCompound tag = armor.getTagCompound();
+                     NBTTagCompound tag = armor.getTagCompound();
                         if (tag == null) {
                            tag = new NBTTagCompound();
                            armor.setTagCompound(tag);
@@ -65,7 +64,6 @@ public class PacketBackpackGuiHandle implements IMessage, IMessageHandler<Packet
                               ModPackets.instance.sendTo(new PacketBackpackSync(player, id), mp);
                            }
                         }
-                     }
                   } catch (Throwable ignored) {
                   }
                   player.openGui(riftflux.instance, 1, world, 0, 0, 0);
