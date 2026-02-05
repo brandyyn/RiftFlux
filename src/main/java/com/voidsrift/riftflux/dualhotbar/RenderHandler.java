@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -16,9 +17,12 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import com.voidsrift.riftflux.ModConfig;
 
 public class RenderHandler {
     private static final ResourceLocation WIDGITS = new ResourceLocation("textures/gui/widgets.png");
+    private static final ResourceLocation RIFT_SELECTOR = new ResourceLocation("riftflux:textures/gui/riftselector.png");
+    private static final int SELECTOR_Y_OFFSET = 1;
 
     private boolean recievedPost = true;
 
@@ -72,6 +76,9 @@ public class RenderHandler {
             mc.renderEngine.bindTexture(WIDGITS);
 
             InventoryPlayer inv = mc.thePlayer.inventory;
+            int selectorX = 0;
+            int selectorY = 0;
+            boolean hasSelector = false;
             if (DualHotbarConfig.twoLayerRendering) {
                 mc.ingameGUI.drawTexturedModalRect(width / 2 - 91, height - 22, 0, 0, 182, 22);
 
@@ -94,22 +101,9 @@ public class RenderHandler {
                     GL11.glColor4f(1.0f, 1.0f, 1.0f, 1f);
                 }
 
-                mc.ingameGUI.drawTexturedModalRect(
-                        width / 2 - 91 - 1 + (inv.currentItem % 9) * 20,
-                        height - 22 - 1 - ((inv.currentItem / 9) * offset),
-                        0,
-                        22,
-                        24,
-                        22
-                );
-                mc.ingameGUI.drawTexturedModalRect(
-                        width / 2 - 91 - 1 + (inv.currentItem % 9) * 20,
-                        height - 1 - ((inv.currentItem / 9) * offset),
-                        0,
-                        22,
-                        24,
-                        1
-                );
+                selectorX = width / 2 - 91 - 1 + (inv.currentItem % 9) * 20;
+                selectorY = height - 22 - 1 - ((inv.currentItem / 9) * offset);
+                hasSelector = true;
             } else {
                 mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 90, height - 22, 0, 0, 182, 22);
                 mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91, height - 22, 1, 0, 181, 22);
@@ -140,22 +134,9 @@ public class RenderHandler {
                             21
                     );
                 }
-                mc.ingameGUI.drawTexturedModalRect(
-                        width / 2 - 91 - 1 + (inv.currentItem % 18) * 20 - 90,
-                        height - 22 - 1 - ((inv.currentItem / 18) * offset),
-                        0,
-                        22,
-                        24,
-                        22
-                );
-                mc.ingameGUI.drawTexturedModalRect(
-                        width / 2 - 91 - 1 + (inv.currentItem % 18) * 20 - 90,
-                        height - 1 - ((inv.currentItem / 18) * offset),
-                        0,
-                        22,
-                        24,
-                        1
-                );
+                selectorX = width / 2 - 91 - 1 + (inv.currentItem % 18) * 20 - 90;
+                selectorY = height - 22 - 1 - ((inv.currentItem / 18) * offset);
+                hasSelector = true;
             }
 
             GL11.glDisable(GL11.GL_BLEND);
@@ -178,6 +159,10 @@ public class RenderHandler {
                     int z = height - 16 - 3 - ((i / 18) * offset);
                     renderInventorySlot(i, x, z, 1f);
                 }
+            }
+
+            if (hasSelector) {
+                drawSelectorAfterItems(mc, selectorX, selectorY);
             }
 
             RenderHelper.disableStandardItemLighting();
@@ -282,5 +267,46 @@ public class RenderHandler {
 
             itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemstack, x, y);
         }
+    }
+
+    private void drawSelectorAfterItems(Minecraft mc, int x, int y) {
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_BLEND);
+        if (ModConfig.enableHotbarSelectorTexture) {
+            mc.renderEngine.bindTexture(RIFT_SELECTOR);
+            drawCustomSizedTexture(x, y + SELECTOR_Y_OFFSET, 0f, 0f, 24, 24, 24, 22, 24f, 24f);
+            mc.renderEngine.bindTexture(WIDGITS);
+        } else {
+            mc.ingameGUI.drawTexturedModalRect(
+                    x,
+                    y,
+                    0,
+                    22,
+                    24,
+                    22
+            );
+            mc.ingameGUI.drawTexturedModalRect(
+                    x,
+                    y + 21,
+                    0,
+                    22,
+                    24,
+                    1
+            );
+        }
+    }
+
+    private void drawCustomSizedTexture(int x, int y, float u, float v, int regionWidth, int regionHeight,
+                                        int drawWidth, int drawHeight, float textureWidth, float textureHeight) {
+        float f = 1.0F / textureWidth;
+        float f1 = 1.0F / textureHeight;
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+        tessellator.addVertexWithUV(x, y + drawHeight, 0.0D, (u) * f, (v + regionHeight) * f1);
+        tessellator.addVertexWithUV(x + drawWidth, y + drawHeight, 0.0D, (u + regionWidth) * f, (v + regionHeight) * f1);
+        tessellator.addVertexWithUV(x + drawWidth, y, 0.0D, (u + regionWidth) * f, (v) * f1);
+        tessellator.addVertexWithUV(x, y, 0.0D, (u) * f, (v) * f1);
+        tessellator.draw();
     }
 }

@@ -59,6 +59,7 @@ public class ModConfig {
     public static boolean itemPickupStarClearOnLeaveInventory;
     public static boolean itemPickupStarClearOnInventoryClose;
     public static boolean itemPickupStarShowHotbarHud;
+    public static boolean enableHotbarSelectorTexture;
 
     // Zelda
     public static boolean zeldaDisableRegen;
@@ -313,6 +314,11 @@ public class ModConfig {
         itemPickupStarShowHotbarHud = config.getBoolean(
                 "ItemPickupStarShowHotbarHud", "general", true,
                 "If true, show pickup stars on the in-game hotbar HUD."
+        );
+
+        enableHotbarSelectorTexture = config.getBoolean(
+                "EnableRiftHotbarSelectorTexture", "general", true,
+                "Use riftselector.png for the hotbar selection box to avoid vanilla cut-off."
         );
 
         zeldaDisableRegen = config.getBoolean(

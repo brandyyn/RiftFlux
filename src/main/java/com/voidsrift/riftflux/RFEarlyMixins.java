@@ -138,6 +138,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
 
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            if (ModConfig.enableHotbarSelectorTexture) {
+                mixins.add("early.MixinGuiIngame_HotbarSelectorTexture");
+            }
             boolean hasBackhand = loadedCoreMods.contains("xonin.backhand.coremod.BackhandLoadingPlugin")
                     || classExists("xonin.backhand.Backhand");
             if (hasBackhand) {
