@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.dualhotbar.DualHotbarConfig;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -40,8 +41,13 @@ public final class PickupStarHotbarHud {
         final int sw = sr.getScaledWidth();
         final int sh = sr.getScaledHeight();
 
-        final int baseX = (sw / 2) - 90 + 2;
+        final boolean dualEnabled = DualHotbarConfig.enable;
+        final int numBars = dualEnabled ? DualHotbarConfig.numHotbars : 1;
+        final boolean longHotbar = dualEnabled && !DualHotbarConfig.twoLayerRendering;
+        final int columns = longHotbar ? 18 : 9;
+        final int baseX = (sw / 2) - 90 + 2 + (longHotbar ? -90 : 0);
         final int baseY = sh - 16 - 3;
+        final int offset = 20;
 
         mc.getTextureManager().bindTexture(TEX);
 
@@ -56,14 +62,15 @@ public final class PickupStarHotbarHud {
             GL11.glColor4f(1F, 1F, 1F, 1F);
 
             final Tessellator t = Tessellator.instance;
-            for (int i = 0; i < 9; i++) {
+            int totalSlots = 9 * numBars;
+            for (int i = 0; i < totalSlots; i++) {
                 ItemStack st = mc.thePlayer.inventory.mainInventory[i];
                 if (st == null) continue;
                 NBTTagCompound tag = st.getTagCompound();
                 if (tag == null || !tag.getBoolean(TAG_NEW)) continue;
 
-                int x = baseX + i * 20;
-                int y = baseY;
+                int x = baseX + (i % columns) * 20;
+                int y = baseY - (i / columns) * offset;
 
                 t.startDrawingQuads();
                 t.addVertexWithUV(x     , y + 16, 0, 0, 1);
