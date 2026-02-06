@@ -102,7 +102,14 @@ public class PacketToolbeltSwap implements IMessage, IMessageHandler<PacketToolb
             }
             case 2: { // swap
                ItemStack slotStack = toolbelt.getStackInSlot(slotId);
-               if (ItemStack.areItemStacksEqual(slotStack, message.toolbeltItem)) {
+               if (message.toolbeltItem == null) {
+                  ItemStack held = player.inventory.getCurrentItem();
+                  if (slotStack != null || held != null) {
+                     toolbelt.setInventorySlotContents(slotId, held);
+                     player.inventory.setInventorySlotContents(player.inventory.currentItem, slotStack);
+                     changed = true;
+                  }
+               } else if (ItemStack.areItemStacksEqual(slotStack, message.toolbeltItem)) {
                   toolbelt.setInventorySlotContents(slotId, player.inventory.getCurrentItem());
                   player.inventory.setInventorySlotContents(player.inventory.currentItem, message.toolbeltItem);
                   changed = true;
