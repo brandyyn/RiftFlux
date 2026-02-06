@@ -25,25 +25,6 @@ public class PacketToolbeltSwap implements IMessage, IMessageHandler<PacketToolb
    private int mode;
    private int id;
 
-   private static boolean sameStack(ItemStack a, ItemStack b) {
-      if (a == b) return true;
-      if (a == null || b == null) return false;
-      if (a.getItem() != b.getItem()) return false;
-      if (a.getItemDamage() != b.getItemDamage()) return false;
-      return ItemStack.areItemStackTagsEqual(a, b);
-   }
-
-   private static int findMatchingSlot(InventoryToolbelt toolbelt, ItemStack target) {
-      if (toolbelt == null || target == null) return -1;
-      for (int i = 0; i < toolbelt.getSizeInventory(); i++) {
-         ItemStack slot = toolbelt.getStackInSlot(i);
-         if (sameStack(slot, target)) {
-            return i;
-         }
-      }
-      return -1;
-   }
-
    public PacketToolbeltSwap() {
    }
 
@@ -81,36 +62,33 @@ public class PacketToolbeltSwap implements IMessage, IMessageHandler<PacketToolb
                return null;
             }
 
-            InventoryToolbelt toolbelt = ContainerHelper.getToolbeltInventory(BaublesApi.getBaubles(player).getStackInSlot(3));
+            int toolbeltSlot = ItemHelper.findBaubleSlot(player, ModItems.toolbelt);
+            if (toolbeltSlot < 0) {
+               return null;
+            }
+            ItemStack toolbeltStack = BaublesApi.getBaubles(player).getStackInSlot(toolbeltSlot);
+            if (toolbeltStack == null) {
+               return null;
+            }
+            InventoryToolbelt toolbelt = ContainerHelper.getToolbeltInventory(toolbeltStack);
             boolean changed = false;
             int slotId = message.id;
-            if (slotId < 0 || slotId >= toolbelt.getSizeInventory()) {
-               slotId = -1;
-            }
-            if (message.toolbeltItem != null) {
-               if (slotId < 0 || !sameStack(toolbelt.getStackInSlot(slotId), message.toolbeltItem)) {
-                  int found = findMatchingSlot(toolbelt, message.toolbeltItem);
-                  if (found >= 0) {
-                     slotId = found;
-                  }
-               }
-            }
             if (slotId < 0 || slotId >= toolbelt.getSizeInventory()) {
                return null;
             }
             switch(message.mode) {
             case 0: { // withdraw
                ItemStack slotStack = toolbelt.getStackInSlot(slotId);
-               if (player.inventory.getCurrentItem() == null && slotStack != null) {
+               if (ItemStack.areItemStacksEqual(slotStack, message.toolbeltItem)) {
                   toolbelt.setInventorySlotContents(slotId, null);
-                  player.inventory.setInventorySlotContents(player.inventory.currentItem, slotStack);
+                  player.inventory.setInventorySlotContents(player.inventory.currentItem, message.toolbeltItem);
                   changed = true;
                }
                break;
             }
             case 1: { // insert into first empty slot
                ItemStack held = player.inventory.getCurrentItem();
-               if (held != null && ContainerHelper.toolbeltValid(held)) {
+               if (held != null) {
                   for (int i = 0; i < toolbelt.getSizeInventory(); ++i) {
                      if (toolbelt.getStackInSlot(i) == null) {
                         toolbelt.setInventorySlotContents(i, held);
@@ -124,19 +102,9 @@ public class PacketToolbeltSwap implements IMessage, IMessageHandler<PacketToolb
             }
             case 2: { // swap
                ItemStack slotStack = toolbelt.getStackInSlot(slotId);
-               ItemStack held = player.inventory.getCurrentItem();
-               if (held != null && !ContainerHelper.toolbeltValid(held)) {
-                  break;
-               }
-               if (slotStack == null) {
-                  if (held != null) {
-                     toolbelt.setInventorySlotContents(slotId, held);
-                     player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
-                     changed = true;
-                  }
-               } else {
-                  toolbelt.setInventorySlotContents(slotId, held);
-                  player.inventory.setInventorySlotContents(player.inventory.currentItem, slotStack);
+               if (ItemStack.areItemStacksEqual(slotStack, message.toolbeltItem)) {
+                  toolbelt.setInventorySlotContents(slotId, player.inventory.getCurrentItem());
+                  player.inventory.setInventorySlotContents(player.inventory.currentItem, message.toolbeltItem);
                   changed = true;
                }
                break;
@@ -152,7 +120,7 @@ public class PacketToolbeltSwap implements IMessage, IMessageHandler<PacketToolb
 	                  // Force client sync of the updated bauble stack NBT.
 	                  if (player instanceof EntityPlayerMP) {
 	                     EntityPlayerMP mp = (EntityPlayerMP) player;
-	                     ItemStack tb = BaublesApi.getBaubles(player).getStackInSlot(3);
+	                     ItemStack tb = BaublesApi.getBaubles(player).getStackInSlot(toolbeltSlot);
 	                     ModPackets.instance.sendTo(new PacketToolbeltSync(player, tb), mp);
                         try {
                            BaublesApi.getBaubles(player).markDirty();

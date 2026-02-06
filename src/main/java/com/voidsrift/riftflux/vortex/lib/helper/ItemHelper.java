@@ -1,10 +1,10 @@
 package com.voidsrift.riftflux.vortex.lib.helper;
 
-import cpw.mods.fml.common.Loader;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.MapMaker;
 import cpw.mods.fml.common.registry.GameData;
 import java.util.Map;
+import baubles.api.BaublesApi;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
@@ -21,27 +21,25 @@ public class ItemHelper {
       if (player == null || bauble == null) {
          return false;
       }
-      // Optional Baubles compatibility: do not hard-crash if Baubles isn't installed.
-      if (!Loader.isModLoaded("Baubles")) {
-         return false;
+      return findBaubleSlot(player, bauble) >= 0;
+   }
+
+   public static int findBaubleSlot(EntityPlayer player, Item bauble) {
+      if (player == null || bauble == null) {
+         return -1;
       }
       try {
-         Class<?> baublesApi = Class.forName("baubles.api.BaublesApi");
-         java.lang.reflect.Method getBaubles = baublesApi.getMethod("getBaubles", EntityPlayer.class);
-         Object invObj = getBaubles.invoke(null, player);
-         if (!(invObj instanceof IInventory)) {
-            return false;
-         }
-         IInventory binventory = (IInventory) invObj;
+         IInventory binventory = BaublesApi.getBaubles(player);
+         if (binventory == null) return -1;
          for (int i = 0; i < binventory.getSizeInventory(); ++i) {
             ItemStack stack = binventory.getStackInSlot(i);
             if (stack != null && stack.getItem() == bauble) {
-               return true;
+               return i;
             }
          }
       } catch (Throwable ignored) {
       }
-      return false;
+      return -1;
    }
 
    /** Try to consume one instance of the given item from Baubles. Returns true if consumed. */
@@ -49,17 +47,9 @@ public class ItemHelper {
       if (player == null || bauble == null) {
          return false;
       }
-      if (!Loader.isModLoaded("Baubles")) {
-         return false;
-      }
       try {
-         Class<?> baublesApi = Class.forName("baubles.api.BaublesApi");
-         java.lang.reflect.Method getBaubles = baublesApi.getMethod("getBaubles", EntityPlayer.class);
-         Object invObj = getBaubles.invoke(null, player);
-         if (!(invObj instanceof IInventory)) {
-            return false;
-         }
-         IInventory binventory = (IInventory) invObj;
+         IInventory binventory = BaublesApi.getBaubles(player);
+         if (binventory == null) return false;
          for (int i = 0; i < binventory.getSizeInventory(); ++i) {
             ItemStack stack = binventory.getStackInSlot(i);
             if (stack != null && stack.getItem() == bauble) {

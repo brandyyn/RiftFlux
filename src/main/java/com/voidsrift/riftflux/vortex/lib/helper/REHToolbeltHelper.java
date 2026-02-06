@@ -53,15 +53,18 @@ public class REHToolbeltHelper {
          if (KeyEventHandler.TRMactive) {
             if (mc.currentScreen != null) {
                KeyEventHandler.TRMactive = false;
+               ToolbeltState.setRadialActive(false);
                mc.setIngameFocus();
                mc.setIngameNotInFocus();
                return;
             }
 
             if (!ItemHelper.hasBauble(mc.thePlayer, ModItems.toolbelt)) {
+               ToolbeltState.setRadialActive(false);
                return;
             }
 
+            ToolbeltState.setRadialActive(true);
             this.renderToolbeltRadialMenu(mc, event);
             this.active = 5;
             if (mc.inGameHasFocus) {
@@ -74,17 +77,18 @@ public class REHToolbeltHelper {
                mc.mouseHelper.grabMouseCursor();
             }
 
-            this.lastState = false;
          }
 
          if (!KeyEventHandler.TRMactive) {
-            Mouse.setCursorPosition(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
             this.itemMap.clear();
             this.buttonList.clear();
             this.buttonHover.clear();
          }
 
          this.lastState = KeyEventHandler.TRMactive;
+         if (!KeyEventHandler.TRMactive) {
+            ToolbeltState.setRadialActive(false);
+         }
       }
 
    }
@@ -117,8 +121,12 @@ public class REHToolbeltHelper {
       // - the player changed the held item (insert candidate changes)
       final int rev = ToolbeltState.getClientRevision();
       ItemStack toolbeltStack = null;
+      int toolbeltSlot = -1;
       try {
-         toolbeltStack = BaublesApi.getBaubles(mc.thePlayer).getStackInSlot(3);
+         toolbeltSlot = ItemHelper.findBaubleSlot(mc.thePlayer, ModItems.toolbelt);
+         if (toolbeltSlot >= 0) {
+            toolbeltStack = BaublesApi.getBaubles(mc.thePlayer).getStackInSlot(toolbeltSlot);
+         }
       } catch (Throwable ignored) {
       }
       final boolean heldChanged = !sameStack(heldItem, this.lastHeldCopy);
@@ -180,7 +188,8 @@ public class REHToolbeltHelper {
          ButtonToolbeltRadial button = (ButtonToolbeltRadial)this.buttonList.get(i);
          if (valid && button.itemstack != null && (button.isHovered(mX, mY) || button.isItemHovered(mX, mY))) {
             button.drawButton(mc, ri, tessellator, 1.0F, 1.0F, 1.0F, 0.25F);
-            this.buttonHover.put(button, true);            if (heldItem == null) {
+            this.buttonHover.put(button, true);
+            if (heldItem == null) {
                RenderHelper.drawCenteredString(mc.fontRenderer, "Withdraw", event.resolution.getScaledWidth() / 2, (event.resolution.getScaledHeight() - mc.fontRenderer.FONT_HEIGHT) / 2, -1);
             } else if (heldItem == button.itemstack) {
                RenderHelper.drawCenteredString(mc.fontRenderer, "Insert", event.resolution.getScaledWidth() / 2, (event.resolution.getScaledHeight() - mc.fontRenderer.FONT_HEIGHT) / 2, -1);
@@ -188,7 +197,7 @@ public class REHToolbeltHelper {
                RenderHelper.drawCenteredString(mc.fontRenderer, "Swap", event.resolution.getScaledWidth() / 2, (event.resolution.getScaledHeight() - mc.fontRenderer.FONT_HEIGHT) / 2, -1);
             }
             if (mouseClick) {
-               this.doTrade(mc.thePlayer, heldItem, button.id);
+               this.doTrade(mc.thePlayer, heldItem, button.id, button.itemstack);
                // Force a rebuild next frame. The authoritative contents will arrive via PacketToolbeltSync.
                this.lastClientRev = -1;
                break;
@@ -212,33 +221,47 @@ public class REHToolbeltHelper {
 
    }
 
-   private void doTrade(EntityPlayer player, ItemStack heldItem, int id) {
-      byte mode;
-      ItemStack toolbeltStack = null;
+   private void doTrade(EntityPlayer player, ItemStack heldItem, int id, ItemStack toolbeltItem) {
+      int mode;
       if (heldItem == null) {
-         mode = (byte)ContainerHelper.toolbeltWithdraw;
+         mode = ContainerHelper.toolbeltWithdraw;
+      } else if (heldItem == toolbeltItem) {
+         mode = ContainerHelper.toolbeltInsert;
       } else {
-         try {
-            toolbeltStack = BaublesApi.getBaubles(player).getStackInSlot(3);
-         } catch (Throwable ignored) {
+         mode = ContainerHelper.toolbeltSwap;
+      }
+      int sendId = id;
+      if (mode != ContainerHelper.toolbeltInsert) {
+         int found = findToolbeltSlot(player, toolbeltItem);
+         if (found >= 0) {
+            sendId = found;
          }
+      }
+      ModPackets.instance.sendToServer(new PacketToolbeltSwap(player, mode, sendId, toolbeltItem));
+      KeyEventHandler.markToolbeltRadialAction();
+   }
+
+   private int findToolbeltSlot(EntityPlayer player, ItemStack target) {
+      if (player == null || target == null) {
+         return -1;
+      }
+      try {
+         int toolbeltSlot = ItemHelper.findBaubleSlot(player, ModItems.toolbelt);
+         if (toolbeltSlot < 0) {
+            return -1;
+         }
+         ItemStack toolbeltStack = BaublesApi.getBaubles(player).getStackInSlot(toolbeltSlot);
          if (toolbeltStack == null) {
-            mode = (byte)ContainerHelper.toolbeltSwap;
-         } else {
-            InventoryToolbelt toolbelt = ContainerHelper.getToolbeltInventory(toolbeltStack);
-            mode = (byte)(toolbelt.getStackInSlot(id) == null ? ContainerHelper.toolbeltInsert : ContainerHelper.toolbeltSwap);
+            return -1;
          }
-      }
-
-      ItemStack slotStack = null;
-      if (toolbeltStack != null) {
-         try {
-            InventoryToolbelt toolbelt = ContainerHelper.getToolbeltInventory(toolbeltStack);
-            slotStack = toolbelt.getStackInSlot(id);
-         } catch (Throwable ignored) {
+         InventoryToolbelt toolbelt = ContainerHelper.getToolbeltInventory(toolbeltStack);
+         for (int i = 0; i < toolbelt.getSizeInventory(); i++) {
+            if (sameStack(toolbelt.getStackInSlot(i), target)) {
+               return i;
+            }
          }
+      } catch (Throwable ignored) {
       }
-
-      ModPackets.instance.sendToServer(new PacketToolbeltSwap(player, mode, id, slotStack));
+      return -1;
    }
 }

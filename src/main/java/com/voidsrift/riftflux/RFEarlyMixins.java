@@ -167,6 +167,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.vortex.MixinGuiScreen");
             mixins.add("early.vortex.MixinItemRenderer");
             mixins.add("early.vortex.MixinItemRendererOF");
+            mixins.add("early.vortex.MixinMinecraft_ToolbeltFocus");
             mixins.add("early.vortex.MixinRendererLivingEntity");
         }
 

@@ -13,6 +13,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import com.voidsrift.riftflux.vortex.lib.helper.ToolbeltState;
+import com.voidsrift.riftflux.vortex.item.ModItems;
+import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
 
 /**
  * Client-side sync for the Toolbelt bauble ItemStack NBT.
@@ -68,9 +70,12 @@ public class PacketToolbeltSync implements IMessage, IMessageHandler<PacketToolb
 
                 EntityPlayer p = (EntityPlayer) e;
                 try {
-                    BaublesApi.getBaubles(p).setInventorySlotContents(3, message.toolbeltStack);
-                    BaublesApi.getBaubles(p).markDirty();
-                    ToolbeltState.bumpClientRevision();
+                    int toolbeltSlot = ItemHelper.findBaubleSlot(p, ModItems.toolbelt);
+                    if (toolbeltSlot >= 0) {
+                        BaublesApi.getBaubles(p).setInventorySlotContents(toolbeltSlot, message.toolbeltStack);
+                        BaublesApi.getBaubles(p).markDirty();
+                        ToolbeltState.bumpClientRevision();
+                    }
                 } catch (Throwable ignored) {
                 }
             }

@@ -946,16 +946,16 @@ public class ModConfig {
         butterflyKnifeFlickBoostEffects = config.getStringList(
                 "butterflyKnifeFlickBoostEffects",
                 "vortex",
-                new String[]{"speed,5,0.5"},
+                new String[]{"speed,5,1.0"},
                 "Potion effects applied when flicking shortly after a successful backstab.\n" +
                         "Format per entry: potionNameOrId,amplifier,durationSeconds (or durationTicks).\n" +
-                        "Example: speed,5,0.5"
+                        "Example: speed,5,1.0"
         );
 
         float flickWindowSeconds = config.getFloat(
                 "butterflyKnifeFlickBoostWindowSeconds",
                 "vortex",
-                0.5F,
+                1.0F,
                 0.0F,
                 60.0F,
                 "Time window (in seconds) after a successful backstab in which a flick grants the boost."

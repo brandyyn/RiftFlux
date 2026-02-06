@@ -9,6 +9,7 @@ package com.voidsrift.riftflux.vortex.lib.helper;
 public final class ToolbeltState {
 
     private static volatile int clientRevision = 0;
+    private static volatile boolean radialActive = false;
 
     private ToolbeltState() {}
 
@@ -18,5 +19,13 @@ public final class ToolbeltState {
 
     public static void bumpClientRevision() {
         clientRevision++;
+    }
+
+    public static boolean isRadialActive() {
+        return radialActive;
+    }
+
+    public static void setRadialActive(boolean active) {
+        radialActive = active;
     }
 }
