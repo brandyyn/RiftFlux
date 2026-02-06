@@ -25,11 +25,17 @@ public class Core {
 
     public static void preInit(FMLPreInitializationEvent e) {
         Config.syncFromModConfig();
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         ZItems.init();
         ZBlocks.init();
     }
 
     public static void init(FMLInitializationEvent e) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         proxy = createProxy();
         proxy.registerClientStuff();
         FMLCommonHandler.instance().bus().register(new TickHandler());

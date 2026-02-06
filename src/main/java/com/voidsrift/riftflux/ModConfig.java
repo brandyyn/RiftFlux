@@ -62,6 +62,7 @@ public class ModConfig {
     public static boolean enableHotbarSelectorTexture;
 
     // Zelda
+    public static boolean zeldaHeartsEnabled;
     public static boolean zeldaDisableRegen;
     public static int zeldaHeartPieceRarity;
     public static int zeldaStartingHearts;
@@ -319,6 +320,13 @@ public class ModConfig {
         enableHotbarSelectorTexture = config.getBoolean(
                 "EnableRiftHotbarSelectorTexture", "general", true,
                 "Use riftselector.png for the hotbar selection box to avoid vanilla cut-off."
+        );
+
+        zeldaHeartsEnabled = config.getBoolean(
+                "EnableHeartsModule",
+                "zelda",
+                true,
+                "If false, disables the Zelda hearts module (HUD, heart items/drops, and regen rule changes)."
         );
 
         zeldaDisableRegen = config.getBoolean(

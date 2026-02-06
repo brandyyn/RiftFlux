@@ -19,9 +19,13 @@ public class TickHandler {
 
     @SubscribeEvent
     public void worldTick(TickEvent.WorldTickEvent event) {
-        if (Config.DISABLE_REGEN && event.world.getGameRules().getGameRuleBooleanValue("naturalRegeneration")) {
-            event.world.getGameRules().setOrCreateGameRule("naturalRegeneration", "false");
+        if (!Config.HEARTS_ENABLED || event.world == null || event.world.isRemote) {
+            return;
+        }
+        boolean desired = !Config.DISABLE_REGEN;
+        boolean current = event.world.getGameRules().getGameRuleBooleanValue("naturalRegeneration");
+        if (current != desired) {
+            event.world.getGameRules().setOrCreateGameRule("naturalRegeneration", desired ? "true" : "false");
         }
     }
 }
-

@@ -56,6 +56,9 @@ extends Gui {
         if (event == null) {
             return;
         }
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         if (event.type == null) {
             return;
         }
@@ -91,6 +94,9 @@ extends Gui {
     @SubscribeEvent
     public void heartGUI(RenderGameOverlayEvent.Pre event) {
         if (event == null) {
+            return;
+        }
+        if (!Config.HEARTS_ENABLED) {
             return;
         }
         if (event.type == null) {
@@ -190,4 +196,3 @@ extends Gui {
         this.drawTexturedModalRect(x, y, heartStageImage, row * 9, 9, 9);
     }
 }
-

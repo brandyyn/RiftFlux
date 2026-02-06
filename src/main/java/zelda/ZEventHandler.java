@@ -46,6 +46,9 @@ import zelda.proxy.CommonProxy;
 public class ZEventHandler {
     @SubscribeEvent
     public void onEntityConstructing(EntityEvent.EntityConstructing event) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         if (event.entity instanceof EntityPlayer && ExtendedPlayerProperties.get((EntityPlayer)event.entity) == null) {
             ExtendedPlayerProperties.register((EntityPlayer)event.entity);
         }
@@ -56,6 +59,9 @@ public class ZEventHandler {
 
     @SubscribeEvent
     public void onLivingDeathEvent(LivingDeathEvent event) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         if (!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
             NBTTagCompound playerData = new NBTTagCompound();
             ((ExtendedPlayerProperties)event.entity.getExtendedProperties("ExtendedPlayer")).saveNBTData(playerData);
@@ -75,6 +81,9 @@ public class ZEventHandler {
 
     @SubscribeEvent
     public void onEntityJoinWorld(EntityJoinWorldEvent event) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         if (!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
             NBTTagCompound playerData = CommonProxy.getEntityData(((EntityPlayer)event.entity).getUniqueID().toString());
             if (playerData != null) {
@@ -89,6 +98,9 @@ public class ZEventHandler {
 
     @SubscribeEvent
     public void onItemPickup(EntityItemPickupEvent event) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         ItemStack item = event.item.getEntityItem();
         if (item.getItem() == ZItems.heart) {
             EntityPlayer player = event.entityPlayer;
@@ -103,10 +115,12 @@ public class ZEventHandler {
 
     @SubscribeEvent
     public void onBlockBreak(BlockEvent.HarvestDropsEvent event) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
         Random rand = new Random();
         if (event.block == Blocks.tallgrass && Config.BLOCK_DROP > 0 && rand.nextInt(Config.BLOCK_DROP) == 0) {
             event.drops.add(new ItemStack(ZItems.heart));
         }
     }
 }
-
