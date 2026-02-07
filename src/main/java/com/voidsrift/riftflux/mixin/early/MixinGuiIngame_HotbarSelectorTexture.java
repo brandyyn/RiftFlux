@@ -50,12 +50,20 @@ public abstract class MixinGuiIngame_HotbarSelectorTexture {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
         GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         mc.getTextureManager().bindTexture(RIFT_SELECTOR);
         drawSelectorScaled(riftflux$selectorX, riftflux$selectorY + SELECTOR_Y_OFFSET);
         mc.getTextureManager().bindTexture(WIDGETS);
+        GL11.glPopAttrib();
         riftflux$hasSelector = false;
     }
 

@@ -97,6 +97,7 @@ public class ButtonToolbeltRadial {
       GL11.glEnable(3553);
       GL11.glDisable(3042);
       GL11.glPopMatrix();
+      GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
       RenderHelper.drawItemStack(mc, ri, this.itemstack, this.itemx, this.itemy);
    }
 

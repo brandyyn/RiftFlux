@@ -21,6 +21,11 @@ public class RenderHelper {
    public static void drawItemStack(Minecraft mc, RenderItem ri, ItemStack stack, int x, int y) {
       if (stack != null) {
          GL11.glPushMatrix();
+         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+         GL11.glEnable(GL11.GL_TEXTURE_2D);
+         GL11.glEnable(GL11.GL_ALPHA_TEST);
+         GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
+         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
          ri.zLevel = 300.0F;
          GL11.glEnable(2929);
          GL11.glEnable(32826);
@@ -31,6 +36,7 @@ public class RenderHelper {
          GL11.glDisable(32826);
          GL11.glDisable(2929);
          ri.zLevel = 0.0F;
+         GL11.glPopAttrib();
          GL11.glPopMatrix();
       }
 

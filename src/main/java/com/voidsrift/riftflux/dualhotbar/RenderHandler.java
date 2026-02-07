@@ -270,9 +270,16 @@ public class RenderHandler {
     }
 
     private void drawSelectorAfterItems(Minecraft mc, int x, int y) {
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
         GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         if (ModConfig.enableHotbarSelectorTexture) {
             mc.renderEngine.bindTexture(RIFT_SELECTOR);
             drawCustomSizedTexture(x, y + SELECTOR_Y_OFFSET, 0f, 0f, 24, 24, 24, 22, 24f, 24f);
@@ -295,6 +302,7 @@ public class RenderHandler {
                     1
             );
         }
+        GL11.glPopAttrib();
     }
 
     private void drawCustomSizedTexture(int x, int y, float u, float v, int regionWidth, int regionHeight,
