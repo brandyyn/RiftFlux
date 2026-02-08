@@ -1,18 +1,27 @@
 package com.voidsrift.riftflux.vortex.event;
 
+import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.vortex.item.ModItems;
 import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.gameevent.InputEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import baubles.api.BaublesApi;
 import com.voidsrift.riftflux.vortex.lib.container.InventoryToolbelt;
 import com.voidsrift.riftflux.vortex.lib.helper.ContainerHelper;
 import com.voidsrift.riftflux.vortex.network.ModPackets;
+import com.voidsrift.riftflux.vortex.network.PacketPlacedItem;
 import com.voidsrift.riftflux.vortex.network.PacketToolbeltSwap;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+import net.minecraft.entity.player.EntityPlayerMP;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import net.minecraftforge.client.event.MouseEvent;
@@ -25,6 +34,7 @@ import net.minecraftforge.client.event.MouseEvent;
 public class KeyEventHandler {
 
     public static final KeyBinding keyX = new KeyBinding("Cycle Toolbelt", 45, "key.categories.gameplay");
+    public static final KeyBinding keyPlaceItem = new KeyBinding("Place Item", 47, "key.categories.gameplay");
 
     /** Toolbelt Radial Menu active flag (used by REHToolbeltHelper). */
     public static boolean TRMactive = false;
@@ -52,6 +62,7 @@ public class KeyEventHandler {
         if (registered) return;
         try {
             ClientRegistry.registerKeyBinding(keyX);
+            ClientRegistry.registerKeyBinding(keyPlaceItem);
             registered = true;
         } catch (Throwable ignored) {
         }
@@ -147,6 +158,20 @@ public class KeyEventHandler {
         }
     }
 
+    @SubscribeEvent
+    public void onKeyInput(InputEvent.KeyInputEvent event) {
+        if (keyPlaceItem.isPressed()) {
+            handlePlaceItemKey();
+        }
+    }
+
+    @SubscribeEvent
+    public void onMouseInput(InputEvent.MouseInputEvent event) {
+        if (keyPlaceItem.isPressed()) {
+            handlePlaceItemKey();
+        }
+    }
+
     private static void doQuickTapSwap(Minecraft mc) {
         if (ModItems.toolbelt != null && ItemHelper.hasBauble(mc.thePlayer, ModItems.toolbelt)) {
             try {
@@ -182,5 +207,48 @@ public class KeyEventHandler {
             } catch (Throwable ignored) {
             }
         }
+    }
+
+    private void handlePlaceItemKey() {
+        if (!ModConfig.enablePlacedItem) {
+            return;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.currentScreen != null || mc.thePlayer == null || mc.theWorld == null) {
+            return;
+        }
+        double reach = 4.5D;
+        if (mc.playerController != null) {
+            reach = mc.playerController.getBlockReachDistance();
+        }
+        MovingObjectPosition mop = raytraceFromEntity(mc.theWorld, mc.thePlayer, reach);
+        if (mop != null) {
+            ModPackets.instance.sendToServer(new PacketPlacedItem((byte) mop.sideHit, mop.blockX, mop.blockY, mop.blockZ));
+        }
+    }
+
+    private static MovingObjectPosition raytraceFromEntity(World world, Entity entity, double range) {
+        float partial = 1.0F;
+        float pitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partial;
+        float yaw = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partial;
+        double x = entity.prevPosX + (entity.posX - entity.prevPosX) * partial;
+        double y = entity.prevPosY + (entity.posY - entity.prevPosY) * partial;
+        if (!world.isRemote && entity instanceof net.minecraft.entity.player.EntityPlayer) {
+            y += 1.62D;
+        }
+        double z = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partial;
+        Vec3 vec3 = Vec3.createVectorHelper(x, y, z);
+        float f3 = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI);
+        float f4 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI);
+        float f5 = -MathHelper.cos(-pitch * 0.017453292F);
+        float f6 = MathHelper.sin(-pitch * 0.017453292F);
+        float f7 = f4 * f5;
+        float f8 = f3 * f5;
+        double distance = range;
+        if (entity instanceof EntityPlayerMP && range < 10.0D) {
+            distance = ((EntityPlayerMP) entity).theItemInWorldManager.getBlockReachDistance();
+        }
+        Vec3 vec32 = vec3.addVector(f7 * distance, f6 * distance, f8 * distance);
+        return world.rayTraceBlocks(vec3, vec32);
     }
 }

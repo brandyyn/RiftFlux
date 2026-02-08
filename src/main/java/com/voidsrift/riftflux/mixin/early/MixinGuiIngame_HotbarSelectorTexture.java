@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.GuiIngameForge;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
+import com.voidsrift.riftflux.ModConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -44,11 +45,41 @@ public abstract class MixinGuiIngame_HotbarSelectorTexture {
         instance.drawTexturedModalRect(x, y, u, v, w, h);
     }
 
-    @Inject(method = "renderHotbar", at = @At("RETURN"))
-    private void riftflux$renderSelectorOnTop(int width, int height, float partialTicks, CallbackInfo ci) {
+    @Inject(
+            method = "renderHotbar",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/entity/RenderItem;renderItemOverlayIntoGUI(Lnet/minecraft/client/gui/FontRenderer;Lnet/minecraft/client/renderer/texture/TextureManager;Lnet/minecraft/item/ItemStack;II)V",
+                    ordinal = 0,
+                    shift = At.Shift.BEFORE
+            )
+    )
+    private void riftflux$renderSelectorBeforeText(int width, int height, float partialTicks, CallbackInfo ci) {
+        if (ModConfig.hotbarSelectorAboveItemText) {
+            return;
+        }
         if (!riftflux$hasSelector) {
             return;
         }
+        riftflux$drawSelectorNow();
+        riftflux$hasSelector = false;
+    }
+
+    @Inject(method = "renderHotbar", at = @At("RETURN"))
+    private void riftflux$renderSelectorOnTop(int width, int height, float partialTicks, CallbackInfo ci) {
+        if (!ModConfig.hotbarSelectorAboveItemText) {
+            riftflux$hasSelector = false;
+            return;
+        }
+        if (!riftflux$hasSelector) {
+            return;
+        }
+        riftflux$drawSelectorNow();
+        riftflux$hasSelector = false;
+    }
+
+    @Unique
+    private void riftflux$drawSelectorNow() {
         Minecraft mc = Minecraft.getMinecraft();
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
         GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -64,7 +95,6 @@ public abstract class MixinGuiIngame_HotbarSelectorTexture {
         drawSelectorScaled(riftflux$selectorX, riftflux$selectorY + SELECTOR_Y_OFFSET);
         mc.getTextureManager().bindTexture(WIDGETS);
         GL11.glPopAttrib();
-        riftflux$hasSelector = false;
     }
 
     private void drawSelectorScaled(int x, int y) {

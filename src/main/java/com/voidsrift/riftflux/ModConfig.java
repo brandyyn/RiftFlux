@@ -60,6 +60,7 @@ public class ModConfig {
     public static boolean itemPickupStarClearOnInventoryClose;
     public static boolean itemPickupStarShowHotbarHud;
     public static boolean enableHotbarSelectorTexture;
+    public static boolean hotbarSelectorAboveItemText;
 
     // Zelda
     public static boolean zeldaHeartsEnabled;
@@ -182,6 +183,7 @@ public class ModConfig {
     public static boolean enableUnloader;
     public static int unloaderSeconds;
     public static int[] unloaderBlacklistedDimensions;
+    public static boolean enablePlacedItem;
     public static int butterflyKnifeDurability;
     public static float butterflyKnifeDamage;
     public static float butterflyKnifeBackstabDamage;
@@ -320,6 +322,11 @@ public class ModConfig {
         enableHotbarSelectorTexture = config.getBoolean(
                 "EnableRiftHotbarSelectorTexture", "general", true,
                 "Use riftselector.png for the hotbar selection box to avoid vanilla cut-off."
+        );
+
+        hotbarSelectorAboveItemText = config.getBoolean(
+                "HotbarSelectorAboveItemText", "general", true,
+                "If true, render the hotbar selector above item count text. If false, render beneath text like vanilla."
         );
 
         zeldaHeartsEnabled = config.getBoolean(
@@ -909,6 +916,13 @@ public class ModConfig {
         unloaderBlacklistedDimensions = config.get("vortex", "UnloaderBlacklistedDimensions",
                 new int[]{-1, 0, 1},
                 "Dimension IDs that should never be unloaded. Default: -1 (Nether), 0 (Overworld), 1 (End)").getIntList();
+
+        enablePlacedItem = config.getBoolean(
+                "EnablePlacedItem",
+                "vortex",
+                true,
+                "If true, you can place the held item into the world using the Place Item keybind."
+        );
 
         butterflyKnifeDurability = config.getInt(
                 "butterflyKnifeDurability",

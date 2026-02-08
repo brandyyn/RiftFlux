@@ -37,6 +37,7 @@ public class ClientProxy extends CommonProxy {
                 PickupStarHotbarHud.bootstrap();
             }
         }
+        com.voidsrift.riftflux.placeditem.PlacedItemContent.initClient();
         DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
 

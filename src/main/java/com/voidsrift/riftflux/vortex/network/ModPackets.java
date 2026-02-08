@@ -18,6 +18,7 @@ public class ModPackets {
       instance.registerMessage(PacketHCPlayerRespawn.class, PacketHCPlayerRespawn.class, id1++, Side.SERVER);
       instance.registerMessage(PacketBackpackGuiHandle.class, PacketBackpackGuiHandle.class, id1++, Side.SERVER);
       instance.registerMessage(PacketWorldDataSync.class, PacketWorldDataSync.class, id1++, Side.CLIENT);
+      instance.registerMessage(PacketPlacedItem.class, PacketPlacedItem.class, id1++, Side.SERVER);
    }
 
    static {

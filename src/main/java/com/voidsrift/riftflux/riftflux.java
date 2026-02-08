@@ -32,6 +32,7 @@ public class riftflux {
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         vortexContent.preInit(event);
+        com.voidsrift.riftflux.placeditem.PlacedItemContent.init();
         makamys.satchels.Satchels.preInit(event);
         Core.preInit(event);
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
