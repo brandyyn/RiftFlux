@@ -52,7 +52,8 @@ public class EntityGlider extends Entity {
             this.setDead();
             return;
         }
-        if (this.ridingEntity instanceof EntityPlayer && ((EntityPlayer) this.ridingEntity).getHeldItem() == null) {
+        if (this.ridingEntity instanceof EntityPlayer
+                && !GliderItemHelper.isHoldingGlider((EntityPlayer) this.ridingEntity)) {
             this.ridingEntity.riddenByEntity = null;
             this.ridingEntity = null;
             this.setDead();

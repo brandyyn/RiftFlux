@@ -6,21 +6,30 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 
+import com.voidsrift.riftflux.compat.BackhandCompat;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class GliderEvents {
+    private static final Map<String, Boolean> OFFHAND_USE = new ConcurrentHashMap<String, Boolean>();
+
     @SubscribeEvent
     public void onLivingUpdate(LivingEvent.LivingUpdateEvent evt) {
         if (!(evt.entityLiving instanceof EntityPlayer)) {
             return;
         }
         EntityPlayer player = (EntityPlayer) evt.entityLiving;
-        ItemStack held = player.getHeldItem();
-        boolean holdingGlider = held != null && held.getItem() instanceof ItemGlider;
+        ItemStack gliderStack = GliderItemHelper.getGliderStack(player);
+        boolean holdingGlider = gliderStack != null;
         String playerName = player.getDisplayName();
+
+        handleOffhandToggle(player, playerName);
 
         if (!holdingGlider) {
             if (GliderState.isPlayerGliding(playerName)) {
                 GliderState.removeGlidingPlayerName(playerName);
             }
+            OFFHAND_USE.remove(playerName);
             return;
         }
 
@@ -57,9 +66,32 @@ public class GliderEvents {
 
     @SubscribeEvent
     public void onFall(LivingFallEvent evt) {
-        ItemStack held = evt.entityLiving.getHeldItem();
-        if (held != null && held.getItem() instanceof ItemGlider) {
-            evt.distance = 1.1f;
+        if (evt.entityLiving instanceof EntityPlayer) {
+            ItemStack gliderStack = GliderItemHelper.getGliderStack((EntityPlayer) evt.entityLiving);
+            if (gliderStack != null) {
+                evt.distance = 1.1f;
+            }
         }
+    }
+
+    private static void handleOffhandToggle(EntityPlayer player, String playerName) {
+        if (!player.worldObj.isRemote || !BackhandCompat.isAvailable()) {
+            return;
+        }
+        ItemStack offhand = BackhandCompat.getOffhandItem(player);
+        if (!GliderItemHelper.isGlider(offhand)) {
+            OFFHAND_USE.remove(playerName);
+            return;
+        }
+        boolean usingOffhand = BackhandCompat.isUsingOffhand(player);
+        boolean wasUsing = OFFHAND_USE.containsKey(playerName) && OFFHAND_USE.get(playerName);
+        if (usingOffhand && !wasUsing) {
+            if (GliderState.isPlayerGliding(playerName)) {
+                GliderState.removeGlidingPlayerName(playerName);
+            } else {
+                GliderState.addGlidingPlayerName(playerName);
+            }
+        }
+        OFFHAND_USE.put(playerName, usingOffhand);
     }
 }

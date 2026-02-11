@@ -16,15 +16,15 @@ public class GliderClientEvents {
         }
 
         EntityPlayer player = evt.entityPlayer;
-        ItemStack held = player.getHeldItem();
-        boolean holdingGlider = held != null && held.getItem() instanceof ItemGlider;
+        ItemStack gliderStack = GliderItemHelper.getGliderStack(player);
+        boolean holdingGlider = gliderStack != null;
         boolean isLocal = player == Minecraft.getMinecraft().thePlayer;
         String playerName = player.getDisplayName();
 
         if (holdingGlider) {
             boolean shouldRenderGlider = GliderState.isPlayerGliding(playerName) && !player.isInWater();
             if (shouldRenderGlider) {
-                ensureGlider(player, held);
+                ensureGlider(player, gliderStack);
                 return;
             }
 
@@ -52,14 +52,14 @@ public class GliderClientEvents {
             return;
         }
         EntityPlayer player = mc.thePlayer;
-        ItemStack held = player.getHeldItem();
-        boolean holdingGlider = held != null && held.getItem() instanceof ItemGlider;
+        ItemStack gliderStack = GliderItemHelper.getGliderStack(player);
+        boolean holdingGlider = gliderStack != null;
         String playerName = player.getDisplayName();
         boolean shouldRenderGlider = holdingGlider && !player.isInWater()
                 && GliderState.isPlayerGliding(playerName);
 
         if (shouldRenderGlider) {
-            ensureGlider(player, held);
+            ensureGlider(player, gliderStack);
         } else if (player.riddenByEntity instanceof EntityGlider) {
             detachGlider(player);
         }

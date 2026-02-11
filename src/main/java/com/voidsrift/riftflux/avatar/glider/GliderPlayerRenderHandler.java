@@ -15,8 +15,7 @@ public class GliderPlayerRenderHandler {
     @SubscribeEvent
     public void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
         EntityPlayer player = event.entityPlayer;
-        ItemStack held = player.getHeldItem();
-        boolean holdingGlider = held != null && held.getItem() instanceof ItemGlider;
+        boolean holdingGlider = GliderItemHelper.isHoldingGlider(player);
         if (!holdingGlider) {
             return;
         }
