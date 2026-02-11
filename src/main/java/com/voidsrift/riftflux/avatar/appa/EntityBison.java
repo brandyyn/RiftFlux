@@ -88,6 +88,10 @@ public class EntityBison extends EntityFamiliar {
             this.controlUp = false;
             this.controlDown = false;
         }
+        if (this.riddenByEntity == null && !this.onGround && !this.isInWater()) {
+            this.motionY = Math.max(this.motionY, -0.1D);
+            this.fallDistance = 0.0f;
+        }
     }
 
     public void setGlideControls(boolean up, boolean down) {
@@ -160,6 +164,11 @@ public class EntityBison extends EntityFamiliar {
     @Override
     protected void dropFewItems(boolean par1, int par2) {
         this.dropItem(Items.beef, 27);
+    }
+
+    @Override
+    protected void fall(float distance) {
+        this.fallDistance = 0.0f;
     }
 
     @Override
