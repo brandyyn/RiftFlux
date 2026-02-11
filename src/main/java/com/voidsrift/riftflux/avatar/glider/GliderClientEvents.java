@@ -22,9 +22,8 @@ public class GliderClientEvents {
         String playerName = player.getDisplayName();
 
         if (holdingGlider) {
-            boolean shouldGlide = !player.onGround && !player.isInWater()
-                    && GliderState.isPlayerGliding(playerName);
-            if (shouldGlide) {
+            boolean shouldRenderGlider = GliderState.isPlayerGliding(playerName) && !player.isInWater();
+            if (shouldRenderGlider) {
                 ensureGlider(player, held);
                 return;
             }
@@ -56,10 +55,10 @@ public class GliderClientEvents {
         ItemStack held = player.getHeldItem();
         boolean holdingGlider = held != null && held.getItem() instanceof ItemGlider;
         String playerName = player.getDisplayName();
-        boolean shouldGlide = holdingGlider && !player.onGround && !player.isInWater()
+        boolean shouldRenderGlider = holdingGlider && !player.isInWater()
                 && GliderState.isPlayerGliding(playerName);
 
-        if (shouldGlide) {
+        if (shouldRenderGlider) {
             ensureGlider(player, held);
         } else if (player.riddenByEntity instanceof EntityGlider) {
             detachGlider(player);

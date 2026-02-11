@@ -29,9 +29,19 @@ public class RenderGliderActive extends Render {
         try {
             GL11.glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
             GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+            boolean backPose = entity.ridingEntity.onGround;
             float yaw = interpAngle((float) entity.prevRotationYAW, (float) entity.rotationYAW, f1);
             float roll = interpAngle((float) entity.prevRotationRoll, (float) entity.rotationRoll, f1);
             float pitch = interpAngle((float) entity.prevRotationPitch, (float) entity.rotationPitch, f1);
+            if (backPose) {
+                if (entity.ridingEntity instanceof net.minecraft.entity.player.EntityPlayer) {
+                    net.minecraft.entity.player.EntityPlayer rider =
+                            (net.minecraft.entity.player.EntityPlayer) entity.ridingEntity;
+                    yaw = interpAngle(rider.prevRenderYawOffset, rider.renderYawOffset, f1);
+                }
+                roll = 0.0f;
+                pitch = -82.0f;
+            }
             if (Math.abs(entity.ridingEntity.motionX) < 0.01 && Math.abs(entity.ridingEntity.motionZ) < 0.01) {
                 GL11.glRotatef(yaw, 0.0f, 1.0f, 0.0f);
             } else {
