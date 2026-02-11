@@ -52,7 +52,7 @@ public class ModItems {
       if (Loader.isModLoaded("Thaumcraft")) {
          runeThanatos = (new ItemRuneThanatos()).setUnlocalizedName("runethanatos");
          GameRegistry.registerItem(runeThanatos, "runethanatos");
-         toolbelt = (new ItemToolbelt()).setUnlocalizedName("toolbelt");
+         toolbelt = (new ItemToolbelt()).setUnlocalizedName("riftflux_toolbelt");
          GameRegistry.registerItem(toolbelt, "toolbelt");
       }
 

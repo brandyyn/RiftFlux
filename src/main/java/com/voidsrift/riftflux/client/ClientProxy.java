@@ -40,6 +40,7 @@ public class ClientProxy extends CommonProxy {
         com.voidsrift.riftflux.placeditem.PlacedItemContent.initClient();
         DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
+        com.voidsrift.riftflux.avatar.AvatarTLBContent.initClient();
 
     }
 }

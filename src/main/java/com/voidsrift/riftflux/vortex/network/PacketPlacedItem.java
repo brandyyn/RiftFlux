@@ -17,6 +17,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraft.util.Facing;
 
 public class PacketPlacedItem implements IMessage, IMessageHandler<PacketPlacedItem, IMessage> {
     private byte side;
@@ -86,7 +87,8 @@ public class PacketPlacedItem implements IMessage, IMessageHandler<PacketPlacedI
             return null;
         }
 
-        world.setBlock(x, y, z, PlacedItemContent.placedItemBlock, message.side, 2);
+        int placedMeta = Facing.oppositeSide[message.side];
+        world.setBlock(x, y, z, PlacedItemContent.placedItemBlock, placedMeta, 2);
         TileEntity te = world.getTileEntity(x, y, z);
         if (!(te instanceof TilePlacedItem)) {
             world.setBlockToAir(x, y, z);
@@ -103,26 +105,19 @@ public class PacketPlacedItem implements IMessage, IMessageHandler<PacketPlacedI
     }
 
     private static float getInitialRotation(EntityPlayerMP player, byte side, ItemStack stack) {
-        if (side >= 2 && side <= 5 && (stack == null || !(stack.getItem() instanceof ItemBlock))) {
+        int dir = MathHelper.floor_double((player.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
+        int meta = side >= 0 && side < Facing.oppositeSide.length
+                ? Facing.oppositeSide[side]
+                : side;
+        if (meta != 0 && meta != 1) {
             return 0.0F;
         }
-        int dir = MathHelper.floor_double((player.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
-        float rotation;
-        switch (dir) {
-            case 0:
-                rotation = 0.0F;
-                break;
-            case 1:
-                rotation = 270.0F;
-                break;
-            case 2:
-                rotation = 180.0F;
-                break;
-            case 3:
-            default:
-                rotation = 90.0F;
-                break;
+        int rotationIndex = dir;
+        if (meta == 0) {
+            rotationIndex = (rotationIndex + 2) % 4;
+        } else {
+            rotationIndex = (4 - rotationIndex) % 4;
         }
-        return rotation;
+        return (rotationIndex * 90.0F) % 360.0F;
     }
 }

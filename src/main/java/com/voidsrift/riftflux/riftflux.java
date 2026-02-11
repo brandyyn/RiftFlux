@@ -33,6 +33,7 @@ public class riftflux {
     public void preInit(FMLPreInitializationEvent event) {
         vortexContent.preInit(event);
         com.voidsrift.riftflux.placeditem.PlacedItemContent.init();
+        com.voidsrift.riftflux.avatar.AvatarTLBContent.preInit();
         makamys.satchels.Satchels.preInit(event);
         Core.preInit(event);
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
@@ -53,6 +54,7 @@ public class riftflux {
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
 
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.tweaks.ladder.FloatingLadderEvents());
+        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.avatar.glider.GliderEvents());
 
         MinecraftForge.EVENT_BUS.register(new StickTooltipHandler());
 

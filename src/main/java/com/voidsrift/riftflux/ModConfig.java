@@ -84,7 +84,6 @@ public class ModConfig {
     public static boolean zyinQuickDepositBlacklistClockCompass;
     public static boolean zyinItemSelectorEnabled;
     public static int zyinItemSelectorTimeout;
-    public static String zyinItemSelectorMode;
     public static boolean zyinItemSelectorSideButtons;
     public static int zyinItemSelectorHudOffsetY;
     public static boolean zyinItemSelectorIncludeHotbar;
@@ -472,13 +471,6 @@ public class ModConfig {
                 0,
                 2000,
                 "How many ticks the item selector overlay stays visible before it disappears."
-        );
-
-        zyinItemSelectorMode = config.getString(
-                "ItemSelectorMode",
-                "itemselector",
-                "ALL",
-                "Sets the Item Selector mode."
         );
 
         zyinItemSelectorSideButtons = config.getBoolean(
@@ -892,7 +884,7 @@ public class ModConfig {
         disableSpecificPotions = config.getBoolean(
                 "DisableSpecificPotions",
                 "general",
-                true,
+                false,
                 "If true, potion effects IDs that are listed in 'DisabledPotionIds' will never be applied to players."
         );
 

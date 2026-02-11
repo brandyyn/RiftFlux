@@ -17,6 +17,7 @@ import makamys.satchels.gui.GuiSatchelsInventory;
 import makamys.satchels.gui.TooltippedItem;
 import makamys.satchels.inventory.ContainerPlayerExtended;
 import makamys.satchels.inventory.ContainerSatchels;
+import com.voidsrift.riftflux.mixin.accessor.GuiScreenAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -79,7 +80,8 @@ public class SatchelsProxyClient extends SatchelsProxyCommon {
             GuiScreen gui = Minecraft.getMinecraft().currentScreen;
             if(gui instanceof GuiContainer && ((GuiContainer)gui).inventorySlots instanceof ContainerPlayerExtended) {
                 // Remove InventoryTweaks chest sorting buttons
-                gui.buttonList.removeIf(bObj -> {
+                List buttonList = ((GuiScreenAccessor) gui).getButtonList();
+                buttonList.removeIf(bObj -> {
                     final int JIMEOWAN_ID = 54696386;
                     GuiButton b = (GuiButton)bObj;
                     return b.id > JIMEOWAN_ID && b.id < JIMEOWAN_ID + 4;

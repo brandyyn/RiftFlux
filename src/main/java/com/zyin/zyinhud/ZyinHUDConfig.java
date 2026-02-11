@@ -34,7 +34,7 @@ public class ZyinHUDConfig {
 
         ItemSelector.Enabled = ModConfig.zyinItemSelectorEnabled;
         ItemSelector.SetTimeout(ModConfig.zyinItemSelectorTimeout);
-        ItemSelector.Mode = ItemSelector.Modes.GetMode(ModConfig.zyinItemSelectorMode);
+        ItemSelector.Mode = ItemSelector.Modes.GetMode("ALL");
         ItemSelector.UseMouseSideButtons = ModConfig.zyinItemSelectorSideButtons;
         ItemSelector.HudYOffset = ModConfig.zyinItemSelectorHudOffsetY;
         ItemSelector.IncludeHotbar = ModConfig.zyinItemSelectorIncludeHotbar;
@@ -54,7 +54,6 @@ public class ZyinHUDConfig {
 
         ModConfig.zyinItemSelectorEnabled = ItemSelector.Enabled;
         ModConfig.zyinItemSelectorTimeout = ItemSelector.GetTimeout();
-        ModConfig.zyinItemSelectorMode = ItemSelector.Mode.name();
         ModConfig.zyinItemSelectorSideButtons = ItemSelector.UseMouseSideButtons;
         ModConfig.zyinItemSelectorHudOffsetY = ItemSelector.HudYOffset;
         ModConfig.zyinItemSelectorIncludeHotbar = ItemSelector.IncludeHotbar;
@@ -89,8 +88,6 @@ public class ZyinHUDConfig {
                 .set(ItemSelector.Enabled);
         config.get(CATEGORY_ITEMSELECTOR, "ItemSelectorTimeout", ItemSelector.defaultTimeout)
                 .set(ItemSelector.GetTimeout());
-        config.get(CATEGORY_ITEMSELECTOR, "ItemSelectorMode", "ALL")
-                .set(ItemSelector.Mode.name());
         config.get(CATEGORY_ITEMSELECTOR, "ItemSelectorSideButtons", false)
                 .set(ItemSelector.UseMouseSideButtons);
         config.get(CATEGORY_ITEMSELECTOR, "ItemSelectorHudOffsetY", 0)

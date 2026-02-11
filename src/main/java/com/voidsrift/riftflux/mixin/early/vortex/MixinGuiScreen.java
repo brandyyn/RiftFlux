@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = GuiScreen.class, priority = 1100)
 public class MixinGuiScreen {
    @Shadow
-   private Minecraft mc;
+   public Minecraft mc;
 
    @Inject(method = "handleMouseInput", at = @At("HEAD"), cancellable = true)
    private void onMouseInputPre(CallbackInfo ci) {

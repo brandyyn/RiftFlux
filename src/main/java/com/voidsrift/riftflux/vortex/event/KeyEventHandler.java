@@ -33,8 +33,8 @@ import net.minecraftforge.client.event.MouseEvent;
  */
 public class KeyEventHandler {
 
-    public static final KeyBinding keyX = new KeyBinding("Cycle Toolbelt", 45, "key.categories.gameplay");
-    public static final KeyBinding keyPlaceItem = new KeyBinding("Place Item", 47, "key.categories.gameplay");
+    public static final KeyBinding keyX = new KeyBinding("Cycle Toolbelt", 45, "RiftFlux");
+    public static final KeyBinding keyPlaceItem = new KeyBinding("Place Item", 47, "RiftFlux");
 
     /** Toolbelt Radial Menu active flag (used by REHToolbeltHelper). */
     public static boolean TRMactive = false;

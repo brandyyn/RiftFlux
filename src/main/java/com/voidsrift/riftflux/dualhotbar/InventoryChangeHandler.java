@@ -8,6 +8,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import com.voidsrift.riftflux.mixin.accessor.PlayerControllerMPAccessor;
 
 public class InventoryChangeHandler {
     public static KeyBinding swapkey;
@@ -44,7 +45,7 @@ public class InventoryChangeHandler {
             }
             mousePrev = Mouse.getDWheel();
 
-            if (Keyboard.isKeyDown(swapkey.getKeyCode()) && Math.abs(mousePrev - Mouse.getDWheel()) > 0) {
+            if (swapkey != null && Keyboard.isKeyDown(swapkey.getKeyCode()) && Math.abs(mousePrev - Mouse.getDWheel()) > 0) {
                 if (swapKeyDown == false) {
                     swapKeyDown = true;
                     System.out.println(Mouse.getX() + " " + Mouse.getY());
@@ -129,6 +130,10 @@ public class InventoryChangeHandler {
                 if (Keyboard.isKeyDown(mc.gameSettings.keyBindsHotbar[j].getKeyCode())) {
                     if (Keyboard.isKeyDown(selectKey.getKeyCode())) {
                         mc.thePlayer.inventory.currentItem = j + 9;
+                        if (mc.playerController != null) {
+                            mc.playerController.updateController();
+                            syncCurrentPlayItem(mc.playerController);
+                        }
                         continue;
                     }
 
@@ -140,6 +145,10 @@ public class InventoryChangeHandler {
                         if (selectedItem == j + i * 9) {
                             mc.thePlayer.inventory.currentItem =
                                     (j + 9 * (i + 1)) % (DualHotbarConfig.numHotbars * 9);
+                            if (mc.playerController != null) {
+                                mc.playerController.updateController();
+                                syncCurrentPlayItem(mc.playerController);
+                            }
                         }
                     }
 
@@ -163,4 +172,11 @@ public class InventoryChangeHandler {
             }
         }
     }
+
+    private static void syncCurrentPlayItem(PlayerControllerMP controller) {
+        if (controller instanceof PlayerControllerMPAccessor) {
+            ((PlayerControllerMPAccessor) controller).riftflux$syncCurrentPlayItem();
+        }
+    }
+
 }

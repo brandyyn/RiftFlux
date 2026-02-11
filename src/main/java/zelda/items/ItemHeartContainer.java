@@ -31,27 +31,64 @@ extends Item {
     }
 
     public ItemStack onEaten(ItemStack stack, World world, EntityPlayer player) {
+        if (world.isRemote) {
+            return stack;
+        }
+        ExtendedPlayerProperties props = ExtendedPlayerProperties.get(player);
+        if (props == null) {
+            ExtendedPlayerProperties.register(player);
+            props = ExtendedPlayerProperties.get(player);
+        }
+        if (props != null) {
+            props.addHeart();
+        }
+        if (player.capabilities.isCreativeMode) {
+            return stack;
+        }
         --stack.stackSize;
         world.playSoundAtEntity((Entity)player, "random.levelup", 0.5f, world.rand.nextFloat() * 0.1f + 0.9f);
-        ExtendedPlayerProperties.get(player).addHeart();
+        if (stack.stackSize <= 0) {
+            return null;
+        }
         return stack;
     }
 
     public int getMaxItemUseDuration(ItemStack stack) {
-        return 16;
+        return 0;
     }
 
     public EnumAction getItemUseAction(ItemStack stack) {
-        return EnumAction.block;
+        return EnumAction.none;
     }
 
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
-        if (ExtendedPlayerProperties.get(player).getMaxHearts() < (double)Config.MAXIMUM_HEARTS) {
-            player.setItemInUse(stack, this.getMaxItemUseDuration(stack));
-        } else if (world.isRemote) {
+        return this.tryConsume(stack, world, player);
+    }
+
+    public boolean onItemUse(ItemStack stack, EntityPlayer player, World world,
+                             int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
+        ItemStack result = this.tryConsume(stack, world, player);
+        return result != stack || result == null;
+    }
+
+    private ItemStack tryConsume(ItemStack stack, World world, EntityPlayer player) {
+        int maxHearts = Math.max(Config.STARTING_HEARTS, Config.MAXIMUM_HEARTS);
+        ExtendedPlayerProperties props = ExtendedPlayerProperties.get(player);
+        if (props == null) {
+            ExtendedPlayerProperties.register(player);
+            props = ExtendedPlayerProperties.get(player);
+        }
+        if (props != null && props.getMaxHearts() < (double)maxHearts) {
+            if (!world.isRemote) {
+                ItemStack result = this.onEaten(stack, world, player);
+                player.inventory.markDirty();
+                return result;
+            }
+            return stack;
+        }
+        if (world.isRemote) {
             player.addChatComponentMessage((IChatComponent)new ChatComponentText("You are at the maximum heart capacity."));
         }
         return stack;
     }
 }
-

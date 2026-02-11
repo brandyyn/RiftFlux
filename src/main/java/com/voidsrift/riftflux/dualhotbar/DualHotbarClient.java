@@ -15,18 +15,11 @@ public final class DualHotbarClient {
         InventoryChangeHandler inventoryChangeHandler = new InventoryChangeHandler();
 
         inventoryChangeHandler.selectKey = new KeyBinding(
-                "Hold For Second 9",
+                "Hold + Number for second hotbar",
                 Keyboard.KEY_NONE,
-                "key.categories.inventory"
+                "RiftFlux"
         );
         ClientRegistry.registerKeyBinding(inventoryChangeHandler.selectKey);
-
-        inventoryChangeHandler.swapkey = new KeyBinding(
-                "Hold+Wheel to Swap Bars",
-                Keyboard.KEY_NONE,
-                "key.categories.inventory"
-        );
-        ClientRegistry.registerKeyBinding(inventoryChangeHandler.swapkey);
 
         MinecraftForge.EVENT_BUS.register(renderHandler);
         FMLCommonHandler.instance().bus().register(inventoryChangeHandler);

@@ -20,6 +20,7 @@
  */
 package zelda;
 
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.util.Random;
 import net.minecraft.client.Minecraft;
@@ -51,7 +52,7 @@ extends Gui {
         this.mc.getTextureManager().bindTexture(res);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
     public void armorGUI(RenderGameOverlayEvent.Pre event) {
         if (event == null) {
             return;
@@ -117,7 +118,9 @@ extends Gui {
             int healthLast = MathHelper.ceiling_float_int((float)this.mc.thePlayer.prevHealth);
             float healthMax = (float)attrMaxHealth.getAttributeValue();
             int absorb = MathHelper.ceiling_float_int((float)this.mc.thePlayer.getAbsorptionAmount());
-            int healthRows = MathHelper.ceiling_float_int((float)((healthMax + (float)absorb) / 4.0f / 10.0f));
+            int baseHearts = MathHelper.ceiling_float_int((float)(healthMax / 4.0f));
+            int totalHearts = baseHearts + MathHelper.ceiling_float_int((float)absorb / 4.0f);
+            int healthRows = MathHelper.ceiling_float_int((float)((float)totalHearts / 10.0f));
             int rowHeight = Math.max(10 - (healthRows - 2), 3);
             this.rand.setSeed(this.mc.ingameGUI.getUpdateCounter() * 312871);
             ScaledResolution res = new ScaledResolution(this.mc, this.mc.displayWidth, this.mc.displayHeight);
@@ -145,7 +148,7 @@ extends Gui {
             }
             int absorbRemaining = absorb;
             int myRow = this.mc.thePlayer.isPotionActive(Potion.wither) ? 4 : (this.mc.thePlayer.isPotionActive(Potion.poison) ? 2 : 0);
-            for (int i = MathHelper.ceiling_float_int((float)((healthMax + (float)absorb) / 4.0f)) - 1; i >= 0; --i) {
+            for (int i = totalHearts - 1; i >= 0; --i) {
                 int j;
                 int STEPS_PER_HEART;
                 int HEALTH_PER_STEP;
@@ -173,18 +176,14 @@ extends Gui {
                     heartStage = new int[]{200, 27, 18, 9, 0};
                     HEALTH_PER_STEP = 1;
                     STEPS_PER_HEART = 4;
-                    for (j = 0; j < MathHelper.ceiling_float_int((float)(absorb / 4)); ++j) {
-                        this.drawHeartAt(x, y, heartStage[MathHelper.clamp_int((int)(MathHelper.ceiling_float_int((float)(absorb / HEALTH_PER_STEP)) - i * STEPS_PER_HEART), (int)0, (int)STEPS_PER_HEART)], 6);
-                    }
+                    this.drawHeartAt(x, y, heartStage[MathHelper.clamp_int((int)(MathHelper.ceiling_float_int((float)(absorb / HEALTH_PER_STEP)) - i * STEPS_PER_HEART), (int)0, (int)STEPS_PER_HEART)], 6);
                     absorbRemaining = (int)((float)absorbRemaining - 4.0f);
                     continue;
                 }
                 heartStage = new int[]{200, 27, 18, 9, 0};
                 HEALTH_PER_STEP = 1;
                 STEPS_PER_HEART = 4;
-                for (j = 0; j < Config.MAXIMUM_HEARTS; ++j) {
-                    this.drawHeartAt(x, y, heartStage[MathHelper.clamp_int((int)(MathHelper.ceiling_float_int((float)(health / HEALTH_PER_STEP)) - i * STEPS_PER_HEART), (int)0, (int)STEPS_PER_HEART)], myRow);
-                }
+                this.drawHeartAt(x, y, heartStage[MathHelper.clamp_int((int)(MathHelper.ceiling_float_int((float)(health / HEALTH_PER_STEP)) - i * STEPS_PER_HEART), (int)0, (int)STEPS_PER_HEART)], myRow);
             }
             GL11.glDisable((int)3042);
             this.mc.mcProfiler.endSection();

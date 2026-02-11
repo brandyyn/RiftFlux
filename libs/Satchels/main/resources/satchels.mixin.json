@@ -1,0 +1,13 @@
+{
+    "required": true,
+    "minVersion": "0.6",
+    "package": "makamys.satchels.mixin",
+    "refmap": "satchels.mixin.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+    	"MixinEntityPlayer",
+    	"MixinInventoryPlayer",
+    	"MixinItemInWorldManager",
+    	"MixinPlayerControllerMP"
+    ]
+}

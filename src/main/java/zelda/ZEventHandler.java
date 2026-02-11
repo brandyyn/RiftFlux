@@ -37,6 +37,8 @@ import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import zelda.Config;
 import zelda.ExtendedPlayerProperties;
@@ -90,7 +92,35 @@ public class ZEventHandler {
                 ((ExtendedPlayerProperties)event.entity.getExtendedProperties("ExtendedPlayer")).loadNBTData(playerData);
             }
             ExtendedPlayerProperties props = ExtendedPlayerProperties.get((EntityPlayer)event.entity);
+            if (playerData == null && props != null) {
+                props.loadNBTData(event.entity.getEntityData());
+            }
             if (event.entity instanceof EntityPlayer && props.isFresh()) {
+                props.setBaseHeartsMax();
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerClone(PlayerEvent.Clone event) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
+        if (event.entityPlayer == null || event.original == null) {
+            return;
+        }
+        ExtendedPlayerProperties originalProps = ExtendedPlayerProperties.get(event.original);
+        if (originalProps == null) {
+            return;
+        }
+        ExtendedPlayerProperties props = ExtendedPlayerProperties.get(event.entityPlayer);
+        if (props == null) {
+            ExtendedPlayerProperties.register(event.entityPlayer);
+            props = ExtendedPlayerProperties.get(event.entityPlayer);
+        }
+        if (props != null) {
+            props.setBaseHearts(originalProps.getMaxHearts());
+            if (event.wasDeath) {
                 props.setBaseHeartsMax();
             }
         }
@@ -111,6 +141,50 @@ public class ZEventHandler {
                 event.setCanceled(true);
             }
         }
+    }
+
+    @SubscribeEvent
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!Config.HEARTS_ENABLED) {
+            return;
+        }
+        if (event.world == null || event.world.isRemote) {
+            return;
+        }
+        if (event.action != PlayerInteractEvent.Action.RIGHT_CLICK_AIR
+                && event.action != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+        EntityPlayer player = event.entityPlayer;
+        if (player == null) {
+            return;
+        }
+        ItemStack held = player.getHeldItem();
+        if (held == null || held.getItem() != ZItems.heartContainer) {
+            return;
+        }
+        ExtendedPlayerProperties props = ExtendedPlayerProperties.get(player);
+        if (props == null) {
+            ExtendedPlayerProperties.register(player);
+            props = ExtendedPlayerProperties.get(player);
+        }
+        int maxHearts = Math.max(Config.STARTING_HEARTS, Config.MAXIMUM_HEARTS);
+        if (props != null && props.getMaxHearts() < (double)maxHearts) {
+            props.addHeart();
+            event.world.playSoundAtEntity((Entity)player, "random.levelup", 0.5f,
+                    event.world.rand.nextFloat() * 0.1f + 0.9f);
+            if (!player.capabilities.isCreativeMode) {
+                --held.stackSize;
+                if (held.stackSize <= 0) {
+                    player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+                }
+            }
+            player.inventory.markDirty();
+        } else {
+            player.addChatComponentMessage((net.minecraft.util.IChatComponent)
+                    new net.minecraft.util.ChatComponentText("You are at the maximum heart capacity."));
+        }
+        event.setCanceled(true);
     }
 
     @SubscribeEvent

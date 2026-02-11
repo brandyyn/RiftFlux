@@ -1,0 +1,15 @@
+[
+{
+  "modid": "${modid}",
+  "name": "Satchels",
+  "description": "Upgrade your inventory!",
+  "version": "${version}",
+  "mcversion": "${minecraft_version}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["makamys"],
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

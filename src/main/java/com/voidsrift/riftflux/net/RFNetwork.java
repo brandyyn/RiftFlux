@@ -36,5 +36,12 @@ public final class RFNetwork {
 
         // Register clear-tag packet (ID 1) on SERVER
         CH.registerMessage(MsgClearPickupTag.Handler.class, MsgClearPickupTag.class, 1, Side.SERVER);
+
+        // Glider sync (IDs 2-3)
+        CH.registerMessage(MsgGliderToggle.Handler.class, MsgGliderToggle.class, 2, Side.SERVER);
+        CH.registerMessage(MsgGliderState.Handler.class, MsgGliderState.class, 3, Side.CLIENT);
+
+        // Appa control (ID 4)
+        CH.registerMessage(MsgAppaControl.Handler.class, MsgAppaControl.class, 4, Side.SERVER);
     }
 }

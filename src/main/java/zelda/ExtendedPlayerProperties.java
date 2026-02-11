@@ -16,7 +16,6 @@ package zelda;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
@@ -28,6 +27,9 @@ import zelda.Config;
 public class ExtendedPlayerProperties
 implements IExtendedEntityProperties {
     public static final String EXT_PROP_NAME = "ExtendedPlayer";
+    private static final String PERSIST_TAG = "ForgeData";
+    private static final String HEARTS_TAG = "RiftFluxZeldaHearts";
+    private static final String FRESH_TAG = "RiftFluxZeldaFresh";
     private final EntityPlayer player;
     private double hearts;
     private boolean fresh;
@@ -51,54 +53,117 @@ implements IExtendedEntityProperties {
         props.setDouble("Hearts", this.hearts);
         props.setBoolean("Fresh", this.fresh);
         compound.setTag(EXT_PROP_NAME, (NBTBase)props);
+        this.saveToPersistedData();
     }
 
     public void loadNBTData(NBTTagCompound compound) {
         NBTTagCompound props = (NBTTagCompound)compound.getTag(EXT_PROP_NAME);
-        this.hearts = props.getDouble("Hearts");
-        this.setBaseHeartsMax();
-        this.fresh = props.getBoolean("Fresh");
+        if (props != null && props.hasKey("Hearts")) {
+            this.hearts = props.getDouble("Hearts");
+            this.fresh = props.getBoolean("Fresh");
+        } else {
+            this.loadFromPersistedData();
+        }
+        this.applyHearts(false);
     }
 
     public void init(Entity entity, World world) {
     }
 
     public void addHeart() {
-        double amount = 4.0;
-        try {
-            amount = this.player.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(this.player.getPersistentID()).getAmount() + 4.0;
+        int maxHearts = Math.max(Config.STARTING_HEARTS, Config.MAXIMUM_HEARTS);
+        this.hearts = this.clampHearts();
+        if (this.hearts >= (double)maxHearts) {
+            return;
         }
-        catch (Exception e) {
-            // empty catch block
-        }
-        AttributeModifier moreHealth = new AttributeModifier(this.player.getPersistentID(), "HealthBoost", amount, 0);
-        IAttributeInstance attributeInstance = this.player.getEntityAttribute(SharedMonsterAttributes.maxHealth);
-        attributeInstance.removeModifier(moreHealth);
-        attributeInstance.applyModifier(moreHealth);
         this.hearts += 1.0;
-        this.player.setHealth((float)(this.hearts * 4.0));
+        this.applyHearts(true);
     }
 
     public void setBaseHearts(double hearts) {
-        double amount = hearts * 4.0;
-        IAttributeInstance attributeInstance = this.player.getEntityAttribute(SharedMonsterAttributes.maxHealth);
-        attributeInstance.setBaseValue(amount);
+        this.hearts = hearts;
+        this.applyHearts(false);
         if (this.fresh) {
             this.fresh = false;
         }
     }
 
     public void setBaseHeartsMax() {
-        this.setBaseHearts(this.hearts);
-        this.player.setHealth((float)(this.hearts * 4.0));
+        this.applyHearts(true);
     }
 
     public double getMaxHearts() {
-        return this.hearts;
+        return this.clampHearts();
     }
 
     public boolean isFresh() {
         return this.fresh;
     }
-}
 
+    private double clampHearts() {
+        int maxHearts = Math.max(Config.STARTING_HEARTS, Config.MAXIMUM_HEARTS);
+        if (this.hearts < (double)Config.STARTING_HEARTS) {
+            this.hearts = Config.STARTING_HEARTS;
+        } else if (this.hearts > (double)maxHearts) {
+            this.hearts = maxHearts;
+        }
+        return this.hearts;
+    }
+
+    private void applyHearts(boolean setToFull) {
+        int maxHearts = Math.max(Config.STARTING_HEARTS, Config.MAXIMUM_HEARTS);
+        if (this.hearts < (double)Config.STARTING_HEARTS) {
+            this.hearts = Config.STARTING_HEARTS;
+        } else if (this.hearts > (double)maxHearts) {
+            this.hearts = maxHearts;
+        }
+        IAttributeInstance attributeInstance = this.player.getEntityAttribute(SharedMonsterAttributes.maxHealth);
+        if (attributeInstance == null) {
+            return;
+        }
+        double desiredBase = this.hearts * 4.0;
+        double currentBase = attributeInstance.getBaseValue();
+        if (this.fresh) {
+            if (Math.abs(currentBase - 20.0) < 0.01) {
+                attributeInstance.setBaseValue(desiredBase);
+            } else if (currentBase < desiredBase) {
+                attributeInstance.setBaseValue(desiredBase);
+            }
+            this.fresh = false;
+        } else if (currentBase < desiredBase) {
+            attributeInstance.setBaseValue(desiredBase);
+        }
+        float maxHealth = (float)attributeInstance.getAttributeValue();
+        if (setToFull) {
+            this.player.setHealth(maxHealth);
+        } else if (this.player.getHealth() > maxHealth) {
+            this.player.setHealth(maxHealth);
+        }
+        this.saveToPersistedData();
+    }
+
+    private void saveToPersistedData() {
+        if (this.player == null) {
+            return;
+        }
+        NBTTagCompound root = this.player.getEntityData();
+        NBTTagCompound persisted = root.getCompoundTag(PERSIST_TAG);
+        persisted.setDouble(HEARTS_TAG, this.hearts);
+        persisted.setBoolean(FRESH_TAG, this.fresh);
+        root.setTag(PERSIST_TAG, persisted);
+    }
+
+    private void loadFromPersistedData() {
+        if (this.player == null) {
+            return;
+        }
+        NBTTagCompound root = this.player.getEntityData();
+        NBTTagCompound persisted = root.getCompoundTag(PERSIST_TAG);
+        if (persisted.hasKey(HEARTS_TAG)) {
+            this.hearts = persisted.getDouble(HEARTS_TAG);
+        }
+        if (persisted.hasKey(FRESH_TAG)) {
+            this.fresh = persisted.getBoolean(FRESH_TAG);
+        }
+    }
+}

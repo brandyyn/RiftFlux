@@ -3,6 +3,7 @@ package com.voidsrift.riftflux;
 import com.voidsrift.riftflux.core.BasicTransformer;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarTransformer;
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
 import java.io.File;
@@ -138,14 +139,32 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
 
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            mixins.add("accessor.GuiScreenAccessor");
+            mixins.add("accessor.PlayerControllerMPAccessor");
             if (ModConfig.enableHotbarSelectorTexture) {
                 mixins.add("early.MixinGuiIngame_HotbarSelectorTexture");
             }
+            if (ModConfig.enablePlacedItem) {
+                mixins.add("early.MixinWorld_NoPlacedItemParticles");
+                mixins.add("early.MixinWorldClient_NoPlacedItemParticles");
+                mixins.add("early.MixinEntityLivingBase_NoPlacedItemRunParticles");
+                mixins.add("early.MixinEffectRenderer_PlacedItemDestroyParticles");
+            }
+            mixins.add("early.MixinNetHandlerPlayClient_WindowItemsClamp");
             boolean hasBackhand = loadedCoreMods.contains("xonin.backhand.coremod.BackhandLoadingPlugin")
-                    || classExists("xonin.backhand.Backhand");
+                    || hasBackhandClass();
             if (hasBackhand) {
                 mixins.add("early.backhand.MixinGuiInventory_BackhandSlot");
+                mixins.add("early.backhand.MixinGuiInventoryBackpack_BackhandSlot");
+                mixins.add("early.backhand.MixinGuiSatchelsInventory_BackhandSlot");
+                mixins.add("early.backhand.MixinContainerPlayer_BackhandSlot");
             }
+            if (hasLegendGearClass()) {
+                mixins.add("early.legendgear.MixinGuiManaBar");
+            }
+        }
+        if (ModConfig.dualHotbarEnable) {
+            mixins.add("early.dualhotbar.MixinNetHandlerPlayServer_HeldItemChange");
         }
         mixins.add("early.baubles.MixinContainerPlayerExpanded_BackpackShiftClick");
 
@@ -174,10 +193,18 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         return mixins;
     }
 
-    private static boolean classExists(String name) {
+    private static boolean hasBackhandClass() {
         try {
-            Class.forName(name, false, RFEarlyMixins.class.getClassLoader());
+            Class.forName("xonin.backhand.Backhand", false, RFEarlyMixins.class.getClassLoader());
             return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static boolean hasLegendGearClass() {
+        try {
+            return Loader.isModLoaded("legendgear");
         } catch (Throwable ignored) {
             return false;
         }

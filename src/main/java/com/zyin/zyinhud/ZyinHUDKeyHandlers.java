@@ -47,8 +47,8 @@ public class ZyinHUDKeyHandlers
      */
     public static final KeyBinding[] KEY_BINDINGS =
 	{
-	    new KeyBinding(QuickDepositKeyHandler.HotkeyDescription, 	Keyboard.getKeyIndex("X"), 	   ZyinHUD.MODNAME),	//[0]
-	    new KeyBinding(ItemSelectorKeyHandler.HotkeyDescription, 	Keyboard.getKeyIndex("TAB"), ZyinHUD.MODNAME),	//[1]
+	    new KeyBinding(QuickDepositKeyHandler.HotkeyDescription, 	Keyboard.getKeyIndex("X"), 	   "RiftFlux"),	//[0]
+	    new KeyBinding(ItemSelectorKeyHandler.HotkeyDescription, 	Keyboard.getKeyIndex("TAB"), "RiftFlux"),	//[1]
 	};
 
     public static final ZyinHUDKeyHandlers instance = new ZyinHUDKeyHandlers();

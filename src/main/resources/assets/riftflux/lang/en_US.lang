@@ -1,7 +1,7 @@
 item.butterflyknife.name=Butterfly Knife
 item.focusband.name=Focus Band
 item.highlandspirit.name=The Highland Spirit
-item.toolbelt.name=Toolbelt
+item.riftflux_toolbelt.name=Toolbelt
 item.runethanatos.name=Rune of Thanatos
 item.partyhat.name=Party Hat
 item.backpack.name=Backpack
@@ -32,3 +32,23 @@ gui.runegameover.blurb1=...or can you?
 gui.runegameover.blurb2=You feel the anchor of the rune...
 
 tile.riftflux.floating_ladder.name=Hanging Ladder
+
+item.glider_white.name=Glider (White)
+item.glider_orange.name=Glider (Orange)
+item.glider_magenta.name=Glider (Magenta)
+item.glider_light_blue.name=Glider (Light Blue)
+item.glider_yellow.name=Glider (Yellow)
+item.glider_light_green.name=Glider (Light Green)
+item.glider_pink.name=Glider (Pink)
+item.glider_grey.name=Glider (Grey)
+item.glider_light_grey.name=Glider (Light Grey)
+item.glider_cyan.name=Glider (Cyan)
+item.glider_purple.name=Glider (Purple)
+item.glider_blue.name=Glider (Blue)
+item.glider_brown.name=Glider (Brown)
+item.glider_green.name=Glider (Green)
+item.glider_red.name=Glider (Red)
+item.glider_black.name=Glider (Black)
+item.appa_spawn_egg.name=Appa Spawn Egg
+
+entity.riftflux.Bison.name=Appa
