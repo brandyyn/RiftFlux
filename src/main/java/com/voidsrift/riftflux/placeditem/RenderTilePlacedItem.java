@@ -63,14 +63,11 @@ public class RenderTilePlacedItem extends TileEntitySpecialRenderer {
     }
 
     private void renderItem(TilePlacedItem tile, float partialTicks) {
-        ItemStack stack = tile.getStack();
-        ItemStack renderStack = stack;
-        if (stack != null && stack.stackSize > 1) {
-            renderStack = stack.copy();
-            renderStack.stackSize = 1;
+        EntityItem entity = tile.getOrCreateRenderEntity();
+        if (entity == null) {
+            return;
         }
-        EntityItem entity = new EntityItem(tile.getWorldObj(), 0.0D, 0.0D, 0.0D, renderStack);
-        entity.hoverStart = 0.0F;
+        ItemStack stack = entity.getEntityItem();
         renderStack(tile.getWorldObj(), stack, entity, partialTicks);
     }
 

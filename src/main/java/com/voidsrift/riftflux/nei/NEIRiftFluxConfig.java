@@ -13,6 +13,7 @@ import cpw.mods.fml.common.FMLLog;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import com.voidsrift.riftflux.placeditem.PlacedItemContent;
 
 import java.util.List;
 
@@ -101,6 +102,13 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 FMLLog.info("[RiftFlux] NEI plugin loaded: Clay Soldiers handler registered.");
             } catch (Throwable t) {
                 FMLLog.severe("[RiftFlux] Failed to register Clay Soldiers NEI handler: %s", t);
+            }
+        }
+        if (PlacedItemContent.placedItemBlock != null) {
+            try {
+                API.hideItem(new ItemStack(PlacedItemContent.placedItemBlock));
+            } catch (Throwable t) {
+                FMLLog.severe("[RiftFlux] Failed to hide placed item block in NEI: %s", t);
             }
         }
     }

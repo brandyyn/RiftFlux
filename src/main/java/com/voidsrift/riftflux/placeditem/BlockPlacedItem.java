@@ -8,6 +8,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -21,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.util.Vec3;
+import java.util.List;
 
 public class BlockPlacedItem extends Block {
     public BlockPlacedItem() {
@@ -264,6 +266,16 @@ public class BlockPlacedItem extends Block {
     @Override
     public boolean hasTileEntity(int meta) {
         return true;
+    }
+
+    @Override
+    public String getLocalizedName() {
+        return "";
+    }
+
+    @Override
+    public void getSubBlocks(Item item, CreativeTabs tab, List list) {
+        // Hide from creative tabs.
     }
 
     @Override
