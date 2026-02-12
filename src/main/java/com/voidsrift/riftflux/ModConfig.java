@@ -73,6 +73,8 @@ public class ModConfig {
 
     // Avatar glider
     public static boolean gliderDyeRecipes;
+    public static boolean appaRequireTameToRide;
+    public static boolean appaRestrictRideToOwner;
 
     // Zyin's HUD
     public static boolean zyinQuickDepositEnabled;
@@ -395,6 +397,20 @@ public class ModConfig {
                 "avatar_glider",
                 true,
                 "If true, gliders can be recolored with dyes in a crafting grid."
+        );
+
+        appaRequireTameToRide = config.getBoolean(
+                "AppaRequireTameToRide",
+                "avatar_appa",
+                false,
+                "If true, Appa can only be ridden after being tamed."
+        );
+
+        appaRestrictRideToOwner = config.getBoolean(
+                "AppaRestrictRideToOwner",
+                "avatar_appa",
+                false,
+                "If true, only the owner can ride a tamed Appa."
         );
 
         zyinQuickDepositEnabled = config.getBoolean(

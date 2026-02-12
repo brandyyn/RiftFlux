@@ -20,6 +20,9 @@ public class GliderClientEvents {
         boolean holdingGlider = gliderStack != null;
         boolean isLocal = player == Minecraft.getMinecraft().thePlayer;
         String playerName = player.getDisplayName();
+        if (playerName == null) {
+            return;
+        }
 
         if (holdingGlider) {
             boolean shouldRenderGlider = GliderState.isPlayerGliding(playerName) && !player.isInWater();
@@ -55,6 +58,9 @@ public class GliderClientEvents {
         ItemStack gliderStack = GliderItemHelper.getGliderStack(player);
         boolean holdingGlider = gliderStack != null;
         String playerName = player.getDisplayName();
+        if (playerName == null) {
+            return;
+        }
         boolean shouldRenderGlider = holdingGlider && !player.isInWater()
                 && GliderState.isPlayerGliding(playerName);
 
@@ -66,6 +72,9 @@ public class GliderClientEvents {
     }
 
     private void ensureGlider(EntityPlayer player, ItemStack held) {
+        if (held == null || !(held.getItem() instanceof ItemGlider)) {
+            return;
+        }
         int desiredColor = ((ItemGlider) held.getItem()).getColor();
         if (player.riddenByEntity instanceof EntityGlider) {
             EntityGlider existing = (EntityGlider) player.riddenByEntity;

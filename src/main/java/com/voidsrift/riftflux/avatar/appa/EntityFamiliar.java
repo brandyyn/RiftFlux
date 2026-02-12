@@ -11,6 +11,8 @@ import net.minecraft.world.World;
 
 import java.util.Random;
 
+import com.voidsrift.riftflux.ModConfig;
+
 public abstract class EntityFamiliar extends EntityCreature implements EntityChatListener {
     public String owner = "";
     public int mood = 0;
@@ -28,6 +30,9 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     }
 
     public void setOwner(EntityPlayer owner) {
+        if (owner == null) {
+            return;
+        }
         if (EntityFamiliar.getFamiliarByOwner(owner) == null) {
             this.owner = owner.getDisplayName();
             this.sendNameUpdate();
@@ -72,6 +77,16 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
                 }
                 this.setOwner(player);
             } else {
+                boolean hasOwner = this.owner != null && !this.owner.isEmpty();
+                if (ModConfig.appaRequireTameToRide && !hasOwner) {
+                    return true;
+                }
+                if (ModConfig.appaRestrictRideToOwner && hasOwner) {
+                    String playerName = player.getDisplayName();
+                    if (playerName == null || !playerName.equals(this.owner)) {
+                        return true;
+                    }
+                }
                 player.mountEntity(this);
             }
             return true;
@@ -148,6 +163,9 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     }
 
     public static EntityFamiliar getFamiliarByOwner(EntityPlayer owner) {
+        if (owner == null || owner.worldObj == null) {
+            return null;
+        }
         String ownerStr = owner.getDisplayName();
         for (Object o : owner.worldObj.getLoadedEntityList()) {
             if (!(o instanceof EntityFamiliar)) {

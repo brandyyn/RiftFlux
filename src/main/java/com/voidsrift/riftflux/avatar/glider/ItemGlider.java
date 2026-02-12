@@ -25,6 +25,9 @@ public class ItemGlider extends Item {
             return stack;
         }
         String playerName = player.getDisplayName();
+        if (playerName == null) {
+            return stack;
+        }
         long tick = player.worldObj != null ? player.worldObj.getTotalWorldTime() : 0L;
         Long last = LAST_TOGGLE_TICK.get(playerName);
         if (last != null && last.longValue() == tick) {

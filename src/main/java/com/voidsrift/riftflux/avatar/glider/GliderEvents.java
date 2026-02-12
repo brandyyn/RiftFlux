@@ -16,6 +16,9 @@ public class GliderEvents {
         ItemStack gliderStack = GliderItemHelper.getGliderStack(player);
         boolean holdingGlider = gliderStack != null;
         String playerName = player.getDisplayName();
+        if (playerName == null) {
+            return;
+        }
 
         if (!holdingGlider) {
             if (GliderState.isPlayerGliding(playerName)) {
