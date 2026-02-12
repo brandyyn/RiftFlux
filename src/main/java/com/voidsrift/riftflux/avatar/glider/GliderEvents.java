@@ -6,13 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 
-import com.voidsrift.riftflux.compat.BackhandCompat;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 public class GliderEvents {
-    private static final Map<String, Boolean> OFFHAND_USE = new ConcurrentHashMap<String, Boolean>();
-
     @SubscribeEvent
     public void onLivingUpdate(LivingEvent.LivingUpdateEvent evt) {
         if (!(evt.entityLiving instanceof EntityPlayer)) {
@@ -23,13 +17,10 @@ public class GliderEvents {
         boolean holdingGlider = gliderStack != null;
         String playerName = player.getDisplayName();
 
-        handleOffhandToggle(player, playerName);
-
         if (!holdingGlider) {
             if (GliderState.isPlayerGliding(playerName)) {
                 GliderState.removeGlidingPlayerName(playerName);
             }
-            OFFHAND_USE.remove(playerName);
             return;
         }
 
@@ -72,26 +63,5 @@ public class GliderEvents {
                 evt.distance = 1.1f;
             }
         }
-    }
-
-    private static void handleOffhandToggle(EntityPlayer player, String playerName) {
-        if (!player.worldObj.isRemote || !BackhandCompat.isAvailable()) {
-            return;
-        }
-        ItemStack offhand = BackhandCompat.getOffhandItem(player);
-        if (!GliderItemHelper.isGlider(offhand)) {
-            OFFHAND_USE.remove(playerName);
-            return;
-        }
-        boolean usingOffhand = BackhandCompat.isUsingOffhand(player);
-        boolean wasUsing = OFFHAND_USE.containsKey(playerName) && OFFHAND_USE.get(playerName);
-        if (usingOffhand && !wasUsing) {
-            if (GliderState.isPlayerGliding(playerName)) {
-                GliderState.removeGlidingPlayerName(playerName);
-            } else {
-                GliderState.addGlidingPlayerName(playerName);
-            }
-        }
-        OFFHAND_USE.put(playerName, usingOffhand);
     }
 }

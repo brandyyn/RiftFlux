@@ -66,10 +66,15 @@ public class GliderClientEvents {
     }
 
     private void ensureGlider(EntityPlayer player, ItemStack held) {
+        int desiredColor = ((ItemGlider) held.getItem()).getColor();
         if (player.riddenByEntity instanceof EntityGlider) {
+            EntityGlider existing = (EntityGlider) player.riddenByEntity;
+            if (existing.getColor() != desiredColor) {
+                existing.setColor(desiredColor);
+            }
             return;
         }
-        EntityGlider entity = new EntityGlider(player.worldObj, ((ItemGlider) held.getItem()).getColor());
+        EntityGlider entity = new EntityGlider(player.worldObj, desiredColor);
         entity.setLocationAndAngles(player.posX, player.posY, player.posZ, 0.0f, 0.0f);
         entity.prevPosX = entity.posX;
         entity.prevPosY = entity.posY;

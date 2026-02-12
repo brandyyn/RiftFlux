@@ -145,6 +145,14 @@ public class EntityGlider extends Entity {
         return EntityGlider.getOpenTexture(this.color);
     }
 
+    public int getColor() {
+        return this.color;
+    }
+
+    public void setColor(int color) {
+        this.color = color;
+    }
+
     public static String getOpenTexture(int color) {
         switch (color) {
             case 0:

@@ -12,15 +12,20 @@ import com.voidsrift.riftflux.avatar.glider.ItemGlider;
 import com.voidsrift.riftflux.avatar.glider.RenderGliderActive;
 import com.voidsrift.riftflux.avatar.glider.RenderGliderInHand;
 import com.voidsrift.riftflux.riftflux;
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.init.Items;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 public final class AvatarTLBContent {
     public static final ItemGlider[] GLIDERS = new ItemGlider[16];
@@ -43,6 +48,25 @@ public final class AvatarTLBContent {
             "green",
             "red",
             "black"
+    };
+
+    private static final int[] DYE_TO_GLIDER = {
+            15, // black
+            14, // red
+            13, // green
+            12, // brown
+            11, // blue
+            10, // purple
+            9,  // cyan
+            8,  // light gray
+            7,  // gray
+            6,  // pink
+            5,  // lime
+            4,  // yellow
+            3,  // light blue
+            2,  // magenta
+            1,  // orange
+            0   // white
     };
 
     private static boolean initialized;
@@ -89,6 +113,9 @@ public final class AvatarTLBContent {
             GameRegistry.registerItem(glider, "glider_" + color);
             GLIDERS[i] = glider;
         }
+        if (ModConfig.gliderDyeRecipes) {
+            registerGliderDyeRecipes();
+        }
         APPA_SPAWN_EGG = new ItemAppaSpawnEgg(0xEDEDDF, 14071663);
         APPA_SPAWN_EGG.setUnlocalizedName("appa_spawn_egg");
         GameRegistry.registerItem(APPA_SPAWN_EGG, "appa_spawn_egg");
@@ -105,5 +132,26 @@ public final class AvatarTLBContent {
         int entityId = EntityRegistry.findGlobalUniqueEntityId();
         EntityRegistry.registerGlobalEntityID(entityClass, entityClass.getSimpleName(), entityId);
         EntityList.entityEggs.put(entityId, new EntityList.EntityEggInfo(entityId, primaryColor, secondaryColor));
+    }
+
+    private static void registerGliderDyeRecipes() {
+        for (ItemGlider glider : GLIDERS) {
+            if (glider != null) {
+                OreDictionary.registerOre("riftfluxGlider", glider);
+            }
+        }
+
+        for (int dyeColor = 0; dyeColor < DYE_TO_GLIDER.length; dyeColor++) {
+            int gliderColor = DYE_TO_GLIDER[dyeColor];
+            ItemGlider glider = GLIDERS[gliderColor];
+            if (glider == null) {
+                continue;
+            }
+            GameRegistry.addRecipe(new ShapelessOreRecipe(
+                    new ItemStack(glider, 1, 0),
+                    new ItemStack(Items.dye, 1, dyeColor),
+                    "riftfluxGlider"
+            ));
+        }
     }
 }

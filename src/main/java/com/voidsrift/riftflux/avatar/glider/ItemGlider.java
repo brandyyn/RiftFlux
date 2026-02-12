@@ -6,7 +6,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class ItemGlider extends Item {
+    private static final Map<String, Long> LAST_TOGGLE_TICK = new ConcurrentHashMap<String, Long>();
     private final int color;
 
     public ItemGlider(int color) {
@@ -20,10 +24,17 @@ public class ItemGlider extends Item {
         if (player == null) {
             return stack;
         }
-        if (!GliderState.isPlayerGliding(player.getDisplayName())) {
-            GliderState.addGlidingPlayerName(player.getDisplayName());
+        String playerName = player.getDisplayName();
+        long tick = player.worldObj != null ? player.worldObj.getTotalWorldTime() : 0L;
+        Long last = LAST_TOGGLE_TICK.get(playerName);
+        if (last != null && last.longValue() == tick) {
+            return stack;
+        }
+        LAST_TOGGLE_TICK.put(playerName, tick);
+        if (!GliderState.isPlayerGliding(playerName)) {
+            GliderState.addGlidingPlayerName(playerName);
         } else {
-            GliderState.removeGlidingPlayerName(player.getDisplayName());
+            GliderState.removeGlidingPlayerName(playerName);
         }
         return stack;
     }

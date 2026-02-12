@@ -71,6 +71,9 @@ public class ModConfig {
     public static int zeldaMobDrop;
     public static int zeldaBlockDrop;
 
+    // Avatar glider
+    public static boolean gliderDyeRecipes;
+
     // Zyin's HUD
     public static boolean zyinQuickDepositEnabled;
     public static boolean zyinQuickDepositIgnoreHotbar;
@@ -385,6 +388,13 @@ public class ModConfig {
                 0,
                 Integer.MAX_VALUE,
                 "The higher the number, the rarer the hearts will drop from tall grass. 0 to disable."
+        );
+
+        gliderDyeRecipes = config.getBoolean(
+                "GliderDyeRecipes",
+                "avatar_glider",
+                true,
+                "If true, gliders can be recolored with dyes in a crafting grid."
         );
 
         zyinQuickDepositEnabled = config.getBoolean(
