@@ -2,7 +2,7 @@ package com.voidsrift.riftflux.avatar;
 
 import com.voidsrift.riftflux.avatar.appa.EntityBison;
 import com.voidsrift.riftflux.avatar.appa.ItemAppaSpawnEgg;
-import com.voidsrift.riftflux.avatar.appa.ModelFlyingBison;
+import com.voidsrift.riftflux.avatar.appa.ModelSkyBison;
 import com.voidsrift.riftflux.avatar.appa.RenderBison;
 import com.voidsrift.riftflux.avatar.appa.AppaClientEvents;
 import com.voidsrift.riftflux.avatar.glider.EntityGlider;
@@ -90,7 +90,7 @@ public final class AvatarTLBContent {
         }
 
         RenderingRegistry.registerEntityRenderingHandler(EntityGlider.class, new RenderGliderActive());
-        RenderingRegistry.registerEntityRenderingHandler(EntityBison.class, new RenderBison(new ModelFlyingBison(), 1.0f));
+        RenderingRegistry.registerEntityRenderingHandler(EntityBison.class, new RenderBison(new ModelSkyBison(), 1.5f));
 
         RenderGliderInHand gliderRenderer = new RenderGliderInHand();
         for (ItemGlider glider : GLIDERS) {

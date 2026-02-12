@@ -24,7 +24,7 @@ public class EntityBison extends EntityFamiliar {
     public EntityBison(World world) {
         super(world);
         this.getNavigator().setAvoidsWater(true);
-        this.setSize(3.0f, 4.5f);
+        this.setSize(1.5f, 2.5f);
         this.moveSpeedAir = 0.08;
         this.moveSpeedAirVert = 0.25f;
         this.maxSpeed = (float) this.getEntityAttribute(SharedMonsterAttributes.movementSpeed).getBaseValue();

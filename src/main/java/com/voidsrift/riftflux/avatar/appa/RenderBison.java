@@ -5,10 +5,13 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
 
 public class RenderBison extends RenderLiving {
-    private static final ResourceLocation res = new ResourceLocation(FileLocation.ENTITYTEXTURE + "Bison2.png");
+    private static final ResourceLocation res = new ResourceLocation(FileLocation.ENTITYTEXTURE + "sky_bison.png");
+    private static final float MODEL_SCALE = 1.5f;
 
     public RenderBison(ModelBase par1ModelBase, float par2) {
         super(par1ModelBase, par2);
@@ -29,5 +32,11 @@ public class RenderBison extends RenderLiving {
             return res;
         }
         return null;
+    }
+
+    @Override
+    protected void preRenderCallback(EntityLivingBase entity, float partialTickTime) {
+        GL11.glTranslatef(0.0f, 0.95f, 0.0f);
+        GL11.glScalef(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
     }
 }
