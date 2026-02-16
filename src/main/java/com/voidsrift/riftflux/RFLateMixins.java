@@ -1,11 +1,12 @@
 package com.voidsrift.riftflux;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import com.gtnewhorizon.gtnhmixins.ILateMixinLoader;
 import com.gtnewhorizon.gtnhmixins.LateMixin;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.Side;
 
 @LateMixin
 public class RFLateMixins implements ILateMixinLoader {
@@ -35,6 +36,9 @@ public class RFLateMixins implements ILateMixinLoader {
         }
         if(loadedMods.contains("Hats")) {
             mixins.add("late.MixinHatsEventHandler");
+            if (FMLLaunchHandler.side() == Side.CLIENT) {
+                mixins.add("late.MixinHatsKeybind");
+            }
         }
         if(loadedMods.contains("chocolateQuest")) {
             mixins.add("late.MixinGameRegistry_CatchCQDivZero");

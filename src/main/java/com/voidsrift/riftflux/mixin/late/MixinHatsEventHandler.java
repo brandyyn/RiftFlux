@@ -8,9 +8,13 @@ import hats.common.core.CommonProxy;
 import hats.common.core.EventHandler;
 import hats.common.core.HatHandler;
 import hats.common.core.HatInfo;
+import ichun.client.keybind.KeyEvent;
 import net.minecraft.entity.EntityLivingBase;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 @Mixin(value = EventHandler.class, remap = false)
@@ -70,5 +74,10 @@ public abstract class MixinHatsEventHandler {
         if (!hatInfo.hatName.isEmpty()) {
             CommonProxy.tickHandlerServer.mobHats.put(living, hatInfo.hatName);
         }
+    }
+
+    @Inject(method = "onKeyEvent", at = @At("HEAD"), cancellable = true)
+    private void riftflux$disableGuiKeybind(KeyEvent event, CallbackInfo ci) {
+        ci.cancel();
     }
 }

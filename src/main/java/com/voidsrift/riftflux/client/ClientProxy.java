@@ -2,9 +2,11 @@ package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.CommonProxy;
+import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import net.minecraft.client.Minecraft;
 
@@ -41,6 +43,9 @@ public class ClientProxy extends CommonProxy {
         DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
         com.voidsrift.riftflux.avatar.AvatarTLBContent.initClient();
+        if (Loader.isModLoaded("Hats")) {
+            HatsKeybinds.ensureRegistered();
+        }
 
     }
 }
