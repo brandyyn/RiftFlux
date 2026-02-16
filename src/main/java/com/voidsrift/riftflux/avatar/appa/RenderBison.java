@@ -11,7 +11,7 @@ import org.lwjgl.opengl.GL11;
 
 public class RenderBison extends RenderLiving {
     private static final ResourceLocation res = new ResourceLocation(FileLocation.ENTITYTEXTURE + "sky_bison.png");
-    private static final float MODEL_SCALE = 1.5f;
+    private static final float MODEL_SCALE = 2.25f;
 
     public RenderBison(ModelBase par1ModelBase, float par2) {
         super(par1ModelBase, par2);
@@ -36,7 +36,7 @@ public class RenderBison extends RenderLiving {
 
     @Override
     protected void preRenderCallback(EntityLivingBase entity, float partialTickTime) {
-        GL11.glTranslatef(0.0f, 0.95f, 0.0f);
+        GL11.glTranslatef(0.0f, 1.42f, 0.0f);
         GL11.glScalef(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
     }
 }

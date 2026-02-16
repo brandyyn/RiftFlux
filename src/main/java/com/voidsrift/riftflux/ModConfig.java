@@ -75,6 +75,8 @@ public class ModConfig {
     public static boolean gliderDyeRecipes;
     public static boolean appaRequireTameToRide;
     public static boolean appaRestrictRideToOwner;
+    public static boolean appaAllowMobPassengers;
+    public static float appaMovementSpeed;
 
     // Zyin's HUD
     public static boolean zyinQuickDepositEnabled;
@@ -413,6 +415,22 @@ public class ModConfig {
                 "If true, only the owner can ride a tamed Appa."
         );
 
+        appaAllowMobPassengers = config.getBoolean(
+                "AppaAllowMobPassengers",
+                "avatar_appa",
+                true,
+                "If true, non-player mobs can occupy Appa's passenger seats when pushed into them."
+        );
+
+        appaMovementSpeed = config.getFloat(
+                "AppaMovementSpeed",
+                "avatar_appa",
+                0.1F,
+                0.0F,
+                2.0F,
+                "Base movement speed for Appa. Lower values make Appa slower."
+        );
+
         zyinQuickDepositEnabled = config.getBoolean(
                 "EnableQuickDeposit",
                 "quickdeposit",
@@ -509,7 +527,7 @@ public class ModConfig {
         zyinItemSelectorHudOffsetY = config.getInt(
                 "ItemSelectorHudOffsetY",
                 "itemselector",
-                24,
+                30,
                 -2000,
                 2000,
                 "Pixels to move the item selector overlay up (positive moves up)."

@@ -1,10 +1,13 @@
 package com.voidsrift.riftflux.avatar;
 
 import com.voidsrift.riftflux.avatar.appa.EntityBison;
+import com.voidsrift.riftflux.avatar.appa.EntityBisonSeat;
 import com.voidsrift.riftflux.avatar.appa.ItemAppaSpawnEgg;
 import com.voidsrift.riftflux.avatar.appa.ModelSkyBison;
 import com.voidsrift.riftflux.avatar.appa.RenderBison;
+import com.voidsrift.riftflux.avatar.appa.RenderBisonSeat;
 import com.voidsrift.riftflux.avatar.appa.AppaClientEvents;
+import com.voidsrift.riftflux.avatar.appa.AppaSeatEvents;
 import com.voidsrift.riftflux.avatar.glider.EntityGlider;
 import com.voidsrift.riftflux.avatar.glider.GliderClientEvents;
 import com.voidsrift.riftflux.avatar.glider.GliderPlayerRenderHandler;
@@ -82,6 +85,7 @@ public final class AvatarTLBContent {
 
         registerItems();
         registerEntities();
+        MinecraftForge.EVENT_BUS.register(new AppaSeatEvents());
     }
 
     public static void initClient() {
@@ -91,6 +95,7 @@ public final class AvatarTLBContent {
 
         RenderingRegistry.registerEntityRenderingHandler(EntityGlider.class, new RenderGliderActive());
         RenderingRegistry.registerEntityRenderingHandler(EntityBison.class, new RenderBison(new ModelSkyBison(), 1.5f));
+        RenderingRegistry.registerEntityRenderingHandler(EntityBisonSeat.class, new RenderBisonSeat());
 
         RenderGliderInHand gliderRenderer = new RenderGliderInHand();
         for (ItemGlider glider : GLIDERS) {
@@ -125,6 +130,7 @@ public final class AvatarTLBContent {
         int id = 50;
         EntityRegistry.registerModEntity(EntityGlider.class, "Glider", id++, riftflux.instance, 80, 1, true);
         EntityRegistry.registerModEntity(EntityBison.class, "Bison", id++, riftflux.instance, 80, 3, true);
+        EntityRegistry.registerModEntity(EntityBisonSeat.class, "BisonSeat", id++, riftflux.instance, 64, 1, false);
         registerEntityEgg(EntityBison.class, 0xEDEDDF, 14071663);
     }
 
