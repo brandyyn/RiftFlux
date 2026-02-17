@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.dualhotbar;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -17,16 +18,26 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.Loader;
 import com.voidsrift.riftflux.ModConfig;
 
 public class RenderHandler {
     private static final ResourceLocation WIDGITS = new ResourceLocation("textures/gui/widgets.png");
     private static final ResourceLocation RIFT_SELECTOR = new ResourceLocation("riftflux:textures/gui/riftselector.png");
     private static final int SELECTOR_Y_OFFSET = 1;
+    private static final int BATTLEGEAR_SLOT_MIN = 150;
+    private static final int BATTLEGEAR_SLOT_MAX = 156;
 
     private boolean recievedPost = true;
 
     private static Constructor<ScaledResolution> scaledResolution172Constructor = null;
+    private static Method battlegearIsBattlemodeMethod;
+    private static boolean battlegearMethodChecked;
+    private static boolean battlegearHudHookChecked;
+    private static Object battlegearInGameGui;
+    private static Method battlegearRenderGameOverlayMethod;
+    private static boolean battlegearHookInitErrorLogged;
+    private static boolean battlegearHookInvokeErrorLogged;
 
     static {
         try {
@@ -87,6 +98,7 @@ public class RenderHandler {
             mc.renderEngine.bindTexture(WIDGITS);
 
             InventoryPlayer inv = mc.thePlayer.inventory;
+            int selectedSlot = getDisplaySelectedSlot(inv.currentItem, inv);
             int selectorX = 0;
             int selectorY = 0;
             boolean hasSelector = false;
@@ -112,9 +124,11 @@ public class RenderHandler {
                     GL11.glColor4f(1.0f, 1.0f, 1.0f, 1f);
                 }
 
-                selectorX = width / 2 - 91 - 1 + (inv.currentItem % 9) * 20;
-                selectorY = height - 22 - 1 - ((inv.currentItem / 9) * offset);
-                hasSelector = true;
+                if (selectedSlot >= 0 && selectedSlot < 9 * DualHotbarConfig.numHotbars) {
+                    selectorX = width / 2 - 91 - 1 + (selectedSlot % 9) * 20;
+                    selectorY = height - 22 - 1 - ((selectedSlot / 9) * offset);
+                    hasSelector = true;
+                }
             } else {
                 mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 90, height - 22, 0, 0, 182, 22);
                 mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91, height - 22, 1, 0, 181, 22);
@@ -145,9 +159,11 @@ public class RenderHandler {
                             21
                     );
                 }
-                selectorX = width / 2 - 91 - 1 + (inv.currentItem % 18) * 20 - 90;
-                selectorY = height - 22 - 1 - ((inv.currentItem / 18) * offset);
-                hasSelector = true;
+                if (selectedSlot >= 0 && selectedSlot < 9 * DualHotbarConfig.numHotbars) {
+                    selectorX = width / 2 - 91 - 1 + (selectedSlot % 18) * 20 - 90;
+                    selectorY = height - 22 - 1 - ((selectedSlot / 18) * offset);
+                    hasSelector = true;
+                }
             }
 
             GL11.glDisable(GL11.GL_BLEND);
@@ -201,6 +217,7 @@ public class RenderHandler {
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
             mc.mcProfiler.endSection();
 
+            renderBattlegearOverlayIfPresent(event);
             event.setCanceled(true);
             } finally {
                 if (pushed) {
@@ -211,6 +228,31 @@ public class RenderHandler {
                     GL11.glMatrixMode(previousMatrixMode);
                     GL11.glPopAttrib();
                 }
+            }
+        }
+    }
+
+    private void renderBattlegearOverlayIfPresent(RenderGameOverlayEvent.Pre event) {
+        if (!Loader.isModLoaded("battlegear2")) {
+            return;
+        }
+
+        if (!initBattlegearHudHook()) {
+            return;
+        }
+
+        try {
+            battlegearRenderGameOverlayMethod.invoke(
+                    battlegearInGameGui,
+                    event.partialTicks,
+                    event.mouseX,
+                    event.mouseY
+            );
+        } catch (Exception ignored) {
+            if (!battlegearHookInvokeErrorLogged) {
+                battlegearHookInvokeErrorLogged = true;
+                System.out.println("[RiftFlux] Battlegear HUD invoke failed: " + ignored);
+                ignored.printStackTrace();
             }
         }
     }
@@ -278,6 +320,70 @@ public class RenderHandler {
         }
 
         GL11.glPopMatrix();
+    }
+
+    private static int getDisplaySelectedSlot(int currentItem, InventoryPlayer inventory) {
+        if (isBattlegearBattlemode(inventory)) {
+            return -1;
+        }
+        return currentItem;
+    }
+
+    private static boolean isBattlegearBattlemode(InventoryPlayer inventory) {
+        if (inventory == null) {
+            return false;
+        }
+        if (inventory.currentItem >= BATTLEGEAR_SLOT_MIN && inventory.currentItem < BATTLEGEAR_SLOT_MAX) {
+            return true;
+        }
+        if (!Loader.isModLoaded("battlegear2")) {
+            return false;
+        }
+
+        if (!battlegearMethodChecked) {
+            battlegearMethodChecked = true;
+            try {
+                battlegearIsBattlemodeMethod = inventory.getClass().getMethod("battlegear2$isBattlemode");
+                battlegearIsBattlemodeMethod.setAccessible(true);
+            } catch (Exception ignored) {
+                battlegearIsBattlemodeMethod = null;
+            }
+        }
+
+        if (battlegearIsBattlemodeMethod == null) {
+            return false;
+        }
+
+        try {
+            Object value = battlegearIsBattlemodeMethod.invoke(inventory);
+            return value instanceof Boolean && (Boolean) value;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private static boolean initBattlegearHudHook() {
+        if (battlegearHudHookChecked) {
+            return battlegearInGameGui != null && battlegearRenderGameOverlayMethod != null;
+        }
+
+        battlegearHudHookChecked = true;
+        try {
+            Class<?> guiClass = Class.forName("mods.battlegear2.client.gui.BattlegearInGameGUI");
+            battlegearInGameGui = guiClass.getConstructor().newInstance();
+            battlegearRenderGameOverlayMethod = guiClass.getMethod("renderGameOverlay", float.class, int.class, int.class);
+            battlegearRenderGameOverlayMethod.setAccessible(true);
+            return true;
+        } catch (Exception ignored) {
+            battlegearInGameGui = null;
+            battlegearRenderGameOverlayMethod = null;
+            if (!battlegearHookInitErrorLogged) {
+                battlegearHookInitErrorLogged = true;
+                System.out.println("[RiftFlux] Battlegear HUD hook init failed: " + ignored);
+                ignored.printStackTrace();
+            }
+            return false;
+        }
     }
 
     protected void renderInventorySlotItem(int slotIndex, int x, int y, float partialTicks) {

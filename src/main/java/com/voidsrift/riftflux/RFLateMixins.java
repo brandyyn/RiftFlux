@@ -73,6 +73,32 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.vortex.MixinInfusionEnchantmentRecipe");
         }
 
+        // AlternativeChunkloading compatibility fixes port
+        if (hasAnyMod(loadedMods, "erebus", "Erebus")) {
+            mixins.add("late.erebus.MixinSpawnerErebus");
+        }
+
+        if (hasAnyMod(loadedMods, "DimDoors", "dimdoors", "DimensionalDoors", "dimensionaldoors")) {
+            mixins.add("late.dimdoors.legacy.MixinChunkBlockSetter");
+            mixins.add("late.dimdoors.legacy.MixinDungeonSchematic");
+            mixins.add("late.dimdoors.legacy.MixinWorldBlockSettings");
+            mixins.add("late.dimdoors.legacy.MixinPocketBuilder");
+
+            mixins.add("late.dimdoors.modern.MixinChunkBlockSetter");
+            mixins.add("late.dimdoors.modern.MixinDungeonSchematic");
+            mixins.add("late.dimdoors.modern.MixinWorldBlockSettings");
+            mixins.add("late.dimdoors.modern.MixinPocketBuilder");
+        }
+
         return mixins;
+    }
+
+    private static boolean hasAnyMod(Set<String> loadedMods, String... modIds) {
+        for (String modId : modIds) {
+            if (loadedMods.contains(modId)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
