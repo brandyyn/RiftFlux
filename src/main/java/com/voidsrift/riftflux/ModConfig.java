@@ -231,19 +231,20 @@ public class ModConfig {
 
         disableStrataOreVeins = config.getBoolean("DisableStrataOreVeins","general",false,"Toggles GeoStrata's ore vein spawn");
 
-        enableArmorMixin = config.getBoolean("EnableArmorMixin","general",true,"Enable mixin scaling armor protections");
+        enableArmorMixin = config.getBoolean("EnableArmorMixin","combat",true,"Enable mixin scaling armor protections");
 
-        changeArmorBarAmount = config.getBoolean("ChangeArmorBarAmount","general",true,
+        changeArmorBarAmount = config.getBoolean("ChangeArmorBarAmount","combat",true,
                 "Enable mixin that changes armor bar displayed amount, may affect other things");
-        protectionMultiplier = config.getFloat("protectionMultiplier","general",0.5F,0.0F,1F,"Scales armor's protection(1.0 is unchanged armor)");
 
-        enableChestLaunch = config.getBoolean("EnableChestLaunch","general", true,
+        protectionMultiplier = config.getFloat("protectionMultiplier","chest launching",0.5F,0.0F,1F,"Scales armor's protection(1.0 is unchanged armor)");
+
+        enableChestLaunch = config.getBoolean("EnableChestLaunch","chest launching", true,
                 "Launch entities standing on top when a chest opens.");
 
-        chestLaunchHorizontal = (float) config.get("general", "ChestLaunchHorizontal", 5,
+        chestLaunchHorizontal = (float) config.get("chest launching", "ChestLaunchHorizontal", 5,
                 "Horizontal push strength when a chest opens. (no bounds)").getDouble(5);
 
-        chestLaunchUpward = (float) config.get("general", "ChestLaunchUpward", 1,
+        chestLaunchUpward = (float) config.get("chest launching", "ChestLaunchUpward", 1,
                 "Upward boost when a chest opens. (no bounds)").getDouble(1);
 
         enableFullExplosionDrops = config.getBoolean(
@@ -396,35 +397,35 @@ public class ModConfig {
 
         gliderDyeRecipes = config.getBoolean(
                 "GliderDyeRecipes",
-                "avatar_glider",
+                "avatar",
                 true,
                 "If true, gliders can be recolored with dyes in a crafting grid."
         );
 
         appaRequireTameToRide = config.getBoolean(
                 "AppaRequireTameToRide",
-                "avatar_appa",
-                false,
+                "avatar",
+                true,
                 "If true, Appa can only be ridden after being tamed."
         );
 
         appaRestrictRideToOwner = config.getBoolean(
                 "AppaRestrictRideToOwner",
-                "avatar_appa",
+                "avatar",
                 false,
                 "If true, only the owner can ride a tamed Appa."
         );
 
         appaAllowMobPassengers = config.getBoolean(
                 "AppaAllowMobPassengers",
-                "avatar_appa",
+                "avatar",
                 true,
                 "If true, non-player mobs can occupy Appa's passenger seats when pushed into them."
         );
 
         appaMovementSpeed = config.getFloat(
                 "AppaMovementSpeed",
-                "avatar_appa",
+                "avatar",
                 0.1F,
                 0.0F,
                 2.0F,

@@ -8,6 +8,8 @@ import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import java.util.HashMap;
@@ -160,6 +162,16 @@ public class EntityBison extends EntityFamiliar {
     }
 
     @Override
+    public void setOwner(EntityPlayer ownerPlayer) {
+        if (ownerPlayer == null) {
+            return;
+        }
+        this.owner = ownerPlayer.getDisplayName();
+        this.sendNameUpdate();
+        this.sendHealthUpdate();
+    }
+
+    @Override
     public int getTotalArmorValue() {
         return 8;
     }
@@ -222,8 +234,10 @@ public class EntityBison extends EntityFamiliar {
         if (this.worldObj.isRemote) {
             return true;
         }
-        if (player.getHeldItem() != null && player.getHeldItem().getItem() == this.getTameItem()) {
-            --player.getHeldItem().stackSize;
+        boolean hasOwner = this.owner != null && !this.owner.isEmpty();
+        ItemStack held = player.getHeldItem();
+        if (!hasOwner && held != null && held.getItem() == this.getTameItem()) {
+            --held.stackSize;
             Random r = this.getRNG();
             for (int i = 0; i < 7; ++i) {
                 double vx = r.nextGaussian() * 202.0;
@@ -236,11 +250,12 @@ public class EntityBison extends EntityFamiliar {
                         vx, vy, vz);
             }
             this.setOwner(player);
+            player.addChatComponentMessage(new ChatComponentText("Appa likes it! Hop on his back!"));
             return true;
         }
 
-        boolean hasOwner = this.owner != null && !this.owner.isEmpty();
         if (ModConfig.appaRequireTameToRide && !hasOwner) {
+            player.addChatComponentMessage(new ChatComponentText("Appa likes apples!"));
             return true;
         }
         if (ModConfig.appaRestrictRideToOwner && hasOwner) {
@@ -398,6 +413,10 @@ public class EntityBison extends EntityFamiliar {
     }
 
     private void tryMountNearbyMob() {
+        boolean hasOwner = this.owner != null && !this.owner.isEmpty();
+        if (ModConfig.appaRequireTameToRide && !hasOwner) {
+            return;
+        }
         if (!isStandingStillForMobMount()) {
             return;
         }
@@ -611,6 +630,47 @@ public class EntityBison extends EntityFamiliar {
             }
         }
         return false;
+    }
+
+    @Override
+    public void setPositionAndUpdate(double x, double y, double z) {
+        if (shouldBlockOwnerTeleport(x, y, z)) {
+            return;
+        }
+        super.setPositionAndUpdate(x, y, z);
+    }
+
+    @Override
+    public void setPositionAndRotation2(double x, double y, double z, float yaw, float pitch, int increments) {
+        if (shouldBlockOwnerTeleport(x, y, z)) {
+            return;
+        }
+        super.setPositionAndRotation2(x, y, z, yaw, pitch, increments);
+    }
+
+    private boolean shouldBlockOwnerTeleport(double targetX, double targetY, double targetZ) {
+        if (this.worldObj == null || this.worldObj.isRemote) {
+            return false;
+        }
+        if (this.ticksExisted < 40) {
+            return false;
+        }
+        if (this.ridingEntity != null || this.riddenByEntity != null) {
+            return false;
+        }
+        if (this.owner == null || this.owner.isEmpty()) {
+            return false;
+        }
+        EntityPlayer ownerPlayer = this.worldObj.getPlayerEntityByName(this.owner);
+        if (ownerPlayer == null) {
+            return false;
+        }
+        double targetToOwnerSq = ownerPlayer.getDistanceSq(targetX, targetY, targetZ);
+        if (targetToOwnerSq > 36.0D) {
+            return false;
+        }
+        double currentToOwnerSq = this.getDistanceSqToEntity(ownerPlayer);
+        return currentToOwnerSq > 1024.0D;
     }
 
 }
