@@ -238,7 +238,7 @@ public class ModConfig {
         changeArmorBarAmount = config.getBoolean("ChangeArmorBarAmount","combat",true,
                 "Enable mixin that changes armor bar displayed amount, may affect other things");
 
-        protectionMultiplier = config.getFloat("protectionMultiplier","chest launching",0.5F,0.0F,1F,"Scales armor's protection(1.0 is unchanged armor)");
+        protectionMultiplier = config.getFloat("protectionMultiplier","combat",0.5F,0.0F,1F,"Scales armor's protection(1.0 is unchanged armor)");
 
         enableChestLaunch = config.getBoolean("EnableChestLaunch","chest launching", true,
                 "Launch entities standing on top when a chest opens.");
