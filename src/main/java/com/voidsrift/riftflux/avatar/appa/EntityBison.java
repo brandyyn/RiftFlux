@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.avatar.appa;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.EnumCreatureAttribute;
@@ -12,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
+import net.minecraft.nbt.NBTTagCompound;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,6 +46,9 @@ public class EntityBison extends EntityFamiliar {
     };
     private final EntityBisonSeat[] passengerSeats = new EntityBisonSeat[PASSENGER_SEATS];
     private final HashMap<Integer, Integer> seatNoRemountTicks = new HashMap<Integer, Integer>();
+    private int lastDriverEntityId = -1;
+    private boolean restoreYawAfterLoad = false;
+    private float loadedYaw = 0.0F;
 
     public EntityBison(World world) {
         super(world);
@@ -117,9 +122,37 @@ public class EntityBison extends EntityFamiliar {
     @Override
     public void onUpdate() {
         super.onUpdate();
+        if (this.restoreYawAfterLoad && this.riddenByEntity == null && this.ticksExisted < 40) {
+            this.rotationYaw = this.loadedYaw;
+            this.prevRotationYaw = this.loadedYaw;
+            this.rotationYawHead = this.loadedYaw;
+            this.renderYawOffset = this.loadedYaw;
+            this.prevRenderYawOffset = this.loadedYaw;
+        } else if (this.restoreYawAfterLoad && (this.ticksExisted >= 40 || this.riddenByEntity != null)) {
+            this.restoreYawAfterLoad = false;
+        }
         ensureSeats();
+        boolean playerOnBack = this.riddenByEntity == null && isAnyPlayerOnBackZone();
+        if (playerOnBack) {
+            // Keep client and server in sync while players stand on top.
+            this.fallDistance = 0.0F;
+            this.motionY = 0.0D;
+        }
         if (!this.worldObj.isRemote) {
             tickSeatNoRemounts();
+            if (playerOnBack) {
+                stabilizePlayersOnBack();
+            }
+            updateOwnerRecall(playerOnBack);
+            updateDriverDismountSafety();
+            if (playerOnBack) {
+                if (Math.abs(this.motionX) < 0.01D) {
+                    this.motionX = 0.0D;
+                }
+                if (Math.abs(this.motionZ) < 0.01D) {
+                    this.motionZ = 0.0D;
+                }
+            }
         }
         if (!this.worldObj.isRemote && ModConfig.appaAllowMobPassengers) {
             tryMountNearbyMob();
@@ -322,27 +355,6 @@ public class EntityBison extends EntityFamiliar {
             living.moveStrafing = 0.0f;
             living.moveForward = 0.0f;
         }
-        if (passenger instanceof EntityPlayer) {
-            applyYawToPassenger(passenger);
-        }
-    }
-
-    private void applyYawToPassenger(Entity passenger) {
-        if (passenger instanceof EntityLivingBase) {
-            EntityLivingBase living = (EntityLivingBase) passenger;
-            float yawDelta = MathHelper.wrapAngleTo180_float(living.rotationYawHead - this.rotationYaw);
-            float clamped = MathHelper.clamp_float(yawDelta, -105.0F, 105.0F);
-            float adjust = clamped - yawDelta;
-            passenger.prevRotationYaw += adjust;
-            passenger.rotationYaw += adjust;
-            living.rotationYawHead += adjust;
-            living.prevRotationYawHead += adjust;
-            living.renderYawOffset = this.rotationYaw;
-            living.prevRenderYawOffset = this.rotationYaw;
-        } else {
-            passenger.rotationYaw = this.rotationYaw;
-            passenger.prevRotationYaw = this.rotationYaw;
-        }
     }
 
     @Override
@@ -434,9 +446,6 @@ public class EntityBison extends EntityFamiliar {
             if (candidate instanceof EntityPlayer) {
                 continue;
             }
-            if (candidate instanceof EntityBison) {
-                continue;
-            }
             if (candidate.ridingEntity instanceof EntityBisonSeat) {
                 EntityBisonSeat ridingSeat = (EntityBisonSeat) candidate.ridingEntity;
                 if (!isSeatLive(ridingSeat) || ridingSeat.getParent() == null) {
@@ -444,6 +453,9 @@ public class EntityBison extends EntityFamiliar {
                 }
             }
             if (candidate.isDead || candidate.ridingEntity != null || candidate.riddenByEntity != null) {
+                continue;
+            }
+            if (!isMobPassengerAllowed(candidate)) {
                 continue;
             }
             if (isInNoRemountCooldown(candidate)) {
@@ -466,6 +478,37 @@ public class EntityBison extends EntityFamiliar {
         double deltaZ = this.posZ - this.prevPosZ;
         double deltaSq = deltaX * deltaX + deltaZ * deltaZ;
         return motionSq < 9.0E-4D && deltaSq < 9.0E-4D;
+    }
+
+    private boolean isMobPassengerAllowed(EntityLivingBase entity) {
+        if (entity == null) {
+            return false;
+        }
+        String[] filter = ModConfig.appaMobPassengerEntityFilter;
+        boolean whitelist = ModConfig.appaMobPassengerWhitelistMode;
+        if (filter == null || filter.length == 0) {
+            return !whitelist;
+        }
+        String entityId = EntityList.getEntityString(entity);
+        String simpleName = entity.getClass().getSimpleName();
+        String className = entity.getClass().getName();
+        boolean match = false;
+        for (String raw : filter) {
+            if (raw == null) {
+                continue;
+            }
+            String entry = raw.trim();
+            if (entry.isEmpty()) {
+                continue;
+            }
+            if ((entityId != null && entry.equalsIgnoreCase(entityId))
+                    || entry.equalsIgnoreCase(simpleName)
+                    || entry.equalsIgnoreCase(className)) {
+                match = true;
+                break;
+            }
+        }
+        return whitelist ? match : !match;
     }
 
     public boolean ejectSeatPassenger(Entity passenger) {
@@ -564,6 +607,17 @@ public class EntityBison extends EntityFamiliar {
         if (entity == this.riddenByEntity || isSeatPassenger(entity) || isSeatEntity(entity)) {
             return null;
         }
+        if (entity instanceof EntityPlayer && entity.ridingEntity == null && isEntityOnBackZone(entity)) {
+            // Keep only a thin "deck" collider for standing players to avoid side-collision shove jitter.
+            return AxisAlignedBB.getBoundingBox(
+                    this.boundingBox.minX,
+                    this.boundingBox.maxY - 0.10D,
+                    this.boundingBox.minZ,
+                    this.boundingBox.maxX,
+                    this.boundingBox.maxY + 0.24D,
+                    this.boundingBox.maxZ
+            );
+        }
         return this.boundingBox;
     }
 
@@ -587,6 +641,7 @@ public class EntityBison extends EntityFamiliar {
         if (entity == this.riddenByEntity
                 || isSeatPassenger(entity)
                 || isSeatEntity(entity)
+                || isEntityOnBackZone(entity)
                 || hasMobSeatPassenger()) {
             return;
         }
@@ -614,7 +669,7 @@ public class EntityBison extends EntityFamiliar {
 
     @Override
     public void addVelocity(double x, double y, double z) {
-        if (hasMobSeatPassenger()) {
+        if (hasMobSeatPassenger() || isAnyPlayerOnBackZone()) {
             return;
         }
         super.addVelocity(x, y, z);
@@ -630,6 +685,235 @@ public class EntityBison extends EntityFamiliar {
             }
         }
         return false;
+    }
+
+    private void updateOwnerRecall(boolean playerOnBack) {
+        if (this.ticksExisted < 40) {
+            return;
+        }
+        if (this.riddenByEntity != null || this.ridingEntity != null) {
+            return;
+        }
+        if (this.onGround || this.isInWater()) {
+            return;
+        }
+        if (this.owner == null || this.owner.isEmpty()) {
+            return;
+        }
+        if (playerOnBack || isAnyPlayerOnBackZone()) {
+            cancelRecallMotion();
+            return;
+        }
+        EntityPlayer ownerPlayer = this.worldObj.getPlayerEntityByName(this.owner);
+        if (ownerPlayer == null || ownerPlayer.isDead) {
+            cancelRecallMotion();
+            return;
+        }
+        double ownerFeetY = ownerPlayer.boundingBox != null ? ownerPlayer.boundingBox.minY : ownerPlayer.posY;
+        if (ownerFeetY >= this.boundingBox.minY - 0.2D) {
+            // Only recall when owner is below Appa.
+            cancelRecallMotion();
+            return;
+        }
+        double dx = ownerPlayer.posX - this.posX;
+        double dz = ownerPlayer.posZ - this.posZ;
+        double horizontalSq = dx * dx + dz * dz;
+        double horizontalDistance = Math.sqrt(horizontalSq);
+        double verticalGap = this.boundingBox.minY - ownerFeetY;
+        if (horizontalDistance < 6.0D && verticalGap <= 6.0D) {
+            // Recall only when far enough horizontally, unless Appa is significantly above owner.
+            cancelRecallMotion();
+            return;
+        }
+        double followRadius = 2.75D;
+        float targetYaw = (float) (Math.atan2(-dx, dz) * 180.0D / Math.PI);
+        this.rotationYaw = approachYaw(this.rotationYaw, targetYaw, 2.25f);
+        this.renderYawOffset = this.rotationYaw;
+        this.rotationYawHead = this.rotationYaw;
+        if (horizontalSq > 1.0E-6D) {
+            double travel = Math.max(0.0D, horizontalDistance - followRadius);
+            double maxHorizontal = Math.max(0.005D, getConfiguredMoveSpeed() * 0.45D);
+            double desiredSpeed = Math.min(maxHorizontal, travel * 0.045D);
+            double horizontal = horizontalDistance;
+            double desiredX = (dx / horizontal) * desiredSpeed;
+            double desiredZ = (dz / horizontal) * desiredSpeed;
+            this.motionX += (desiredX - this.motionX) * 0.12D;
+            this.motionZ += (desiredZ - this.motionZ) * 0.12D;
+            double motionHorizontalSq = this.motionX * this.motionX + this.motionZ * this.motionZ;
+            if (motionHorizontalSq > maxHorizontal * maxHorizontal) {
+                double scale = maxHorizontal / Math.sqrt(motionHorizontalSq);
+                this.motionX *= scale;
+                this.motionZ *= scale;
+            }
+            if (horizontalDistance <= followRadius + 0.3D) {
+                this.motionX *= 0.75D;
+                this.motionZ *= 0.75D;
+            }
+        } else {
+            this.motionX *= 0.75D;
+            this.motionZ *= 0.75D;
+        }
+        double targetDescent = -Math.max(0.003D, getConfiguredMoveSpeed() * 0.08D);
+        this.motionY += (targetDescent - this.motionY) * 0.1D;
+        if (this.motionY < -0.02D) {
+            this.motionY = -0.02D;
+        }
+        this.fallDistance = 0.0f;
+        this.velocityChanged = true;
+    }
+
+    private void cancelRecallMotion() {
+        this.motionX *= 0.6D;
+        this.motionZ *= 0.6D;
+        if (Math.abs(this.motionX) < 0.01D) {
+            this.motionX = 0.0D;
+        }
+        if (Math.abs(this.motionZ) < 0.01D) {
+            this.motionZ = 0.0D;
+        }
+        this.motionY = 0.0D;
+        this.fallDistance = 0.0f;
+    }
+
+    private boolean isAlmostStationaryInAir() {
+        double horizontalMotionSq = this.motionX * this.motionX + this.motionZ * this.motionZ;
+        double horizontalDeltaX = this.posX - this.prevPosX;
+        double horizontalDeltaZ = this.posZ - this.prevPosZ;
+        double horizontalDeltaSq = horizontalDeltaX * horizontalDeltaX + horizontalDeltaZ * horizontalDeltaZ;
+        return horizontalMotionSq < 1.0E-4D && horizontalDeltaSq < 1.0E-4D && Math.abs(this.motionY) < 1.0E-3D;
+    }
+
+    private boolean isEntityOnBackZone(Entity entity) {
+        if (entity == null || entity.boundingBox == null) {
+            return false;
+        }
+        AxisAlignedBB backZone = AxisAlignedBB.getBoundingBox(
+                this.boundingBox.minX - 0.25D,
+                this.boundingBox.maxY - 1.25D,
+                this.boundingBox.minZ - 0.25D,
+                this.boundingBox.maxX + 0.25D,
+                this.boundingBox.maxY + 1.6D,
+                this.boundingBox.maxZ + 0.25D
+        );
+        return entity.boundingBox.intersectsWith(backZone);
+    }
+
+    private boolean isAnyPlayerOnBackZone() {
+        if (this.worldObj == null || this.worldObj.playerEntities == null) {
+            return false;
+        }
+        for (Object obj : this.worldObj.playerEntities) {
+            if (!(obj instanceof EntityPlayer)) {
+                continue;
+            }
+            EntityPlayer player = (EntityPlayer) obj;
+            if (player.isDead || player.ridingEntity != null) {
+                continue;
+            }
+            if (isEntityOnBackZone(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void stabilizePlayersOnBack() {
+        if (this.worldObj == null || this.worldObj.playerEntities == null) {
+            return;
+        }
+        double targetFeetY = this.boundingBox.maxY + 0.02D;
+        for (Object obj : this.worldObj.playerEntities) {
+            if (!(obj instanceof EntityPlayer)) {
+                continue;
+            }
+            EntityPlayer player = (EntityPlayer) obj;
+            if (player.isDead || player.ridingEntity != null) {
+                continue;
+            }
+            if (!isEntityOnBackZone(player)) {
+                continue;
+            }
+            if (player.boundingBox != null && player.boundingBox.minY < targetFeetY - 0.02D) {
+                player.setPosition(player.posX, targetFeetY, player.posZ);
+                // Prevent server-side interpolation spikes after relog correction.
+                player.prevPosY = targetFeetY;
+                player.lastTickPosY = targetFeetY;
+            }
+            if (player.motionY < 0.0D) {
+                player.motionY = 0.0D;
+            }
+            if (Math.abs(player.motionX) < 0.005D) {
+                player.motionX = 0.0D;
+            }
+            if (Math.abs(player.motionZ) < 0.005D) {
+                player.motionZ = 0.0D;
+            }
+            player.fallDistance = 0.0F;
+        }
+    }
+
+    private float approachYaw(float current, float target, float step) {
+        float delta = MathHelper.wrapAngleTo180_float(target - current);
+        if (delta > step) {
+            delta = step;
+        } else if (delta < -step) {
+            delta = -step;
+        }
+        return current + delta;
+    }
+
+    private void updateDriverDismountSafety() {
+        if (this.riddenByEntity != null) {
+            this.lastDriverEntityId = this.riddenByEntity.getEntityId();
+            return;
+        }
+        if (this.lastDriverEntityId < 0) {
+            return;
+        }
+        Entity formerDriver = this.worldObj.getEntityByID(this.lastDriverEntityId);
+        this.lastDriverEntityId = -1;
+        if (formerDriver == null || formerDriver.isDead || formerDriver.ridingEntity != null) {
+            return;
+        }
+        placeDismountedDriverSafely(formerDriver);
+    }
+
+    private void placeDismountedDriverSafely(Entity driver) {
+        if (driver == null || driver.boundingBox == null) {
+            return;
+        }
+        double x = this.posX;
+        double z = this.posZ;
+        double y = this.boundingBox.maxY + 1.0D;
+        if (this.motionY > 0.02D) {
+            y += Math.min(1.25D, this.motionY * 8.0D + 0.35D);
+        }
+        for (int i = 0; i < 8; i++) {
+            double testY = y + i * 0.25D;
+            if (isClearDismountSpot(driver, x, testY, z)) {
+                applyDismountPosition(driver, x, testY, z);
+                return;
+            }
+        }
+        applyDismountPosition(driver, x, y + 1.0D, z);
+    }
+
+    private boolean isClearDismountSpot(Entity entity, double x, double y, double z) {
+        AxisAlignedBB box = entity.boundingBox.copy().offset(
+                x - entity.posX,
+                y - entity.posY,
+                z - entity.posZ
+        );
+        return this.worldObj.getCollidingBoundingBoxes(entity, box).isEmpty();
+    }
+
+    private void applyDismountPosition(Entity driver, double x, double y, double z) {
+        driver.setPosition(x, y, z);
+        driver.motionX = this.motionX * 0.9D;
+        driver.motionZ = this.motionZ * 0.9D;
+        driver.motionY = Math.max(driver.motionY, this.motionY + 0.06D);
+        driver.fallDistance = 0.0f;
+        driver.velocityChanged = true;
     }
 
     @Override
@@ -671,6 +955,13 @@ public class EntityBison extends EntityFamiliar {
         }
         double currentToOwnerSq = this.getDistanceSqToEntity(ownerPlayer);
         return currentToOwnerSq > 1024.0D;
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound tag) {
+        super.readEntityFromNBT(tag);
+        this.loadedYaw = this.rotationYaw;
+        this.restoreYawAfterLoad = true;
     }
 
 }

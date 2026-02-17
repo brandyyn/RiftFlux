@@ -2,6 +2,7 @@ package com.voidsrift.riftflux;
 
 import net.minecraftforge.common.config.Configuration;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.io.File;
 import makamys.mclib.config.item.BackpackConfigHelper;
@@ -76,6 +77,8 @@ public class ModConfig {
     public static boolean appaRequireTameToRide;
     public static boolean appaRestrictRideToOwner;
     public static boolean appaAllowMobPassengers;
+    public static boolean appaMobPassengerWhitelistMode;
+    public static String[] appaMobPassengerEntityFilter;
     public static float appaMovementSpeed;
 
     // Zyin's HUD
@@ -422,6 +425,29 @@ public class ModConfig {
                 true,
                 "If true, non-player mobs can occupy Appa's passenger seats when pushed into them."
         );
+
+        appaMobPassengerWhitelistMode = config.getBoolean(
+                "AppaMobPassengerWhitelistMode",
+                "avatar",
+                false,
+                "If false, AppaMobPassengerEntityFilter is a blacklist.\n" +
+                        "If true, AppaMobPassengerEntityFilter is a whitelist."
+        );
+
+        appaMobPassengerEntityFilter = config.getStringList(
+                "AppaMobPassengerEntityFilter",
+                "avatar",
+                new String[]{
+                        "EntityBison"
+                },
+                "Entity IDs/class names used to filter which mobs can ride Appa.\n" +
+                        "Matches entity ID, class simple name, or full class name.\n" +
+                        "Default blocks Appa from mounting itself."
+        );
+        appaMobPassengerEntityFilter = sanitizeAppaPassengerFilter(appaMobPassengerEntityFilter);
+        config.getCategory("avatar")
+                .get("AppaMobPassengerEntityFilter")
+                .set(appaMobPassengerEntityFilter);
 
         appaMovementSpeed = config.getFloat(
                 "AppaMovementSpeed",
@@ -1041,6 +1067,35 @@ public class ModConfig {
         zelda.Config.syncFromModConfig();
 
         config.save();
+    }
+
+    private static String[] sanitizeAppaPassengerFilter(String[] values) {
+        if (values == null || values.length == 0) {
+            return values;
+        }
+        final String appaEntityClass = "EntityBison";
+        LinkedHashSet<String> unique = new LinkedHashSet<String>();
+        HashSet<String> lowered = new HashSet<String>();
+        for (String raw : values) {
+            if (raw == null) {
+                continue;
+            }
+            String entry = raw.trim();
+            if (entry.isEmpty()) {
+                continue;
+            }
+            if ("EntityBison".equalsIgnoreCase(entry)) {
+                entry = appaEntityClass;
+            }
+            String key = entry.toLowerCase();
+            if (lowered.add(key)) {
+                unique.add(entry);
+            }
+        }
+        if (unique.isEmpty()) {
+            unique.add(appaEntityClass);
+        }
+        return unique.toArray(new String[unique.size()]);
     }
 
     // parse the string of IDs into a set
