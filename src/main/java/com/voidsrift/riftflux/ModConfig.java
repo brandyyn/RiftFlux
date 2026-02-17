@@ -25,6 +25,9 @@ public class ModConfig {
     public static boolean disableStrataVents;
 
     public static boolean disableStrataOreVeins;
+    public static boolean disableThermalDynamicsFacades;
+    public static boolean fixChocolateQuestDivideByZero;
+    public static boolean hideChocolateQuestGeneratingStructureOverlay;
 
     public static boolean enableArmorMixin;
 
@@ -232,6 +235,27 @@ public class ModConfig {
         disableStrataVents = config.getBoolean("DisableStrataVents","general",false,"Toggles GeoStrata's vent spawn");
 
         disableStrataOreVeins = config.getBoolean("DisableStrataOreVeins","general",false,"Toggles GeoStrata's ore vein spawn");
+
+        disableThermalDynamicsFacades = config.getBoolean(
+                "DisableThermalDynamicsFacades",
+                "general",
+                true,
+                "If true, disables ThermalDynamics facades/covers (recipes, placement, and persisted cover data)."
+        );
+
+        fixChocolateQuestDivideByZero = config.getBoolean(
+                "FixChocolateQuestDivideByZero",
+                "general",
+                true,
+                "If true, catches Chocolate Quest ArithmeticException (/ by zero) crashes during dungeon worldgen and skips only the failed generation call."
+        );
+
+        hideChocolateQuestGeneratingStructureOverlay = config.getBoolean(
+                "HideChocolateQuestGeneratingStructureOverlay",
+                "client",
+                true,
+                "If true, hides Chocolate Quest's \"Generating Structure... Please wait\" overlay."
+        );
 
         enableArmorMixin = config.getBoolean("EnableArmorMixin","combat",true,"Enable mixin scaling armor protections");
 

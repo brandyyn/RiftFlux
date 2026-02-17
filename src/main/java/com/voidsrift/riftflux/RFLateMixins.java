@@ -41,7 +41,15 @@ public class RFLateMixins implements ILateMixinLoader {
             }
         }
         if(loadedMods.contains("chocolateQuest")) {
-            mixins.add("late.MixinGameRegistry_CatchCQDivZero");
+            if (ModConfig.fixChocolateQuestDivideByZero) {
+                mixins.add("late.chocolatequest.MixinWorldGeneratorNew_CatchBuilderArithmetic");
+            }
+            if (FMLLaunchHandler.side() == Side.CLIENT && ModConfig.hideChocolateQuestGeneratingStructureOverlay) {
+                mixins.add("late.chocolatequest.MixinGuiInGameStats_HideStructureOverlay");
+            }
+        }
+        if (loadedMods.contains("battlegear2")) {
+            mixins.add("late.battlegear.MixinBattlegearClientEventsBridge");
         }
         if(loadedMods.contains("LambdaLib")) {
             mixins.add("late.MixinRenderImagPhaseLiquid_Optimize");
@@ -66,6 +74,15 @@ public class RFLateMixins implements ILateMixinLoader {
 
         if (loadedMods.contains("ExtraUtilities")) {
             mixins.add("late.extrautilities.MixinEnderConstructorRecipesHandler");
+        }
+
+        if (loadedMods.contains("ThermalDynamics") && ModConfig.disableThermalDynamicsFacades) {
+            mixins.add("late.thermaldynamics.MixinCoverHelper_NoFacades");
+            mixins.add("late.thermaldynamics.MixinItemCover_NoFacades");
+            mixins.add("late.thermaldynamics.MixinTileTDBase_NoFacades");
+            if (FMLLaunchHandler.side() == Side.CLIENT) {
+                mixins.add("late.thermaldynamics.MixinTDCreativeTabCovers_NoFacades");
+            }
         }
 
         // vortex mixins

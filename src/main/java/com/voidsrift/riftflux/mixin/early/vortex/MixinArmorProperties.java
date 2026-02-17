@@ -1,36 +1,63 @@
 package com.voidsrift.riftflux.mixin.early.vortex;
 
-import java.util.ArrayList;
+import com.voidsrift.riftflux.vortex.lib.event.LivingDestroyArmorEvent;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties;
-import com.voidsrift.riftflux.vortex.lib.event.LivingDestroyArmorEvent;
+import net.minecraftforge.common.MinecraftForge;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin({ArmorProperties.class})
 public abstract class MixinArmorProperties {
+   @Unique
+   private static final ThreadLocal<ItemStack[]> riftflux$armorSnapshot = new ThreadLocal<ItemStack[]>();
+
    @Inject(
       method = {"ApplyArmor"},
-      at = {@At(
-   value = "FIELD",
-   target = " net/minecraftforge/common/ISpecialArmor$ArmorProperties.Slot:I",
-   opcode = 180,
-   ordinal = 2
-)},
-      locals = LocalCapture.CAPTURE_FAILSOFT,
+      at = {@At("HEAD")},
       remap = false
    )
-   private static void onApplyArmor(EntityLivingBase entity, ItemStack[] inventory, DamageSource source, double damage, CallbackInfoReturnable<Float> ci, ArrayList dmgVals, ArmorProperties[] props, int level, double ratio, ArmorProperties[] var10, int var11, int var12, ArmorProperties prop, double absorb, ItemStack stack, int itemDamage) {
-      if (stack != null) {
-         int max = stack.getMaxDamage();
-         if (max > 0 && itemDamage > 0 && stack.getItemDamage() + itemDamage >= max) {
-            MinecraftForge.EVENT_BUS.post(new LivingDestroyArmorEvent(entity, stack));
+   private static void riftflux$captureArmorState(EntityLivingBase entity, ItemStack[] inventory, DamageSource source, double damage, CallbackInfoReturnable<Float> ci) {
+      if (inventory == null) {
+         riftflux$armorSnapshot.remove();
+         return;
+      }
+
+      ItemStack[] snapshot = new ItemStack[inventory.length];
+      for (int i = 0; i < inventory.length; i++) {
+         if (inventory[i] != null) {
+            snapshot[i] = inventory[i].copy();
+         }
+      }
+
+      riftflux$armorSnapshot.set(snapshot);
+   }
+
+   @Inject(
+      method = {"ApplyArmor"},
+      at = {@At("RETURN")},
+      remap = false
+   )
+   private static void riftflux$postDestroyArmorEvents(EntityLivingBase entity, ItemStack[] inventory, DamageSource source, double damage, CallbackInfoReturnable<Float> ci) {
+      ItemStack[] snapshot = riftflux$armorSnapshot.get();
+      riftflux$armorSnapshot.remove();
+      if (snapshot == null || inventory == null) {
+         return;
+      }
+
+      int size = Math.min(snapshot.length, inventory.length);
+      for (int i = 0; i < size; i++) {
+         ItemStack before = snapshot[i];
+         if (before == null || before.getMaxDamage() <= 0) {
+            continue;
+         }
+         if (inventory[i] == null) {
+            MinecraftForge.EVENT_BUS.post(new LivingDestroyArmorEvent(entity, before));
          }
       }
    }
