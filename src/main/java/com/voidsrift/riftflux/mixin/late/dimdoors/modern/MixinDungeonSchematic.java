@@ -1,7 +1,7 @@
 package com.voidsrift.riftflux.mixin.late.dimdoors.modern;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import com.voidsrift.riftflux.mixin.late.chunkloading.ChunkloadingCompatHelper;
+import com.voidsrift.riftflux.compat.chunkloading.ChunkloadingCompatHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -21,8 +21,9 @@ public abstract class MixinDungeonSchematic {
             remap = false,
             require = 0
     )
-    private static void riftflux$createEntranceReverseLink$loadChunk(World world, Object dimension, Object pocketCenter,
-                                                                     Object entryLink, CallbackInfo ci) {
+    private static void riftflux$createEntranceReverseLink$loadChunk(CallbackInfo ci,
+                                                                     @Local(argsOnly = true, index = 0) World world,
+                                                                     @Local(argsOnly = true, index = 2) Object pocketCenter) {
         ChunkloadingCompatHelper.ensureBlockExists(world, pocketCenter);
     }
 
@@ -36,9 +37,9 @@ public abstract class MixinDungeonSchematic {
             remap = false,
             require = 0
     )
-    private static void riftflux$createExitDoorLink$loadChunk(World world, Object dimension, Object point, Object entrance,
-                                                              int rotation, Object pocketCenter, Object blockSetter,
-                                                              CallbackInfo ci, @Local(ordinal = 3) Object location) {
+    private static void riftflux$createExitDoorLink$loadChunk(CallbackInfo ci,
+                                                              @Local(argsOnly = true, index = 0) World world,
+                                                              @Local(ordinal = 3) Object location) {
         ChunkloadingCompatHelper.ensureBlockExists(world, location);
     }
 
@@ -52,14 +53,16 @@ public abstract class MixinDungeonSchematic {
             remap = false,
             require = 0
     )
-    private static void riftflux$createDimensionalDoorLink$loadChunk(World world, Object dimension, Object point,
-                                                                     Object entrance, int rotation, Object pocketCenter,
-                                                                     CallbackInfo ci, @Local(ordinal = 3) Object location) {
+    private static void riftflux$createDimensionalDoorLink$loadChunk(CallbackInfo ci,
+                                                                     @Local(argsOnly = true, index = 0) World world,
+                                                                     @Local(ordinal = 3) Object location) {
         ChunkloadingCompatHelper.ensureBlockExists(world, location);
     }
 
     @Inject(at = @At("HEAD"), method = "initDoorTileEntity", remap = false, require = 0)
-    private static void riftflux$initDoorTileEntity$loadChunk(World world, Object point, CallbackInfo ci) {
+    private static void riftflux$initDoorTileEntity$loadChunk(CallbackInfo ci,
+                                                              @Local(argsOnly = true, index = 0) World world,
+                                                              @Local(argsOnly = true, index = 1) Object point) {
         ChunkloadingCompatHelper.ensureBlockExists(world, point);
     }
 
@@ -69,7 +72,8 @@ public abstract class MixinDungeonSchematic {
             remap = false,
             require = 0
     )
-    private static void riftflux$writeDepthSign$loadChunk(World world, Object pocketCenter, int depth, CallbackInfo ci,
+    private static void riftflux$writeDepthSign$loadChunk(CallbackInfo ci,
+                                                          @Local(argsOnly = true, index = 0) World world,
                                                           @Local(ordinal = 0) int x, @Local(ordinal = 1) int y,
                                                           @Local(ordinal = 2) int z) {
         ChunkloadingCompatHelper.ensureBlockExists(world, x, y, z);

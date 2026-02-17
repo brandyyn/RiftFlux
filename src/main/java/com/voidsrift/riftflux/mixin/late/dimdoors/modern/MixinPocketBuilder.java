@@ -1,7 +1,7 @@
 package com.voidsrift.riftflux.mixin.late.dimdoors.modern;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import com.voidsrift.riftflux.mixin.late.chunkloading.ChunkloadingCompatHelper;
+import com.voidsrift.riftflux.compat.chunkloading.ChunkloadingCompatHelper;
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,8 +20,9 @@ public abstract class MixinPocketBuilder {
             remap = false,
             require = 0
     )
-    private static void riftflux$getDoorOrientation$loadChunk(Object source, Object properties,
-                                                              CallbackInfoReturnable<Integer> cir, @Local World world) {
+    private static void riftflux$getDoorOrientation$loadChunk(CallbackInfoReturnable<Integer> cir,
+                                                              @Local(argsOnly = true, index = 0) Object source,
+                                                              @Local World world) {
         ChunkloadingCompatHelper.ensureBlockExists(world, source);
     }
 

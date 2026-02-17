@@ -1,6 +1,6 @@
 package com.voidsrift.riftflux.mixin.late.dimdoors.modern;
 
-import com.voidsrift.riftflux.mixin.late.chunkloading.ChunkloadingCompatHelper;
+import com.voidsrift.riftflux.compat.chunkloading.ChunkloadingCompatHelper;
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;

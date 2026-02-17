@@ -1,4 +1,4 @@
-package com.voidsrift.riftflux.mixin.late.chunkloading;
+package com.voidsrift.riftflux.compat.chunkloading;
 
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
