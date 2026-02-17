@@ -23,6 +23,7 @@ item.glintrune_13.name=Green Rune
 item.glintrune_14.name=Red Rune
 item.glintrune_15.name=Black Rune
 item.glintrune_16.name=Null Rune
+tooltip.riftflux.glintrune=Use in anvil to change enchantment glint
 
 potion.headbuff=Highlander
 
