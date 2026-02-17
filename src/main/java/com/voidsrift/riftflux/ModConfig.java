@@ -190,7 +190,6 @@ public class ModConfig {
 
     // vortex configs
     public static boolean enableUnloader;
-    public static int unloaderSeconds;
     public static int[] unloaderBlacklistedDimensions;
     public static boolean enablePlacedItem;
     public static int butterflyKnifeDurability;
@@ -971,12 +970,10 @@ public class ModConfig {
 
         //vortex configs
 
-        enableUnloader = config.getBoolean("EnableUnloader", "vortex", true,
+        enableUnloader = config.getBoolean("EnableUnloader", "unloader", true,
                 "Enable the Unloader port.");
-        unloaderSeconds = config.getInt("UnloaderSeconds", "vortex", 120, 10, 1800,
-                "Number of seconds for Unloader to unload unused dimensions.");
 
-        unloaderBlacklistedDimensions = config.get("vortex", "UnloaderBlacklistedDimensions",
+        unloaderBlacklistedDimensions = config.get("unloader", "UnloaderBlacklistedDimensions",
                 new int[]{-1, 0, 1},
                 "Dimension IDs that should never be unloaded. Default: -1 (Nether), 0 (Overworld), 1 (End)").getIntList();
 
@@ -990,7 +987,7 @@ public class ModConfig {
         butterflyKnifeDurability = config.getInt(
                 "butterflyKnifeDurability",
                 "vortex",
-                333,
+                0,
                 0,
                 32767,
                 "Max durability for the butterfly knife. Set to 0 for infinite durability."

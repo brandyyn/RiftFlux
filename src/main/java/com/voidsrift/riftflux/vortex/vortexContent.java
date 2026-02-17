@@ -41,7 +41,9 @@ public final class vortexContent {
         MinecraftForge.EVENT_BUS.register(new ModEvents());
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.CraftingEventHandler());
         MinecraftForge.EVENT_BUS.register(new EntityEventHandler());
-        MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
+        WorldEventHandler worldEventHandler = new WorldEventHandler();
+        MinecraftForge.EVENT_BUS.register(worldEventHandler);
+        FMLCommonHandler.instance().bus().register(worldEventHandler);
 
         // GUI
         NetworkRegistry.INSTANCE.registerGuiHandler(riftflux.instance, new GuiProxy());

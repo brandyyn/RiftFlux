@@ -138,12 +138,13 @@ public class EntityBison extends EntityFamiliar {
             this.fallDistance = 0.0F;
             this.motionY = 0.0D;
         }
+        boolean recallActive = false;
         if (!this.worldObj.isRemote) {
             tickSeatNoRemounts();
             if (playerOnBack) {
                 stabilizePlayersOnBack();
             }
-            updateOwnerRecall(playerOnBack);
+            recallActive = updateOwnerRecall(playerOnBack);
             updateDriverDismountSafety();
             if (playerOnBack) {
                 if (Math.abs(this.motionX) < 0.01D) {
@@ -153,6 +154,10 @@ public class EntityBison extends EntityFamiliar {
                     this.motionZ = 0.0D;
                 }
             }
+        } else if (this.riddenByEntity == null && shouldClientHoverNearOwner()) {
+            // Mirror server hover stop state.
+            this.motionY = 0.0D;
+            this.fallDistance = 0.0F;
         }
         if (!this.worldObj.isRemote && ModConfig.appaAllowMobPassengers) {
             tryMountNearbyMob();
@@ -161,8 +166,15 @@ public class EntityBison extends EntityFamiliar {
             this.controlUp = false;
             this.controlDown = false;
         }
-        if (this.riddenByEntity == null && !this.onGround && !this.isInWater()) {
-            this.motionY = Math.max(this.motionY, -0.1D);
+        boolean riderVerticalControl = this.riddenByEntity instanceof EntityPlayer && (this.controlUp || this.controlDown);
+        if (!this.isInWater() && !riderVerticalControl) {
+            if (this.worldObj.isRemote) {
+                if (this.motionY < 0.0D) {
+                    this.motionY = 0.0D;
+                }
+            } else if (!recallActive) {
+                this.motionY = 0.0D;
+            }
             this.fallDistance = 0.0f;
         }
     }
@@ -687,44 +699,71 @@ public class EntityBison extends EntityFamiliar {
         return false;
     }
 
-    private void updateOwnerRecall(boolean playerOnBack) {
+    private boolean updateOwnerRecall(boolean playerOnBack) {
         if (this.ticksExisted < 40) {
-            return;
+            return false;
         }
         if (this.riddenByEntity != null || this.ridingEntity != null) {
-            return;
+            return false;
         }
         if (this.onGround || this.isInWater()) {
-            return;
+            return false;
         }
         if (this.owner == null || this.owner.isEmpty()) {
-            return;
+            return false;
         }
         if (playerOnBack || isAnyPlayerOnBackZone()) {
             cancelRecallMotion();
-            return;
+            return false;
         }
         EntityPlayer ownerPlayer = this.worldObj.getPlayerEntityByName(this.owner);
         if (ownerPlayer == null || ownerPlayer.isDead) {
             cancelRecallMotion();
-            return;
+            return false;
         }
         double ownerFeetY = ownerPlayer.boundingBox != null ? ownerPlayer.boundingBox.minY : ownerPlayer.posY;
         if (ownerFeetY >= this.boundingBox.minY - 0.2D) {
             // Only recall when owner is below Appa.
             cancelRecallMotion();
-            return;
+            return false;
         }
         double dx = ownerPlayer.posX - this.posX;
         double dz = ownerPlayer.posZ - this.posZ;
         double horizontalSq = dx * dx + dz * dz;
         double horizontalDistance = Math.sqrt(horizontalSq);
         double verticalGap = this.boundingBox.minY - ownerFeetY;
-        if (horizontalDistance < 6.0D && verticalGap <= 6.0D) {
-            // Recall only when far enough horizontally, unless Appa is significantly above owner.
-            cancelRecallMotion();
-            return;
+        final double horizontalStopRadius = 6.0D;
+        final double verticalStopGap = 6.0D;
+
+        if (horizontalDistance <= horizontalStopRadius) {
+            // Once close enough horizontally, stop drifting toward the owner.
+            this.motionX *= 0.6D;
+            this.motionZ *= 0.6D;
+            if (Math.abs(this.motionX) < 0.01D) {
+                this.motionX = 0.0D;
+            }
+            if (Math.abs(this.motionZ) < 0.01D) {
+                this.motionZ = 0.0D;
+            }
+
+            if (verticalGap <= verticalStopGap) {
+                // Close enough: stop descending to avoid down-then-snap behavior.
+                this.motionY = 0.0D;
+                this.fallDistance = 0.0f;
+                return true;
+            }
+
+            // Close on X/Z, but still high above owner: descend only.
+            double targetDescent = -Math.max(0.003D, getConfiguredMoveSpeed() * 0.08D);
+            this.motionY += (targetDescent - this.motionY) * 0.1D;
+            if (this.motionY < -0.02D) {
+                this.motionY = -0.02D;
+            }
+            this.fallDistance = 0.0f;
+            this.velocityChanged = true;
+            return true;
         }
+
         double followRadius = 2.75D;
         float targetYaw = (float) (Math.atan2(-dx, dz) * 180.0D / Math.PI);
         this.rotationYaw = approachYaw(this.rotationYaw, targetYaw, 2.25f);
@@ -760,6 +799,7 @@ public class EntityBison extends EntityFamiliar {
         }
         this.fallDistance = 0.0f;
         this.velocityChanged = true;
+        return true;
     }
 
     private void cancelRecallMotion() {
@@ -955,6 +995,31 @@ public class EntityBison extends EntityFamiliar {
         }
         double currentToOwnerSq = this.getDistanceSqToEntity(ownerPlayer);
         return currentToOwnerSq > 1024.0D;
+    }
+
+    private boolean shouldClientHoverNearOwner() {
+        if (this.worldObj == null || !this.worldObj.isRemote) {
+            return false;
+        }
+        if (this.onGround || this.isInWater()) {
+            return false;
+        }
+        if (this.owner == null || this.owner.isEmpty()) {
+            return false;
+        }
+        EntityPlayer ownerPlayer = this.worldObj.getPlayerEntityByName(this.owner);
+        if (ownerPlayer == null || ownerPlayer.isDead) {
+            return false;
+        }
+        double ownerFeetY = ownerPlayer.boundingBox != null ? ownerPlayer.boundingBox.minY : ownerPlayer.posY;
+        if (ownerFeetY >= this.boundingBox.minY - 0.2D) {
+            return false;
+        }
+        double dx = ownerPlayer.posX - this.posX;
+        double dz = ownerPlayer.posZ - this.posZ;
+        double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+        double verticalGap = this.boundingBox.minY - ownerFeetY;
+        return horizontalDistance <= 6.0D && verticalGap <= 6.0D;
     }
 
     @Override
