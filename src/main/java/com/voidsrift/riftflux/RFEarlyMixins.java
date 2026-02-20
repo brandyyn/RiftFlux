@@ -137,11 +137,18 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.playerOnlyHurtSound && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("early.MixinEntityPlayer_CustomHurtSound");
         }
+        if (ModConfig.enableCustomPaintings) {
+            mixins.add("early.MixinEntityPainting_ExtraArt");
+            mixins.add("early.MixinS10PacketSpawnPainting_TitleLength");
+        }
 
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("accessor.GuiScreenAccessor");
             mixins.add("accessor.ModelBoxAccessor");
             mixins.add("accessor.PlayerControllerMPAccessor");
+            if (ModConfig.enableCustomPaintings) {
+                mixins.add("early.MixinRenderPainting_CustomTexture");
+            }
             if (ModConfig.enableHotbarSelectorTexture) {
                 mixins.add("early.MixinGuiIngame_HotbarSelectorTexture");
             }

@@ -175,6 +175,9 @@ public class ModConfig {
     public static boolean enableNetherrackTweak;
     public static boolean enableDoorAirPlacement;
     public static boolean enablePodzolDirtTexture;
+    public static boolean enableCustomPaintings;
+    public static String customPaintingDefaultTexture;
+    public static String[] customPaintingEntries;
 
     public static boolean enableNewBlockHighlight;
 
@@ -1002,6 +1005,93 @@ public class ModConfig {
                 false,
                 "If true, podzol uses riftflux:dirt on the bottom, and when a podzol block is below another podzol it uses riftflux:dirt on all faces. Mycelium also uses riftflux:dirt on the bottom."
         );
+
+        enableCustomPaintings = config.getBoolean(
+                "EnableCustomPaintings",
+                "general",
+                true,
+                "If true, RiftFlux can add extra painting motives from CustomPaintingEntries while keeping all vanilla motives."
+        );
+
+        customPaintingDefaultTexture = config.getString(
+                "CustomPaintingDefaultTexture",
+                "general",
+                "riftflux:textures/painting/custom_paintings.png",
+                "Default texture used by custom paintings when an entry does not provide a texture.\n" +
+                        "Format: namespace:path"
+        );
+
+        String[] defaultCustomPaintingEntries = new String[]{
+                "SeaGlow;32;32;0;128",
+                "PinkPath;32;32;32;128",
+                "GoldenField;32;32;64;128",
+                "BluePeak;32;32;96;128",
+                "SunsetMount;32;32;128;128",
+                "MistyRange;32;32;160;128",
+                "CloudValley;64;64;0;192",
+                "GreenBridge;64;64;64;192",
+                "NightSky;64;64;128;192",
+                "CityPath;64;64;192;48",
+                "AutumnRoad;64;32;192;128",
+                "Import_1105242611714886714;32;32;0;0;riftflux:textures/painting/imported/att_1105242611714886714.png",
+                "Import_15898581183307818233;16;16;0;0;riftflux:textures/painting/imported/att_15898581183307818233.png",
+                "Import_5707704980356058947;32;32;0;0;riftflux:textures/painting/imported/att_5707704980356058947.png",
+                "Import_8390554114962693927;16;16;0;0;riftflux:textures/painting/imported/att_8390554114962693927.png",
+                "Import_2453731557530369994;16;32;0;0;riftflux:textures/painting/imported/att_2453731557530369994.png",
+                "Import_15686945115718463924;32;32;0;0;riftflux:textures/painting/imported/att_15686945115718463924.png",
+                "Import_14926847136614811964;16;16;0;0;riftflux:textures/painting/imported/att_14926847136614811964.png",
+                "Import_8437322785318950020;32;32;0;0;riftflux:textures/painting/imported/att_8437322785318950020.png",
+                "Import_14961980454791572902;32;32;0;0;riftflux:textures/painting/imported/att_14961980454791572902.png",
+                "Import_3038250295555765778;16;16;0;0;riftflux:textures/painting/imported/att_3038250295555765778.png",
+                "Import_14853050705435720726;32;32;0;0;riftflux:textures/painting/imported/att_14853050705435720726.png",
+                "Import_13494592494013951062;32;16;0;0;riftflux:textures/painting/imported/att_13494592494013951062.png",
+                "Import_8145294216501436008;256;176;0;0;riftflux:textures/painting/imported/att_8145294216501436008.png",
+                "Import_3278302959043282574;64;48;0;0;riftflux:textures/painting/imported/att_3278302959043282574.png",
+                "Import_10433218889319366305;32;16;0;0;riftflux:textures/painting/imported/att_10433218889319366305.png",
+                "Import_3316100501211956769;32;32;0;0;riftflux:textures/painting/imported/att_3316100501211956769.png",
+                "Import_1405110628700110104;32;32;0;0;riftflux:textures/painting/imported/att_1405110628700110104.png",
+                "Import_5396209286604440417;256;256;0;0;riftflux:textures/painting/imported/att_5396209286604440417.png",
+                "Import_3980202720619743710;32;16;0;0;riftflux:textures/painting/imported/att_3980202720619743710.png",
+                "Import_12002261695906088408;16;16;0;0;riftflux:textures/painting/imported/att_12002261695906088408.png",
+                "Import_4865533768723008097;32;32;0;0;riftflux:textures/painting/imported/att_4865533768723008097.png",
+                "Import_3537128328782683102;32;32;0;0;riftflux:textures/painting/imported/att_3537128328782683102.png",
+                "Import_10789327830195471405;32;32;0;0;riftflux:textures/painting/imported/att_10789327830195471405.png",
+                "Import_10083096985915292797;128;128;0;0;riftflux:textures/painting/imported/att_10083096985915292797.png",
+                "Import_943304298191828284;32;32;0;0;riftflux:textures/painting/imported/att_943304298191828284.png",
+                "Import_4131215028221111236;16;16;0;0;riftflux:textures/painting/imported/att_4131215028221111236.png",
+                "Import_11795424469239502756;32;32;0;0;riftflux:textures/painting/imported/att_11795424469239502756.png",
+                "Import_492653515534584664;32;32;0;0;riftflux:textures/painting/imported/att_492653515534584664.png",
+                "Import_8680897047976471280;32;32;0;0;riftflux:textures/painting/imported/att_8680897047976471280.png",
+                "Import_17468346436947212311;32;32;0;0;riftflux:textures/painting/imported/att_17468346436947212311.png",
+                "Import_3583122789790429381;32;32;0;0;riftflux:textures/painting/imported/att_3583122789790429381.png",
+                "Import_2103629306946470516;32;32;0;0;riftflux:textures/painting/imported/att_2103629306946470516.png",
+                "Import_9464401474315549901;32;16;0;0;riftflux:textures/painting/imported/att_9464401474315549901.png",
+                "Import_14899282787076458166;32;16;0;0;riftflux:textures/painting/imported/att_14899282787076458166.png",
+                "Import_13680866727003923712;16;16;0;0;riftflux:textures/painting/imported/att_13680866727003923712.png",
+                "Import_1061680030994392119;256;176;0;0;riftflux:textures/painting/imported/att_1061680030994392119.png",
+                "Import_82306519022149241;16;32;0;0;riftflux:textures/painting/imported/att_82306519022149241.png"
+        };
+
+        customPaintingEntries = config.getStringList(
+                "CustomPaintingEntries",
+                "general",
+                defaultCustomPaintingEntries,
+                "List of extra painting entries.\n" +
+                        "Format: title;sizeX;sizeY;offsetX;offsetY[;texture]\n" +
+                        "- title: motive name stored in world data/network packets\n" +
+                        "- sizeX/sizeY: painting size in pixels (must be multiples of 16)\n" +
+                        "- offsetX/offsetY: top-left pixel in the texture\n" +
+                        "- texture (optional): namespace:path; falls back to CustomPaintingDefaultTexture"
+        );
+        customPaintingEntries = mergeStringListUnique(customPaintingEntries, defaultCustomPaintingEntries);
+        customPaintingEntries = forceCustomPaintingEntry(
+                customPaintingEntries,
+                "CityPath",
+                "CityPath;64;64;192;48"
+        );
+        config.getCategory("general")
+                .get("CustomPaintingEntries")
+                .set(customPaintingEntries);
         // --- Boats: configurable legacy buoyancy + fall-breaking ---
         // Used by Rift Flux's boat mixins and intended to apply to vanilla and modded boats.
         legacyBoatBuoyancy = config.getBoolean(
@@ -1214,6 +1304,75 @@ public class ModConfig {
             unique.add(entry);
         }
         return unique.toArray(new String[unique.size()]);
+    }
+
+    private static String[] mergeStringListUnique(String[] primary, String[] fallback) {
+        LinkedHashSet<String> merged = new LinkedHashSet<String>();
+
+        if (primary != null) {
+            for (String raw : primary) {
+                if (raw == null) {
+                    continue;
+                }
+                String entry = raw.trim();
+                if (!entry.isEmpty()) {
+                    merged.add(entry);
+                }
+            }
+        }
+
+        if (fallback != null) {
+            for (String raw : fallback) {
+                if (raw == null) {
+                    continue;
+                }
+                String entry = raw.trim();
+                if (!entry.isEmpty()) {
+                    merged.add(entry);
+                }
+            }
+        }
+
+        return merged.toArray(new String[merged.size()]);
+    }
+
+    private static String[] forceCustomPaintingEntry(String[] entries, String title, String replacement) {
+        LinkedHashSet<String> out = new LinkedHashSet<String>();
+        boolean inserted = false;
+
+        if (entries != null) {
+            for (String raw : entries) {
+                if (raw == null) {
+                    continue;
+                }
+                String entry = raw.trim();
+                if (entry.isEmpty()) {
+                    continue;
+                }
+
+                String existingTitle = entry;
+                int separator = entry.indexOf(';');
+                if (separator >= 0) {
+                    existingTitle = entry.substring(0, separator).trim();
+                }
+
+                if (existingTitle.equalsIgnoreCase(title)) {
+                    if (!inserted) {
+                        out.add(replacement);
+                        inserted = true;
+                    }
+                    continue;
+                }
+
+                out.add(entry);
+            }
+        }
+
+        if (!inserted) {
+            out.add(replacement);
+        }
+
+        return out.toArray(new String[out.size()]);
     }
 
     // parse the string of IDs into a set
