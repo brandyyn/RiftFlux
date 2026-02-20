@@ -145,6 +145,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.enableHotbarSelectorTexture) {
                 mixins.add("early.MixinGuiIngame_HotbarSelectorTexture");
             }
+            if (ModConfig.enableCelestialEventTextures) {
+                mixins.add("early.MixinRenderGlobal_CelestialEventTextures");
+            }
             if (ModConfig.enablePlacedItem) {
                 mixins.add("early.MixinWorld_NoPlacedItemParticles");
                 mixins.add("early.MixinWorldClient_NoPlacedItemParticles");

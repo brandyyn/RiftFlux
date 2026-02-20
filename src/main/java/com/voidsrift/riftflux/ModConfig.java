@@ -65,6 +65,13 @@ public class ModConfig {
     public static boolean itemPickupStarShowHotbarHud;
     public static boolean enableHotbarSelectorTexture;
     public static boolean hotbarSelectorAboveItemText;
+    public static boolean enableCelestialEventTextures;
+    public static float celestialSunEventChance;
+    public static float celestialMoonEventChance;
+    public static String[] celestialSunEventTextures;
+    public static String[] celestialMoonEventTextures;
+    public static String celestialSunEventTexture;
+    public static String celestialMoonEventTexture;
 
     // Zelda
     public static boolean zeldaHeartsEnabled;
@@ -361,6 +368,78 @@ public class ModConfig {
                 "HotbarSelectorAboveItemText", "general", true,
                 "If true, render the hotbar selector above item count text. If false, render beneath text like vanilla."
         );
+
+        enableCelestialEventTextures = config.getBoolean(
+                "EnableCelestialEventTextures",
+                "client",
+                true,
+                "If true, sun/moon textures can be swapped on random special event days."
+        );
+
+        celestialSunEventChance = config.getFloat(
+                "CelestialSunEventChance",
+                "client",
+                0.10F,
+                0.0F,
+                1.0F,
+                "Chance between 0.0 and 1.0 each day for the sun texture to use CelestialSunEventTexture."
+        );
+
+        celestialSunEventTextures = sanitizeCelestialTextureList(config.getStringList(
+                "CelestialSunEventTextures",
+                "client",
+                new String[]{"riftflux:textures/environment/sun_event.png"},
+                "List of candidate sun textures for event days. One is picked each event day.\n" +
+                        "Format per entry: namespace:path\n" +
+                        "If empty, falls back to CelestialSunEventTexture."
+        ));
+        config.getCategory("client")
+                .get("CelestialSunEventTextures")
+                .set(celestialSunEventTextures);
+
+        celestialSunEventTexture = config.getString(
+                "CelestialSunEventTexture",
+                "client",
+                "riftflux:textures/environment/sun_event.png",
+                "Legacy single sun texture for event days. Used only when CelestialSunEventTextures is empty."
+        );
+
+        celestialMoonEventChance = config.getFloat(
+                "CelestialMoonEventChance",
+                "client",
+                0.0F,
+                0.0F,
+                1.0F,
+                "Chance between 0.0 and 1.0 each day for the moon texture to use CelestialMoonEventTexture."
+        );
+
+        celestialMoonEventTextures = sanitizeCelestialTextureList(config.getStringList(
+                "CelestialMoonEventTextures",
+                "client",
+                new String[]{"riftflux:textures/environment/moon_event_phases.png"},
+                "List of candidate moon phase-sheet textures for event days. One is picked each event day.\n" +
+                        "Each texture must be a vanilla-style 4x2 phase sheet.\n" +
+                        "A default tiled sheet based on the included moon event texture is provided.\n" +
+                        "If empty, falls back to CelestialMoonEventTexture."
+        ));
+        config.getCategory("client")
+                .get("CelestialMoonEventTextures")
+                .set(celestialMoonEventTextures);
+
+        celestialMoonEventTexture = config.getString(
+                "CelestialMoonEventTexture",
+                "client",
+                "textures/environment/moon_phases.png",
+                "Legacy single moon texture for event days. Used only when CelestialMoonEventTextures is empty."
+        );
+        if (celestialMoonEventTextures.length == 1
+                && "textures/environment/moon_phases.png".equalsIgnoreCase(celestialMoonEventTextures[0])
+                && "textures/environment/moon_phases.png".equalsIgnoreCase(celestialMoonEventTexture)) {
+            celestialMoonEventTextures = new String[]{"riftflux:textures/environment/moon_event_phases.png"};
+            config.getCategory("client")
+                    .get("CelestialMoonEventTextures")
+                    .set(celestialMoonEventTextures);
+        }
 
         zeldaHeartsEnabled = config.getBoolean(
                 "EnableHeartsModule",
@@ -1115,6 +1194,24 @@ public class ModConfig {
         }
         if (unique.isEmpty()) {
             unique.add(appaEntityClass);
+        }
+        return unique.toArray(new String[unique.size()]);
+    }
+
+    private static String[] sanitizeCelestialTextureList(String[] values) {
+        if (values == null || values.length == 0) {
+            return new String[0];
+        }
+        LinkedHashSet<String> unique = new LinkedHashSet<String>();
+        for (String raw : values) {
+            if (raw == null) {
+                continue;
+            }
+            String entry = raw.trim();
+            if (entry.isEmpty()) {
+                continue;
+            }
+            unique.add(entry);
         }
         return unique.toArray(new String[unique.size()]);
     }
