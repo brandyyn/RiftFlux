@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderPainting;
 import net.minecraft.entity.item.EntityPainting;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -12,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.lwjgl.opengl.GL11;
 
 @Mixin(RenderPainting.class)
 public abstract class MixinRenderPainting_CustomTexture {
@@ -53,6 +55,8 @@ public abstract class MixinRenderPainting_CustomTexture {
         if (painting == null || painting.art == null) {
             return;
         }
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_CURRENT_BIT | GL11.GL_TEXTURE_BIT);
 
         ResourceLocation frontTexture = CustomPaintingRegistry.getCustomTexture(painting.art);
         boolean fullTexture = false;
@@ -103,81 +107,94 @@ public abstract class MixinRenderPainting_CustomTexture {
         float vBottomEdge0 = artV1 - borderV;
         float vBottomEdge1 = artV1;
 
+        Minecraft mc = Minecraft.getMinecraft();
+        Tessellator tessellator = Tessellator.instance;
+
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
+        mc.getTextureManager().bindTexture(frontTexture);
+        tessellator.startDrawingQuads();
         for (int i1 = 0; i1 < tilesX; ++i1) {
             for (int j1 = 0; j1 < tilesY; ++j1) {
                 float f15 = f + (float)((i1 + 1) * 16);
                 float f16 = f + (float)(i1 * 16);
                 float f17 = f1 + (float)((j1 + 1) * 16);
                 float f18 = f1 + (float)(j1 * 16);
-                this.func_77008_a(painting, (f15 + f16) / 2.0F, (f17 + f18) / 2.0F);
                 float f19 = (float)(baseOffsetX + sizeX - i1 * 16) * invTextureWidth;
                 float f20 = (float)(baseOffsetX + sizeX - (i1 + 1) * 16) * invTextureWidth;
                 float f21 = (float)(baseOffsetY + sizeY - j1 * 16) * invTextureHeight;
                 float f22 = (float)(baseOffsetY + sizeY - (j1 + 1) * 16) * invTextureHeight;
 
-                Minecraft.getMinecraft().getTextureManager().bindTexture(frontTexture);
-                Tessellator tessellator = Tessellator.instance;
-                tessellator.startDrawingQuads();
+                int light = riftflux$getBrightness(painting, (f15 + f16) / 2.0F, (f17 + f18) / 2.0F);
+                tessellator.setBrightness(light);
                 tessellator.setNormal(0.0F, 0.0F, -1.0F);
                 tessellator.addVertexWithUV((double)f15, (double)f18, (double)(-f2), (double)f20, (double)f21);
                 tessellator.addVertexWithUV((double)f16, (double)f18, (double)(-f2), (double)f19, (double)f21);
                 tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)f19, (double)f22);
                 tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)f20, (double)f22);
-                tessellator.draw();
-
-                float uLeft = f20;
-                float uRight = f19;
-                float vTop = f22;
-                float vBottom = f21;
-
-                boolean isLeft = i1 == 0;
-                boolean isRight = i1 == tilesX - 1;
-                boolean isBottom = j1 == 0;
-                boolean isTop = j1 == tilesY - 1;
-                if (isLeft || isRight || isBottom || isTop) {
-                    tessellator.startDrawingQuads();
-                    if (isTop) {
-                        tessellator.setNormal(0.0F, 1.0F, 0.0F);
-                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)uLeft, (double)vTopEdge0);
-                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)uRight, (double)vTopEdge0);
-                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)uRight, (double)vTopEdge1);
-                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)uLeft, (double)vTopEdge1);
-                    }
-                    if (isBottom) {
-                        tessellator.setNormal(0.0F, -1.0F, 0.0F);
-                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)uLeft, (double)vBottomEdge0);
-                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)uRight, (double)vBottomEdge0);
-                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)(-f2), (double)uRight, (double)vBottomEdge1);
-                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)(-f2), (double)uLeft, (double)vBottomEdge1);
-                    }
-                    if (isRight) {
-                        tessellator.setNormal(-1.0F, 0.0F, 0.0F);
-                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)uRightEdge1, (double)vTop);
-                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)uRightEdge1, (double)vBottom);
-                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)(-f2), (double)uRightEdge0, (double)vBottom);
-                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)uRightEdge0, (double)vTop);
-                    }
-                    if (isLeft) {
-                        tessellator.setNormal(1.0F, 0.0F, 0.0F);
-                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)uLeftEdge0, (double)vTop);
-                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)(-f2), (double)uLeftEdge0, (double)vBottom);
-                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)uLeftEdge1, (double)vBottom);
-                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)uLeftEdge1, (double)vTop);
-                    }
-                    tessellator.draw();
-                }
-
-                Minecraft.getMinecraft().getTextureManager().bindTexture(VANILLA_PAINTINGS);
-                tessellator.startDrawingQuads();
                 tessellator.setNormal(0.0F, 0.0F, 1.0F);
-                tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)f3, (double)f5);
-                tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)f4, (double)f5);
-                tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)f4, (double)f6);
-                tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)f3, (double)f6);
-                tessellator.draw();
+                tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)f19, (double)f22);
+                tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)f20, (double)f22);
+                tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)f20, (double)f21);
+                tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)f19, (double)f21);
             }
         }
 
+        float left = f;
+        float right = f + (float) sizeX;
+        float bottom = f1;
+        float top = f1 + (float) sizeY;
+        int centerLight = riftflux$getBrightness(painting, 0.0F, 0.0F);
+        tessellator.setBrightness(centerLight);
+        tessellator.setNormal(0.0F, 1.0F, 0.0F);
+        tessellator.addVertexWithUV((double)right, (double)top, (double)(-f2), (double)artU0, (double)vTopEdge0);
+        tessellator.addVertexWithUV((double)left, (double)top, (double)(-f2), (double)artU1, (double)vTopEdge0);
+        tessellator.addVertexWithUV((double)left, (double)top, (double)f2, (double)artU1, (double)vTopEdge1);
+        tessellator.addVertexWithUV((double)right, (double)top, (double)f2, (double)artU0, (double)vTopEdge1);
+
+        tessellator.setNormal(0.0F, -1.0F, 0.0F);
+        tessellator.addVertexWithUV((double)right, (double)bottom, (double)f2, (double)artU0, (double)vBottomEdge0);
+        tessellator.addVertexWithUV((double)left, (double)bottom, (double)f2, (double)artU1, (double)vBottomEdge0);
+        tessellator.addVertexWithUV((double)left, (double)bottom, (double)(-f2), (double)artU1, (double)vBottomEdge1);
+        tessellator.addVertexWithUV((double)right, (double)bottom, (double)(-f2), (double)artU0, (double)vBottomEdge1);
+
+        tessellator.setNormal(-1.0F, 0.0F, 0.0F);
+        tessellator.addVertexWithUV((double)right, (double)top, (double)f2, (double)uRightEdge1, (double)artV0);
+        tessellator.addVertexWithUV((double)right, (double)bottom, (double)f2, (double)uRightEdge1, (double)artV1);
+        tessellator.addVertexWithUV((double)right, (double)bottom, (double)(-f2), (double)uRightEdge0, (double)artV1);
+        tessellator.addVertexWithUV((double)right, (double)top, (double)(-f2), (double)uRightEdge0, (double)artV0);
+
+        tessellator.setNormal(1.0F, 0.0F, 0.0F);
+        tessellator.addVertexWithUV((double)left, (double)top, (double)(-f2), (double)uLeftEdge0, (double)artV0);
+        tessellator.addVertexWithUV((double)left, (double)bottom, (double)(-f2), (double)uLeftEdge0, (double)artV1);
+        tessellator.addVertexWithUV((double)left, (double)bottom, (double)f2, (double)uLeftEdge1, (double)artV1);
+        tessellator.addVertexWithUV((double)left, (double)top, (double)f2, (double)uLeftEdge1, (double)artV0);
+        tessellator.draw();
+
+        GL11.glPopAttrib();
         ci.cancel();
+    }
+
+    private int riftflux$getBrightness(EntityPainting painting, float offsetX, float offsetY) {
+        int i = MathHelper.floor_double(painting.posX);
+        int j = MathHelper.floor_double(painting.posY + (double)(offsetY / 16.0F));
+        int k = MathHelper.floor_double(painting.posZ);
+
+        if (painting.hangingDirection == 2) {
+            i = MathHelper.floor_double(painting.posX + (double)(offsetX / 16.0F));
+        } else if (painting.hangingDirection == 1) {
+            k = MathHelper.floor_double(painting.posZ - (double)(offsetX / 16.0F));
+        } else if (painting.hangingDirection == 0) {
+            i = MathHelper.floor_double(painting.posX - (double)(offsetX / 16.0F));
+        } else if (painting.hangingDirection == 3) {
+            k = MathHelper.floor_double(painting.posZ + (double)(offsetX / 16.0F));
+        }
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null) {
+            return 15728880;
+        }
+
+        return mc.theWorld.getLightBrightnessForSkyBlocks(i, j, k, 0);
     }
 }

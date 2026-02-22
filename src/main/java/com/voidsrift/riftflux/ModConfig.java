@@ -1136,7 +1136,6 @@ public class ModConfig {
                 "UnityPool;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityPool.png",
                 "UnityCourbet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCourbet.png",
                 "UnitySea;32;16;0;0;riftflux:textures/painting/atlas_unity/UnitySea.png",
-                "UnityCreebet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCreebet.png",
                 "UnityWanderer;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityWanderer.png",
                 "UnityGraham;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityGraham.png",
                 "UnityFighters;64;32;0;0;riftflux:textures/painting/atlas_unity/UnityFighters.png",
@@ -1619,7 +1618,6 @@ public class ModConfig {
             out = forceCustomPaintingEntry(out, "UnityPool", "UnityPool;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityPool.png");
             out = forceCustomPaintingEntry(out, "UnityCourbet", "UnityCourbet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCourbet.png");
             out = forceCustomPaintingEntry(out, "UnitySea", "UnitySea;32;16;0;0;riftflux:textures/painting/atlas_unity/UnitySea.png");
-            out = forceCustomPaintingEntry(out, "UnityCreebet", "UnityCreebet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCreebet.png");
             out = forceCustomPaintingEntry(out, "UnityWanderer", "UnityWanderer;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityWanderer.png");
             out = forceCustomPaintingEntry(out, "UnityGraham", "UnityGraham;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityGraham.png");
             out = forceCustomPaintingEntry(out, "UnityFighters", "UnityFighters;64;32;0;0;riftflux:textures/painting/atlas_unity/UnityFighters.png");
@@ -1813,6 +1811,7 @@ public class ModConfig {
             out = removeCustomPaintingEntry(out, "UnityPigscene");
             out = removeCustomPaintingEntry(out, "UnitySunset");
             out = removeCustomPaintingEntry(out, "UnityDonkeyKong");
+            out = removeCustomPaintingEntry(out, "UnityCreebet");
             return out;
         } finally {
             allowCustomPaintingInsert = previousAllow;
