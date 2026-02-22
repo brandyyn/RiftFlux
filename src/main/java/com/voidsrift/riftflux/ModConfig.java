@@ -1125,7 +1125,68 @@ public class ModConfig {
                 "MugShine;16;16;0;0;riftflux:textures/painting/imported/MugShine.png",
                 "VoidGlyph;16;16;0;0;riftflux:textures/painting/imported/VoidGlyph.png",
                 "Umbra;16;16;0;0;riftflux:textures/painting/imported/Umbra.png",
-                "DarkStorm;32;32;32;128;riftflux:textures/painting/imported/DarkStorm.png"
+                "DarkStorm;32;32;32;128;riftflux:textures/painting/imported/DarkStorm.png",
+                "UnityKebab;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityKebab.png",
+                "UnityAztec;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec.png",
+                "UnityAlban;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAlban.png",
+                "UnityAztec2;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec2.png",
+                "UnityBomb;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityBomb.png",
+                "UnityPlant;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityPlant.png",
+                "UnityWasteland;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityWasteland.png",
+                "UnityPool;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityPool.png",
+                "UnityCourbet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCourbet.png",
+                "UnitySea;32;16;0;0;riftflux:textures/painting/atlas_unity/UnitySea.png",
+                "UnityCreebet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCreebet.png",
+                "UnityWanderer;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityWanderer.png",
+                "UnityGraham;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityGraham.png",
+                "UnityFighters;64;32;0;0;riftflux:textures/painting/atlas_unity/UnityFighters.png",
+                "UnityWither;32;32;0;0;riftflux:textures/painting/atlas_unity/UnityWither.png",
+                "UnityPointer;64;64;0;0;riftflux:textures/painting/atlas_unity/UnityPointer.png",
+                "GalleryKebab;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryKebab.png",
+                "GalleryAztec;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAztec.png",
+                "GalleryAlban;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAlban.png",
+                "GalleryAztec2;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAztec2.png",
+                "GalleryBomb;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryBomb.png",
+                "GalleryPlant;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryPlant.png",
+                "GalleryWasteland;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryWasteland.png",
+                "GalleryPool;32;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryPool.png",
+                "GalleryCourbet;32;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryCourbet.png",
+                "GallerySea;32;16;0;0;riftflux:textures/painting/atlas_gallery/GallerySea.png",
+                "GallerySunset;32;16;0;0;riftflux:textures/painting/atlas_gallery/GallerySunset.png",
+                "GalleryCreebet;32;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryCreebet.png",
+                "GalleryWanderer;16;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryWanderer.png",
+                "GalleryGraham;16;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryGraham.png",
+                "GalleryFighters;64;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryFighters.png",
+                "GalleryBust;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryBust.png",
+                "GalleryStage;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryStage.png",
+                "GalleryVoid;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryVoid.png",
+                "GalleryPointer;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryPointer.png",
+                "GalleryBurningSkull;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryBurningSkull.png",
+                "ArcaneKebab;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneKebab.png",
+                "ArcaneAztec;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneAztec.png",
+                "ArcaneAlban;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneAlban.png",
+                "ArcaneAztec2;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneAztec2.png",
+                "ArcaneBomb;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneBomb.png",
+                "ArcanePlant;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcanePlant.png",
+                "ArcaneWasteland;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneWasteland.png",
+                "ArcanePool;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcanePool.png",
+                "ArcaneCourbet;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneCourbet.png",
+                "ArcaneSea;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSea.png",
+                "ArcaneSunset;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSunset.png",
+                "ArcaneCreebet;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneCreebet.png",
+                "ArcaneWanderer;16;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneWanderer.png",
+                "ArcaneGraham;16;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneGraham.png",
+                "ArcaneFighters;64;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneFighters.png",
+                "ArcaneMatch;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneMatch.png",
+                "ArcaneBust;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneBust.png",
+                "ArcaneStage;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneStage.png",
+                "ArcaneVoid;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneVoid.png",
+                "ArcaneSkullAndRoses;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSkullAndRoses.png",
+                "ArcaneWither;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneWither.png",
+                "ArcanePointer;64;64;0;0;riftflux:textures/painting/atlas_arcane/ArcanePointer.png",
+                "ArcanePigscene;64;64;0;0;riftflux:textures/painting/atlas_arcane/ArcanePigscene.png",
+                "ArcaneBurningSkull;64;64;0;0;riftflux:textures/painting/atlas_arcane/ArcaneBurningSkull.png",
+                "ArcaneSkeleton;64;48;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSkeleton.png",
         };
 
         Property customPaintingProp = config.get(
@@ -1548,6 +1609,67 @@ public class ModConfig {
             out = forceCustomPaintingEntry(out, "VoidGlyph", "VoidGlyph;16;16;0;0;riftflux:textures/painting/imported/VoidGlyph.png");
             out = forceCustomPaintingEntry(out, "Umbra", "Umbra;16;16;0;0;riftflux:textures/painting/imported/Umbra.png");
             out = forceCustomPaintingEntry(out, "DarkStorm", "DarkStorm;32;32;32;128;riftflux:textures/painting/imported/DarkStorm.png");
+            out = forceCustomPaintingEntry(out, "UnityKebab", "UnityKebab;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityKebab.png");
+            out = forceCustomPaintingEntry(out, "UnityAztec", "UnityAztec;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec.png");
+            out = forceCustomPaintingEntry(out, "UnityAlban", "UnityAlban;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAlban.png");
+            out = forceCustomPaintingEntry(out, "UnityAztec2", "UnityAztec2;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec2.png");
+            out = forceCustomPaintingEntry(out, "UnityBomb", "UnityBomb;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityBomb.png");
+            out = forceCustomPaintingEntry(out, "UnityPlant", "UnityPlant;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityPlant.png");
+            out = forceCustomPaintingEntry(out, "UnityWasteland", "UnityWasteland;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityWasteland.png");
+            out = forceCustomPaintingEntry(out, "UnityPool", "UnityPool;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityPool.png");
+            out = forceCustomPaintingEntry(out, "UnityCourbet", "UnityCourbet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCourbet.png");
+            out = forceCustomPaintingEntry(out, "UnitySea", "UnitySea;32;16;0;0;riftflux:textures/painting/atlas_unity/UnitySea.png");
+            out = forceCustomPaintingEntry(out, "UnityCreebet", "UnityCreebet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCreebet.png");
+            out = forceCustomPaintingEntry(out, "UnityWanderer", "UnityWanderer;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityWanderer.png");
+            out = forceCustomPaintingEntry(out, "UnityGraham", "UnityGraham;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityGraham.png");
+            out = forceCustomPaintingEntry(out, "UnityFighters", "UnityFighters;64;32;0;0;riftflux:textures/painting/atlas_unity/UnityFighters.png");
+            out = forceCustomPaintingEntry(out, "UnityWither", "UnityWither;32;32;0;0;riftflux:textures/painting/atlas_unity/UnityWither.png");
+            out = forceCustomPaintingEntry(out, "UnityPointer", "UnityPointer;64;64;0;0;riftflux:textures/painting/atlas_unity/UnityPointer.png");
+            out = forceCustomPaintingEntry(out, "GalleryKebab", "GalleryKebab;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryKebab.png");
+            out = forceCustomPaintingEntry(out, "GalleryAztec", "GalleryAztec;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAztec.png");
+            out = forceCustomPaintingEntry(out, "GalleryAlban", "GalleryAlban;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAlban.png");
+            out = forceCustomPaintingEntry(out, "GalleryAztec2", "GalleryAztec2;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAztec2.png");
+            out = forceCustomPaintingEntry(out, "GalleryBomb", "GalleryBomb;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryBomb.png");
+            out = forceCustomPaintingEntry(out, "GalleryPlant", "GalleryPlant;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryPlant.png");
+            out = forceCustomPaintingEntry(out, "GalleryWasteland", "GalleryWasteland;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryWasteland.png");
+            out = forceCustomPaintingEntry(out, "GalleryPool", "GalleryPool;32;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryPool.png");
+            out = forceCustomPaintingEntry(out, "GalleryCourbet", "GalleryCourbet;32;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryCourbet.png");
+            out = forceCustomPaintingEntry(out, "GallerySea", "GallerySea;32;16;0;0;riftflux:textures/painting/atlas_gallery/GallerySea.png");
+            out = forceCustomPaintingEntry(out, "GallerySunset", "GallerySunset;32;16;0;0;riftflux:textures/painting/atlas_gallery/GallerySunset.png");
+            out = forceCustomPaintingEntry(out, "GalleryCreebet", "GalleryCreebet;32;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryCreebet.png");
+            out = forceCustomPaintingEntry(out, "GalleryWanderer", "GalleryWanderer;16;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryWanderer.png");
+            out = forceCustomPaintingEntry(out, "GalleryGraham", "GalleryGraham;16;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryGraham.png");
+            out = forceCustomPaintingEntry(out, "GalleryFighters", "GalleryFighters;64;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryFighters.png");
+            out = forceCustomPaintingEntry(out, "GalleryBust", "GalleryBust;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryBust.png");
+            out = forceCustomPaintingEntry(out, "GalleryStage", "GalleryStage;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryStage.png");
+            out = forceCustomPaintingEntry(out, "GalleryVoid", "GalleryVoid;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryVoid.png");
+            out = forceCustomPaintingEntry(out, "GalleryPointer", "GalleryPointer;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryPointer.png");
+            out = forceCustomPaintingEntry(out, "GalleryBurningSkull", "GalleryBurningSkull;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryBurningSkull.png");
+            out = forceCustomPaintingEntry(out, "ArcaneKebab", "ArcaneKebab;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneKebab.png");
+            out = forceCustomPaintingEntry(out, "ArcaneAztec", "ArcaneAztec;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneAztec.png");
+            out = forceCustomPaintingEntry(out, "ArcaneAlban", "ArcaneAlban;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneAlban.png");
+            out = forceCustomPaintingEntry(out, "ArcaneAztec2", "ArcaneAztec2;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneAztec2.png");
+            out = forceCustomPaintingEntry(out, "ArcaneBomb", "ArcaneBomb;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneBomb.png");
+            out = forceCustomPaintingEntry(out, "ArcanePlant", "ArcanePlant;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcanePlant.png");
+            out = forceCustomPaintingEntry(out, "ArcaneWasteland", "ArcaneWasteland;16;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneWasteland.png");
+            out = forceCustomPaintingEntry(out, "ArcanePool", "ArcanePool;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcanePool.png");
+            out = forceCustomPaintingEntry(out, "ArcaneCourbet", "ArcaneCourbet;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneCourbet.png");
+            out = forceCustomPaintingEntry(out, "ArcaneSea", "ArcaneSea;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSea.png");
+            out = forceCustomPaintingEntry(out, "ArcaneSunset", "ArcaneSunset;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSunset.png");
+            out = forceCustomPaintingEntry(out, "ArcaneCreebet", "ArcaneCreebet;32;16;0;0;riftflux:textures/painting/atlas_arcane/ArcaneCreebet.png");
+            out = forceCustomPaintingEntry(out, "ArcaneWanderer", "ArcaneWanderer;16;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneWanderer.png");
+            out = forceCustomPaintingEntry(out, "ArcaneGraham", "ArcaneGraham;16;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneGraham.png");
+            out = forceCustomPaintingEntry(out, "ArcaneFighters", "ArcaneFighters;64;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneFighters.png");
+            out = forceCustomPaintingEntry(out, "ArcaneMatch", "ArcaneMatch;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneMatch.png");
+            out = forceCustomPaintingEntry(out, "ArcaneBust", "ArcaneBust;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneBust.png");
+            out = forceCustomPaintingEntry(out, "ArcaneStage", "ArcaneStage;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneStage.png");
+            out = forceCustomPaintingEntry(out, "ArcaneVoid", "ArcaneVoid;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneVoid.png");
+            out = forceCustomPaintingEntry(out, "ArcaneSkullAndRoses", "ArcaneSkullAndRoses;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSkullAndRoses.png");
+            out = forceCustomPaintingEntry(out, "ArcaneWither", "ArcaneWither;32;32;0;0;riftflux:textures/painting/atlas_arcane/ArcaneWither.png");
+            out = forceCustomPaintingEntry(out, "ArcanePointer", "ArcanePointer;64;64;0;0;riftflux:textures/painting/atlas_arcane/ArcanePointer.png");
+            out = forceCustomPaintingEntry(out, "ArcanePigscene", "ArcanePigscene;64;64;0;0;riftflux:textures/painting/atlas_arcane/ArcanePigscene.png");
+            out = forceCustomPaintingEntry(out, "ArcaneBurningSkull", "ArcaneBurningSkull;64;64;0;0;riftflux:textures/painting/atlas_arcane/ArcaneBurningSkull.png");
+            out = forceCustomPaintingEntry(out, "ArcaneSkeleton", "ArcaneSkeleton;64;48;0;0;riftflux:textures/painting/atlas_arcane/ArcaneSkeleton.png");
             out = forceCustomPaintingEntry(out, "RustRelic", "FrostRelic;32;32;0;0;riftflux:textures/painting/imported/FrostRelic.png");
             out = forceCustomPaintingEntry(out, "MintChip", "MushroomChips;16;16;0;0;riftflux:textures/painting/imported/MushroomChips.png");
             out = forceCustomPaintingEntry(out, "LongSpear", "CreepingFlowers;16;32;0;0;riftflux:textures/painting/imported/CreepingFlowers.png");
@@ -1674,6 +1796,23 @@ public class ModConfig {
             out = removeCustomPaintingEntry(out, "AtlasPillar");
             out = removeCustomPaintingEntry(out, "AtlasSnowReach");
             out = removeCustomPaintingEntry(out, "CrownPath");
+            out = removeCustomPaintingEntry(out, "GalleryMatch");
+            out = removeCustomPaintingEntry(out, "GallerySkullAndRoses");
+            out = removeCustomPaintingEntry(out, "GalleryWither");
+            out = removeCustomPaintingEntry(out, "UnitySkullAndRoses");
+            out = removeCustomPaintingEntry(out, "UnityMatch");
+            out = removeCustomPaintingEntry(out, "UnityStage");
+            out = removeCustomPaintingEntry(out, "UnityVoid");
+            out = removeCustomPaintingEntry(out, "UnityBust");
+            out = removeCustomPaintingEntry(out, "ArcaneDonkeyKong");
+            out = removeCustomPaintingEntry(out, "GallerySkeleton");
+            out = removeCustomPaintingEntry(out, "GalleryDonkeyKong");
+            out = removeCustomPaintingEntry(out, "UnitySkeleton");
+            out = removeCustomPaintingEntry(out, "GalleryPigscene");
+            out = removeCustomPaintingEntry(out, "UnityBurningSkull");
+            out = removeCustomPaintingEntry(out, "UnityPigscene");
+            out = removeCustomPaintingEntry(out, "UnitySunset");
+            out = removeCustomPaintingEntry(out, "UnityDonkeyKong");
             return out;
         } finally {
             allowCustomPaintingInsert = previousAllow;

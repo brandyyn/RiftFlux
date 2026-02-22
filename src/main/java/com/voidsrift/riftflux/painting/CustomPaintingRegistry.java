@@ -26,9 +26,14 @@ public final class CustomPaintingRegistry {
         if (registered) {
             return;
         }
-        registered = true;
+
+        // If the config hasn't loaded yet, bail out so we can retry later.
+        if (ModConfig.config == null) {
+            return;
+        }
 
         if (!ModConfig.enableCustomPaintings) {
+            registered = true;
             return;
         }
 
@@ -39,6 +44,7 @@ public final class CustomPaintingRegistry {
 
         String[] entries = ModConfig.customPaintingEntries;
         if (entries == null || entries.length == 0) {
+            registered = true;
             return;
         }
 
@@ -95,6 +101,8 @@ public final class CustomPaintingRegistry {
         if (addedCount > 0) {
             FMLLog.info("[RiftFlux] Registered %d custom paintings.", addedCount);
         }
+
+        registered = true;
     }
 
     public static synchronized ResourceLocation getCustomTexture(EntityPainting.EnumArt art) {
