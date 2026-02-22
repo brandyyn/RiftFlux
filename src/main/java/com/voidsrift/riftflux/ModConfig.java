@@ -1129,17 +1129,12 @@ public class ModConfig {
                 "UnityKebab;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityKebab.png",
                 "UnityAztec;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec.png",
                 "UnityAlban;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAlban.png",
-                "UnityAztec2;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec2.png",
-                "UnityBomb;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityBomb.png",
-                "UnityPlant;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityPlant.png",
-                "UnityWasteland;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityWasteland.png",
                 "UnityPool;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityPool.png",
                 "UnityCourbet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCourbet.png",
                 "UnitySea;32;16;0;0;riftflux:textures/painting/atlas_unity/UnitySea.png",
                 "UnityWanderer;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityWanderer.png",
                 "UnityGraham;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityGraham.png",
                 "UnityFighters;64;32;0;0;riftflux:textures/painting/atlas_unity/UnityFighters.png",
-                "UnityWither;32;32;0;0;riftflux:textures/painting/atlas_unity/UnityWither.png",
                 "UnityPointer;64;64;0;0;riftflux:textures/painting/atlas_unity/UnityPointer.png",
                 "GalleryKebab;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryKebab.png",
                 "GalleryAztec;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAztec.png",
@@ -1611,17 +1606,12 @@ public class ModConfig {
             out = forceCustomPaintingEntry(out, "UnityKebab", "UnityKebab;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityKebab.png");
             out = forceCustomPaintingEntry(out, "UnityAztec", "UnityAztec;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec.png");
             out = forceCustomPaintingEntry(out, "UnityAlban", "UnityAlban;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAlban.png");
-            out = forceCustomPaintingEntry(out, "UnityAztec2", "UnityAztec2;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityAztec2.png");
-            out = forceCustomPaintingEntry(out, "UnityBomb", "UnityBomb;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityBomb.png");
-            out = forceCustomPaintingEntry(out, "UnityPlant", "UnityPlant;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityPlant.png");
-            out = forceCustomPaintingEntry(out, "UnityWasteland", "UnityWasteland;16;16;0;0;riftflux:textures/painting/atlas_unity/UnityWasteland.png");
             out = forceCustomPaintingEntry(out, "UnityPool", "UnityPool;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityPool.png");
             out = forceCustomPaintingEntry(out, "UnityCourbet", "UnityCourbet;32;16;0;0;riftflux:textures/painting/atlas_unity/UnityCourbet.png");
             out = forceCustomPaintingEntry(out, "UnitySea", "UnitySea;32;16;0;0;riftflux:textures/painting/atlas_unity/UnitySea.png");
             out = forceCustomPaintingEntry(out, "UnityWanderer", "UnityWanderer;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityWanderer.png");
             out = forceCustomPaintingEntry(out, "UnityGraham", "UnityGraham;16;32;0;0;riftflux:textures/painting/atlas_unity/UnityGraham.png");
             out = forceCustomPaintingEntry(out, "UnityFighters", "UnityFighters;64;32;0;0;riftflux:textures/painting/atlas_unity/UnityFighters.png");
-            out = forceCustomPaintingEntry(out, "UnityWither", "UnityWither;32;32;0;0;riftflux:textures/painting/atlas_unity/UnityWither.png");
             out = forceCustomPaintingEntry(out, "UnityPointer", "UnityPointer;64;64;0;0;riftflux:textures/painting/atlas_unity/UnityPointer.png");
             out = forceCustomPaintingEntry(out, "GalleryKebab", "GalleryKebab;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryKebab.png");
             out = forceCustomPaintingEntry(out, "GalleryAztec", "GalleryAztec;16;16;0;0;riftflux:textures/painting/atlas_gallery/GalleryAztec.png");
@@ -1812,6 +1802,11 @@ public class ModConfig {
             out = removeCustomPaintingEntry(out, "UnitySunset");
             out = removeCustomPaintingEntry(out, "UnityDonkeyKong");
             out = removeCustomPaintingEntry(out, "UnityCreebet");
+            out = removeCustomPaintingEntry(out, "UnityWither");
+            out = removeCustomPaintingEntry(out, "UnityAztec2");
+            out = removeCustomPaintingEntry(out, "UnityPlant");
+            out = removeCustomPaintingEntry(out, "UnityWasteland");
+            out = removeCustomPaintingEntry(out, "UnityBomb");
             return out;
         } finally {
             allowCustomPaintingInsert = previousAllow;

@@ -133,10 +133,10 @@ public abstract class MixinRenderPainting_CustomTexture {
                 tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)f19, (double)f22);
                 tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)f20, (double)f22);
                 tessellator.setNormal(0.0F, 0.0F, 1.0F);
-                tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)f19, (double)f22);
-                tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)f20, (double)f22);
-                tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)f20, (double)f21);
-                tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)f19, (double)f21);
+                tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)f20, (double)f22);
+                tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)f19, (double)f22);
+                tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)f19, (double)f21);
+                tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)f20, (double)f21);
             }
         }
 
