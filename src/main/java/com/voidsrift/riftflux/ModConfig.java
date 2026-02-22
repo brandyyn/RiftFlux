@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux;
 
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -176,6 +177,8 @@ public class ModConfig {
     public static boolean enableDoorAirPlacement;
     public static boolean enablePodzolDirtTexture;
     public static boolean enableCustomPaintings;
+    public static boolean enablePaintingSelection;
+    public static boolean enablePaintingAirPlacement;
     public static String customPaintingDefaultTexture;
     public static String[] customPaintingEntries;
 
@@ -1013,6 +1016,20 @@ public class ModConfig {
                 "If true, RiftFlux can add extra painting motives from CustomPaintingEntries while keeping all vanilla motives."
         );
 
+        enablePaintingSelection = config.getBoolean(
+                "EnablePaintingSelection",
+                "general",
+                true,
+                "If true, sneak + right-click with a painting opens a selector GUI to choose the exact motive to place."
+        );
+
+        enablePaintingAirPlacement = config.getBoolean(
+                "EnablePaintingAirPlacement",
+                "general",
+                true,
+                "If true, paintings can be placed and remain without solid blocks behind them (only collisions and other hangings are checked)."
+        );
+
         customPaintingDefaultTexture = config.getString(
                 "CustomPaintingDefaultTexture",
                 "general",
@@ -1031,50 +1048,89 @@ public class ModConfig {
                 "CloudValley;64;64;0;192",
                 "GreenBridge;64;64;64;192",
                 "NightSky;64;64;128;192",
-                "CityPath;64;64;192;48",
-                "AutumnRoad;64;32;192;128",
-                "Import_1105242611714886714;32;32;0;0;riftflux:textures/painting/imported/att_1105242611714886714.png",
-                "Import_15898581183307818233;16;16;0;0;riftflux:textures/painting/imported/att_15898581183307818233.png",
-                "Import_5707704980356058947;32;32;0;0;riftflux:textures/painting/imported/att_5707704980356058947.png",
-                "Import_8390554114962693927;16;16;0;0;riftflux:textures/painting/imported/att_8390554114962693927.png",
-                "Import_2453731557530369994;16;32;0;0;riftflux:textures/painting/imported/att_2453731557530369994.png",
-                "Import_15686945115718463924;32;32;0;0;riftflux:textures/painting/imported/att_15686945115718463924.png",
-                "Import_14926847136614811964;16;16;0;0;riftflux:textures/painting/imported/att_14926847136614811964.png",
-                "Import_8437322785318950020;32;32;0;0;riftflux:textures/painting/imported/att_8437322785318950020.png",
-                "Import_14961980454791572902;32;32;0;0;riftflux:textures/painting/imported/att_14961980454791572902.png",
-                "Import_3038250295555765778;16;16;0;0;riftflux:textures/painting/imported/att_3038250295555765778.png",
-                "Import_14853050705435720726;32;32;0;0;riftflux:textures/painting/imported/att_14853050705435720726.png",
-                "Import_13494592494013951062;32;16;0;0;riftflux:textures/painting/imported/att_13494592494013951062.png",
-                "Import_8145294216501436008;256;176;0;0;riftflux:textures/painting/imported/att_8145294216501436008.png",
-                "Import_3278302959043282574;64;48;0;0;riftflux:textures/painting/imported/att_3278302959043282574.png",
-                "Import_10433218889319366305;32;16;0;0;riftflux:textures/painting/imported/att_10433218889319366305.png",
-                "Import_3316100501211956769;32;32;0;0;riftflux:textures/painting/imported/att_3316100501211956769.png",
-                "Import_1405110628700110104;32;32;0;0;riftflux:textures/painting/imported/att_1405110628700110104.png",
-                "Import_5396209286604440417;256;256;0;0;riftflux:textures/painting/imported/att_5396209286604440417.png",
-                "Import_3980202720619743710;32;16;0;0;riftflux:textures/painting/imported/att_3980202720619743710.png",
-                "Import_12002261695906088408;16;16;0;0;riftflux:textures/painting/imported/att_12002261695906088408.png",
-                "Import_4865533768723008097;32;32;0;0;riftflux:textures/painting/imported/att_4865533768723008097.png",
-                "Import_3537128328782683102;32;32;0;0;riftflux:textures/painting/imported/att_3537128328782683102.png",
-                "Import_10789327830195471405;32;32;0;0;riftflux:textures/painting/imported/att_10789327830195471405.png",
-                "Import_10083096985915292797;128;128;0;0;riftflux:textures/painting/imported/att_10083096985915292797.png",
-                "Import_943304298191828284;32;32;0;0;riftflux:textures/painting/imported/att_943304298191828284.png",
-                "Import_4131215028221111236;16;16;0;0;riftflux:textures/painting/imported/att_4131215028221111236.png",
-                "Import_11795424469239502756;32;32;0;0;riftflux:textures/painting/imported/att_11795424469239502756.png",
-                "Import_492653515534584664;32;32;0;0;riftflux:textures/painting/imported/att_492653515534584664.png",
-                "Import_8680897047976471280;32;32;0;0;riftflux:textures/painting/imported/att_8680897047976471280.png",
-                "Import_17468346436947212311;32;32;0;0;riftflux:textures/painting/imported/att_17468346436947212311.png",
-                "Import_3583122789790429381;32;32;0;0;riftflux:textures/painting/imported/att_3583122789790429381.png",
-                "Import_2103629306946470516;32;32;0;0;riftflux:textures/painting/imported/att_2103629306946470516.png",
-                "Import_9464401474315549901;32;16;0;0;riftflux:textures/painting/imported/att_9464401474315549901.png",
-                "Import_14899282787076458166;32;16;0;0;riftflux:textures/painting/imported/att_14899282787076458166.png",
-                "Import_13680866727003923712;16;16;0;0;riftflux:textures/painting/imported/att_13680866727003923712.png",
-                "Import_1061680030994392119;256;176;0;0;riftflux:textures/painting/imported/att_1061680030994392119.png",
-                "Import_82306519022149241;16;32;0;0;riftflux:textures/painting/imported/att_82306519022149241.png"
+                "CityPath;64;48;0;0;riftflux:textures/painting/CityPath.png",
+                "AutumnRoad;64;48;192;112",
+                "FrostRelic;32;32;0;0;riftflux:textures/painting/imported/FrostRelic.png",
+                "BlueStamp;16;16;0;0;riftflux:textures/painting/imported/BlueStamp.png",
+                "CinderBloom;32;32;0;0;riftflux:textures/painting/imported/CinderBloom.png",
+                "MushroomChips;16;16;0;0;riftflux:textures/painting/imported/MushroomChips.png",
+                "CreepingFlowers;16;32;0;0;riftflux:textures/painting/imported/CreepingFlowers.png",
+                "CrackedSun;32;32;0;0;riftflux:textures/painting/imported/CrackedSun.png",
+                "PotionShelf;16;16;0;0;riftflux:textures/painting/imported/PotionShelf.png",
+                "FrostGlyph;32;32;0;0;riftflux:textures/painting/imported/FrostGlyph.png",
+                "GoldMoss;32;32;0;0;riftflux:textures/painting/imported/GoldMoss.png",
+                "Oddities;16;16;0;0;riftflux:textures/painting/imported/Oddities.png",
+                "Toolrack;32;32;0;0;riftflux:textures/painting/imported/Toolrack.png",
+                "Dusk;32;16;0;0;riftflux:textures/painting/imported/Dusk.png",
+                "StarrySky;96;64;0;0;riftflux:textures/painting/StarrySky.png",
+                "ButterflyCollection;32;16;0;0;riftflux:textures/painting/imported/ButterflyCollection.png",
+                "EchoesOfLove;32;32;0;0;riftflux:textures/painting/imported/EchoesOfLove.png",
+                "SkullMark;32;32;0;0;riftflux:textures/painting/imported/SkullMark.png",
+                "JollySquid;16;16;0;0;riftflux:textures/painting/imported/JollySquid.png",
+                "Noteboard;32;16;0;0;riftflux:textures/painting/imported/Noteboard.png",
+                "PondPixel;16;16;0;0;riftflux:textures/painting/imported/PondPixel.png",
+                "HushBloom;32;32;0;0;riftflux:textures/painting/imported/HushBloom.png",
+                "Bloid;32;32;0;0;riftflux:textures/painting/imported/Bloid.png",
+                "VelvetRune;32;32;0;0;riftflux:textures/painting/imported/VelvetRune.png",
+                "pack.png;16;16;0;0;riftflux:textures/painting/pack.png",
+                "stylized.png;32;32;0;0;riftflux:textures/painting/imported/stylized.png",
+                "Pegboard;16;16;0;0;riftflux:textures/painting/imported/Pegboard.png",
+                "CopperKnot;32;32;0;0;riftflux:textures/painting/imported/CopperKnot.png",
+                "SeedlingBloom;32;32;0;0;riftflux:textures/painting/imported/SeedlingBloom.png",
+                "KelpSpark;32;32;0;0;riftflux:textures/painting/imported/KelpSpark.png",
+                "BrightSpark;32;32;0;0;riftflux:textures/painting/imported/BrightSpark.png",
+                "FogToken;32;32;0;0;riftflux:textures/painting/imported/FogToken.png",
+                "UmbralBanner;32;32;0;0;riftflux:textures/painting/imported/UmbralBanner.png",
+                "SoftRibbon;32;16;0;0;riftflux:textures/painting/imported/SoftRibbon.png",
+                "WarmEcho;32;16;0;0;riftflux:textures/painting/imported/WarmEcho.png",
+                "NorthGlyph;16;16;0;0;riftflux:textures/painting/imported/NorthGlyph.png",
+                "StarHaze;96;64;0;0;riftflux:textures/painting/StarHaze.png",
+                "SilentStem;16;32;0;0;riftflux:textures/painting/imported/SilentStem.png",
+                "BurningSkele;32;32;0;0;riftflux:textures/painting/BurningSkele.png",
+                "SkyBadge;16;16;16;0;riftflux:textures/painting/imported/SkyBadge.png",
+                "Meeseeks;16;16;32;0;riftflux:textures/painting/imported/Meeseeks.png",
+                "TornNote;16;16;48;0;riftflux:textures/painting/imported/TornNote.png",
+                "IvoryMark;16;16;64;0;riftflux:textures/painting/imported/IvoryMark.png",
+                "Shield;16;16;80;0;riftflux:textures/painting/imported/Shield.png",
+                "Knives;16;16;96;0;riftflux:textures/painting/imported/Knives.png",
+                "WineRack;32;16;0;32;riftflux:textures/painting/imported/WineRack.png",
+                "Axe;32;16;32;32;riftflux:textures/painting/imported/Axe.png",
+                "Utensils;32;16;64;32;riftflux:textures/painting/imported/Utensils.png",
+                "ForestDawn;32;16;96;32;riftflux:textures/painting/imported/ForestDawn.png",
+                "Dust;32;16;128;32;riftflux:textures/painting/imported/Dust.png",
+                "Clouds;96;64;0;0;riftflux:textures/painting/Clouds.png",
+                "Sun;64;64;0;0;riftflux:textures/painting/Sun.png",
+                "AtlasBannerGreen;16;32;0;64;riftflux:textures/painting/imported/AtlasBannerGreen.png",
+                "AtlasBannerBlue;16;32;16;64;riftflux:textures/painting/imported/AtlasBannerBlue.png",
+                "Celestial;32;32;64;128;riftflux:textures/painting/imported/Celestial.png",
+                "Flowering;32;32;96;128;riftflux:textures/painting/imported/Flowering.png",
+                "CrossedBlades;32;32;128;128;riftflux:textures/painting/imported/CrossedBlades.png",
+                "AtlasBlades;32;32;160;128;riftflux:textures/painting/imported/AtlasBlades.png",
+                "SummitCliff;64;48;192;64;riftflux:textures/painting/imported/SummitCliff.png",
+                "ForestPath;64;48;192;112;riftflux:textures/painting/imported/ForestPath.png",
+                "Harbor;64;64;0;192;riftflux:textures/painting/imported/Harbor.png",
+                "Lighthouse;64;64;64;192;riftflux:textures/painting/imported/Lighthouse.png",
+                "Slowpoke;32;32;0;0;riftflux:textures/painting/Slowpoke.png",
+                "AtlasNote;64;32;0;96;riftflux:textures/painting/imported/AtlasNote.png",
+                "DarkForest;32;32;0;128;riftflux:textures/painting/imported/DarkForest.png",
+                "SnowCoral;16;16;0;0;riftflux:textures/painting/imported/SnowCoral.png",
+                "CreepyMint;16;16;0;0;riftflux:textures/painting/imported/CreepyMint.png",
+                "PuppyHeart;16;16;0;0;riftflux:textures/painting/imported/PuppyHeart.png",
+                "SkullFrog;16;16;0;0;riftflux:textures/painting/imported/SkullFrog.png",
+                "BearPaw;16;16;0;0;riftflux:textures/painting/imported/BearPaw.png",
+                "LunarEye;16;16;0;0;riftflux:textures/painting/imported/LunarEye.png",
+                "NeonPearl;16;16;0;0;riftflux:textures/painting/imported/NeonPearl.png",
+                "SpinedCoil;16;16;0;0;riftflux:textures/painting/imported/SpinedCoil.png",
+                "SpiralingSeed;16;16;0;0;riftflux:textures/painting/imported/SpiralingSeed.png",
+                "MugShine;16;16;0;0;riftflux:textures/painting/imported/MugShine.png",
+                "VoidGlyph;16;16;0;0;riftflux:textures/painting/imported/VoidGlyph.png",
+                "Umbra;16;16;0;0;riftflux:textures/painting/imported/Umbra.png",
+                "DarkStorm;32;32;32;128;riftflux:textures/painting/imported/DarkStorm.png"
         };
 
-        customPaintingEntries = config.getStringList(
-                "CustomPaintingEntries",
+        Property customPaintingProp = config.get(
                 "general",
+                "CustomPaintingEntries",
                 defaultCustomPaintingEntries,
                 "List of extra painting entries.\n" +
                         "Format: title;sizeX;sizeY;offsetX;offsetY[;texture]\n" +
@@ -1083,15 +1139,10 @@ public class ModConfig {
                         "- offsetX/offsetY: top-left pixel in the texture\n" +
                         "- texture (optional): namespace:path; falls back to CustomPaintingDefaultTexture"
         );
+        customPaintingEntries = customPaintingProp.getStringList();
         customPaintingEntries = mergeStringListUnique(customPaintingEntries, defaultCustomPaintingEntries);
-        customPaintingEntries = forceCustomPaintingEntry(
-                customPaintingEntries,
-                "CityPath",
-                "CityPath;64;64;192;48"
-        );
-        config.getCategory("general")
-                .get("CustomPaintingEntries")
-                .set(customPaintingEntries);
+        customPaintingEntries = applyCustomPaintingMigrations(customPaintingEntries, true);
+        customPaintingProp.set(customPaintingEntries);
         // --- Boats: configurable legacy buoyancy + fall-breaking ---
         // Used by Rift Flux's boat mixins and intended to apply to vanilla and modded boats.
         legacyBoatBuoyancy = config.getBoolean(
@@ -1336,6 +1387,8 @@ public class ModConfig {
         return merged.toArray(new String[merged.size()]);
     }
 
+    private static boolean allowCustomPaintingInsert = true;
+
     private static String[] forceCustomPaintingEntry(String[] entries, String title, String replacement) {
         LinkedHashSet<String> out = new LinkedHashSet<String>();
         boolean inserted = false;
@@ -1368,11 +1421,263 @@ public class ModConfig {
             }
         }
 
-        if (!inserted) {
+        if (!inserted && allowCustomPaintingInsert) {
             out.add(replacement);
         }
 
         return out.toArray(new String[out.size()]);
+    }
+
+    private static String[] removeCustomPaintingEntry(String[] entries, String title) {
+        if (entries == null || entries.length == 0) {
+            return new String[0];
+        }
+
+        LinkedHashSet<String> out = new LinkedHashSet<String>();
+        for (String raw : entries) {
+            if (raw == null) {
+                continue;
+            }
+            String entry = raw.trim();
+            if (entry.isEmpty()) {
+                continue;
+            }
+
+            String existingTitle = entry;
+            int separator = entry.indexOf(';');
+            if (separator >= 0) {
+                existingTitle = entry.substring(0, separator).trim();
+            }
+
+            if (!existingTitle.equalsIgnoreCase(title)) {
+                out.add(entry);
+            }
+        }
+        return out.toArray(new String[out.size()]);
+    }
+
+        private static String[] applyCustomPaintingMigrations(String[] entries, boolean addMissing) {
+        String[] out = entries;
+        boolean previousAllow = allowCustomPaintingInsert;
+        allowCustomPaintingInsert = addMissing;
+        try {
+            out = forceCustomPaintingEntry(out, "SeaGlow", "SeaGlow;32;32;0;128");
+            out = forceCustomPaintingEntry(out, "PinkPath", "PinkPath;32;32;32;128");
+            out = forceCustomPaintingEntry(out, "GoldenField", "GoldenField;32;32;64;128");
+            out = forceCustomPaintingEntry(out, "BluePeak", "BluePeak;32;32;96;128");
+            out = forceCustomPaintingEntry(out, "SunsetMount", "SunsetMount;32;32;128;128");
+            out = forceCustomPaintingEntry(out, "MistyRange", "MistyRange;32;32;160;128");
+            out = forceCustomPaintingEntry(out, "CloudValley", "CloudValley;64;64;0;192");
+            out = forceCustomPaintingEntry(out, "GreenBridge", "GreenBridge;64;64;64;192");
+            out = forceCustomPaintingEntry(out, "NightSky", "NightSky;64;64;128;192");
+            out = forceCustomPaintingEntry(out, "CityPath", "CityPath;64;48;0;0;riftflux:textures/painting/CityPath.png");
+            out = forceCustomPaintingEntry(out, "AutumnRoad", "AutumnRoad;64;48;192;112");
+            out = forceCustomPaintingEntry(out, "FrostRelic", "FrostRelic;32;32;0;0;riftflux:textures/painting/imported/FrostRelic.png");
+            out = forceCustomPaintingEntry(out, "BlueStamp", "BlueStamp;16;16;0;0;riftflux:textures/painting/imported/BlueStamp.png");
+            out = forceCustomPaintingEntry(out, "CinderBloom", "CinderBloom;32;32;0;0;riftflux:textures/painting/imported/CinderBloom.png");
+            out = forceCustomPaintingEntry(out, "MushroomChips", "MushroomChips;16;16;0;0;riftflux:textures/painting/imported/MushroomChips.png");
+            out = forceCustomPaintingEntry(out, "CreepingFlowers", "CreepingFlowers;16;32;0;0;riftflux:textures/painting/imported/CreepingFlowers.png");
+            out = forceCustomPaintingEntry(out, "CrackedSun", "CrackedSun;32;32;0;0;riftflux:textures/painting/imported/CrackedSun.png");
+            out = forceCustomPaintingEntry(out, "PotionShelf", "PotionShelf;16;16;0;0;riftflux:textures/painting/imported/PotionShelf.png");
+            out = forceCustomPaintingEntry(out, "FrostGlyph", "FrostGlyph;32;32;0;0;riftflux:textures/painting/imported/FrostGlyph.png");
+            out = forceCustomPaintingEntry(out, "GoldMoss", "GoldMoss;32;32;0;0;riftflux:textures/painting/imported/GoldMoss.png");
+            out = forceCustomPaintingEntry(out, "Oddities", "Oddities;16;16;0;0;riftflux:textures/painting/imported/Oddities.png");
+            out = forceCustomPaintingEntry(out, "Toolrack", "Toolrack;32;32;0;0;riftflux:textures/painting/imported/Toolrack.png");
+            out = forceCustomPaintingEntry(out, "Dusk", "Dusk;32;16;0;0;riftflux:textures/painting/imported/Dusk.png");
+            out = forceCustomPaintingEntry(out, "StarrySky", "StarrySky;96;64;0;0;riftflux:textures/painting/StarrySky.png");
+            out = forceCustomPaintingEntry(out, "ButterflyCollection", "ButterflyCollection;32;16;0;0;riftflux:textures/painting/imported/ButterflyCollection.png");
+            out = forceCustomPaintingEntry(out, "EchoesOfLove", "EchoesOfLove;32;32;0;0;riftflux:textures/painting/imported/EchoesOfLove.png");
+            out = forceCustomPaintingEntry(out, "SkullMark", "SkullMark;32;32;0;0;riftflux:textures/painting/imported/SkullMark.png");
+            out = forceCustomPaintingEntry(out, "JollySquid", "JollySquid;16;16;0;0;riftflux:textures/painting/imported/JollySquid.png");
+            out = forceCustomPaintingEntry(out, "Noteboard", "Noteboard;32;16;0;0;riftflux:textures/painting/imported/Noteboard.png");
+            out = forceCustomPaintingEntry(out, "PondPixel", "PondPixel;16;16;0;0;riftflux:textures/painting/imported/PondPixel.png");
+            out = forceCustomPaintingEntry(out, "HushBloom", "HushBloom;32;32;0;0;riftflux:textures/painting/imported/HushBloom.png");
+            out = forceCustomPaintingEntry(out, "Bloid", "Bloid;32;32;0;0;riftflux:textures/painting/imported/Bloid.png");
+            out = forceCustomPaintingEntry(out, "VelvetRune", "VelvetRune;32;32;0;0;riftflux:textures/painting/imported/VelvetRune.png");
+            out = forceCustomPaintingEntry(out, "pack.png", "pack.png;16;16;0;0;riftflux:textures/painting/pack.png");
+            out = forceCustomPaintingEntry(out, "stylized.png", "stylized.png;32;32;0;0;riftflux:textures/painting/imported/stylized.png");
+            out = forceCustomPaintingEntry(out, "Pegboard", "Pegboard;16;16;0;0;riftflux:textures/painting/imported/Pegboard.png");
+            out = forceCustomPaintingEntry(out, "CopperKnot", "CopperKnot;32;32;0;0;riftflux:textures/painting/imported/CopperKnot.png");
+            out = forceCustomPaintingEntry(out, "SeedlingBloom", "SeedlingBloom;32;32;0;0;riftflux:textures/painting/imported/SeedlingBloom.png");
+            out = forceCustomPaintingEntry(out, "KelpSpark", "KelpSpark;32;32;0;0;riftflux:textures/painting/imported/KelpSpark.png");
+            out = forceCustomPaintingEntry(out, "BrightSpark", "BrightSpark;32;32;0;0;riftflux:textures/painting/imported/BrightSpark.png");
+            out = forceCustomPaintingEntry(out, "FogToken", "FogToken;32;32;0;0;riftflux:textures/painting/imported/FogToken.png");
+            out = forceCustomPaintingEntry(out, "UmbralBanner", "UmbralBanner;32;32;0;0;riftflux:textures/painting/imported/UmbralBanner.png");
+            out = forceCustomPaintingEntry(out, "SoftRibbon", "SoftRibbon;32;16;0;0;riftflux:textures/painting/imported/SoftRibbon.png");
+            out = forceCustomPaintingEntry(out, "WarmEcho", "WarmEcho;32;16;0;0;riftflux:textures/painting/imported/WarmEcho.png");
+            out = forceCustomPaintingEntry(out, "NorthGlyph", "NorthGlyph;16;16;0;0;riftflux:textures/painting/imported/NorthGlyph.png");
+            out = forceCustomPaintingEntry(out, "StarHaze", "StarHaze;96;64;0;0;riftflux:textures/painting/StarHaze.png");
+            out = forceCustomPaintingEntry(out, "SilentStem", "SilentStem;16;32;0;0;riftflux:textures/painting/imported/SilentStem.png");
+            out = forceCustomPaintingEntry(out, "BurningSkele", "BurningSkele;32;32;0;0;riftflux:textures/painting/BurningSkele.png");
+            out = forceCustomPaintingEntry(out, "SkyBadge", "SkyBadge;16;16;16;0;riftflux:textures/painting/imported/SkyBadge.png");
+            out = forceCustomPaintingEntry(out, "Meeseeks", "Meeseeks;16;16;32;0;riftflux:textures/painting/imported/Meeseeks.png");
+            out = forceCustomPaintingEntry(out, "TornNote", "TornNote;16;16;48;0;riftflux:textures/painting/imported/TornNote.png");
+            out = forceCustomPaintingEntry(out, "IvoryMark", "IvoryMark;16;16;64;0;riftflux:textures/painting/imported/IvoryMark.png");
+            out = forceCustomPaintingEntry(out, "Shield", "Shield;16;16;80;0;riftflux:textures/painting/imported/Shield.png");
+            out = forceCustomPaintingEntry(out, "Knives", "Knives;16;16;96;0;riftflux:textures/painting/imported/Knives.png");
+            out = forceCustomPaintingEntry(out, "WineRack", "WineRack;32;16;0;32;riftflux:textures/painting/imported/WineRack.png");
+            out = forceCustomPaintingEntry(out, "Axe", "Axe;32;16;32;32;riftflux:textures/painting/imported/Axe.png");
+            out = forceCustomPaintingEntry(out, "Utensils", "Utensils;32;16;64;32;riftflux:textures/painting/imported/Utensils.png");
+            out = forceCustomPaintingEntry(out, "ForestDawn", "ForestDawn;32;16;96;32;riftflux:textures/painting/imported/ForestDawn.png");
+            out = forceCustomPaintingEntry(out, "Dust", "Dust;32;16;128;32;riftflux:textures/painting/imported/Dust.png");
+            out = forceCustomPaintingEntry(out, "Clouds", "Clouds;96;64;0;0;riftflux:textures/painting/Clouds.png");
+            out = forceCustomPaintingEntry(out, "Sun", "Sun;64;64;0;0;riftflux:textures/painting/Sun.png");
+            out = forceCustomPaintingEntry(out, "AtlasBannerGreen", "AtlasBannerGreen;16;32;0;64;riftflux:textures/painting/imported/AtlasBannerGreen.png");
+            out = forceCustomPaintingEntry(out, "AtlasBannerBlue", "AtlasBannerBlue;16;32;16;64;riftflux:textures/painting/imported/AtlasBannerBlue.png");
+            out = forceCustomPaintingEntry(out, "Celestial", "Celestial;32;32;64;128;riftflux:textures/painting/imported/Celestial.png");
+            out = forceCustomPaintingEntry(out, "Flowering", "Flowering;32;32;96;128;riftflux:textures/painting/imported/Flowering.png");
+            out = forceCustomPaintingEntry(out, "CrossedBlades", "CrossedBlades;32;32;128;128;riftflux:textures/painting/imported/CrossedBlades.png");
+            out = forceCustomPaintingEntry(out, "AtlasBlades", "AtlasBlades;32;32;160;128;riftflux:textures/painting/imported/AtlasBlades.png");
+            out = forceCustomPaintingEntry(out, "SummitCliff", "SummitCliff;64;48;192;64;riftflux:textures/painting/imported/SummitCliff.png");
+            out = forceCustomPaintingEntry(out, "ForestPath", "ForestPath;64;48;192;112;riftflux:textures/painting/imported/ForestPath.png");
+            out = forceCustomPaintingEntry(out, "Harbor", "Harbor;64;64;0;192;riftflux:textures/painting/imported/Harbor.png");
+            out = forceCustomPaintingEntry(out, "Lighthouse", "Lighthouse;64;64;64;192;riftflux:textures/painting/imported/Lighthouse.png");
+            out = forceCustomPaintingEntry(out, "Slowpoke", "Slowpoke;32;32;0;0;riftflux:textures/painting/Slowpoke.png");
+            out = forceCustomPaintingEntry(out, "AtlasNote", "AtlasNote;64;32;0;96;riftflux:textures/painting/imported/AtlasNote.png");
+            out = forceCustomPaintingEntry(out, "DarkForest", "DarkForest;32;32;0;128;riftflux:textures/painting/imported/DarkForest.png");
+            out = forceCustomPaintingEntry(out, "SnowCoral", "SnowCoral;16;16;0;0;riftflux:textures/painting/imported/SnowCoral.png");
+            out = forceCustomPaintingEntry(out, "CreepyMint", "CreepyMint;16;16;0;0;riftflux:textures/painting/imported/CreepyMint.png");
+            out = forceCustomPaintingEntry(out, "PuppyHeart", "PuppyHeart;16;16;0;0;riftflux:textures/painting/imported/PuppyHeart.png");
+            out = forceCustomPaintingEntry(out, "SkullFrog", "SkullFrog;16;16;0;0;riftflux:textures/painting/imported/SkullFrog.png");
+            out = forceCustomPaintingEntry(out, "BearPaw", "BearPaw;16;16;0;0;riftflux:textures/painting/imported/BearPaw.png");
+            out = forceCustomPaintingEntry(out, "LunarEye", "LunarEye;16;16;0;0;riftflux:textures/painting/imported/LunarEye.png");
+            out = forceCustomPaintingEntry(out, "NeonPearl", "NeonPearl;16;16;0;0;riftflux:textures/painting/imported/NeonPearl.png");
+            out = forceCustomPaintingEntry(out, "SpinedCoil", "SpinedCoil;16;16;0;0;riftflux:textures/painting/imported/SpinedCoil.png");
+            out = forceCustomPaintingEntry(out, "SpiralingSeed", "SpiralingSeed;16;16;0;0;riftflux:textures/painting/imported/SpiralingSeed.png");
+            out = forceCustomPaintingEntry(out, "MugShine", "MugShine;16;16;0;0;riftflux:textures/painting/imported/MugShine.png");
+            out = forceCustomPaintingEntry(out, "VoidGlyph", "VoidGlyph;16;16;0;0;riftflux:textures/painting/imported/VoidGlyph.png");
+            out = forceCustomPaintingEntry(out, "Umbra", "Umbra;16;16;0;0;riftflux:textures/painting/imported/Umbra.png");
+            out = forceCustomPaintingEntry(out, "DarkStorm", "DarkStorm;32;32;32;128;riftflux:textures/painting/imported/DarkStorm.png");
+            out = forceCustomPaintingEntry(out, "RustRelic", "FrostRelic;32;32;0;0;riftflux:textures/painting/imported/FrostRelic.png");
+            out = forceCustomPaintingEntry(out, "MintChip", "MushroomChips;16;16;0;0;riftflux:textures/painting/imported/MushroomChips.png");
+            out = forceCustomPaintingEntry(out, "LongSpear", "CreepingFlowers;16;32;0;0;riftflux:textures/painting/imported/CreepingFlowers.png");
+            out = forceCustomPaintingEntry(out, "TinyDrum", "PotionShelf;16;16;0;0;riftflux:textures/painting/imported/PotionShelf.png");
+            out = forceCustomPaintingEntry(out, "PearlDot", "Oddities;16;16;0;0;riftflux:textures/painting/imported/Oddities.png");
+            out = forceCustomPaintingEntry(out, "StoneOrbit", "Toolrack;32;32;0;0;riftflux:textures/painting/imported/Toolrack.png");
+            out = forceCustomPaintingEntry(out, "DuskBand", "Dusk;32;16;0;0;riftflux:textures/painting/imported/Dusk.png");
+            out = forceCustomPaintingEntry(out, "BronzeLine", "ButterflyCollection;32;16;0;0;riftflux:textures/painting/imported/ButterflyCollection.png");
+            out = forceCustomPaintingEntry(out, "IvoryEcho", "EchoesOfLove;32;32;0;0;riftflux:textures/painting/imported/EchoesOfLove.png");
+            out = forceCustomPaintingEntry(out, "DriftMark", "SkullMark;32;32;0;0;riftflux:textures/painting/imported/SkullMark.png");
+            out = forceCustomPaintingEntry(out, "SkyThread", "Noteboard;32;16;0;0;riftflux:textures/painting/imported/Noteboard.png");
+            out = forceCustomPaintingEntry(out, "CopperOrb", "Bloid;32;32;0;0;riftflux:textures/painting/imported/Bloid.png");
+            out = forceCustomPaintingEntry(out, "LumenSeed", "Pegboard;16;16;0;0;riftflux:textures/painting/imported/Pegboard.png");
+            out = forceCustomPaintingEntry(out, "AmberKnot", "CopperKnot;32;32;0;0;riftflux:textures/painting/imported/CopperKnot.png");
+            out = forceCustomPaintingEntry(out, "GlassBloom", "SeedlingBloom;32;32;0;0;riftflux:textures/painting/imported/SeedlingBloom.png");
+            out = forceCustomPaintingEntry(out, "MossOrbit", "BrightSpark;32;32;0;0;riftflux:textures/painting/imported/BrightSpark.png");
+            out = forceCustomPaintingEntry(out, "CrimsonDew", "UmbralBanner;32;32;0;0;riftflux:textures/painting/imported/UmbralBanner.png");
+            out = forceCustomPaintingEntry(out, "RunedBrick", "JollySquid;16;16;0;0;riftflux:textures/painting/imported/JollySquid.png");
+            out = forceCustomPaintingEntry(out, "BonePile", "Meeseeks;16;16;32;0;riftflux:textures/painting/imported/Meeseeks.png");
+            out = forceCustomPaintingEntry(out, "RedMedal", "TornNote;16;16;48;0;riftflux:textures/painting/imported/TornNote.png");
+            out = forceCustomPaintingEntry(out, "TotemDuo", "Shield;16;16;80;0;riftflux:textures/painting/imported/Shield.png");
+            out = forceCustomPaintingEntry(out, "NullPocket", "Knives;16;16;96;0;riftflux:textures/painting/imported/Knives.png");
+            out = forceCustomPaintingEntry(out, "VineCode", "WineRack;32;16;0;32;riftflux:textures/painting/imported/WineRack.png");
+            out = forceCustomPaintingEntry(out, "WireRest", "Axe;32;16;32;32;riftflux:textures/painting/imported/Axe.png");
+            out = forceCustomPaintingEntry(out, "HookLoop", "Utensils;32;16;64;32;riftflux:textures/painting/imported/Utensils.png");
+            out = forceCustomPaintingEntry(out, "CyanPort", "ForestDawn;32;16;96;32;riftflux:textures/painting/imported/ForestDawn.png");
+            out = forceCustomPaintingEntry(out, "DustSlope", "Dust;32;16;128;32;riftflux:textures/painting/imported/Dust.png");
+            out = forceCustomPaintingEntry(out, "AtlasBannerA", "AtlasBannerGreen;16;32;0;64;riftflux:textures/painting/imported/AtlasBannerGreen.png");
+            out = forceCustomPaintingEntry(out, "AtlasBannerB", "AtlasBannerBlue;16;32;16;64;riftflux:textures/painting/imported/AtlasBannerBlue.png");
+            out = forceCustomPaintingEntry(out, "AtlasPurpleRange", "Celestial;32;32;64;128;riftflux:textures/painting/imported/Celestial.png");
+            out = forceCustomPaintingEntry(out, "AtlasFlowerSky", "Flowering;32;32;96;128;riftflux:textures/painting/imported/Flowering.png");
+            out = forceCustomPaintingEntry(out, "AtlasCrossedBlades", "CrossedBlades;32;32;128;128;riftflux:textures/painting/imported/CrossedBlades.png");
+            out = forceCustomPaintingEntry(out, "AtlasBladeTrio", "AtlasBlades;32;32;160;128;riftflux:textures/painting/imported/AtlasBlades.png");
+            out = forceCustomPaintingEntry(out, "AtlasMountainVista", "SummitCliff;64;48;192;64;riftflux:textures/painting/imported/SummitCliff.png");
+            out = forceCustomPaintingEntry(out, "AtlasForestPath", "ForestPath;64;48;192;112;riftflux:textures/painting/imported/ForestPath.png");
+            out = forceCustomPaintingEntry(out, "AtlasHarborSun", "Harbor;64;64;0;192;riftflux:textures/painting/imported/Harbor.png");
+            out = forceCustomPaintingEntry(out, "AtlasLighthouse", "Lighthouse;64;64;64;192;riftflux:textures/painting/imported/Lighthouse.png");
+            out = forceCustomPaintingEntry(out, "AtlasDuskTwin", "DarkStorm;32;32;32;128;riftflux:textures/painting/imported/DarkStorm.png");
+            out = forceCustomPaintingEntry(out, "AtlasDarkRight", "DarkStorm;32;32;32;128;riftflux:textures/painting/imported/DarkStorm.png");
+            out = forceCustomPaintingEntry(out, "AtlasDark", "DarkForest;32;32;0;128;riftflux:textures/painting/imported/DarkForest.png");
+            out = forceCustomPaintingEntry(out, "Import_1105242611714886714", "FrostRelic;32;32;0;0;riftflux:textures/painting/imported/FrostRelic.png");
+            out = forceCustomPaintingEntry(out, "Gallery01", "FrostRelic;32;32;0;0;riftflux:textures/painting/imported/FrostRelic.png");
+            out = forceCustomPaintingEntry(out, "Import_15898581183307818233", "BlueStamp;16;16;0;0;riftflux:textures/painting/imported/BlueStamp.png");
+            out = forceCustomPaintingEntry(out, "Gallery02", "BlueStamp;16;16;0;0;riftflux:textures/painting/imported/BlueStamp.png");
+            out = forceCustomPaintingEntry(out, "Import_5707704980356058947", "CinderBloom;32;32;0;0;riftflux:textures/painting/imported/CinderBloom.png");
+            out = forceCustomPaintingEntry(out, "Gallery03", "CinderBloom;32;32;0;0;riftflux:textures/painting/imported/CinderBloom.png");
+            out = forceCustomPaintingEntry(out, "Import_8390554114962693927", "MushroomChips;16;16;0;0;riftflux:textures/painting/imported/MushroomChips.png");
+            out = forceCustomPaintingEntry(out, "Gallery04", "MushroomChips;16;16;0;0;riftflux:textures/painting/imported/MushroomChips.png");
+            out = forceCustomPaintingEntry(out, "Import_2453731557530369994", "CreepingFlowers;16;32;0;0;riftflux:textures/painting/imported/CreepingFlowers.png");
+            out = forceCustomPaintingEntry(out, "Gallery05", "CreepingFlowers;16;32;0;0;riftflux:textures/painting/imported/CreepingFlowers.png");
+            out = forceCustomPaintingEntry(out, "Import_15686945115718463924", "CrackedSun;32;32;0;0;riftflux:textures/painting/imported/CrackedSun.png");
+            out = forceCustomPaintingEntry(out, "Gallery06", "CrackedSun;32;32;0;0;riftflux:textures/painting/imported/CrackedSun.png");
+            out = forceCustomPaintingEntry(out, "Import_14926847136614811964", "PotionShelf;16;16;0;0;riftflux:textures/painting/imported/PotionShelf.png");
+            out = forceCustomPaintingEntry(out, "Gallery07", "PotionShelf;16;16;0;0;riftflux:textures/painting/imported/PotionShelf.png");
+            out = forceCustomPaintingEntry(out, "Import_8437322785318950020", "FrostGlyph;32;32;0;0;riftflux:textures/painting/imported/FrostGlyph.png");
+            out = forceCustomPaintingEntry(out, "Gallery08", "FrostGlyph;32;32;0;0;riftflux:textures/painting/imported/FrostGlyph.png");
+            out = forceCustomPaintingEntry(out, "Import_14961980454791572902", "GoldMoss;32;32;0;0;riftflux:textures/painting/imported/GoldMoss.png");
+            out = forceCustomPaintingEntry(out, "Gallery09", "GoldMoss;32;32;0;0;riftflux:textures/painting/imported/GoldMoss.png");
+            out = forceCustomPaintingEntry(out, "Import_3038250295555765778", "Oddities;16;16;0;0;riftflux:textures/painting/imported/Oddities.png");
+            out = forceCustomPaintingEntry(out, "Gallery10", "Oddities;16;16;0;0;riftflux:textures/painting/imported/Oddities.png");
+            out = forceCustomPaintingEntry(out, "Import_14853050705435720726", "Toolrack;32;32;0;0;riftflux:textures/painting/imported/Toolrack.png");
+            out = forceCustomPaintingEntry(out, "Gallery11", "Toolrack;32;32;0;0;riftflux:textures/painting/imported/Toolrack.png");
+            out = forceCustomPaintingEntry(out, "Import_13494592494013951062", "Dusk;32;16;0;0;riftflux:textures/painting/imported/Dusk.png");
+            out = forceCustomPaintingEntry(out, "Gallery12", "Dusk;32;16;0;0;riftflux:textures/painting/imported/Dusk.png");
+            out = forceCustomPaintingEntry(out, "Import_10433218889319366305", "ButterflyCollection;32;16;0;0;riftflux:textures/painting/imported/ButterflyCollection.png");
+            out = forceCustomPaintingEntry(out, "Gallery14", "ButterflyCollection;32;16;0;0;riftflux:textures/painting/imported/ButterflyCollection.png");
+            out = forceCustomPaintingEntry(out, "Import_3316100501211956769", "EchoesOfLove;32;32;0;0;riftflux:textures/painting/imported/EchoesOfLove.png");
+            out = forceCustomPaintingEntry(out, "Gallery15", "EchoesOfLove;32;32;0;0;riftflux:textures/painting/imported/EchoesOfLove.png");
+            out = forceCustomPaintingEntry(out, "Import_1405110628700110104", "SkullMark;32;32;0;0;riftflux:textures/painting/imported/SkullMark.png");
+            out = forceCustomPaintingEntry(out, "Gallery16", "SkullMark;32;32;0;0;riftflux:textures/painting/imported/SkullMark.png");
+            out = forceCustomPaintingEntry(out, "Import_3980202720619743710", "Noteboard;32;16;0;0;riftflux:textures/painting/imported/Noteboard.png");
+            out = forceCustomPaintingEntry(out, "Gallery17", "Noteboard;32;16;0;0;riftflux:textures/painting/imported/Noteboard.png");
+            out = forceCustomPaintingEntry(out, "Import_12002261695906088408", "PondPixel;16;16;0;0;riftflux:textures/painting/imported/PondPixel.png");
+            out = forceCustomPaintingEntry(out, "Gallery18", "PondPixel;16;16;0;0;riftflux:textures/painting/imported/PondPixel.png");
+            out = forceCustomPaintingEntry(out, "Import_4865533768723008097", "HushBloom;32;32;0;0;riftflux:textures/painting/imported/HushBloom.png");
+            out = forceCustomPaintingEntry(out, "Gallery19", "HushBloom;32;32;0;0;riftflux:textures/painting/imported/HushBloom.png");
+            out = forceCustomPaintingEntry(out, "Import_3537128328782683102", "Bloid;32;32;0;0;riftflux:textures/painting/imported/Bloid.png");
+            out = forceCustomPaintingEntry(out, "Gallery20", "Bloid;32;32;0;0;riftflux:textures/painting/imported/Bloid.png");
+            out = forceCustomPaintingEntry(out, "Import_10789327830195471405", "VelvetRune;32;32;0;0;riftflux:textures/painting/imported/VelvetRune.png");
+            out = forceCustomPaintingEntry(out, "Gallery21", "VelvetRune;32;32;0;0;riftflux:textures/painting/imported/VelvetRune.png");
+            out = forceCustomPaintingEntry(out, "Import_943304298191828284", "stylized.png;32;32;0;0;riftflux:textures/painting/imported/stylized.png");
+            out = forceCustomPaintingEntry(out, "Gallery22", "stylized.png;32;32;0;0;riftflux:textures/painting/imported/stylized.png");
+            out = forceCustomPaintingEntry(out, "styalized.png", "stylized.png;32;32;0;0;riftflux:textures/painting/imported/stylized.png");
+            out = forceCustomPaintingEntry(out, "stylized.png", "stylized.png;32;32;0;0;riftflux:textures/painting/imported/stylized.png");
+            out = forceCustomPaintingEntry(out, "Import_4131215028221111236", "Pegboard;16;16;0;0;riftflux:textures/painting/imported/Pegboard.png");
+            out = forceCustomPaintingEntry(out, "Gallery23", "Pegboard;16;16;0;0;riftflux:textures/painting/imported/Pegboard.png");
+            out = forceCustomPaintingEntry(out, "Import_11795424469239502756", "CopperKnot;32;32;0;0;riftflux:textures/painting/imported/CopperKnot.png");
+            out = forceCustomPaintingEntry(out, "Gallery24", "CopperKnot;32;32;0;0;riftflux:textures/painting/imported/CopperKnot.png");
+            out = forceCustomPaintingEntry(out, "Import_492653515534584664", "SeedlingBloom;32;32;0;0;riftflux:textures/painting/imported/SeedlingBloom.png");
+            out = forceCustomPaintingEntry(out, "Gallery25", "SeedlingBloom;32;32;0;0;riftflux:textures/painting/imported/SeedlingBloom.png");
+            out = forceCustomPaintingEntry(out, "Import_8680897047976471280", "KelpSpark;32;32;0;0;riftflux:textures/painting/imported/KelpSpark.png");
+            out = forceCustomPaintingEntry(out, "Gallery26", "KelpSpark;32;32;0;0;riftflux:textures/painting/imported/KelpSpark.png");
+            out = forceCustomPaintingEntry(out, "Import_17468346436947212311", "BrightSpark;32;32;0;0;riftflux:textures/painting/imported/BrightSpark.png");
+            out = forceCustomPaintingEntry(out, "Gallery27", "BrightSpark;32;32;0;0;riftflux:textures/painting/imported/BrightSpark.png");
+            out = forceCustomPaintingEntry(out, "Import_3583122789790429381", "FogToken;32;32;0;0;riftflux:textures/painting/imported/FogToken.png");
+            out = forceCustomPaintingEntry(out, "Gallery28", "FogToken;32;32;0;0;riftflux:textures/painting/imported/FogToken.png");
+            out = forceCustomPaintingEntry(out, "Import_2103629306946470516", "UmbralBanner;32;32;0;0;riftflux:textures/painting/imported/UmbralBanner.png");
+            out = forceCustomPaintingEntry(out, "Gallery29", "UmbralBanner;32;32;0;0;riftflux:textures/painting/imported/UmbralBanner.png");
+            out = forceCustomPaintingEntry(out, "Import_9464401474315549901", "SoftRibbon;32;16;0;0;riftflux:textures/painting/imported/SoftRibbon.png");
+            out = forceCustomPaintingEntry(out, "Gallery30", "SoftRibbon;32;16;0;0;riftflux:textures/painting/imported/SoftRibbon.png");
+            out = forceCustomPaintingEntry(out, "Import_14899282787076458166", "WarmEcho;32;16;0;0;riftflux:textures/painting/imported/WarmEcho.png");
+            out = forceCustomPaintingEntry(out, "Gallery31", "WarmEcho;32;16;0;0;riftflux:textures/painting/imported/WarmEcho.png");
+            out = forceCustomPaintingEntry(out, "Import_13680866727003923712", "NorthGlyph;16;16;0;0;riftflux:textures/painting/imported/NorthGlyph.png");
+            out = forceCustomPaintingEntry(out, "Gallery32", "NorthGlyph;16;16;0;0;riftflux:textures/painting/imported/NorthGlyph.png");
+            out = forceCustomPaintingEntry(out, "Import_82306519022149241", "SilentStem;16;32;0;0;riftflux:textures/painting/imported/SilentStem.png");
+            out = forceCustomPaintingEntry(out, "Gallery33", "SilentStem;16;32;0;0;riftflux:textures/painting/imported/SilentStem.png");
+            out = forceCustomPaintingEntry(out, "Import_8145294216501436008", "StarrySky;96;64;0;0;riftflux:textures/painting/StarrySky.png");
+            out = forceCustomPaintingEntry(out, "Import_10083096985915292797", "pack.png;16;16;0;0;riftflux:textures/painting/pack.png");
+            out = forceCustomPaintingEntry(out, "Import_1061680030994392119", "StarHaze;96;64;0;0;riftflux:textures/painting/StarHaze.png");
+            out = forceCustomPaintingEntry(out, "Import_5396209286604440417", "JollySquid;16;16;0;0;riftflux:textures/painting/imported/JollySquid.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-11629597661984161539.png", "SnowCoral;16;16;0;0;riftflux:textures/painting/imported/SnowCoral.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-10933815052753999217.png", "CreepyMint;16;16;0;0;riftflux:textures/painting/imported/CreepyMint.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-18270552977104938692.png", "PuppyHeart;16;16;0;0;riftflux:textures/painting/imported/PuppyHeart.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-15568491389411106162.png", "SkullFrog;16;16;0;0;riftflux:textures/painting/imported/SkullFrog.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-9713999812205739366.png", "BearPaw;16;16;0;0;riftflux:textures/painting/imported/BearPaw.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-18087994978578207719.png", "LunarEye;16;16;0;0;riftflux:textures/painting/imported/LunarEye.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-5515462690562765049.png", "NeonPearl;16;16;0;0;riftflux:textures/painting/imported/NeonPearl.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-8108177091012945282.png", "SpinedCoil;16;16;0;0;riftflux:textures/painting/imported/SpinedCoil.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-13399677967542943283.png", "SpiralingSeed;16;16;0;0;riftflux:textures/painting/imported/SpiralingSeed.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-629525076553057384.png", "MugShine;16;16;0;0;riftflux:textures/painting/imported/MugShine.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-6247862312713638472.png", "VoidGlyph;16;16;0;0;riftflux:textures/painting/imported/VoidGlyph.png");
+            out = forceCustomPaintingEntry(out, "ai-chat-attachment-1254734670699394308.png", "Umbra;16;16;0;0;riftflux:textures/painting/imported/Umbra.png");
+            out = removeCustomPaintingEntry(out, "AtlasCompass");
+            out = removeCustomPaintingEntry(out, "AtlasPillar");
+            out = removeCustomPaintingEntry(out, "AtlasSnowReach");
+            out = removeCustomPaintingEntry(out, "CrownPath");
+            return out;
+        } finally {
+            allowCustomPaintingInsert = previousAllow;
+        }
     }
 
     // parse the string of IDs into a set
@@ -1404,3 +1709,4 @@ public class ModConfig {
     }
 
 }
+

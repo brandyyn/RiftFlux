@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.CommonProxy;
 import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
+import com.voidsrift.riftflux.painting.GuiPaintingSelector;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
 import cpw.mods.fml.common.Loader;
@@ -17,6 +18,16 @@ public class ClientProxy extends CommonProxy {
         // Client-side: read the jump keybinding directly (no reflection).
         return Minecraft.getMinecraft().gameSettings.keyBindJump.getIsKeyPressed();
     }
+
+    @Override
+    public void openPaintingSelectorScreen() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null) {
+            return;
+        }
+        mc.displayGuiScreen(new GuiPaintingSelector());
+    }
+
     @Override
     public void initClientFeatures() {
         // Register NEI handler tab icon

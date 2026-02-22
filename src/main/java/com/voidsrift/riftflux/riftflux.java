@@ -2,6 +2,7 @@ package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
+import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
@@ -57,6 +58,7 @@ public class riftflux {
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.avatar.glider.GliderEvents());
 
         MinecraftForge.EVENT_BUS.register(new StickTooltipHandler());
+        MinecraftForge.EVENT_BUS.register(new PaintingTooltipHandler());
 
         vortexContent.init(event);
         makamys.satchels.Satchels.init(event);

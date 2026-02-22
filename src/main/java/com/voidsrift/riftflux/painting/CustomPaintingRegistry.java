@@ -15,6 +15,7 @@ import java.util.Set;
 public final class CustomPaintingRegistry {
 
     private static final Map<String, ResourceLocation> CUSTOM_TEXTURES_BY_TITLE = new HashMap<String, ResourceLocation>();
+    private static final Set<String> CUSTOM_FULL_TEXTURES = new HashSet<String>();
     private static final String FALLBACK_TEXTURE = "riftflux:textures/painting/custom_paintings.png";
 
     private static boolean registered;
@@ -85,6 +86,9 @@ public final class CustomPaintingRegistry {
             knownEnumNames.add(enumName);
             knownTitles.add(spec.title);
             CUSTOM_TEXTURES_BY_TITLE.put(spec.title, new ResourceLocation(spec.texture));
+            if (shouldUseFullTexture(spec.texture, defaultTexture)) {
+                CUSTOM_FULL_TEXTURES.add(spec.title);
+            }
             addedCount++;
         }
 
@@ -101,6 +105,16 @@ public final class CustomPaintingRegistry {
             return null;
         }
         return CUSTOM_TEXTURES_BY_TITLE.get(art.title);
+    }
+
+    public static synchronized boolean usesFullTexture(EntityPainting.EnumArt art) {
+        if (!registered) {
+            registerFromConfig();
+        }
+        if (art == null) {
+            return false;
+        }
+        return CUSTOM_FULL_TEXTURES.contains(art.title);
     }
 
     private static boolean isValidMultipleOf16(int value) {
@@ -212,6 +226,18 @@ public final class CustomPaintingRegistry {
         }
         String texture = raw.trim();
         return texture.isEmpty() ? null : texture;
+    }
+
+    private static boolean shouldUseFullTexture(String texture, String defaultTexture) {
+        String normalizedTexture = normalizeTexture(texture);
+        if (normalizedTexture == null) {
+            return false;
+        }
+        String normalizedDefault = normalizeTexture(defaultTexture);
+        if (normalizedDefault != null && normalizedTexture.equalsIgnoreCase(normalizedDefault)) {
+            return false;
+        }
+        return !normalizedTexture.equalsIgnoreCase(FALLBACK_TEXTURE);
     }
 
     private static final class PaintingSpec {

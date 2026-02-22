@@ -6,4 +6,8 @@ public class CommonProxy {
     public boolean isJumpKeyDown() {
         return false;
     }
+
+    public void openPaintingSelectorScreen() {
+        // no-op on server
+    }
 }

@@ -43,5 +43,8 @@ public final class RFNetwork {
 
         // Appa control (ID 4)
         CH.registerMessage(MsgAppaControl.Handler.class, MsgAppaControl.class, 4, Side.SERVER);
+
+        // Painting selection (ID 5)
+        CH.registerMessage(MsgSetPaintingSelection.Handler.class, MsgSetPaintingSelection.class, 5, Side.SERVER);
     }
 }

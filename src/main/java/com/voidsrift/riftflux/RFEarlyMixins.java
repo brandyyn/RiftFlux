@@ -141,6 +141,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityPainting_ExtraArt");
             mixins.add("early.MixinS10PacketSpawnPainting_TitleLength");
         }
+        if (ModConfig.enablePaintingAirPlacement) {
+            mixins.add("early.MixinEntityHanging_PaintingAirPlacement");
+        }
+        if (ModConfig.enablePaintingSelection) {
+            mixins.add("early.MixinItemHangingEntity_PaintingSelection");
+        }
 
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("accessor.GuiScreenAccessor");
@@ -148,6 +154,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("accessor.PlayerControllerMPAccessor");
             if (ModConfig.enableCustomPaintings) {
                 mixins.add("early.MixinRenderPainting_CustomTexture");
+            }
+            if (ModConfig.enablePaintingSelection) {
+                mixins.add("early.MixinPlayerControllerMP_PaintingSelectorOpen");
             }
             if (ModConfig.enableHotbarSelectorTexture) {
                 mixins.add("early.MixinGuiIngame_HotbarSelectorTexture");
