@@ -54,12 +54,13 @@ public abstract class MixinRenderPainting_CustomTexture {
             return;
         }
 
-        ResourceLocation customTexture = CustomPaintingRegistry.getCustomTexture(painting.art);
-        if (customTexture == null) {
-            return;
+        ResourceLocation frontTexture = CustomPaintingRegistry.getCustomTexture(painting.art);
+        boolean fullTexture = false;
+        if (frontTexture != null) {
+            fullTexture = CustomPaintingRegistry.usesFullTexture(painting.art);
+        } else {
+            frontTexture = VANILLA_PAINTINGS;
         }
-
-        boolean fullTexture = CustomPaintingRegistry.usesFullTexture(painting.art);
         int textureWidth = fullTexture ? sizeX : 256;
         int textureHeight = fullTexture ? sizeY : 256;
         int baseOffsetX = fullTexture ? 0 : offsetX;
@@ -85,8 +86,25 @@ public abstract class MixinRenderPainting_CustomTexture {
         float f13 = 0.0F;
         float f14 = 0.0625F;
 
-        for (int i1 = 0; i1 < sizeX / 16; ++i1) {
-            for (int j1 = 0; j1 < sizeY / 16; ++j1) {
+        int tilesX = sizeX / 16;
+        int tilesY = sizeY / 16;
+
+        float artU0 = (float) baseOffsetX * invTextureWidth;
+        float artU1 = (float) (baseOffsetX + sizeX) * invTextureWidth;
+        float artV0 = (float) baseOffsetY * invTextureHeight;
+        float artV1 = (float) (baseOffsetY + sizeY) * invTextureHeight;
+
+        float uLeftEdge0 = artU1 - borderU;
+        float uLeftEdge1 = artU1;
+        float uRightEdge0 = artU0;
+        float uRightEdge1 = artU0 + borderU;
+        float vTopEdge0 = artV0;
+        float vTopEdge1 = artV0 + borderV;
+        float vBottomEdge0 = artV1 - borderV;
+        float vBottomEdge1 = artV1;
+
+        for (int i1 = 0; i1 < tilesX; ++i1) {
+            for (int j1 = 0; j1 < tilesY; ++j1) {
                 float f15 = f + (float)((i1 + 1) * 16);
                 float f16 = f + (float)(i1 * 16);
                 float f17 = f1 + (float)((j1 + 1) * 16);
@@ -97,7 +115,7 @@ public abstract class MixinRenderPainting_CustomTexture {
                 float f21 = (float)(baseOffsetY + sizeY - j1 * 16) * invTextureHeight;
                 float f22 = (float)(baseOffsetY + sizeY - (j1 + 1) * 16) * invTextureHeight;
 
-                Minecraft.getMinecraft().getTextureManager().bindTexture(customTexture);
+                Minecraft.getMinecraft().getTextureManager().bindTexture(frontTexture);
                 Tessellator tessellator = Tessellator.instance;
                 tessellator.startDrawingQuads();
                 tessellator.setNormal(0.0F, 0.0F, -1.0F);
@@ -107,6 +125,48 @@ public abstract class MixinRenderPainting_CustomTexture {
                 tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)f20, (double)f22);
                 tessellator.draw();
 
+                float uLeft = f20;
+                float uRight = f19;
+                float vTop = f22;
+                float vBottom = f21;
+
+                boolean isLeft = i1 == 0;
+                boolean isRight = i1 == tilesX - 1;
+                boolean isBottom = j1 == 0;
+                boolean isTop = j1 == tilesY - 1;
+                if (isLeft || isRight || isBottom || isTop) {
+                    tessellator.startDrawingQuads();
+                    if (isTop) {
+                        tessellator.setNormal(0.0F, 1.0F, 0.0F);
+                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)uLeft, (double)vTopEdge0);
+                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)uRight, (double)vTopEdge0);
+                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)uRight, (double)vTopEdge1);
+                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)uLeft, (double)vTopEdge1);
+                    }
+                    if (isBottom) {
+                        tessellator.setNormal(0.0F, -1.0F, 0.0F);
+                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)uLeft, (double)vBottomEdge0);
+                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)uRight, (double)vBottomEdge0);
+                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)(-f2), (double)uRight, (double)vBottomEdge1);
+                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)(-f2), (double)uLeft, (double)vBottomEdge1);
+                    }
+                    if (isRight) {
+                        tessellator.setNormal(-1.0F, 0.0F, 0.0F);
+                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)uRightEdge1, (double)vTop);
+                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)uRightEdge1, (double)vBottom);
+                        tessellator.addVertexWithUV((double)f15, (double)f18, (double)(-f2), (double)uRightEdge0, (double)vBottom);
+                        tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)uRightEdge0, (double)vTop);
+                    }
+                    if (isLeft) {
+                        tessellator.setNormal(1.0F, 0.0F, 0.0F);
+                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)uLeftEdge0, (double)vTop);
+                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)(-f2), (double)uLeftEdge0, (double)vBottom);
+                        tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)uLeftEdge1, (double)vBottom);
+                        tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)uLeftEdge1, (double)vTop);
+                    }
+                    tessellator.draw();
+                }
+
                 Minecraft.getMinecraft().getTextureManager().bindTexture(VANILLA_PAINTINGS);
                 tessellator.startDrawingQuads();
                 tessellator.setNormal(0.0F, 0.0F, 1.0F);
@@ -114,49 +174,6 @@ public abstract class MixinRenderPainting_CustomTexture {
                 tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)f4, (double)f5);
                 tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)f4, (double)f6);
                 tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)f3, (double)f6);
-                tessellator.draw();
-
-                float uLeft = f20;
-                float uRight = f19;
-                float vTop = f22;
-                float vBottom = f21;
-
-                float artU0 = (float) baseOffsetX * invTextureWidth;
-                float artU1 = (float) (baseOffsetX + sizeX) * invTextureWidth;
-                float artV0 = (float) baseOffsetY * invTextureHeight;
-                float artV1 = (float) (baseOffsetY + sizeY) * invTextureHeight;
-
-                float uLeftEdge0 = artU1 - borderU;
-                float uLeftEdge1 = artU1;
-                float uRightEdge0 = artU0;
-                float uRightEdge1 = artU0 + borderU;
-                float vTopEdge0 = artV0;
-                float vTopEdge1 = artV0 + borderV;
-                float vBottomEdge0 = artV1 - borderV;
-                float vBottomEdge1 = artV1;
-
-                Minecraft.getMinecraft().getTextureManager().bindTexture(customTexture);
-                tessellator.startDrawingQuads();
-                tessellator.setNormal(0.0F, 1.0F, 0.0F);
-                tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)uLeft, (double)vTopEdge0);
-                tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)uRight, (double)vTopEdge0);
-                tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)uRight, (double)vTopEdge1);
-                tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)uLeft, (double)vTopEdge1);
-                tessellator.setNormal(0.0F, -1.0F, 0.0F);
-                tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)uLeft, (double)vBottomEdge0);
-                tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)uRight, (double)vBottomEdge0);
-                tessellator.addVertexWithUV((double)f16, (double)f18, (double)(-f2), (double)uRight, (double)vBottomEdge1);
-                tessellator.addVertexWithUV((double)f15, (double)f18, (double)(-f2), (double)uLeft, (double)vBottomEdge1);
-                tessellator.setNormal(-1.0F, 0.0F, 0.0F);
-                tessellator.addVertexWithUV((double)f15, (double)f17, (double)f2, (double)uRightEdge1, (double)vTop);
-                tessellator.addVertexWithUV((double)f15, (double)f18, (double)f2, (double)uRightEdge1, (double)vBottom);
-                tessellator.addVertexWithUV((double)f15, (double)f18, (double)(-f2), (double)uRightEdge0, (double)vBottom);
-                tessellator.addVertexWithUV((double)f15, (double)f17, (double)(-f2), (double)uRightEdge0, (double)vTop);
-                tessellator.setNormal(1.0F, 0.0F, 0.0F);
-                tessellator.addVertexWithUV((double)f16, (double)f17, (double)(-f2), (double)uLeftEdge0, (double)vTop);
-                tessellator.addVertexWithUV((double)f16, (double)f18, (double)(-f2), (double)uLeftEdge0, (double)vBottom);
-                tessellator.addVertexWithUV((double)f16, (double)f18, (double)f2, (double)uLeftEdge1, (double)vBottom);
-                tessellator.addVertexWithUV((double)f16, (double)f17, (double)f2, (double)uLeftEdge1, (double)vTop);
                 tessellator.draw();
             }
         }
