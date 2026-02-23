@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
 import com.voidsrift.riftflux.vortex.vortexContent;
+import de.rinonline.korinrpg.Springmain;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -37,6 +38,9 @@ public class riftflux {
         com.voidsrift.riftflux.avatar.AvatarTLBContent.preInit();
         makamys.satchels.Satchels.preInit(event);
         Core.preInit(event);
+        if (ModConfig.dssEnabled) {
+            Springmain.preInit(event);
+        }
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             ZyinHUD.preInit(event);
         }
@@ -63,6 +67,9 @@ public class riftflux {
         vortexContent.init(event);
         makamys.satchels.Satchels.init(event);
         Core.init(event);
+        if (ModConfig.dssEnabled) {
+            Springmain.init(event);
+        }
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             ZyinHUD.init(event);
         }
@@ -75,6 +82,9 @@ public class riftflux {
         vortexContent.postInit(event);
         makamys.satchels.Satchels.postInit(event);
         Core.postInit(event);
+        if (ModConfig.dssEnabled) {
+            Springmain.postInit(event);
+        }
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             ZyinHUD.postInit(event);
         }
@@ -84,6 +94,9 @@ public class riftflux {
     public void serverStarting(FMLServerStartingEvent event) {
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             ZyinHUD.serverStarting(event);
+        }
+        if (ModConfig.dssEnabled) {
+            Springmain.serverLoad(event);
         }
     }
 

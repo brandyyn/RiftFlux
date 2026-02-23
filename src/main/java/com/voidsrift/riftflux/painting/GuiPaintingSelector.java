@@ -5,11 +5,13 @@ import com.voidsrift.riftflux.net.RFNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.item.EntityPainting;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public class GuiPaintingSelector extends GuiScreen {
 
@@ -27,21 +30,36 @@ public class GuiPaintingSelector extends GuiScreen {
     private static final int CELL_W = 144;
     private static final int CELL_H = 78;
     private static final int CELL_GAP = 8;
-    private static final int GRID_TOP = 54;
+    private static final int GRID_TOP = 42;
     private static final int SCROLL_STEP = 28;
     private static final int SCROLLBAR_W = 8;
     private static final int SCROLLBAR_MARGIN = 8;
     private static final int THUMB_MIN_H = 20;
+    private static final int SEARCH_FIELD_Y = 0;
+    private static final int SEARCH_FIELD_W = 200;
+    private static final int SEARCH_FIELD_H = 16;
+    private static final String SEARCH_PLACEHOLDER = "Search...";
+    private static final int SEARCH_ABOVE_BUTTONS = 8;
+    private static final int SELECTED_TEXT_MARGIN = 18;
+    private static final double DRAG_DEADZONE_MOUSE = 16.0;
+    private static final double DRAG_SMOOTH_MOUSE = 24.0;
 
+    private final List<EntityPainting.EnumArt> allArts = new ArrayList<EntityPainting.EnumArt>();
     private final List<EntityPainting.EnumArt> arts = new ArrayList<EntityPainting.EnumArt>();
 
     private int scrollY;
     private String selectedMotive;
     private boolean draggingScrollbar;
     private int scrollbarDragOffset;
+    private int lastDragMouseY;
+    private int dragStartMouseY;
+    private int dragStartScrollY;
+    private double dragScrollRemainder;
+    private String searchQuery = "";
 
     private GuiButton buttonRandom;
     private GuiButton buttonDone;
+    private GuiTextField searchField;
 
     public GuiPaintingSelector() {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
@@ -50,12 +68,14 @@ public class GuiPaintingSelector extends GuiScreen {
 
     @Override
     public void initGui() {
+        Keyboard.enableRepeatEvents(true);
+        this.allArts.clear();
         this.arts.clear();
         EntityPainting.EnumArt[] values = EntityPainting.EnumArt.values();
         for (int i = 0; i < values.length; i++) {
-            this.arts.add(values[i]);
+            this.allArts.add(values[i]);
         }
-        Collections.sort(this.arts, new Comparator<EntityPainting.EnumArt>() {
+        Collections.sort(this.allArts, new Comparator<EntityPainting.EnumArt>() {
             @Override
             public int compare(EntityPainting.EnumArt a, EntityPainting.EnumArt b) {
                 int areaA = a.sizeX * a.sizeY;
@@ -83,6 +103,14 @@ public class GuiPaintingSelector extends GuiScreen {
         this.buttonList.add(this.buttonRandom);
         this.buttonList.add(this.buttonDone);
 
+        int searchY = buttonY - SEARCH_ABOVE_BUTTONS - SEARCH_FIELD_H;
+        this.searchField = new GuiTextField(this.fontRendererObj, centerX - (SEARCH_FIELD_W / 2), searchY, SEARCH_FIELD_W, SEARCH_FIELD_H);
+        this.searchField.setMaxStringLength(64);
+        this.searchField.setText(this.searchQuery);
+        this.searchField.setEnableBackgroundDrawing(true);
+        this.searchField.setTextColor(0xFFFFFF);
+
+        applySearchFilter();
         clampScroll();
     }
 
@@ -103,6 +131,19 @@ public class GuiPaintingSelector extends GuiScreen {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) {
         if (button != 0) {
+            if (button == 1 && this.searchField != null) {
+                int mx = mouseX;
+                int my = mouseY;
+                boolean overSearch = mx >= this.searchField.xPosition
+                        && mx < this.searchField.xPosition + this.searchField.width
+                        && my >= this.searchField.yPosition
+                        && my < this.searchField.yPosition + this.searchField.height;
+                if (overSearch) {
+                    this.searchField.setText("");
+                    this.searchField.setFocused(true);
+                    applySearchFilter();
+                }
+            }
             return;
         }
 
@@ -118,6 +159,10 @@ public class GuiPaintingSelector extends GuiScreen {
                 super.mouseClicked(mouseX, mouseY, button);
                 return;
             }
+        }
+
+        if (this.searchField != null) {
+            this.searchField.mouseClicked(mouseX, mouseY, button);
         }
 
         if (handleScrollbarClick(mouseX, mouseY)) {
@@ -148,6 +193,10 @@ public class GuiPaintingSelector extends GuiScreen {
 
     @Override
     protected void keyTyped(char c, int keyCode) {
+        if (this.searchField != null && this.searchField.textboxKeyTyped(c, keyCode)) {
+            applySearchFilter();
+            return;
+        }
         super.keyTyped(c, keyCode);
     }
 
@@ -165,17 +214,83 @@ public class GuiPaintingSelector extends GuiScreen {
         if (!this.draggingScrollbar || clickedMouseButton != 0) {
             return;
         }
-        applyScrollbarThumbY(mouseY - this.scrollbarDragOffset);
+        int delta = mouseY - this.lastDragMouseY;
+        if (delta == 0) {
+            return;
+        }
+
+        int maxScroll = getMaxScroll();
+        if (maxScroll <= 0) {
+            this.lastDragMouseY = mouseY;
+            return;
+        }
+
+        int top = getViewportTop();
+        int bottom = getViewportBottom();
+        int trackHeight = Math.max(1, bottom - top);
+        int thumbHeight = getScrollbarThumbHeight(trackHeight);
+        int movable = Math.max(1, trackHeight - thumbHeight);
+
+        double ratio = (double) maxScroll / (double) movable;
+        double desired = this.dragStartScrollY + (mouseY - this.dragStartMouseY) * ratio;
+        if (desired < 0.0) {
+            desired = 0.0;
+        } else if (desired > maxScroll) {
+            desired = maxScroll;
+        }
+
+        double base = this.scrollY + delta;
+        double lagFromBase = desired - base;
+        double absLag = Math.abs(lagFromBase);
+        double deadzone = Math.max(32.0, DRAG_DEADZONE_MOUSE * ratio);
+        double smoothRange = Math.max(48.0, DRAG_SMOOTH_MOUSE * ratio);
+        double blend = 0.0;
+        if (absLag > deadzone) {
+            double t = (absLag - deadzone) / smoothRange;
+            if (t > 1.0) {
+                t = 1.0;
+            }
+            // Quadratic ramp from smooth scrolling to snapping.
+            blend = t * t;
+        }
+        double newScroll = base + lagFromBase * blend;
+        if (newScroll < 0.0) {
+            newScroll = 0.0;
+        } else if (newScroll > maxScroll) {
+            newScroll = maxScroll;
+        }
+
+        double scrollDeltaF = (newScroll - this.scrollY) + this.dragScrollRemainder;
+        int scrollDelta;
+        if (scrollDeltaF >= 0.0) {
+            scrollDelta = (int) Math.floor(scrollDeltaF);
+        } else {
+            scrollDelta = (int) Math.ceil(scrollDeltaF);
+        }
+        this.dragScrollRemainder = scrollDeltaF - scrollDelta;
+        if (scrollDelta != 0) {
+            this.scrollY += scrollDelta;
+            clampScroll();
+        }
+        this.lastDragMouseY = mouseY;
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
 
-        drawCenteredString(this.fontRendererObj, "Painting Selector", this.width / 2, 12, 0xFFFFFF);
+        drawCenteredString(this.fontRendererObj, "Painting Selector", this.width / 2, 21, 0xFFFFFF);
         String selectedText = this.selectedMotive == null ? "Selected: Random" : "Selected: " + this.selectedMotive;
-        drawCenteredString(this.fontRendererObj, selectedText, this.width / 2, 24, 0xCFCFCF);
-        drawCenteredString(this.fontRendererObj, "Scroll to browse all paintings", this.width / 2, 34, 0xA8A8A8);
+        drawCenteredString(this.fontRendererObj, selectedText, this.width / 2, getSelectedTextY(), 0xCFCFCF);
+        if (this.searchField != null) {
+            this.searchField.drawTextBox();
+            if (!this.searchField.isFocused() && this.searchField.getText().isEmpty()) {
+                this.fontRendererObj.drawString(SEARCH_PLACEHOLDER,
+                        this.searchField.xPosition + 4,
+                        this.searchField.yPosition + 4,
+                        0x777777);
+            }
+        }
 
         int gridWidth = GRID_COLS * CELL_W + (GRID_COLS - 1) * CELL_GAP;
         int gridLeft = (this.width - gridWidth) / 2;
@@ -264,6 +379,20 @@ public class GuiPaintingSelector extends GuiScreen {
         return false;
     }
 
+    @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+        Keyboard.enableRepeatEvents(false);
+    }
+
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (this.searchField != null) {
+            this.searchField.updateCursorCounter();
+        }
+    }
+
     private void applySelection(String motive) {
         this.selectedMotive = motive;
 
@@ -319,12 +448,20 @@ public class GuiPaintingSelector extends GuiScreen {
         if (mouseY >= thumbY && mouseY < thumbY + thumbHeight) {
             this.draggingScrollbar = true;
             this.scrollbarDragOffset = mouseY - thumbY;
+            this.lastDragMouseY = mouseY;
+            this.dragStartMouseY = mouseY;
+            this.dragStartScrollY = this.scrollY;
+            this.dragScrollRemainder = 0.0;
             return true;
         }
 
         this.draggingScrollbar = true;
         this.scrollbarDragOffset = thumbHeight / 2;
         applyScrollbarThumbY(mouseY - this.scrollbarDragOffset);
+        this.lastDragMouseY = mouseY;
+        this.dragStartMouseY = mouseY;
+        this.dragStartScrollY = this.scrollY;
+        this.dragScrollRemainder = 0.0;
         return true;
     }
 
@@ -335,6 +472,31 @@ public class GuiPaintingSelector extends GuiScreen {
         } else if (this.scrollY > max) {
             this.scrollY = max;
         }
+    }
+
+    private void applySearchFilter() {
+        String query = "";
+        if (this.searchField != null) {
+            query = this.searchField.getText();
+        }
+        String normalized = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        if (normalized.equals(this.searchQuery) && !this.arts.isEmpty()) {
+            return;
+        }
+        this.searchQuery = normalized;
+        this.arts.clear();
+        if (normalized.isEmpty()) {
+            this.arts.addAll(this.allArts);
+        } else {
+            for (EntityPainting.EnumArt art : this.allArts) {
+                String title = art.title == null ? "" : art.title.toLowerCase(Locale.ROOT);
+                if (title.contains(normalized)) {
+                    this.arts.add(art);
+                }
+            }
+        }
+        this.scrollY = 0;
+        clampScroll();
     }
 
     private int getMaxScroll() {
@@ -349,7 +511,23 @@ public class GuiPaintingSelector extends GuiScreen {
     }
 
     private int getViewportBottom() {
-        return this.height - 50;
+        if (this.searchField == null) {
+            return this.height - 50;
+        }
+        return getSelectedTextY() - SELECTED_TEXT_MARGIN;
+    }
+
+    private int getSearchY() {
+        if (this.searchField != null) {
+            return this.searchField.yPosition;
+        }
+        int buttonY = this.height - 26;
+        return buttonY - SEARCH_ABOVE_BUTTONS - SEARCH_FIELD_H;
+    }
+
+    private int getSelectedTextY() {
+        int padding = this.fontRendererObj != null ? this.fontRendererObj.FONT_HEIGHT + 4 : 12;
+        return getSearchY() - padding;
     }
 
     private int getScrollbarX() {

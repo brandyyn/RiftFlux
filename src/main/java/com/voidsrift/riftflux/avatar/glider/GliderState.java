@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class GliderState {
     private static final Set<String> GLIDING_PLAYERS =
             Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private static final Set<String> HOVERING_PLAYERS =
+            Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
     private GliderState() {
     }
@@ -44,8 +46,24 @@ public final class GliderState {
             return;
         }
         GLIDING_PLAYERS.remove(name);
+        HOVERING_PLAYERS.remove(name);
         if (!skipSync) {
             syncGliding(false, name);
+        }
+    }
+
+    public static boolean isPlayerHovering(String name) {
+        return name != null && HOVERING_PLAYERS.contains(name);
+    }
+
+    public static void setPlayerHovering(String name, boolean hovering) {
+        if (name == null) {
+            return;
+        }
+        if (hovering) {
+            HOVERING_PLAYERS.add(name);
+        } else {
+            HOVERING_PLAYERS.remove(name);
         }
     }
 

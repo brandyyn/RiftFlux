@@ -83,8 +83,32 @@ public class ModConfig {
     public static int zeldaMobDrop;
     public static int zeldaBlockDrop;
 
+    // DSS (Darwin Sprint System)
+    public static boolean dssEnabled;
+    public static double dssMaxSprintingTimeSeconds;
+    public static double dssOverchargeRegenTimeSeconds;
+    public static boolean dssEnableEnchantments;
+    public static double dssEnchantmentMaxStaminaSeconds;
+    public static double dssEnchantmentStaminaRegenSeconds;
+    public static double dssEnchantmentOverloadReductionSeconds;
+    public static boolean dssEnablePotionEffects;
+    public static String dssPotionExpandMaxStaminaIds;
+    public static String dssPotionReduceMaxStaminaIds;
+    public static String dssPotionReduceRegenIds;
+    public static String dssPotionRegenSpeedIds;
+    public static double dssPotionExpandMaxStaminaMultiplier;
+    public static double dssPotionReduceMaxStaminaMultiplier;
+    public static double dssPotionReduceRegenMultiplier;
+    public static double dssPotionRegenSpeedMultiplier;
+    public static int dssBarSize;
+    public static int dssBarOffsetX;
+    public static int dssBarOffsetY;
+    public static double dssBarTransparencyPercent;
+
     // Avatar glider
     public static boolean gliderDyeRecipes;
+    public static boolean gliderUseItemInHand;
+    public static boolean enableGliderHoldAltitude;
     public static boolean appaRequireTameToRide;
     public static boolean appaRestrictRideToOwner;
     public static boolean appaAllowMobPassengers;
@@ -211,6 +235,8 @@ public class ModConfig {
     public static int butterflyKnifeDurability;
     public static float butterflyKnifeDamage;
     public static float butterflyKnifeBackstabDamage;
+    public static boolean butterflyKnifeStaminaBoost;
+    public static float butterflyKnifeStaminaBoostAmount;
     public static boolean butterflyKnifeShowBackstabCounter;
     public static String butterflyKnifeBackstabCounterLabel;
     public static String[] butterflyKnifeFlickBoostEffects;
@@ -220,6 +246,7 @@ public class ModConfig {
     public static int backpackDurabilityAmount;
     public static int backpackArmorPoints;
     public static boolean GluttonyCharm;
+    public static int highlanderPotionEffectId;
 
     public static void init(File file){
         config = new Configuration(file);
@@ -506,11 +533,170 @@ public class ModConfig {
                 "The higher the number, the rarer the hearts will drop from tall grass. 0 to disable."
         );
 
+        dssEnabled = config.getBoolean(
+                "EnableDSS",
+                "dss",
+                true,
+                "If false, disables the DSS stamina system, HUD, and commands."
+        );
+
+        dssMaxSprintingTimeSeconds = config.get(
+                "dss",
+                "MaxSprintingTimeSeconds",
+                15.0,
+                "Max sprinting time in seconds (1.0 = 1s)."
+        ).getDouble(15.0);
+
+        dssOverchargeRegenTimeSeconds = config.get(
+                "dss",
+                "OverchargeRegenTimeSeconds",
+                22.5,
+                "Time to recover after stamina reaches 0% (1.0 = 1s)."
+        ).getDouble(22.5);
+
+        dssEnableEnchantments = config.getBoolean(
+                "EnableEnchantments",
+                "dss",
+                true,
+                "Enable or disable DSS stamina enchantments."
+        );
+
+        dssEnchantmentMaxStaminaSeconds = config.get(
+                "dss",
+                "EnchantmentMaxStaminaSeconds",
+                1.0,
+                "Increase max stamina per enchantment level (in seconds)."
+        ).getDouble(1.0);
+
+        dssEnchantmentStaminaRegenSeconds = config.get(
+                "dss",
+                "EnchantmentStaminaRegenSeconds",
+                0.5,
+                "Increase stamina regeneration per enchantment level (in seconds)."
+        ).getDouble(0.5);
+
+        dssEnchantmentOverloadReductionSeconds = config.get(
+                "dss",
+                "EnchantmentOverloadReductionSeconds",
+                1.0,
+                "Reduce overcharge recovery time per enchantment level (in seconds)."
+        ).getDouble(1.0);
+
+        dssEnablePotionEffects = config.getBoolean(
+                "EnablePotionEffects",
+                "dss",
+                false,
+                "Enable or disable DSS potion effect modifiers."
+        );
+
+        dssPotionExpandMaxStaminaIds = config.get(
+                "dss",
+                "PotionExpandMaxStaminaIds",
+                "",
+                "Potion IDs that expand max stamina (comma-separated)."
+        ).getString();
+
+        dssPotionReduceMaxStaminaIds = config.get(
+                "dss",
+                "PotionReduceMaxStaminaIds",
+                "",
+                "Potion IDs that reduce max stamina (comma-separated)."
+        ).getString();
+
+        dssPotionReduceRegenIds = config.get(
+                "dss",
+                "PotionReduceRegenIds",
+                "",
+                "Potion IDs that reduce stamina regeneration (comma-separated)."
+        ).getString();
+
+        dssPotionRegenSpeedIds = config.get(
+                "dss",
+                "PotionRegenSpeedIds",
+                "",
+                "Potion IDs that speed up stamina regeneration (comma-separated)."
+        ).getString();
+
+        dssPotionExpandMaxStaminaMultiplier = config.get(
+                "dss",
+                "PotionExpandMaxStaminaMultiplier",
+                0.2,
+                "Percent to expand max stamina (0.2 = 20%)."
+        ).getDouble(0.2);
+
+        dssPotionReduceMaxStaminaMultiplier = config.get(
+                "dss",
+                "PotionReduceMaxStaminaMultiplier",
+                0.2,
+                "Percent to reduce max stamina (0.2 = 20%)."
+        ).getDouble(0.2);
+
+        dssPotionReduceRegenMultiplier = config.get(
+                "dss",
+                "PotionReduceRegenMultiplier",
+                0.2,
+                "Percent to reduce stamina regeneration (0.2 = 20%)."
+        ).getDouble(0.2);
+
+        dssPotionRegenSpeedMultiplier = config.get(
+                "dss",
+                "PotionRegenSpeedMultiplier",
+                0.2,
+                "Percent to speed up stamina regeneration (0.2 = 20%)."
+        ).getDouble(0.2);
+
+        dssBarSize = config.getInt(
+                "BarSize",
+                "dss",
+                0,
+                0,
+                2,
+                "Size of the bar: 0 = tiny, 1 = small, 2 = big."
+        );
+
+        dssBarOffsetX = config.getInt(
+                "BarOffsetX",
+                "dss",
+                22,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "X offset of the bar from the middle of the screen."
+        );
+
+        dssBarOffsetY = config.getInt(
+                "BarOffsetY",
+                "dss",
+                0,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Y offset of the bar from the middle of the screen."
+        );
+
+        dssBarTransparencyPercent = config.get(
+                "dss",
+                "BarTransparencyPercent",
+                100.0,
+                "Transparency in percent (10 = 10%)."
+        ).getDouble(100.0);
+
         gliderDyeRecipes = config.getBoolean(
                 "GliderDyeRecipes",
                 "avatar",
                 true,
                 "If true, gliders can be recolored with dyes in a crafting grid."
+        );
+
+        gliderUseItemInHand = config.getBoolean(
+                "GliderUseItemInHand",
+                "avatar",
+                false,
+                "If true, use the normal item model in-hand instead of the 3D staff model when holding a glider."
+        );
+        enableGliderHoldAltitude = config.getBoolean(
+                "enableGliderHoldAltitude",
+                "avatar",
+                true,
+                "If true, holding the jump key while gliding prevents downward motion and consumes stamina at sprint rate. Works best with DSS enabled."
         );
 
         appaRequireTameToRide = config.getBoolean(
@@ -1062,6 +1248,7 @@ public class ModConfig {
                 "Oddities;16;16;0;0;riftflux:textures/painting/imported/Oddities.png",
                 "Toolrack;32;32;0;0;riftflux:textures/painting/imported/Toolrack.png",
                 "Dusk;32;16;0;0;riftflux:textures/painting/imported/Dusk.png",
+                "Unicorn;32;16;0;0;riftflux:textures/painting/Unicorn.png",
                 "StarrySky;96;64;0;0;riftflux:textures/painting/StarrySky.png",
                 "ButterflyCollection;32;16;0;0;riftflux:textures/painting/imported/ButterflyCollection.png",
                 "EchoesOfLove;32;32;0;0;riftflux:textures/painting/imported/EchoesOfLove.png",
@@ -1152,7 +1339,6 @@ public class ModConfig {
                 "GalleryGraham;16;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryGraham.png",
                 "GalleryFighters;64;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryFighters.png",
                 "GalleryBust;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryBust.png",
-                "GalleryStage;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryStage.png",
                 "GalleryVoid;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryVoid.png",
                 "GalleryPointer;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryPointer.png",
                 "GalleryBurningSkull;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryBurningSkull.png",
@@ -1310,6 +1496,22 @@ public class ModConfig {
                 "Damage dealt on a successful backstab (sneak attack from behind, ignores armor)."
         );
 
+        butterflyKnifeStaminaBoost = config.getBoolean(
+                "butterflyKnifeStaminaBoost",
+                "dss",
+                true,
+                "If true and DSS is enabled, restore stamina when flicking shortly after a successful backstab."
+        );
+
+        butterflyKnifeStaminaBoostAmount = config.getFloat(
+                "butterflyKnifeStaminaBoostAmount",
+                "dss",
+                2.0F,
+                0.0F,
+                Float.MAX_VALUE,
+                "Amount of stamina (in DSS seconds) restored when flicking within the backstab window."
+        );
+
         butterflyKnifeShowBackstabCounter = config.getBoolean(
                 "butterflyKnifeShowBackstabCounter",
                 "vortex",
@@ -1358,6 +1560,15 @@ public class ModConfig {
 
         GluttonyCharm = config.getBoolean("GluttonyCharm", "vortex", false,
                 "Gives the gluttony charm an autofeeding functionality. Right-click to put in food items.");
+
+        highlanderPotionEffectId = config.getInt(
+                "HighlanderPotionEffectId",
+                "vortex",
+                222,
+                0,
+                65536,
+                "Potion ID to use for the Highland Spirit head buff effect. If the ID is occupied, the next free ID is used."
+        );
 
         DualHotbarConfig.syncFromModConfig();
         zelda.Config.syncFromModConfig();
@@ -1539,6 +1750,7 @@ public class ModConfig {
             out = forceCustomPaintingEntry(out, "Oddities", "Oddities;16;16;0;0;riftflux:textures/painting/imported/Oddities.png");
             out = forceCustomPaintingEntry(out, "Toolrack", "Toolrack;32;32;0;0;riftflux:textures/painting/imported/Toolrack.png");
             out = forceCustomPaintingEntry(out, "Dusk", "Dusk;32;16;0;0;riftflux:textures/painting/imported/Dusk.png");
+            out = forceCustomPaintingEntry(out, "Unicorn", "Unicorn;32;16;0;0;riftflux:textures/painting/Unicorn.png");
             out = forceCustomPaintingEntry(out, "StarrySky", "StarrySky;96;64;0;0;riftflux:textures/painting/StarrySky.png");
             out = forceCustomPaintingEntry(out, "ButterflyCollection", "ButterflyCollection;32;16;0;0;riftflux:textures/painting/imported/ButterflyCollection.png");
             out = forceCustomPaintingEntry(out, "EchoesOfLove", "EchoesOfLove;32;32;0;0;riftflux:textures/painting/imported/EchoesOfLove.png");
@@ -1629,7 +1841,6 @@ public class ModConfig {
             out = forceCustomPaintingEntry(out, "GalleryGraham", "GalleryGraham;16;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryGraham.png");
             out = forceCustomPaintingEntry(out, "GalleryFighters", "GalleryFighters;64;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryFighters.png");
             out = forceCustomPaintingEntry(out, "GalleryBust", "GalleryBust;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryBust.png");
-            out = forceCustomPaintingEntry(out, "GalleryStage", "GalleryStage;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryStage.png");
             out = forceCustomPaintingEntry(out, "GalleryVoid", "GalleryVoid;32;32;0;0;riftflux:textures/painting/atlas_gallery/GalleryVoid.png");
             out = forceCustomPaintingEntry(out, "GalleryPointer", "GalleryPointer;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryPointer.png");
             out = forceCustomPaintingEntry(out, "GalleryBurningSkull", "GalleryBurningSkull;64;64;0;0;riftflux:textures/painting/atlas_gallery/GalleryBurningSkull.png");

@@ -1,5 +1,8 @@
 package com.voidsrift.riftflux.avatar.glider;
 
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.MsgGliderHover;
+import com.voidsrift.riftflux.net.RFNetwork;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
@@ -9,6 +12,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 
 public class GliderClientEvents {
+    private boolean lastHovering;
+    private boolean lastGliding;
     @SubscribeEvent
     public void onRenderPlayer(RenderPlayerEvent.Pre evt) {
         if (!evt.isCancelable() || evt.entityLiving == null) {
@@ -68,6 +73,20 @@ public class GliderClientEvents {
             ensureGlider(player, gliderStack);
         } else if (player.riddenByEntity instanceof EntityGlider) {
             detachGlider(player);
+        }
+
+        boolean hovering = shouldRenderGlider
+                && ModConfig.enableGliderHoldAltitude
+                && mc.gameSettings.keyBindJump.getIsKeyPressed();
+        if (!shouldRenderGlider) {
+            hovering = false;
+        }
+        if (hovering != lastHovering || shouldRenderGlider != lastGliding) {
+            if (RFNetwork.CH != null) {
+                RFNetwork.CH.sendToServer(new MsgGliderHover(hovering));
+            }
+            lastHovering = hovering;
+            lastGliding = shouldRenderGlider;
         }
     }
 

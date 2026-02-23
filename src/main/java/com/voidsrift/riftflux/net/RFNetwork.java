@@ -46,5 +46,8 @@ public final class RFNetwork {
 
         // Painting selection (ID 5)
         CH.registerMessage(MsgSetPaintingSelection.Handler.class, MsgSetPaintingSelection.class, 5, Side.SERVER);
+
+        // Glider hover (ID 6)
+        CH.registerMessage(MsgGliderHover.Handler.class, MsgGliderHover.class, 6, Side.SERVER);
     }
 }

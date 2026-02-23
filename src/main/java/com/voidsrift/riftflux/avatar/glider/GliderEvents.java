@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.avatar.glider;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import de.rinonline.korinrpg.Helper.NBT.RINPlayer2;
+import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -40,14 +42,25 @@ public class GliderEvents {
             return;
         }
 
-        if (player.isSneaking()) {
+        boolean hovering = ModConfig.enableGliderHoldAltitude && GliderState.isPlayerHovering(playerName);
+        boolean canHover = hovering;
+        if (hovering && ModConfig.dssEnabled && !player.capabilities.isCreativeMode) {
+            RINPlayer2 props = RINPlayer2.get(player);
+            if (props != null && props.isOvercharged()) {
+                canHover = false;
+            }
+        }
+
+        if (canHover) {
+            if (player.motionY < 0.0) {
+                player.motionY = 0.0;
+            }
+        } else if (player.isSneaking()) {
             player.motionY = -0.2;
             player.motionX *= 1.05;
             player.motionZ *= 1.05;
-        } else {
-            if (player.motionY < -0.07) {
-                player.motionY = -0.07;
-            }
+        } else if (player.motionY < -0.07) {
+            player.motionY = -0.07;
         }
 
         if (Math.abs(player.motionX) + Math.abs(player.motionZ) < 2.0) {

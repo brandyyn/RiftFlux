@@ -26,7 +26,8 @@ import zelda.Config;
 
 public class ExtendedPlayerProperties
 implements IExtendedEntityProperties {
-    public static final String EXT_PROP_NAME = "ExtendedPlayer";
+    public static final String EXT_PROP_NAME = "RiftFluxZeldaExtendedPlayer";
+    private static final String LEGACY_EXT_PROP_NAME = "ExtendedPlayer";
     private static final String PERSIST_TAG = "ForgeData";
     private static final String HEARTS_TAG = "RiftFluxZeldaHearts";
     private static final String FRESH_TAG = "RiftFluxZeldaFresh";
@@ -45,7 +46,11 @@ implements IExtendedEntityProperties {
     }
 
     public static final ExtendedPlayerProperties get(EntityPlayer player) {
-        return (ExtendedPlayerProperties)player.getExtendedProperties(EXT_PROP_NAME);
+        IExtendedEntityProperties props = player.getExtendedProperties(EXT_PROP_NAME);
+        if (props instanceof ExtendedPlayerProperties) {
+            return (ExtendedPlayerProperties)props;
+        }
+        return null;
     }
 
     public void saveNBTData(NBTTagCompound compound) {
@@ -58,6 +63,9 @@ implements IExtendedEntityProperties {
 
     public void loadNBTData(NBTTagCompound compound) {
         NBTTagCompound props = (NBTTagCompound)compound.getTag(EXT_PROP_NAME);
+        if (props == null || !props.hasKey("Hearts")) {
+            props = (NBTTagCompound)compound.getTag(LEGACY_EXT_PROP_NAME);
+        }
         if (props != null && props.hasKey("Hearts")) {
             this.hearts = props.getDouble("Hearts");
             this.fresh = props.getBoolean("Fresh");

@@ -21,6 +21,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import de.rinonline.korinrpg.Helper.NBT.RINPlayer2;
 
 public class ItemButterflyKnife extends ItemSword {
    public IIcon icon;
@@ -212,14 +213,25 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
          return;
       }
       List<PotionEffect> effects = buildBoostEffects();
-      if (effects.isEmpty()) return;
       for (PotionEffect effect : effects) {
          if (effect != null) {
             player.addPotionEffect(new PotionEffect(effect.getPotionID(), effect.getDuration(), effect.getAmplifier(), true));
          }
       }
+      maybeApplyStaminaBoost(player);
       tag.removeTag(TAG_LAST_BACKSTAB);
       stack.setTagCompound(tag.hasNoTags() ? null : tag);
+   }
+
+   private static void maybeApplyStaminaBoost(EntityPlayer player) {
+      if (player == null) return;
+      if (!com.voidsrift.riftflux.ModConfig.dssEnabled) return;
+      if (!com.voidsrift.riftflux.ModConfig.butterflyKnifeStaminaBoost) return;
+      float amount = com.voidsrift.riftflux.ModConfig.butterflyKnifeStaminaBoostAmount;
+      if (amount <= 0.0F) return;
+      RINPlayer2 props = RINPlayer2.get(player);
+      if (props == null) return;
+      props.restoreStamina(amount);
    }
 
    private static List<PotionEffect> buildBoostEffects() {

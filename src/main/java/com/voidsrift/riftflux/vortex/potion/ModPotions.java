@@ -1,5 +1,7 @@
 package com.voidsrift.riftflux.vortex.potion;
 
+import com.voidsrift.riftflux.ModConfig;
+import cpw.mods.fml.common.FMLLog;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.ResourceLocation;
 
@@ -20,7 +22,14 @@ public class ModPotions {
          }
       }
 
-      int idx = 0;
-      headBuff = (new PotionHeadBuff(ids[idx], false, 0)).setPotionName("potion.headbuff");
+      int configuredId = ModConfig.highlanderPotionEffectId;
+      int selectedId = ids[0];
+      if (configuredId >= 0 && configuredId < Potion.potionTypes.length && Potion.potionTypes[configuredId] == null) {
+         selectedId = configuredId;
+      } else if (configuredId >= 0 && configuredId < Potion.potionTypes.length && Potion.potionTypes[configuredId] != null) {
+         FMLLog.warning("[RiftFlux] HighlanderPotionEffectId %d is already occupied; using %d instead.", configuredId, selectedId);
+      }
+
+      headBuff = (new PotionHeadBuff(selectedId, false, 0)).setPotionName("potion.headbuff");
    }
 }

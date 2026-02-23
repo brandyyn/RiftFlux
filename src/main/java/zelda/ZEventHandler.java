@@ -32,7 +32,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -54,9 +53,6 @@ public class ZEventHandler {
         if (event.entity instanceof EntityPlayer && ExtendedPlayerProperties.get((EntityPlayer)event.entity) == null) {
             ExtendedPlayerProperties.register((EntityPlayer)event.entity);
         }
-        if (event.entity instanceof EntityPlayer && event.entity.getExtendedProperties("ExtendedPlayer") == null) {
-            event.entity.registerExtendedProperties("ExtendedPlayer", (IExtendedEntityProperties)new ExtendedPlayerProperties((EntityPlayer)event.entity));
-        }
     }
 
     @SubscribeEvent
@@ -66,8 +62,11 @@ public class ZEventHandler {
         }
         if (!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
             NBTTagCompound playerData = new NBTTagCompound();
-            ((ExtendedPlayerProperties)event.entity.getExtendedProperties("ExtendedPlayer")).saveNBTData(playerData);
-            CommonProxy.storeEntityData(((EntityPlayer)event.entity).getUniqueID().toString(), playerData);
+            ExtendedPlayerProperties props = ExtendedPlayerProperties.get((EntityPlayer)event.entity);
+            if (props != null) {
+                props.saveNBTData(playerData);
+                CommonProxy.storeEntityData(((EntityPlayer)event.entity).getUniqueID().toString(), playerData);
+            }
         }
         Random rand = new Random();
         if (FMLCommonHandler.instance().getEffectiveSide().isServer()) {
@@ -88,14 +87,20 @@ public class ZEventHandler {
         }
         if (!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
             NBTTagCompound playerData = CommonProxy.getEntityData(((EntityPlayer)event.entity).getUniqueID().toString());
-            if (playerData != null) {
-                ((ExtendedPlayerProperties)event.entity.getExtendedProperties("ExtendedPlayer")).loadNBTData(playerData);
-            }
             ExtendedPlayerProperties props = ExtendedPlayerProperties.get((EntityPlayer)event.entity);
+            if (props == null) {
+                ExtendedPlayerProperties.register((EntityPlayer)event.entity);
+                props = ExtendedPlayerProperties.get((EntityPlayer)event.entity);
+            }
+            if (playerData != null) {
+                if (props != null) {
+                    props.loadNBTData(playerData);
+                }
+            }
             if (playerData == null && props != null) {
                 props.loadNBTData(event.entity.getEntityData());
             }
-            if (event.entity instanceof EntityPlayer && props.isFresh()) {
+            if (event.entity instanceof EntityPlayer && props != null && props.isFresh()) {
                 props.setBaseHeartsMax();
             }
         }
