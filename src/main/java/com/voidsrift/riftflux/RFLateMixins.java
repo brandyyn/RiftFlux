@@ -40,6 +40,12 @@ public class RFLateMixins implements ILateMixinLoader {
                 mixins.add("late.MixinHatsKeybind");
             }
         }
+        if (loadedMods.contains("divinerpg")) {
+            mixins.add("late.divinerpg.MixinArcanaTickHandler_FullOnLogin");
+            if (FMLLaunchHandler.side() == Side.CLIENT) {
+                mixins.add("late.divinerpg.MixinArcanaRenderer_HideFullArcana");
+            }
+        }
         if(loadedMods.contains("chocolateQuest")) {
             if (ModConfig.fixChocolateQuestDivideByZero) {
                 mixins.add("late.chocolatequest.MixinWorldGeneratorNew_CatchBuilderArithmetic");

@@ -12,8 +12,7 @@ import de.rinonline.korinrpg.enchantments.EnchantmentStaminaRegen;
 import net.minecraft.enchantment.Enchantment;
 
 public class EnchRegistry {
-    public static final Enchantment MaxStamina = new EnchantmentMaxStamina(84, 5);
-    public static final Enchantment StaminaRegen = new EnchantmentStaminaRegen(85, 5);
-    public static final Enchantment Overloadreduction = new EnchantmentOverloadreduction(86, 5);
+    public static final Enchantment MaxStamina = new EnchantmentMaxStamina(ConfigurationMoD2.EnchantmentMaxStaminaId, 5);
+    public static final Enchantment StaminaRegen = new EnchantmentStaminaRegen(ConfigurationMoD2.EnchantmentStaminaRegenId, 5);
+    public static final Enchantment Overloadreduction = new EnchantmentOverloadreduction(ConfigurationMoD2.EnchantmentOverloadreductionId, 5);
 }
-

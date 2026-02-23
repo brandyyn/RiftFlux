@@ -17,6 +17,9 @@ public class ConfigurationMoD2 {
     public static double OverchargeSprintime;
     public static double DefaultTrans;
     public static boolean EnableEnchantment;
+    public static int EnchantmentMaxStaminaId;
+    public static int EnchantmentStaminaRegenId;
+    public static int EnchantmentOverloadreductionId;
     public static double EnchantmentMaxStamina;
     public static double EnchantmentStaminaRegen;
     public static double EnchantmentOverloadreduction;
@@ -38,6 +41,9 @@ public class ConfigurationMoD2 {
         MaxSprintime = ModConfig.dssMaxSprintingTimeSeconds;
         OverchargeSprintime = ModConfig.dssOverchargeRegenTimeSeconds;
         EnableEnchantment = ModConfig.dssEnableEnchantments;
+        EnchantmentMaxStaminaId = ModConfig.dssEnchantmentMaxStaminaId;
+        EnchantmentStaminaRegenId = ModConfig.dssEnchantmentStaminaRegenId;
+        EnchantmentOverloadreductionId = ModConfig.dssEnchantmentOverloadReductionId;
         EnchantmentMaxStamina = ModConfig.dssEnchantmentMaxStaminaSeconds;
         EnchantmentStaminaRegen = ModConfig.dssEnchantmentStaminaRegenSeconds;
         EnchantmentOverloadreduction = ModConfig.dssEnchantmentOverloadReductionSeconds;

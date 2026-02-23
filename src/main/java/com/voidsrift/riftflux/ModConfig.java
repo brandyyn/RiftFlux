@@ -88,6 +88,9 @@ public class ModConfig {
     public static double dssMaxSprintingTimeSeconds;
     public static double dssOverchargeRegenTimeSeconds;
     public static boolean dssEnableEnchantments;
+    public static int dssEnchantmentMaxStaminaId;
+    public static int dssEnchantmentStaminaRegenId;
+    public static int dssEnchantmentOverloadReductionId;
     public static double dssEnchantmentMaxStaminaSeconds;
     public static double dssEnchantmentStaminaRegenSeconds;
     public static double dssEnchantmentOverloadReductionSeconds;
@@ -535,20 +538,20 @@ public class ModConfig {
 
         dssEnabled = config.getBoolean(
                 "EnableDSS",
-                "dss",
+                "Darwin Sprinting System",
                 true,
                 "If false, disables the DSS stamina system, HUD, and commands."
         );
 
         dssMaxSprintingTimeSeconds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "MaxSprintingTimeSeconds",
                 15.0,
                 "Max sprinting time in seconds (1.0 = 1s)."
         ).getDouble(15.0);
 
         dssOverchargeRegenTimeSeconds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "OverchargeRegenTimeSeconds",
                 22.5,
                 "Time to recover after stamina reaches 0% (1.0 = 1s)."
@@ -556,27 +559,54 @@ public class ModConfig {
 
         dssEnableEnchantments = config.getBoolean(
                 "EnableEnchantments",
-                "dss",
+                "Darwin Sprinting System",
                 true,
                 "Enable or disable DSS stamina enchantments."
         );
 
+        dssEnchantmentMaxStaminaId = config.getInt(
+                "EnchantmentMaxStaminaId",
+                "Darwin Sprinting System",
+                120,
+                0,
+                255,
+                "Enchantment ID for DSS Max Stamina."
+        );
+
+        dssEnchantmentStaminaRegenId = config.getInt(
+                "EnchantmentStaminaRegenId",
+                "Darwin Sprinting System",
+                121,
+                0,
+                255,
+                "Enchantment ID for DSS Stamina Regeneration."
+        );
+
+        dssEnchantmentOverloadReductionId = config.getInt(
+                "EnchantmentOverloadReductionId",
+                "Darwin Sprinting System",
+                122,
+                0,
+                255,
+                "Enchantment ID for DSS Overload Reduction."
+        );
+
         dssEnchantmentMaxStaminaSeconds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "EnchantmentMaxStaminaSeconds",
                 1.0,
                 "Increase max stamina per enchantment level (in seconds)."
         ).getDouble(1.0);
 
         dssEnchantmentStaminaRegenSeconds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "EnchantmentStaminaRegenSeconds",
                 0.5,
                 "Increase stamina regeneration per enchantment level (in seconds)."
         ).getDouble(0.5);
 
         dssEnchantmentOverloadReductionSeconds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "EnchantmentOverloadReductionSeconds",
                 1.0,
                 "Reduce overcharge recovery time per enchantment level (in seconds)."
@@ -584,62 +614,62 @@ public class ModConfig {
 
         dssEnablePotionEffects = config.getBoolean(
                 "EnablePotionEffects",
-                "dss",
+                "Darwin Sprinting System",
                 false,
                 "Enable or disable DSS potion effect modifiers."
         );
 
         dssPotionExpandMaxStaminaIds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionExpandMaxStaminaIds",
                 "",
                 "Potion IDs that expand max stamina (comma-separated)."
         ).getString();
 
         dssPotionReduceMaxStaminaIds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionReduceMaxStaminaIds",
                 "",
                 "Potion IDs that reduce max stamina (comma-separated)."
         ).getString();
 
         dssPotionReduceRegenIds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionReduceRegenIds",
                 "",
                 "Potion IDs that reduce stamina regeneration (comma-separated)."
         ).getString();
 
         dssPotionRegenSpeedIds = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionRegenSpeedIds",
                 "",
                 "Potion IDs that speed up stamina regeneration (comma-separated)."
         ).getString();
 
         dssPotionExpandMaxStaminaMultiplier = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionExpandMaxStaminaMultiplier",
                 0.2,
                 "Percent to expand max stamina (0.2 = 20%)."
         ).getDouble(0.2);
 
         dssPotionReduceMaxStaminaMultiplier = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionReduceMaxStaminaMultiplier",
                 0.2,
                 "Percent to reduce max stamina (0.2 = 20%)."
         ).getDouble(0.2);
 
         dssPotionReduceRegenMultiplier = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionReduceRegenMultiplier",
                 0.2,
                 "Percent to reduce stamina regeneration (0.2 = 20%)."
         ).getDouble(0.2);
 
         dssPotionRegenSpeedMultiplier = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "PotionRegenSpeedMultiplier",
                 0.2,
                 "Percent to speed up stamina regeneration (0.2 = 20%)."
@@ -647,7 +677,7 @@ public class ModConfig {
 
         dssBarSize = config.getInt(
                 "BarSize",
-                "dss",
+                "Darwin Sprinting System",
                 0,
                 0,
                 2,
@@ -656,7 +686,7 @@ public class ModConfig {
 
         dssBarOffsetX = config.getInt(
                 "BarOffsetX",
-                "dss",
+                "Darwin Sprinting System",
                 22,
                 Integer.MIN_VALUE,
                 Integer.MAX_VALUE,
@@ -665,7 +695,7 @@ public class ModConfig {
 
         dssBarOffsetY = config.getInt(
                 "BarOffsetY",
-                "dss",
+                "Darwin Sprinting System",
                 0,
                 Integer.MIN_VALUE,
                 Integer.MAX_VALUE,
@@ -673,7 +703,7 @@ public class ModConfig {
         );
 
         dssBarTransparencyPercent = config.get(
-                "dss",
+                "Darwin Sprinting System",
                 "BarTransparencyPercent",
                 100.0,
                 "Transparency in percent (10 = 10%)."
