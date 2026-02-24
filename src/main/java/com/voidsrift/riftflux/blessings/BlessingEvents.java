@@ -74,9 +74,6 @@ public class BlessingEvents {
                 BlessingHelper.setBlessing(player, blessing);
                 BlessingHelper.resetBlessingState(player);
                 BlessingHelper.clearBlessingSource(player);
-                player.addChatComponentMessage(new ChatComponentText(
-                        "You've been granted the Blessing of the " + blessing + ". (Use /currentBlessing to check effect)"
-                ));
             }
         }
         String existing = BlessingHelper.getBlessing(player);

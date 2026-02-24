@@ -61,7 +61,7 @@ public final class BlessingHelper {
             "Heal 7% of damage dealt to enemies and, in direct sunlight, you take 20% more damage and deal 20% less damage",
             "You don't take fire damage, do +35% damage while on fire, and take damage when wet",
             "You can breathe underwater",
-            "PASSIVE: Kills are added to berserk counter (10 max). ACTIVE: Toggle berserk mode. While active you deal 33% more damage, move 33% faster, take 33% less damage, and gain extra health",
+            "Kills are counted until 10 - Key to toggle berserk mode. While active you deal 33% more damage, move 33% faster, take 33% less damage, and gain extra health - You lose 1 kill every 2 seconds, regain by bloodshed",
             "The lower your health, the higher your damage, to a maximum of +100%",
             "You don't take fall damage",
             "Melee attackers receive damage"
