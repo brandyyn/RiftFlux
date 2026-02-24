@@ -22,7 +22,12 @@ public class MixinEntityPlayer_CustomHurtSound {
     @Inject(method = "getHurtSound()Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
     private void riftflux$useCustomPlayerHurtSound(CallbackInfoReturnable<String> cir) {
         if (ModConfig.playerOnlyHurtSound) {
-            cir.setReturnValue(Constants.MODID + ":player_hurt");
+            double chance = ModConfig.playerOnlyHurtSoundOofChance;
+            if (chance > 0.0D && Math.random() < chance) {
+                cir.setReturnValue(Constants.MODID + ":oof");
+            } else {
+                cir.setReturnValue(Constants.MODID + ":player_hurt");
+            }
         }
     }
 }

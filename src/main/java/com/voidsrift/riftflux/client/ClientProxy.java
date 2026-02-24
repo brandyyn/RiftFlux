@@ -5,6 +5,7 @@ import com.voidsrift.riftflux.CommonProxy;
 import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
 import com.voidsrift.riftflux.painting.GuiPaintingSelector;
+import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
 import cpw.mods.fml.common.Loader;
@@ -26,6 +27,27 @@ public class ClientProxy extends CommonProxy {
             return;
         }
         mc.displayGuiScreen(new GuiPaintingSelector());
+    }
+
+    @Override
+    public void applyBlessingSync(String blessing, boolean hasSource, int x, int y, int z, int dim) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null) {
+            return;
+        }
+        if (blessing != null && !blessing.isEmpty()) {
+            com.voidsrift.riftflux.blessings.BlessingHelper.setBlessing(mc.thePlayer, blessing);
+        } else {
+            com.voidsrift.riftflux.blessings.BlessingHelper.clearBlessing(mc.thePlayer);
+        }
+        if (hasSource) {
+            mc.thePlayer.getEntityData().setInteger(com.voidsrift.riftflux.blessings.BlessingHelper.NBT_BLESSING_PILLAR_X, x);
+            mc.thePlayer.getEntityData().setInteger(com.voidsrift.riftflux.blessings.BlessingHelper.NBT_BLESSING_PILLAR_Y, y);
+            mc.thePlayer.getEntityData().setInteger(com.voidsrift.riftflux.blessings.BlessingHelper.NBT_BLESSING_PILLAR_Z, z);
+            mc.thePlayer.getEntityData().setInteger(com.voidsrift.riftflux.blessings.BlessingHelper.NBT_BLESSING_PILLAR_DIM, dim);
+        } else {
+            com.voidsrift.riftflux.blessings.BlessingHelper.clearBlessingSource(mc.thePlayer);
+        }
     }
 
     @Override
@@ -54,6 +76,7 @@ public class ClientProxy extends CommonProxy {
         DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
         com.voidsrift.riftflux.avatar.AvatarTLBContent.initClient();
+        BlessingContent.initClient();
         if (Loader.isModLoaded("Hats")) {
             HatsKeybinds.ensureRegistered();
         }

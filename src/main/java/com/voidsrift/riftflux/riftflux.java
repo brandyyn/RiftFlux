@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
 import com.voidsrift.riftflux.vortex.vortexContent;
+import com.voidsrift.riftflux.blessings.BlessingContent;
 import de.rinonline.korinrpg.Springmain;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
@@ -44,11 +45,13 @@ public class riftflux {
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             ZyinHUD.preInit(event);
         }
+        BlessingContent.preInit(event);
     }
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
         com.voidsrift.riftflux.net.RFNetwork.init();
+        BlessingContent.init();
 
         com.voidsrift.riftflux.tweaks.ladder.RiftFluxLadderContent.init();
 
@@ -98,6 +101,7 @@ public class riftflux {
         if (ModConfig.dssEnabled) {
             Springmain.serverLoad(event);
         }
+        BlessingContent.serverStarting(event);
     }
 
     @NetworkCheckHandler

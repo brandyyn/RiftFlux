@@ -33,6 +33,7 @@ gui.runegameover.blurb1=...or can you?
 gui.runegameover.blurb2=You feel the anchor of the rune...
 
 tile.riftflux.floating_ladder.name=Hanging Ladder
+tile.riftflux.blessing_pillar.name=Alien Artifact
 
 item.glider_white.name=Glider (White)
 item.glider_orange.name=Glider (Orange)

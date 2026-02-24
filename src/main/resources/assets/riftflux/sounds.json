@@ -16,6 +16,15 @@
       }
     ]
   },
+  "oof": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "player/oof",
+        "stream": false
+      }
+    ]
+  },
 
  "backstab": {
   "category": "master",

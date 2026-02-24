@@ -5,6 +5,9 @@ import net.minecraftforge.common.config.Property;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.io.File;
 import makamys.mclib.config.item.BackpackConfigHelper;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarConfig;
@@ -21,6 +24,7 @@ public class ModConfig {
 
 
     public static boolean playerOnlyHurtSound;
+    public static double playerOnlyHurtSoundOofChance;
     public static boolean hasShader;
 
     public static boolean disableStrataVents;
@@ -108,7 +112,25 @@ public class ModConfig {
     public static int dssBarOffsetY;
     public static double dssBarTransparencyPercent;
 
-    // Avatar glider
+    // Blessings
+    public static boolean blessingsEnabled;
+    public static boolean blessingsGrantOnFirstJoin;
+    public static boolean blessingsAllowInfernoOnFirstJoin;
+    public static boolean blessingsPillarGenEnabled;
+    public static int blessingsPillarGenChance;
+    public static int blessingsPillarMaxPerChunk;
+    public static int artifactActiveLightLevel;
+    public static boolean artifactExclusiveActivation;
+    public static int blessingNinjaInvisCooldownSeconds;
+    public static boolean loseBlessingOnArtifactBreak;
+    public static boolean artifactActivationAroundMonsters;
+    public static boolean loseBlessingOnDeath;
+    public static String[] blessingThiefDropEntries;
+    public static int[] blessingAlchemistPotionIds;
+    public static int[] blessingDrunkNegativePotionIds;
+    public static String[] blessingsDisabledList;
+
+    // Avatar 
     public static boolean gliderDyeRecipes;
     public static boolean gliderUseItemInHand;
     public static boolean enableGliderHoldAltitude;
@@ -230,6 +252,7 @@ public class ModConfig {
 
     // parsed set of disabled potion IDs (e.g. 14 for invisibility)
     private static final Set<Integer> disabledPotionIdsSet = new HashSet<Integer>();
+    private static final Set<String> disabledBlessingsSet = new HashSet<String>();
 
     // vortex configs
     public static boolean enableUnloader;
@@ -272,6 +295,14 @@ public class ModConfig {
         hasSound = config.getBoolean("SoundEffect","general",true,"Toggles progression's sound effects");
 
         playerOnlyHurtSound = config.getBoolean("PlayerOnlyHurtSound","general",true,"Uses RiftFlux's custom hurt sound, this uses the original OOF hurt sound but was made so that modded mobs and player hurt sound are separated.");
+        playerOnlyHurtSoundOofChance = config.getFloat(
+                "PlayerOnlyHurtSoundOofChance",
+                "general",
+                0.02F,
+                0.0F,
+                1.0F,
+                "Chance (0.0-1.0) for player hurt sound to use the roblox instead of riftflux:player_hurt when PlayerOnlyHurtSound is enabled."
+        );
 
         hasShader= config.getBoolean("ShaderEffect","general",false,"Toggles progression's shader effects");
 
@@ -708,6 +739,131 @@ public class ModConfig {
                 100.0,
                 "Transparency in percent (10 = 10%)."
         ).getDouble(100.0);
+
+        blessingsEnabled = config.getBoolean(
+                "EnableBlessings",
+                "Blessings",
+                true,
+                "If false, disables the Blessings system."
+        );
+
+        blessingsGrantOnFirstJoin = config.getBoolean(
+                "BlessingsGrantOnFirstJoin",
+                "Blessings",
+                true,
+                "If true, players receive a random blessing when they first join a world."
+        );
+
+        blessingsAllowInfernoOnFirstJoin = config.getBoolean(
+                "BlessingsAllowInfernoOnFirstJoin",
+                "Blessings",
+                true,
+                "If true, Inferno may be chosen as a starting blessing."
+        );
+
+        blessingsPillarGenEnabled = config.getBoolean(
+                "BlessingsPillarGenEnabled",
+                "Blessings",
+                true,
+                "If true, blessing pillars generate in the overworld."
+        );
+
+        blessingsPillarGenChance = config.getInt(
+                "BlessingsPillarGenChance",
+                "Blessings",
+                75,
+                1,
+                Integer.MAX_VALUE,
+                "1 in N chance per chunk to attempt placing blessing pillars."
+        );
+
+        blessingsPillarMaxPerChunk = config.getInt(
+                "BlessingsPillarMaxPerChunk",
+                "Blessings",
+                3,
+                1,
+                64,
+                "Maximum blessing pillars that can generate in a chunk when generation triggers."
+        );
+
+        artifactActiveLightLevel = config.getInt(
+                "ArtifactActiveLightLevel",
+                "Blessings",
+                8,
+                0,
+                15,
+                "Light level emitted by an activated artifact (0-15)."
+        );
+
+        artifactExclusiveActivation = config.getBoolean(
+                "ArtifactExclusiveActivation",
+                "Blessings",
+                false,
+                "If true, only one player can have a given artifact as their blessing source at a time."
+        );
+
+        blessingNinjaInvisCooldownSeconds = config.getInt(
+                "BlessingNinjaInvisCooldownSeconds",
+                "Blessings",
+                12,
+                0,
+                3600,
+                "Cooldown in seconds before Ninja invisibility can be applied again."
+        );
+
+        loseBlessingOnArtifactBreak = config.getBoolean(
+                "LoseBlessingOnArtifactBreak",
+                "Blessings",
+                true,
+                "If true, breaking the pillar that granted your blessing removes that blessing."
+        );
+
+        artifactActivationAroundMonsters = config.getBoolean(
+                "ArtifactActivationAroundMonsters",
+                "Blessings",
+                true,
+                "If true, blessing pillars can be activated even when monsters are nearby."
+        );
+
+        loseBlessingOnDeath = config.getBoolean(
+                "LoseBlessingOnDeath",
+                "Blessings",
+                false,
+                "If true, dying clears your current blessing."
+        );
+
+        blessingsDisabledList = config.getStringList(
+                "BlessingsDisabled",
+                "Blessings",
+                new String[]{},
+                "List of blessings to disable by name (case-insensitive). Disabled blessings won't be granted or selectable."
+        );
+        parseDisabledBlessings(blessingsDisabledList);
+
+        blessingThiefDropEntries = config.getStringList(
+                "BlessingThiefExtraDrops",
+                "Blessings",
+                new String[]{
+                        "minecraft:gold_ingot|0.05",
+                        "minecraft:iron_ingot|0.05"
+                },
+                "Items that may drop additionally when you have the Thief blessing.\n" +
+                        "Format: modid:item[@meta]|chance (chance can be 0-1 or percent)."
+        );
+
+        blessingAlchemistPotionIds = parsePotionIdList(config.getStringList(
+                "BlessingAlchemistPotionIds",
+                "Blessings",
+                new String[]{"1", "3", "5", "8", "10", "11", "12", "13", "14", "16", "21", "22"},
+                "Potion IDs eligible for the Alchemist blessing bonus effect."
+        ));
+
+        blessingDrunkNegativePotionIds = parsePotionIdList(config.getStringList(
+                "BlessingDrunkNegativePotionIds",
+                "Blessings",
+                new String[]{"2", "4", "6", "9", "15", "17", "18", "19", "20"},
+                "Potion IDs eligible for the Drunk blessing negative effect."
+        ));
 
         gliderDyeRecipes = config.getBoolean(
                 "GliderDyeRecipes",
@@ -2080,6 +2236,62 @@ public class ModConfig {
     // helper used by the mixin
     public static boolean isPotionIdDisabled(int id) {
         return disabledPotionIdsSet.contains(id);
+    }
+
+    public static boolean isBlessingEnabled(String blessing) {
+        if (blessing == null) {
+            return false;
+        }
+        return !disabledBlessingsSet.contains(blessing.trim().toLowerCase(Locale.ROOT));
+    }
+
+    private static void parseDisabledBlessings(String[] list) {
+        disabledBlessingsSet.clear();
+        if (list == null) {
+            return;
+        }
+        for (String entry : list) {
+            if (entry == null) {
+                continue;
+            }
+            String trimmed = entry.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            disabledBlessingsSet.add(trimmed.toLowerCase(Locale.ROOT));
+        }
+    }
+
+    private static int[] parsePotionIdList(String[] entries) {
+        if (entries == null || entries.length == 0) {
+            return new int[0];
+        }
+        List<Integer> out = new ArrayList<Integer>();
+        for (String entry : entries) {
+            if (entry == null) {
+                continue;
+            }
+            String trimmed = entry.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            String[] parts = trimmed.split("[,; ]+");
+            for (String part : parts) {
+                if (part == null || part.trim().isEmpty()) {
+                    continue;
+                }
+                try {
+                    out.add(Integer.parseInt(part.trim()));
+                } catch (NumberFormatException ignored) {
+                    // ignore invalid entries
+                }
+            }
+        }
+        int[] ids = new int[out.size()];
+        for (int i = 0; i < out.size(); i++) {
+            ids[i] = out.get(i);
+        }
+        return ids;
     }
 
 }

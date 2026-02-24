@@ -10,4 +10,8 @@ public class CommonProxy {
     public void openPaintingSelectorScreen() {
         // no-op on server
     }
+
+    public void applyBlessingSync(String blessing, boolean hasSource, int x, int y, int z, int dim) {
+        // no-op on server
+    }
 }

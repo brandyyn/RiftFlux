@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
@@ -191,12 +192,21 @@ public final class PickupNotifierHud {
 
     @SubscribeEvent
     public void onHud(RenderGameOverlayEvent.Post e){
+        return;
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onRenderTick(TickEvent.RenderTickEvent e) {
         if (!ModConfig.enablePickupNotifier) return;
-        if (e.type != RenderGameOverlayEvent.ElementType.ALL) return;
+        if (e.phase != TickEvent.Phase.END) return;
         if (entries.isEmpty()) return;
 
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.thePlayer == null) return;
+        renderHud(mc);
+    }
+
+    private static void renderHud(Minecraft mc) {
+        if (mc == null || mc.thePlayer == null) return;
 
         ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         final int sw = sr.getScaledWidth(), sh = sr.getScaledHeight();

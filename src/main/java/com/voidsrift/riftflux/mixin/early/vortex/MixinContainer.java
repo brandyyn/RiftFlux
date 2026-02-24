@@ -5,7 +5,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import com.voidsrift.riftflux.vortex.item.ModItems;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,6 +26,16 @@ public abstract class MixinContainer {
    )
    private void riftflux$guardPutStackInSlot(int slot, ItemStack stack, CallbackInfo ci) {
       if (this.inventorySlots != null && (slot < 0 || slot >= this.inventorySlots.size())) {
+         ci.cancel();
+         return;
+      }
+      if (stack != null && stack.getItem() == null) {
+         if (this.inventorySlots != null && slot >= 0 && slot < this.inventorySlots.size()) {
+            Object target = this.inventorySlots.get(slot);
+            if (target instanceof Slot) {
+               ((Slot) target).putStack((ItemStack) null);
+            }
+         }
          ci.cancel();
       }
    }
@@ -52,11 +61,24 @@ public abstract class MixinContainer {
       if (stacks == null || this.inventorySlots == null) {
          return stacks;
       }
-      int max = this.inventorySlots.size();
-      if (stacks.size() > max) {
-         return stacks.subList(0, max);
+      List sanitized = stacks;
+      for (int i = 0; i < stacks.size(); i++) {
+         Object value = stacks.get(i);
+         if (value instanceof ItemStack) {
+            ItemStack stack = (ItemStack) value;
+            if (stack != null && stack.getItem() == null) {
+               if (sanitized == stacks) {
+                  sanitized = new java.util.ArrayList(stacks);
+               }
+               sanitized.set(i, null);
+            }
+         }
       }
-      return stacks;
+      int max = this.inventorySlots.size();
+      if (sanitized.size() > max) {
+         return sanitized.subList(0, max);
+      }
+      return sanitized;
    }
    @Inject(
       method = {"onContainerClosed"},
@@ -70,7 +92,7 @@ public abstract class MixinContainer {
       if ((Object)this == player.inventoryContainer) {
          InventoryPlayer inventoryPlayer = player.inventory;
          ItemStack itemStack = inventoryPlayer.getItemStack();
-         if (itemStack != null && com.voidsrift.riftflux.vortex.item.ItemBackpack.getEquippedBackpack(player) != null
+         if (itemStack != null && itemStack.getItem() != null && com.voidsrift.riftflux.vortex.item.ItemBackpack.getEquippedBackpack(player) != null
                  && itemStack.getItem().isValidArmor(itemStack, 1, player)) {
             ci.cancel();
          }

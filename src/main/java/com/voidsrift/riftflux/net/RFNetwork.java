@@ -49,5 +49,11 @@ public final class RFNetwork {
 
         // Glider hover (ID 6)
         CH.registerMessage(MsgGliderHover.Handler.class, MsgGliderHover.class, 6, Side.SERVER);
+
+        // Blessing activate (ID 7)
+        CH.registerMessage(MsgActivateBlessing.Handler.class, MsgActivateBlessing.class, 7, Side.SERVER);
+
+        // Blessing sync (ID 8)
+        CH.registerMessage(MsgSyncBlessing.Handler.class, MsgSyncBlessing.class, 8, Side.CLIENT);
     }
 }
