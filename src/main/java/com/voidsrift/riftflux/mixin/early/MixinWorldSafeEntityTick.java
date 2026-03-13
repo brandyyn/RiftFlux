@@ -6,14 +6,11 @@ import cpw.mods.fml.common.FMLLog;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(World.class)
 public abstract class MixinWorldSafeEntityTick {
-
-    @Shadow public abstract long getTotalWorldTime();
 
     /**
      * Wrap the per-entity tick:
@@ -29,7 +26,7 @@ public abstract class MixinWorldSafeEntityTick {
             return;
         }
 
-        final long now = this.getTotalWorldTime();
+        final long now = entity != null && entity.worldObj != null ? entity.worldObj.getTotalWorldTime() : 0L;
         final ISafeTickFlag flag = (ISafeTickFlag) entity;
 
         // Still cooling down from a previous fault? Skip quietly.

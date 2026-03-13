@@ -16,7 +16,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.EnumChatFormatting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.world.EnumSkyBlock;
@@ -292,11 +293,11 @@ public class BlockBlessingPillar extends BlockContainer {
         }
         if (ModConfig.artifactExclusiveActivation
                 && isPillarInUseByOther(world, x, y, z, world.provider.dimensionId, player)) {
-            player.addChatComponentMessage(new ChatComponentText("This artifact's blessing is currently taken by another."));
+            sendYellow(player, "blessing.riftflux.artifact.taken");
             return true;
         }
         if (!ModConfig.artifactActivationAroundMonsters && hasNearbyMonsters(world, x, y, z)) {
-            player.addChatComponentMessage(new ChatComponentText("Cannot activate pillar with monsters nearby."));
+            sendYellow(player, "blessing.riftflux.artifact.monsters");
             return true;
         }
         int oldX = 0;
@@ -321,12 +322,13 @@ public class BlockBlessingPillar extends BlockContainer {
                 1.0F,
                 1.0F
         );
-        player.addChatComponentMessage(new ChatComponentText("\u00a7eYou have been granted a blessing"));
+        sendYellow(player, "blessing.riftflux.granted");
+        String title = BlessingHelper.getLocalizedTitle(blessing);
         String desc = BlessingHelper.getDescription(blessing);
         if (desc != null && !desc.isEmpty()) {
-            player.addChatComponentMessage(new ChatComponentText("\u00a7eBlessing of the " + blessing + " - \u00a7o" + desc));
+            sendYellow(player, "blessing.riftflux.granted.with_desc", title, desc);
         } else {
-            player.addChatComponentMessage(new ChatComponentText("\u00a7eBlessing of the " + blessing + "."));
+            sendYellow(player, "blessing.riftflux.granted.without_desc", title);
         }
         if (player instanceof EntityPlayerMP && RFNetwork.CH != null) {
             RFNetwork.CH.sendTo(new MsgSyncBlessing(player), (EntityPlayerMP) player);
@@ -345,6 +347,12 @@ public class BlockBlessingPillar extends BlockContainer {
             }
         }
         return true;
+    }
+
+    private static void sendYellow(EntityPlayer player, String key, Object... args) {
+        ChatComponentTranslation message = new ChatComponentTranslation(key, args);
+        message.getChatStyle().setColor(EnumChatFormatting.YELLOW);
+        player.addChatComponentMessage(message);
     }
 
     private boolean isPillarInUseByOther(World world, int x, int y, int z, int dim, EntityPlayer player) {

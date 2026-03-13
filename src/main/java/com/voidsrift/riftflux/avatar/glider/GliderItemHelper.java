@@ -34,4 +34,16 @@ public final class GliderItemHelper {
     public static boolean isHoldingGlider(EntityPlayer player) {
         return getGliderStack(player) != null;
     }
+
+    public static boolean isGliderEnabled(EntityPlayer player) {
+        if (player == null || !isHoldingGlider(player)) {
+            return false;
+        }
+        String playerName = player.getDisplayName();
+        return playerName != null && GliderState.isPlayerGliding(playerName);
+    }
+
+    public static boolean isGliderFlightActive(EntityPlayer player) {
+        return isGliderEnabled(player) && !player.isInWater() && !player.onGround;
+    }
 }

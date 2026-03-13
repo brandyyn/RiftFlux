@@ -44,6 +44,9 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.divinerpg.MixinArcanaTickHandler_FullOnLogin");
             if (FMLLaunchHandler.side() == Side.CLIENT) {
                 mixins.add("late.divinerpg.MixinArcanaRenderer_HideFullArcana");
+                if (ModConfig.divineRpgDisableHaliteExtraArmorPieceRender) {
+                    mixins.add("late.divinerpg.MixinGUIOverlay_DisableHaliteArmorPiece");
+                }
             }
         }
         if(loadedMods.contains("chocolateQuest")) {
@@ -56,6 +59,9 @@ public class RFLateMixins implements ILateMixinLoader {
         }
         if (loadedMods.contains("battlegear2")) {
             mixins.add("late.battlegear.MixinBattlegearClientEventsBridge");
+        }
+        if (hasAnyMod(loadedMods, "Botania", "botania") && FMLLaunchHandler.side() == Side.CLIENT) {
+            mixins.add("late.botania.MixinHUDHandler_ManaBarOffset");
         }
         if(loadedMods.contains("LambdaLib")) {
             mixins.add("late.MixinRenderImagPhaseLiquid_Optimize");
@@ -80,6 +86,14 @@ public class RFLateMixins implements ILateMixinLoader {
 
         if (loadedMods.contains("ExtraUtilities")) {
             mixins.add("late.extrautilities.MixinEnderConstructorRecipesHandler");
+        }
+
+        if (ModConfig.blockEtFuturumElytraWhileAvatarGliding
+                && hasAnyMod(loadedMods, "etfuturum", "EtFuturum", "etfuturumrequiem", "EtFuturumRequiem")) {
+            mixins.add("late.etfuturum.MixinStartElytraFlyingHandler_NoAvatarGlider");
+            if (hasAnyMod(loadedMods, "OpenBlocks", "openblocks")) {
+                mixins.add("late.openblocks.MixinItemHangGlider_NoElytra");
+            }
         }
 
         if (loadedMods.contains("ThermalDynamics") && ModConfig.disableThermalDynamicsFacades) {

@@ -4,6 +4,7 @@ import java.util.List;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import makamys.satchels.ConfigSatchels;
 import makamys.satchels.Satchels;
 import makamys.satchels.gui.TooltippedItem;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -42,6 +43,9 @@ public class ItemPouchUpgrade extends Item implements TooltippedItem {
 
     @Override
     public void getTooltips(List<String> linesNormal, List<String> linesDetails, ItemTooltipEvent event) {
+        if (!ConfigSatchels.enablePouchUpgrades) {
+            return;
+        }
         linesDetails.add(I18n.format("tooltip.satchels.pouchUpgrade"));
     }
 }

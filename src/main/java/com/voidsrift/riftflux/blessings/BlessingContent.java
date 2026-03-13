@@ -23,6 +23,11 @@ public final class BlessingContent {
         }
         preInited = true;
 
+        if (!ModConfig.blessingsEnabled) {
+            blessingPillar = null;
+            return;
+        }
+
         blessingPillar = new BlockBlessingPillar();
         GameRegistry.registerBlock(blessingPillar, "blessing_pillar");
         GameRegistry.registerTileEntity(TileEntityBlessingPillar.class, Constants.MODID + ":blessing_pillar");
@@ -77,5 +82,6 @@ public final class BlessingContent {
             return;
         }
         event.registerServerCommand(new CommandCurrentBlessing());
+        event.registerServerCommand(new CommandSetBlessing());
     }
 }

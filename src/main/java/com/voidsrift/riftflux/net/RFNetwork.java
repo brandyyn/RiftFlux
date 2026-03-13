@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.net;
 
 import com.voidsrift.riftflux.Constants;
+import com.voidsrift.riftflux.combat.torohealth.net.MsgToroHealthDamage;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.relauncher.Side;
@@ -55,5 +56,11 @@ public final class RFNetwork {
 
         // Blessing sync (ID 8)
         CH.registerMessage(MsgSyncBlessing.Handler.class, MsgSyncBlessing.class, 8, Side.CLIENT);
+
+        // ToroHealth damage sync (ID 9)
+        CH.registerMessage(MsgToroHealthDamage.Handler.class, MsgToroHealthDamage.class, 9, Side.CLIENT);
+
+        // Respawn delay sync (ID 10)
+        CH.registerMessage(MsgSyncRespawnDelay.Handler.class, MsgSyncRespawnDelay.class, 10, Side.CLIENT);
     }
 }

@@ -26,7 +26,9 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.DamageSource;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerPickupXpEvent;
@@ -236,6 +238,51 @@ public class BlessingEvents {
                 event.newSpeed = event.originalSpeed * 1.25f;
             }
         }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onLivingAttack(LivingAttackEvent event) {
+        if (!ModConfig.blessingsEnabled) {
+            return;
+        }
+        if (event.entityLiving == null || event.entityLiving.worldObj == null || event.entityLiving.worldObj.isRemote) {
+            return;
+        }
+        if (!(event.entityLiving instanceof EntityPlayer)) {
+            return;
+        }
+        EntityPlayer player = (EntityPlayer) event.entityLiving;
+        String blessing = getActiveBlessing(player);
+        if (blessing == null) {
+            return;
+        }
+        if ("Inferno".equals(blessing) && event.source != null && event.source.isFireDamage()) {
+            event.setCanceled(true);
+            return;
+        }
+        if ("Paratrooper".equals(blessing) && isFallDamage(event.source)) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onLivingFall(LivingFallEvent event) {
+        if (!ModConfig.blessingsEnabled) {
+            return;
+        }
+        if (event.entityLiving == null || event.entityLiving.worldObj == null || event.entityLiving.worldObj.isRemote) {
+            return;
+        }
+        if (!(event.entityLiving instanceof EntityPlayer)) {
+            return;
+        }
+        EntityPlayer player = (EntityPlayer) event.entityLiving;
+        String blessing = getActiveBlessing(player);
+        if (!"Paratrooper".equals(blessing)) {
+            return;
+        }
+        event.distance = 0.0f;
+        event.setCanceled(true);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -450,8 +497,6 @@ public class BlessingEvents {
             }
         } else if ("Diver".equals(blessing)) {
             player.setAir(300);
-        } else if ("Inferno".equals(blessing) && player.isWet() && player.ticksExisted % 10 == 0) {
-            player.attackEntityFrom(DamageSource.drown, 1.0f);
         }
 
         applyScoutSpeed(player, "Scout".equals(blessing));
@@ -484,11 +529,11 @@ public class BlessingEvents {
             triggerNinjaCooldown(player);
         }
         if ("Inferno".equals(blessing) && event.source != null && event.source.isFireDamage()) {
-            event.ammount = 0.0f;
+            event.setCanceled(true);
             return;
         }
         if ("Paratrooper".equals(blessing) && isFallDamage(event.source)) {
-            event.ammount = 0.0f;
+            event.setCanceled(true);
             return;
         }
         if ("Scout".equals(blessing) && isFallDamage(event.source)) {

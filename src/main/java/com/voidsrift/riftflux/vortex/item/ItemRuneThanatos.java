@@ -19,12 +19,13 @@ public class ItemRuneThanatos extends Item {
 
    @SideOnly(Side.CLIENT)
    public void registerIcons(IIconRegister p_94581_1_) {
-      this.icon = p_94581_1_.registerIcon("riftflux:runethanatos");
+      this.itemIcon = p_94581_1_.registerIcon("riftflux:runethanatos");
+      this.icon = this.itemIcon;
    }
 
    @SideOnly(Side.CLIENT)
    public IIcon getIconFromDamage(int par1) {
-      return this.icon;
+      return this.icon != null ? this.icon : this.itemIcon;
    }
 
    public EnumRarity getRarity(ItemStack p_77613_1_) {

@@ -14,4 +14,12 @@ public class CommonProxy {
     public void applyBlessingSync(String blessing, boolean hasSource, int x, int y, int z, int dim) {
         // no-op on server
     }
+
+    public void applyToroHealthDamage(int entityId, int damage) {
+        // no-op on server
+    }
+
+    public void applyRespawnDelaySync(long remainingMs) {
+        // no-op on server
+    }
 }

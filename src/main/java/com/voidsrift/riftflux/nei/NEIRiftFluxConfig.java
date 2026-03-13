@@ -14,6 +14,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import com.voidsrift.riftflux.placeditem.PlacedItemContent;
+import com.voidsrift.riftflux.terramine.TerrariaContent;
 
 import java.util.List;
 
@@ -109,6 +110,13 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 API.hideItem(new ItemStack(PlacedItemContent.placedItemBlock));
             } catch (Throwable t) {
                 FMLLog.severe("[RiftFlux] Failed to hide placed item block in NEI: %s", t);
+            }
+        }
+        if (TerrariaContent.iceRodBlock != null) {
+            try {
+                API.hideItem(new ItemStack(TerrariaContent.iceRodBlock));
+            } catch (Throwable t) {
+                FMLLog.severe("[RiftFlux] Failed to hide temporary magic ice block in NEI: %s", t);
             }
         }
     }

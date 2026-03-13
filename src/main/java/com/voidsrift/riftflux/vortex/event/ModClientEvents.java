@@ -9,6 +9,8 @@ public class ModClientEvents {
         FMLCommonHandler.instance().bus().register(new KeyEventHandler());
 
         // Forge bus
-        MinecraftForge.EVENT_BUS.register(new GuiEventHandler());
+        GuiEventHandler guiEventHandler = new GuiEventHandler();
+        MinecraftForge.EVENT_BUS.register(guiEventHandler);
+        FMLCommonHandler.instance().bus().register(guiEventHandler);
     }
 }

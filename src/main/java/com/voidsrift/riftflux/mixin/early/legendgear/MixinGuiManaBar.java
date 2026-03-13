@@ -1,11 +1,11 @@
 package com.voidsrift.riftflux.mixin.early.legendgear;
 
+import com.voidsrift.riftflux.client.hud.HudHealthRowHelper;
 import com.voidsrift.riftflux.legendgear.LegendGearClientState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.ForgeHooks;
@@ -35,38 +35,51 @@ public abstract class MixinGuiManaBar extends Gui {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayer player = mc.thePlayer;
         if (player == null) {
+            ci.cancel();
             return;
         }
 
         updateCounter = (int) ((Minecraft.getSystemTime() / 50L) % 1000L);
         rand.setSeed(updateCounter);
 
-        boolean holdingMana = LegendGearClientState.shouldForceShow(player);
-
-        int manaMissing = (int) (20.0f - PlayerStarstatsExtension.get(player).getMana());
-        if (manaMissing == 20 && !holdingMana) {
+        boolean forceShow = LegendGearClientState.shouldForceShow(player);
+        if (!forceShow && LegendGearClientState.isHoldingIceRodWithLegendGearManaDisabled(player)) {
+            ci.cancel();
             return;
         }
 
-        event.setCanceled(true);
+        int manaMissing = (int)(20.0f - PlayerStarstatsExtension.get(player).getMana());
+        if (manaMissing < 0) {
+            manaMissing = 0;
+        } else if (manaMissing > 20) {
+            manaMissing = 20;
+        }
 
-        ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        if (manaMissing >= 20 && !forceShow) {
+            ci.cancel();
+            return;
+        }
+
+        ScaledResolution res = event.resolution != null
+                ? event.resolution
+                : new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         int width = res.getScaledWidth();
-        int height = res.getScaledHeight();
 
         mc.getTextureManager().bindTexture(mod_icons);
         GL11.glEnable(GL11.GL_BLEND);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
         int x = width / 2 - 91;
-        int y = height - 39 - 10;
-        if (player.getAbsorptionAmount() > 0.0f) {
-            y -= 10;
-        }
-        if (ForgeHooks.getTotalArmorValue(player) > 0 || hasAnyArmor(player)) {
-            y -= 10;
-        }
+        int healthRows = HudHealthRowHelper.getHealthRows(player);
 
         int armorValue = ForgeHooks.getTotalArmorValue(player);
+        int topHeartY = res.getScaledHeight() - 39 - (healthRows - 1) * 10;
+        int y = topHeartY - 10;
+        if (armorValue > 0) {
+            y -= 10;
+        }
+        y = Math.max(0, y);
+
         for (int i = 1; i < 20; i += 2) {
             int icon = 0;
             if (i < armorValue) {
@@ -86,24 +99,9 @@ public abstract class MixinGuiManaBar extends Gui {
         }
 
         GL11.glDisable(GL11.GL_BLEND);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         mc.getTextureManager().bindTexture(Gui.icons);
 
         ci.cancel();
-    }
-
-    private static boolean hasAnyArmor(EntityPlayer player) {
-        if (player == null || player.inventory == null) {
-            return false;
-        }
-        ItemStack[] armor = player.inventory.armorInventory;
-        if (armor == null) {
-            return false;
-        }
-        for (ItemStack stack : armor) {
-            if (stack != null) {
-                return true;
-            }
-        }
-        return false;
     }
 }

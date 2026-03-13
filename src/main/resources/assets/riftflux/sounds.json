@@ -103,6 +103,26 @@
   ]
 },
 
+  "whoopie_cushion": {
+  "category": "player",
+  "sounds": [
+    {
+      "name": "whoopiecushion",
+      "stream": false
+    }
+  ]
+},
+
+  "eyeofcthulu": {
+  "category": "music",
+  "sounds": [
+    {
+      "name": "eyeofcthulu",
+      "stream": true
+    }
+  ]
+},
+
   "static": {
   "category": "master",
   "sounds": [

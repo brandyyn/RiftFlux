@@ -1,6 +1,5 @@
 package com.voidsrift.riftflux.vortex.item;
 
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.ToolMaterial;
@@ -49,12 +48,10 @@ public class ModItems {
       GameRegistry.registerItem(glintRune, "glintrune");
       gluttonyCharm = (new ItemGluttonyCharm()).setUnlocalizedName("gluttonycharm");
       GameRegistry.registerItem(gluttonyCharm, "gluttonycharm");
-      if (Loader.isModLoaded("Thaumcraft")) {
-         runeThanatos = (new ItemRuneThanatos()).setUnlocalizedName("runethanatos");
-         GameRegistry.registerItem(runeThanatos, "runethanatos");
-         toolbelt = (new ItemToolbelt()).setUnlocalizedName("riftflux_toolbelt");
-         GameRegistry.registerItem(toolbelt, "toolbelt");
-      }
+      runeThanatos = (new ItemRuneThanatos()).setUnlocalizedName("runethanatos");
+      GameRegistry.registerItem(runeThanatos, "runethanatos");
+      toolbelt = (new ItemToolbelt()).setUnlocalizedName("riftflux_toolbelt");
+      GameRegistry.registerItem(toolbelt, "toolbelt");
 
    }
 

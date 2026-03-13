@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.dualhotbar;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -9,8 +10,14 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
@@ -20,6 +27,10 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.Loader;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.asgardshield.AsgardShieldHud;
+import com.voidsrift.riftflux.client.hud.HudHealthRowHelper;
+import com.voidsrift.riftflux.legendgear.LegendGearClientState;
+import net.nmccoy.legendgear.PlayerStarstatsExtension;
 
 public class RenderHandler {
     private static final ResourceLocation WIDGITS = new ResourceLocation("textures/gui/widgets.png");
@@ -35,6 +46,21 @@ public class RenderHandler {
     private static boolean toolHighlightTicksFieldChecked;
     private static Field toolHighlightTicksField;
     private static boolean toolHighlightShiftPushed;
+
+    private static boolean botaniaCompatChecked;
+    private static boolean botaniaCompatAvailable;
+    private static boolean botaniaCompatErrorLogged;
+    private static Method botaniaHudRenderManaInvBar;
+    private static Object botaniaHudHandlerInstance;
+    private static Method botaniaGetPlayerBaubles;
+    private static Class<?> botaniaIManaUsingItem;
+    private static Method botaniaUsesManaMethod;
+    private static Class<?> botaniaIManaItem;
+    private static Method botaniaIsNoExportMethod;
+    private static Method botaniaGetManaMethod;
+    private static Method botaniaGetMaxManaMethod;
+    private static Class<?> botaniaICreativeManaProvider;
+    private static Method botaniaIsCreativeMethod;
 
     static {
         try {
@@ -214,6 +240,7 @@ public class RenderHandler {
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
             mc.mcProfiler.endSection();
 
+            renderBotaniaManaBarFallback(res, mc);
             renderBattlegearOverlayIfPresent(event);
             event.setCanceled(true);
             } finally {
@@ -250,6 +277,226 @@ public class RenderHandler {
                 t.printStackTrace();
             }
         }
+    }
+
+    private void renderBotaniaManaBarFallback(ScaledResolution res, Minecraft mc) {
+        if (res == null || mc == null || mc.thePlayer == null) {
+            return;
+        }
+        InventoryPlayer inv = mc.thePlayer.inventory;
+        if (inv == null) {
+            return;
+        }
+        if (!ensureBotaniaCompat()) {
+            return;
+        }
+
+        BotaniaManaSnapshot snapshot = new BotaniaManaSnapshot();
+        scanBotaniaManaInventory(inv, snapshot);
+        IInventory baubles = getBaublesInventory(mc.thePlayer);
+        scanBotaniaManaInventory(baubles, snapshot);
+
+        boolean fallbackContext = inv.currentItem >= 9 || !snapshot.hasUsing;
+        if (!fallbackContext) {
+            return;
+        }
+        boolean hasHeldOrWornManaCarrier = hasHeldOrWornBotaniaManaCarrier(mc, baubles);
+        if (!snapshot.hasUsing && !hasHeldOrWornManaCarrier) {
+            return;
+        }
+        if (!snapshot.hasCreative && snapshot.totalMaxMana <= 0) {
+            return;
+        }
+
+        try {
+            int mana = Math.max(0, snapshot.totalMana);
+            int maxMana = Math.max(0, snapshot.totalMaxMana);
+            botaniaHudRenderManaInvBar.invoke(botaniaHudHandlerInstance, res, snapshot.hasCreative, mana, maxMana);
+        } catch (Throwable t) {
+            if (!botaniaCompatErrorLogged) {
+                botaniaCompatErrorLogged = true;
+                System.out.println("[RiftFlux] Botania mana bar fallback failed: " + t);
+                t.printStackTrace();
+            }
+            botaniaCompatAvailable = false;
+        }
+    }
+
+    private static boolean hasHeldOrWornBotaniaManaCarrier(Minecraft mc, IInventory baubles) {
+        if (mc == null || mc.thePlayer == null) {
+            return false;
+        }
+        if (isBotaniaManaCarrier(mc.thePlayer.getCurrentEquippedItem())) {
+            return true;
+        }
+        if (baubles == null) {
+            return false;
+        }
+        int size = baubles.getSizeInventory();
+        for (int i = 0; i < size; i++) {
+            if (isBotaniaManaCarrier(baubles.getStackInSlot(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isBotaniaManaCarrier(ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
+        Item item = stack.getItem();
+        if (item == null) {
+            return false;
+        }
+        if (botaniaIManaUsingItem != null && botaniaIManaUsingItem.isInstance(item)) {
+            return true;
+        }
+        if (botaniaIManaItem != null && botaniaIManaItem.isInstance(item)) {
+            return true;
+        }
+        return botaniaICreativeManaProvider != null && botaniaICreativeManaProvider.isInstance(item);
+    }
+
+    private static boolean ensureBotaniaCompat() {
+        if (botaniaCompatChecked) {
+            return botaniaCompatAvailable;
+        }
+        botaniaCompatChecked = true;
+
+        try {
+            ClassLoader loader = RenderHandler.class.getClassLoader();
+            Class<?> hudHandlerClass = Class.forName("vazkii.botania.client.core.handler.HUDHandler", false, loader);
+            botaniaHudRenderManaInvBar = hudHandlerClass.getDeclaredMethod(
+                    "renderManaInvBar",
+                    ScaledResolution.class,
+                    boolean.class,
+                    int.class,
+                    int.class
+            );
+            botaniaHudRenderManaInvBar.setAccessible(true);
+            botaniaHudHandlerInstance = hudHandlerClass.newInstance();
+
+            botaniaIManaUsingItem = Class.forName("vazkii.botania.api.mana.IManaUsingItem", false, loader);
+            botaniaUsesManaMethod = botaniaIManaUsingItem.getMethod("usesMana", ItemStack.class);
+
+            botaniaIManaItem = Class.forName("vazkii.botania.api.mana.IManaItem", false, loader);
+            botaniaIsNoExportMethod = botaniaIManaItem.getMethod("isNoExport", ItemStack.class);
+            botaniaGetManaMethod = botaniaIManaItem.getMethod("getMana", ItemStack.class);
+            botaniaGetMaxManaMethod = botaniaIManaItem.getMethod("getMaxMana", ItemStack.class);
+
+            botaniaICreativeManaProvider = Class.forName("vazkii.botania.api.mana.ICreativeManaProvider", false, loader);
+            botaniaIsCreativeMethod = botaniaICreativeManaProvider.getMethod("isCreative", ItemStack.class);
+
+            try {
+                Class<?> playerHandlerClass = Class.forName("baubles.common.lib.PlayerHandler", false, loader);
+                Class<?> entityPlayerClass = Class.forName("net.minecraft.entity.player.EntityPlayer", false, loader);
+                botaniaGetPlayerBaubles = playerHandlerClass.getMethod("getPlayerBaubles", entityPlayerClass);
+            } catch (Throwable ignored) {
+                botaniaGetPlayerBaubles = null;
+            }
+
+            botaniaCompatAvailable = true;
+        } catch (Throwable t) {
+            botaniaCompatAvailable = false;
+        }
+
+        return botaniaCompatAvailable;
+    }
+
+    private static IInventory getBaublesInventory(Object player) {
+        if (botaniaGetPlayerBaubles == null || player == null) {
+            return null;
+        }
+        try {
+            Object inv = botaniaGetPlayerBaubles.invoke(null, player);
+            if (inv instanceof IInventory) {
+                return (IInventory) inv;
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static void scanBotaniaManaInventory(IInventory inventory, BotaniaManaSnapshot snapshot) {
+        if (inventory == null || snapshot == null) {
+            return;
+        }
+
+        int size = inventory.getSizeInventory();
+        for (int i = 0; i < size; i++) {
+            ItemStack stack = inventory.getStackInSlot(i);
+            if (stack == null) {
+                continue;
+            }
+            Item item = stack.getItem();
+            if (item == null) {
+                continue;
+            }
+
+            if (botaniaIManaUsingItem != null && botaniaIManaUsingItem.isInstance(item)) {
+                if (invokeBoolean(botaniaUsesManaMethod, item, stack)) {
+                    snapshot.hasUsing = true;
+                }
+            }
+
+            if (botaniaIManaItem != null && botaniaIManaItem.isInstance(item)) {
+                if (!invokeBoolean(botaniaIsNoExportMethod, item, stack)) {
+                    snapshot.totalMana = safeAdd(snapshot.totalMana, invokeInt(botaniaGetManaMethod, item, stack));
+                    snapshot.totalMaxMana = safeAdd(snapshot.totalMaxMana, invokeInt(botaniaGetMaxManaMethod, item, stack));
+                }
+            }
+
+            if (botaniaICreativeManaProvider != null && botaniaICreativeManaProvider.isInstance(item)) {
+                if (invokeBoolean(botaniaIsCreativeMethod, item, stack)) {
+                    snapshot.hasCreative = true;
+                }
+            }
+        }
+    }
+
+    private static boolean invokeBoolean(Method method, Object target, Object arg) {
+        if (method == null || target == null) {
+            return false;
+        }
+        try {
+            Object value = method.invoke(target, arg);
+            return value instanceof Boolean && ((Boolean) value);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static int invokeInt(Method method, Object target, Object arg) {
+        if (method == null || target == null) {
+            return 0;
+        }
+        try {
+            Object value = method.invoke(target, arg);
+            if (value instanceof Integer) {
+                return (Integer) value;
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
+    }
+
+    private static int safeAdd(int current, int delta) {
+        if (delta <= 0) {
+            return current;
+        }
+        long sum = (long) current + (long) delta;
+        if (sum > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        return (int) sum;
+    }
+
+    private static final class BotaniaManaSnapshot {
+        private boolean hasUsing;
+        private boolean hasCreative;
+        private int totalMana;
+        private int totalMaxMana;
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -295,36 +542,131 @@ public class RenderHandler {
     }
 
     public static void shiftUp() {
-        if (!DualHotbarConfig.enable
-                || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4)) {
-            toolHighlightShiftPushed = false;
-            return;
-        }
-
         if (!shouldShiftToolHighlight()) {
             toolHighlightShiftPushed = false;
             return;
         }
 
-        GL11.glPushMatrix();
-        if (DualHotbarConfig.twoLayerRendering) {
-            GL11.glTranslatef(0, -20 * (DualHotbarConfig.numHotbars - 1), 0);
-        } else {
-            GL11.glTranslatef(0, -20 * (DualHotbarConfig.numHotbars / 2 - 1), 0);
+        int shiftY = getDualHotbarTooltipShiftY();
+        shiftY += getOverlayAwareTooltipShiftY();
+        if (shiftY == 0) {
+            toolHighlightShiftPushed = false;
+            return;
         }
+
+        GL11.glPushMatrix();
+        GL11.glTranslatef(0.0F, (float) shiftY, 0.0F);
         toolHighlightShiftPushed = true;
     }
 
     public static void shiftDown() {
-        if (!DualHotbarConfig.enable
-                || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4)
-                || !toolHighlightShiftPushed) {
+        if (!toolHighlightShiftPushed) {
             toolHighlightShiftPushed = false;
             return;
         }
 
         GL11.glPopMatrix();
         toolHighlightShiftPushed = false;
+    }
+
+    private static int getDualHotbarTooltipShiftY() {
+        if (!DualHotbarConfig.enable
+                || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4)) {
+            return 0;
+        }
+        if (DualHotbarConfig.twoLayerRendering) {
+            return -20 * (DualHotbarConfig.numHotbars - 1);
+        }
+        return -20 * (DualHotbarConfig.numHotbars / 2 - 1);
+    }
+
+    private static int getOverlayAwareTooltipShiftY() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || mc.playerController == null || !mc.playerController.shouldDrawHUD()) {
+            return 0;
+        }
+
+        EntityPlayer player = mc.thePlayer;
+        if (player.capabilities != null && player.capabilities.isCreativeMode) {
+            return 0;
+        }
+
+        ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        int screenHeight = res.getScaledHeight();
+        int asgardTopY = AsgardShieldHud.getHudTopY(player, screenHeight);
+        boolean airVisible = player.isInsideOfMaterial(Material.water);
+        if (!DualHotbarConfig.heldItemTooltipAboveBars
+                && !airVisible
+                && asgardTopY == Integer.MIN_VALUE) {
+            return 0;
+        }
+
+        int overlayTopY = Integer.MAX_VALUE;
+
+        if (DualHotbarConfig.heldItemTooltipAboveBars) {
+            int healthRows = HudHealthRowHelper.getHealthRows(player);
+
+            int heartsTopY = screenHeight - 39 - (healthRows - 1) * 10;
+            int barsTopY = heartsTopY;
+            if (player.getTotalArmorValue() > 0) {
+                barsTopY -= 10;
+            }
+            if (isLegendGearManaBarVisible(player)) {
+                barsTopY -= 10;
+            }
+            overlayTopY = Math.min(overlayTopY, barsTopY);
+        }
+
+        if (airVisible) {
+            int airTopY = screenHeight - 39;
+            if (player.ridingEntity == null) {
+                airTopY -= 10;
+            }
+            airTopY = AsgardShieldHud.getTargetAirBubbleTopY(player, screenHeight, airTopY);
+            overlayTopY = Math.min(overlayTopY, airTopY);
+        }
+
+        if (asgardTopY != Integer.MIN_VALUE) {
+            overlayTopY = Math.min(overlayTopY, asgardTopY);
+        }
+
+        if (overlayTopY == Integer.MAX_VALUE) {
+            return 0;
+        }
+
+        int padding = DualHotbarConfig.heldItemTooltipAboveBars
+                ? Math.max(0, DualHotbarConfig.heldItemTooltipPadding)
+                : 0;
+        int targetY = overlayTopY - 10 - padding;
+        int defaultY = screenHeight - 59;
+        return targetY - defaultY;
+    }
+
+    private static boolean isLegendGearManaBarVisible(EntityPlayer player) {
+        if (player == null || !ModConfig.enableLegendGearModule) {
+            return false;
+        }
+        try {
+            boolean forceShow = LegendGearClientState.shouldForceShow(player);
+            if (!forceShow && LegendGearClientState.isHoldingIceRodWithLegendGearManaDisabled(player)) {
+                return false;
+            }
+
+            PlayerStarstatsExtension stats = PlayerStarstatsExtension.get(player);
+            if (stats == null) {
+                return forceShow;
+            }
+
+            int manaMissing = (int) (20.0f - stats.getMana());
+            if (manaMissing < 0) {
+                manaMissing = 0;
+            } else if (manaMissing > 20) {
+                manaMissing = 20;
+            }
+            return manaMissing < 20 || forceShow;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     private static int getDisplaySelectedSlot(int currentItem, InventoryPlayer inventory) {

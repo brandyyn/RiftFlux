@@ -36,7 +36,7 @@ public abstract class MixinRenderGlobal_ItemRenderDist {
     @Inject(method = "renderEntities", at = @At("HEAD"))
     private void rf$buildAllowed(EntityLivingBase view, ICamera camera, float partialTicks, CallbackInfo ci) {
         rf$allowed.clear();
-        if (!ModConfig.enableItemRenderLimiter) { rf$capSq = Double.POSITIVE_INFINITY; return; }
+        if (!ModConfig.enableDroppedItemRenderTweaks) { rf$capSq = Double.POSITIVE_INFINITY; return; }
 
         final int limit = (ModConfig.droppedItemLimit == 2048)
                 ? Integer.MAX_VALUE
@@ -99,7 +99,7 @@ public abstract class MixinRenderGlobal_ItemRenderDist {
                                  @Local(ordinal = 0) double d0,
                                  @Local(ordinal = 1) double d1,
                                  @Local(ordinal = 2) double d2) {
-        if (!(entity instanceof EntityItem) || !ModConfig.enableItemRenderLimiter) return flag;
+        if (!(entity instanceof EntityItem) || !ModConfig.enableDroppedItemRenderTweaks) return flag;
 
         final boolean allowed = rf$allowed.contains(entity.getEntityId());
         if (!allowed) {

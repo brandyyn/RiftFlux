@@ -9,6 +9,8 @@ public final class DualHotbarConfig {
     public static boolean keyCombo;
     public static int doubleTapTime;
     public static int numHotbars = 4;
+    public static boolean heldItemTooltipAboveBars;
+    public static int heldItemTooltipPadding;
 
     private DualHotbarConfig() {
     }
@@ -20,6 +22,8 @@ public final class DualHotbarConfig {
         keyCombo = ModConfig.dualHotbarKeyCombo;
         doubleTapTime = ModConfig.dualHotbarDoubleTapTime;
         numHotbars = ModConfig.dualHotbarNumHotbars;
+        heldItemTooltipAboveBars = ModConfig.dualHotbarHeldItemTooltipAboveBars;
+        heldItemTooltipPadding = Math.max(0, ModConfig.dualHotbarHeldItemTooltipPadding);
 
         if (numHotbars == 3) {
             twoLayerRendering = true;

@@ -2,15 +2,25 @@ package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.CommonProxy;
+import com.voidsrift.riftflux.combat.torohealth.client.particle.DamageParticles;
+import com.voidsrift.riftflux.combat.torohealth.mixins.EntityLivingBaseExt;
 import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
+import com.voidsrift.riftflux.terramine.EyeOfCthulhuMusicHandler;
+import com.voidsrift.riftflux.terramine.IceRodPlacementPreviewRenderer;
+import com.voidsrift.riftflux.terramine.TerrariaContent;
+import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
 import com.voidsrift.riftflux.painting.GuiPaintingSelector;
 import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraftforge.common.MinecraftForge;
 
 public class ClientProxy extends CommonProxy {
 
@@ -51,6 +61,34 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
+    public void applyToroHealthDamage(int entityId, int damage) {
+        if (!ModConfig.enableToroHealthModule || !ModConfig.toroHealthShowDamageParticles || damage <= 0) {
+            return;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null) {
+            return;
+        }
+
+        Entity entity = mc.theWorld.getEntityByID(entityId);
+        if (!(entity instanceof EntityLivingBase)) {
+            return;
+        }
+
+        EntityLivingBase living = (EntityLivingBase) entity;
+        DamageParticles.spawnDamageParticle(living, damage);
+
+        if (living instanceof EntityLivingBaseExt) {
+            ((EntityLivingBaseExt) living).riftflux$setToroHealthLastDamageParticleTick(living.ticksExisted);
+        }
+    }
+
+    @Override
+    public void applyRespawnDelaySync(long remainingMs) {
+        ClientRespawnDelayState.applyRemainingMs(remainingMs);
+    }
+
+    @Override
     public void initClientFeatures() {
         // Register NEI handler tab icon
         com.voidsrift.riftflux.nei.GTNHNeiHandlerInfo.register();
@@ -76,10 +114,15 @@ public class ClientProxy extends CommonProxy {
         DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
         com.voidsrift.riftflux.avatar.AvatarTLBContent.initClient();
+        TerrariaContent.initClient();
+        AsgardShieldContent.initClient();
         BlessingContent.initClient();
         if (Loader.isModLoaded("Hats")) {
             HatsKeybinds.ensureRegistered();
         }
+        MinecraftForge.EVENT_BUS.register(new IceRodDurabilityTooltipHandler());
+        MinecraftForge.EVENT_BUS.register(new IceRodPlacementPreviewRenderer());
+        FMLCommonHandler.instance().bus().register(new EyeOfCthulhuMusicHandler());
 
     }
 }

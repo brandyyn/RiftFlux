@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.vortex.event.EntityEventHandler;
 import com.voidsrift.riftflux.vortex.event.KeyEventHandler;
 import com.voidsrift.riftflux.vortex.event.ModEvents;
+import com.voidsrift.riftflux.vortex.event.RespawnDelayEventHandler;
 import com.voidsrift.riftflux.vortex.event.WorldEventHandler;
 import com.voidsrift.riftflux.vortex.item.ModItems;
 import com.voidsrift.riftflux.vortex.lib.crafting.ModRecipes;
@@ -41,6 +42,9 @@ public final class vortexContent {
         MinecraftForge.EVENT_BUS.register(new ModEvents());
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.CraftingEventHandler());
         MinecraftForge.EVENT_BUS.register(new EntityEventHandler());
+        RespawnDelayEventHandler respawnDelayEventHandler = new RespawnDelayEventHandler();
+        MinecraftForge.EVENT_BUS.register(respawnDelayEventHandler);
+        FMLCommonHandler.instance().bus().register(respawnDelayEventHandler);
         WorldEventHandler worldEventHandler = new WorldEventHandler();
         MinecraftForge.EVENT_BUS.register(worldEventHandler);
         FMLCommonHandler.instance().bus().register(worldEventHandler);
@@ -53,7 +57,10 @@ public final class vortexContent {
             FMLCommonHandler.instance().bus().register(new KeyEventHandler());
             KeyEventHandler.registerKeyBindings();
             com.voidsrift.riftflux.vortex.client.render.ModRenderers.init();
-            MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.GuiEventHandler());
+            com.voidsrift.riftflux.vortex.event.GuiEventHandler guiEventHandler =
+                    new com.voidsrift.riftflux.vortex.event.GuiEventHandler();
+            MinecraftForge.EVENT_BUS.register(guiEventHandler);
+            FMLCommonHandler.instance().bus().register(guiEventHandler);
             MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.RenderEventHandler());
         }
     }
@@ -77,7 +84,10 @@ public final class vortexContent {
 
         // Client-only GUI hooks (e.g. Backpack inventory button).
         try {
-            MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.GuiEventHandler());
+            com.voidsrift.riftflux.vortex.event.GuiEventHandler guiEventHandler =
+                    new com.voidsrift.riftflux.vortex.event.GuiEventHandler();
+            MinecraftForge.EVENT_BUS.register(guiEventHandler);
+            FMLCommonHandler.instance().bus().register(guiEventHandler);
             MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.RenderEventHandler());
         } catch (Throwable ignored) {
         }

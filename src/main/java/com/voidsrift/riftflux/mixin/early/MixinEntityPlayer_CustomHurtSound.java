@@ -1,7 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
-import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.sound.PlayerHurtSoundResolver;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,12 +22,7 @@ public class MixinEntityPlayer_CustomHurtSound {
     @Inject(method = "getHurtSound()Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
     private void riftflux$useCustomPlayerHurtSound(CallbackInfoReturnable<String> cir) {
         if (ModConfig.playerOnlyHurtSound) {
-            double chance = ModConfig.playerOnlyHurtSoundOofChance;
-            if (chance > 0.0D && Math.random() < chance) {
-                cir.setReturnValue(Constants.MODID + ":oof");
-            } else {
-                cir.setReturnValue(Constants.MODID + ":player_hurt");
-            }
+            cir.setReturnValue(PlayerHurtSoundResolver.resolvePlayerHurtSoundKey());
         }
     }
 }

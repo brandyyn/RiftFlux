@@ -64,6 +64,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinBlock_PlayerPlacedBushMarker");
             mixins.add("early.MixinBiomeGenBase_WorldGenContext");
         }
+        if (ModConfig.deathRespawnDelaySeconds > 0) {
+            mixins.add("early.MixinNetHandlerPlayServer_RespawnDelay");
+        }
         if (ModConfig.strictMobSpawnsZeroBlockLight) {
             mixins.add("early.MixinEntityMob_ZeroBlockLightSpawn");
         }
@@ -110,6 +113,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableFistDamageBoost || ModConfig.enableStickDamageBonus) {
             mixins.add("early.MixinEntityPlayer_FistStickDamage");
         }
+        if (ModConfig.enableHeartCrystalModule) {
+            mixins.add("early.heartcrystal.MixinEntityPlayer_HeartCrystalEatParticles");
+        }
         if (ModConfig.disableSpecificPotions) {
             mixins.add("early.MixinEntityLivingBase_DisablePotions");
         }
@@ -134,8 +140,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.legacyBoatBuoyancy || ModConfig.boatsFallBreakDistance > 0.0F) {
             mixins.add("early.MixinEntityBoat_WaterClimb");
         }
-        if (ModConfig.playerOnlyHurtSound && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+        if (ModConfig.playerOnlyHurtSound) {
             mixins.add("early.MixinEntityPlayer_CustomHurtSound");
+            if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+                mixins.add("early.MixinEntityLivingBase_CustomPlayerHurtSound");
+            }
         }
         if (ModConfig.enableCustomPaintings) {
             mixins.add("early.MixinEntityPainting_ExtraArt");
@@ -147,12 +156,25 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enablePaintingSelection) {
             mixins.add("early.MixinItemHangingEntity_PaintingSelection");
         }
-
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("accessor.GuiScreenAccessor");
             mixins.add("accessor.GuiContainerAccessor");
+            mixins.add("accessor.GuiYesNoAccessor");
             mixins.add("accessor.ModelBoxAccessor");
             mixins.add("accessor.PlayerControllerMPAccessor");
+            mixins.add("early.MixinRenderGlobal_SunriseTint");
+            mixins.add("early.MixinEntityRenderer_BlackNightFog");
+            mixins.add("early.MixinEntityRenderer_BetaStyleFogDistance");
+            mixins.add("early.MixinWorld_BetaStyleCloudColor");
+            if (hasClass("com.gtnewhorizons.angelica.glsm.AngelicaFogService")) {
+                mixins.add("early.angelica.MixinAngelicaFogService_BetaStyleFog");
+            }
+            mixins.add("early.MixinEntityRenderer_SunriseTint");
+            mixins.add("early.MixinEntityRenderer_VoidFogHeight");
+            mixins.add("early.MixinWorldClient_VoidParticleHeight");
+            if (ModConfig.enableToroHealthModule && ModConfig.toroHealthShowDamageParticles) {
+                mixins.add("early.torohealth.MixinEntityLivingBase_ToroHealth");
+            }
             if (ModConfig.enableCustomPaintings) {
                 mixins.add("early.MixinRenderPainting_CustomTexture");
             }
@@ -162,8 +184,27 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.enableHotbarSelectorTexture) {
                 mixins.add("early.MixinGuiIngame_HotbarSelectorTexture");
             }
+            if (ModConfig.enableAsgardShieldModule) {
+                mixins.add("early.asgardshield.MixinGuiIngameForge_AsgardAirOffset");
+            }
+            if (ModConfig.allowChatOnDeathScreen) {
+                mixins.add("early.MixinGuiGameOver_AllowChat");
+                mixins.add("early.vortex.MixinGuiRuneGameOver_AllowChat");
+            }
+            if (ModConfig.enableTerraModule) {
+                mixins.add("early.MixinGuiIngame_EyeBossBarColor");
+            }
             if (ModConfig.enableCelestialEventTextures) {
                 mixins.add("early.MixinRenderGlobal_CelestialEventTextures");
+            }
+            if (ModConfig.betaStarsEnabled) {
+                mixins.add("early.MixinRenderGlobal_BetaStars");
+                if (hasClass("jss.notfine.render.RenderStars")) {
+                    mixins.add("early.notfine.MixinRenderStars_BetaStars");
+                }
+                mixins.add("early.mcpatcherforge.MixinRenderGlobal_BetaStarsSkyPass");
+                mixins.add("early.mcpatcherforge.MixinSkyRenderer_BetaStars");
+                mixins.add("early.mcpatcherforge.MixinSkyRendererLayer_BetaStars");
             }
             if (ModConfig.enablePlacedItem) {
                 mixins.add("early.MixinWorld_NoPlacedItemParticles");
@@ -183,8 +224,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (hasLegendGearClass()) {
                 mixins.add("early.legendgear.MixinGuiManaBar");
             }
+            if (ModConfig.dualHotbarEnable) {
+                mixins.add("early.dualhotbar.MixinMinecraft_PickBlock");
+            }
         }
         if (ModConfig.dualHotbarEnable) {
+            mixins.add("early.dualhotbar.MixinForgeHooks_PickBlock");
             mixins.add("early.dualhotbar.MixinNetHandlerPlayServer_HeldItemChange");
         }
         mixins.add("early.baubles.MixinContainerPlayerExpanded_BackpackShiftClick");
@@ -206,7 +251,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.vortex.MixinGuiInventory");
             mixins.add("early.vortex.MixinGuiScreen");
             mixins.add("early.vortex.MixinItemRenderer");
-            mixins.add("early.vortex.MixinItemRendererOF");
+            if (hasClass("ItemRendererOF")) {
+                mixins.add("early.vortex.MixinItemRendererOF");
+            }
             mixins.add("early.vortex.MixinMinecraft_ToolbeltFocus");
             mixins.add("early.vortex.MixinRendererLivingEntity");
         }
@@ -225,7 +272,30 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     private static boolean hasLegendGearClass() {
         try {
-            return Loader.isModLoaded("legendgear");
+            if (Loader.isModLoaded("legendgear")) {
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        if (!ModConfig.enableLegendGearModule) {
+            return false;
+        }
+        try {
+            ClassLoader loader = RFEarlyMixins.class.getClassLoader();
+            return loader.getResource("net/nmccoy/legendgear/render/GuiManaBar.class") != null;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static boolean hasClass(String className) {
+        if (className == null || className.isEmpty()) {
+            return false;
+        }
+        try {
+            ClassLoader loader = RFEarlyMixins.class.getClassLoader();
+            String resourceName = className.replace('.', '/') + ".class";
+            return loader.getResource(resourceName) != null;
         } catch (Throwable ignored) {
             return false;
         }

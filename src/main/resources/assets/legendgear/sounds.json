@@ -1,0 +1,65 @@
+{
+ "moneysmall": {"category": "master","sounds": [{"name": "moneysmall","stream": false}]},
+ "moneymid": {"category": "master","sounds": [{"name": "moneymid","stream": false}]},
+ "moneybig": {"category": "master","sounds": [{"name": "moneybig","stream": false}]},
+ "starcaught": {"category": "master","sounds": [{"name": "starcaught","stream": false}]},
+ "twinkle": {"category": "master","sounds": [{"name": "twinkle","stream": false}]},
+ "starfall": {"category": "master","sounds": [{"name": "starfall","stream": false}]},
+ "fluteattack": {"category": "master","sounds": [{"name": "fluteattack","stream": false}]},
+ "flutesustain": {"category": "master","sounds": [{"name": "flutesustain","stream": false}]};
+ 
+ "partialcharge": {"category": "master","sounds": [{"name": "partialcharge","stream": false}]};
+ "truncatedfullcharge": {"category": "master","sounds": [{"name": "truncatedfullcharge","stream": false}]};
+ 
+ "smash":{"category": "master","sounds": [{"name": "escalate","stream": false}]};
+ "highcharge":{"category": "master","sounds": [{"name": "highcharge","stream": false}]};
+ "eviscerate":{"category": "master","sounds": [{"name": "eviscerate","stream": false}]};
+ "spellcrit":{"category": "master","sounds": [{"name": "spellcrit","stream": false}]};
+ "boomerang":{"category": "master","sounds": [{"name": "boomerang","stream": false}]};
+ "heart":{"category": "master","sounds": [{"name": "aheart","stream": false}]};
+ "starAppear":{"category": "master","sounds": [{"name": "starAppear","stream": false}]};
+ "transform":{"category": "master","sounds": [{"name": "transform","stream": false}]};
+ "revive":{"category": "master","sounds": [{"name": "revive","stream": false}]};
+ "ringTick":{"category": "master","sounds": [{"name": "ringManaTiny","stream": false}]};
+ "ringOut":{"category": "master","sounds": [{"name": "ringManaOut","stream": false}]};
+ "feather":{"category": "master","sounds": [{"name": "feather","stream": false}]};
+ "windboost":{"category": "master","sounds": [{"name": "windboost","stream": false}]};
+ "whirlwind":{"category": "master","sounds": [{"name": "whirlwind","stream": false}]};
+ "mysterySparkle":{"category": "master","sounds": [{"name": "mysterySparkle","stream": false}]};
+ 
+ 
+ 
+ "spell.Twinkle":{"category": "master","sounds": [{"name": "twinklespell","stream": false}]};
+ "spell.Fire1":{"category": "master","sounds": [{"name": "flagra","stream": false}]};
+ "spell.Lightning1":{"category": "master","sounds": [{"name": "electricspell","stream": false}]};
+ "spell.Ice1":{"category": "master","sounds": [{"name": "icespell","stream": false}]};
+ "spell.SprinkleStardust":{"category": "master","sounds": [{"name": "stardust","stream": false}]};
+ "spell.ScytheWind":{"category": "master","sounds": [{"name": "scythewind","stream": false}]};
+ "spell.Rayfire":{"category": "master","sounds": [{"name": "rayfire","stream": false}]};
+ "spell.Exit":{"category": "master","sounds": [{"name": "exit","stream": false}]};
+ 
+ 
+ "chime.0":{"category": "master","sounds": [{"name": "ring0","stream": false}]};
+ "chime.1":{"category": "master","sounds": [{"name": "ring1","stream": false}]};
+ "chime.2":{"category": "master","sounds": [{"name": "ring2","stream": false}]};
+ "chime.3":{"category": "master","sounds": [{"name": "ring3","stream": false}]};
+ "chime.5":{"category": "master","sounds": [{"name": "ring5","stream": false}]};
+ "chime.6":{"category": "master","sounds": [{"name": "ring6","stream": false}]};
+ "chime.7":{"category": "master","sounds": [{"name": "ring7","stream": false}]};
+ "chimeSad":{"category": "master","sounds": [{"name": "ringsad","stream": false}]};
+ "fork":{"category": "master","sounds": [{"name": "fork","stream": false}]};
+ 
+ "ritualReady":{"category": "master","sounds": [{"name": "ritualReady","stream": false}]};
+ "ritualSuccess":{"category": "master","sounds": [{"name": "ritualSuccess","stream": false}]};
+ "ritualFail":{"category": "master","sounds": [{"name": "ritualFail2","stream": false}]};
+ "laser":{"category": "master","sounds": [{"name": "Laser2","stream": false}]};
+ 
+ "records.dragondot":{"category": "record","sounds": [{"name": "dragondot2","stream": true}]};
+ 
+ 
+ "placement": {"category": "master", "sounds":[{"name": "placement1", "stream": false};{"name": "placement2", "stream": false};{"name": "placement3", "stream": false};{"name": "placement4", "stream": false};{"name": "placement5", "stream": false}]};
+ "placementStable": {"category": "master", "sounds":[{"name": "placementstable", "stream": false}]};
+ 
+ "caltropstap": {"category": "master","sounds": [{"name": "caltropstap1","stream": false};{"name": "caltropstap2","stream": false}]};
+ "caltropsland": {"category": "master","sounds": [{"name": "caltropsland","stream": false};{"name": "caltropsland2","stream": false};{"name": "caltropsland3","stream": false}]}
+}

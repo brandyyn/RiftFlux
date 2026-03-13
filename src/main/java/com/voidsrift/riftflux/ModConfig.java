@@ -15,6 +15,9 @@ import com.voidsrift.riftflux.dualhotbar.DualHotbarConfig;
 public class ModConfig {
 
     public static Configuration config;
+    public static final int DATAWATCHER_MAX_ID = 65536;
+    public static final int PLAYER_DATAWATCHER_MIN_ID = 20;
+    public static final int ENTITY_DATAWATCHER_MIN_ID = 16;
 
     public static boolean enableChromatiCraftMixin;
 
@@ -53,6 +56,12 @@ public class ModConfig {
     public static float fistDamageAmount;
     public static boolean enableStickDamageBonus;
     public static float stickDamageBonus;
+    public static boolean enableToroHealthModule;
+    public static boolean toroHealthShowDamageParticles;
+    public static boolean toroHealthShowThroughWalls;
+    public static float toroHealthParticleSize;
+    public static int toroHealthHealColor;
+    public static int toroHealthDamageColor;
 
     public static boolean reworkVillageGolems;
     public static int initialVillageGolems;
@@ -77,6 +86,16 @@ public class ModConfig {
     public static String[] celestialMoonEventTextures;
     public static String celestialSunEventTexture;
     public static String celestialMoonEventTexture;
+    public static boolean celestialFullSunriseSunsetTint;
+    public static boolean celestialFogMatchesSky;
+    public static boolean celestialBetaStyleFogBiomeTint;
+    public static boolean celestialBlackNightFog;
+    public static int celestialVoidFogStartHeight;
+    public static int celestialVoidParticleStartHeight;
+    public static boolean betaStarsEnabled;
+    public static int betaStarsCount;
+    public static float betaStarsSizeMultiplier;
+    public static boolean betaStarsDisableBetterSkiesStars;
 
     // Zelda
     public static boolean zeldaHeartsEnabled;
@@ -132,14 +151,136 @@ public class ModConfig {
 
     // Avatar 
     public static boolean gliderDyeRecipes;
+    public static boolean gliderStackable;
     public static boolean gliderUseItemInHand;
     public static boolean enableGliderHoldAltitude;
+    public static boolean blockEtFuturumElytraWhileAvatarGliding;
     public static boolean appaRequireTameToRide;
     public static boolean appaRestrictRideToOwner;
     public static boolean appaAllowMobPassengers;
     public static boolean appaMobPassengerWhitelistMode;
     public static String[] appaMobPassengerEntityFilter;
     public static float appaMovementSpeed;
+
+    // Terraria module
+    public static boolean enableTerraModule;
+    public static boolean enableDemonEyeSpawning;
+    public static float demonEyeHealth;
+    public static float eyeOfCthulhuHealth;
+    public static int eyeOfCthulhuExperience;
+    public static float lensDropChance;
+    public static float blackLensDropChance;
+    public static String[] eyeOfCthulhuDrops;
+    public static boolean eyeOfCthulhuMusicEnabled;
+    public static int eyeOfCthulhuDemonEyeWaveCount;
+    public static int eyeOfCthulhuDemonEyeWaveIntervalSeconds;
+    public static int eyeOfCthulhuDemonEyeCap;
+    public static int iceRodDurability;
+    public static float iceRodBlockLifetimeSeconds;
+    public static float iceRodSpawnDistance;
+    public static boolean iceRodPlacementPreviewEnabled;
+    public static boolean iceRodUseLegendGearMana;
+    public static float iceRodLegendGearManaCost;
+    public static boolean magicIceRequireSilkTouch;
+    public static int demonEyeSpawnWeight;
+    public static boolean whoopieCushionKnockbackEnabled;
+    public static float whoopieCushionKnockbackRadius;
+    public static float whoopieCushionKnockbackStrength;
+    public static int terraMushroomSpawnAttempts;
+    public static int daybloomSpawnAttempts;
+    public static int blinkrootSpawnAttempts;
+    public static int waterleafSpawnAttempts;
+    public static int deathweedSpawnAttempts;
+    public static int fireblossomSpawnAttempts;
+    public static int jungleSporeSpawnAttempts;
+    public static int moonglowSpawnAttempts;
+    public static boolean terraMushroomRequireShears;
+    public static boolean daybloomRequireShears;
+    public static boolean blinkrootRequireShears;
+    public static boolean waterleafRequireShears;
+    public static boolean deathweedRequireShears;
+    public static boolean fireblossomRequireShears;
+    public static boolean jungleSporeRequireShears;
+    public static boolean moonglowRequireShears;
+
+    // LegendGear module
+    public static boolean enableLegendGearModule;
+    public static int legendGearMagicProtectionId;
+    public static int legendGearSpellReachId;
+    public static int legendGearSpellSpreadId;
+    public static int legendGearSpellArmoredId;
+    public static boolean legendGearAllowEmeraldDrops;
+    public static boolean legendGearAllowHeartDrops;
+    public static float legendGearItemSoundVolume;
+    public static boolean legendGearFancyExperience;
+    public static int legendGearManaDatawatcherId;
+    public static int legendGearGlideDatawatcherId;
+    public static int legendGearMaxStarwellRetries;
+    public static boolean legendGearFallingStarDamageEnabled;
+    public static float legendGearFallingStarDamage;
+    public static boolean legendGearMagicBoomerangInfiniteDurability;
+    public static float legendGearMagicBoomerangDamage;
+    public static boolean legendGearMagicBoomerangBreakPlants;
+    public static boolean legendGearEnableBadBow;
+    public static int legendGearDashRingMaxAirJumps;
+    public static boolean legendGearDashRingUseOriginalBehavior;
+    public static boolean legendGearSprinkleStardustRequireSneak;
+    public static boolean legendGearSpottingScopeConsumesMana;
+    public static int legendGearTwinkleStaffDurability;
+    public static int legendGearFireStaffDurability;
+    public static int legendGearZapStaffDurability;
+    public static int legendGearIceStaffDurability;
+    public static int legendGearStarPieceInfuseLevels;
+    public static float legendGearEmberStaffFireSeconds;
+    public static boolean enableAsgardShieldModule;
+    public static int asgardShieldEquipmentDurabilityMultiplier;
+    public static int asgardShieldHarkenVitalityAugmentId;
+    public static int asgardShieldHarkenExudeAugmentId;
+    public static int asgardShieldHarkenWardAugmentId;
+    public static int asgardShieldHarkenSanguinaryAugmentId;
+    public static boolean asgardShieldEnableVanguard;
+    public static int asgardShieldHudVanguardYOffset;
+    public static int asgardShieldHudGuardGaugeYOffset;
+    public static int asgardShieldColorWood;
+    public static int asgardShieldColorStone;
+    public static int asgardShieldColorIron;
+    public static int asgardShieldColorDiamond;
+    public static int asgardShieldColorNether;
+    public static int asgardShieldColorEnder;
+    public static int asgardShieldColorSkull;
+    public static int asgardShieldColorPatchwork;
+    public static int asgardShieldColorLivingmetal;
+    public static int asgardShieldColorBiomass;
+    public static int healAltarSoulHeartsDatawatcherId;
+    public static int appaFamiliarNameDatawatcherId;
+    public static int appaBisonSeatParentDatawatcherId;
+    public static int appaBisonSeatIndexDatawatcherId;
+    public static int terrariaDemonEyeFlagsDatawatcherId;
+
+    // Soul Hearts
+    public static boolean enableSoulHeartsModule;
+    public static float soulHeartsDamageMultiplier;
+    public static boolean soulHeartsConsumeOneHeartPerHit;
+
+    // Heart Crystal
+    public static boolean enableHeartCrystalModule;
+    public static int heartCrystalHeartsPerCrystal;
+    public static int heartCrystalMiningLevel;
+    public static int heartCrystalMaxHearts;
+    public static int heartCrystalGenHeight;
+    public static int heartCrystalGenCount;
+    public static float heartCrystalKeptRate;
+    public static boolean heartCrystalOldModel;
+    public static boolean heartLanternAuraEnabled;
+    public static float heartLanternAuraRadius;
+    public static String[] heartLanternAuraEffects;
+
+    // Armor Overlay
+    public static boolean enableArmorOverlayModule;
+    public static int armorOverlayLevels;
+    public static int armorOverlayArmorPieces;
+    public static boolean armorOverlayShowNumbers;
+    public static boolean divineRpgDisableHaliteExtraArmorPieceRender;
 
     // Zyin's HUD
     public static boolean zyinQuickDepositEnabled;
@@ -165,6 +306,8 @@ public class ModConfig {
     public static boolean dualHotbarKeyCombo;
     public static int dualHotbarDoubleTapTime;
     public static int dualHotbarNumHotbars;
+    public static boolean dualHotbarHeldItemTooltipAboveBars;
+    public static int dualHotbarHeldItemTooltipPadding;
 
     // Satchels
     public static boolean satchelsHotSwap;
@@ -198,12 +341,14 @@ public class ModConfig {
 
     public static boolean protectItemsFromExplosions;
 
-    public static boolean enableItemRenderLimiter;
+    public static boolean enableDroppedItemRenderTweaks;
     public static int droppedItemLimit;
     public static int droppedItemMaxRenderDistance;
 
     public static boolean woolRequireShears;
     public static boolean shearsDamageOnAnyBlock;
+    public static int deathRespawnDelaySeconds;
+    public static boolean allowChatOnDeathScreen;
 
     public static boolean disableBonemeal;
     public static double bonemealFlowerChance;
@@ -376,6 +521,51 @@ public class ModConfig {
                 "Additional damage added to stick melee hits when EnableStickDamageBonus is true. (no bounds)"
         ).getDouble(1.0D);
 
+        enableToroHealthModule = config.getBoolean(
+                "EnableToroHealthModule",
+                "combat",
+                true,
+                "Master switch for RiftFlux-integrated ToroHealth damage/heal popoff particles."
+        );
+
+        toroHealthShowDamageParticles = config.getBoolean(
+                "ToroHealthShowDamageParticles",
+                "combat",
+                true,
+                "Show floating damage/heal numbers over entities."
+        );
+
+        toroHealthShowThroughWalls = config.getBoolean(
+                "ToroHealthRenderThroughWalls",
+                "combat",
+                false,
+                "Render ToroHealth particles through walls."
+        );
+
+        toroHealthParticleSize = config.getFloat(
+                "ToroHealthParticleSize",
+                "combat",
+                2.5F,
+                0.1F,
+                32.0F,
+                "Size multiplier for ToroHealth floating numbers."
+        );
+
+        String toroHealthHealColorRaw = config.getString(
+                "ToroHealthHealColor",
+                "combat",
+                "LIME",
+                "Heal text color name or hex (#RRGGBB, 0xRRGGBB, or RRGGBB)."
+        );
+        String toroHealthDamageColorRaw = config.getString(
+                "ToroHealthDamageColor",
+                "combat",
+                "GOLD",
+                "Damage text color name or hex (#RRGGBB, 0xRRGGBB, or RRGGBB)."
+        );
+        toroHealthHealColor = parseToroHealthColor(toroHealthHealColorRaw, 0x00FF00);
+        toroHealthDamageColor = parseToroHealthColor(toroHealthDamageColorRaw, 0xFF0000);
+
         reworkVillageGolems = config.getBoolean(
                 "ReworkVillageGolems", "general", true,
                 "Stops villager-based iron golem farms; spawns a fixed number at village worldgen."
@@ -436,16 +626,35 @@ public class ModConfig {
                 "If true, render the hotbar selector above item count text. If false, render beneath text like vanilla."
         );
 
+        deathRespawnDelaySeconds = config.getInt(
+                "DeathRespawnDelaySeconds",
+                "client",
+                12,
+                0,
+                120,
+                "Delay in seconds before the Respawn button can be clicked after dying. Set to 0 to disable."
+        );
+
+        allowChatOnDeathScreen = config.getBoolean(
+                "AllowChatOnDeathScreen",
+                "client",
+                true,
+                "If true, pressing chat/command keys on the death screen opens chat so you can type before respawning."
+        );
+
+        migrateClientConfigKeys();
+        migrateCelestialConfigCategory();
+
         enableCelestialEventTextures = config.getBoolean(
                 "EnableCelestialEventTextures",
-                "client",
+                "celestial",
                 true,
                 "If true, sun/moon textures can be swapped on random special event days."
         );
 
         celestialSunEventChance = config.getFloat(
                 "CelestialSunEventChance",
-                "client",
+                "celestial",
                 0.10F,
                 0.0F,
                 1.0F,
@@ -454,26 +663,26 @@ public class ModConfig {
 
         celestialSunEventTextures = sanitizeCelestialTextureList(config.getStringList(
                 "CelestialSunEventTextures",
-                "client",
+                "celestial",
                 new String[]{"riftflux:textures/environment/sun_event.png"},
                 "List of candidate sun textures for event days. One is picked each event day.\n" +
                         "Format per entry: namespace:path\n" +
                         "If empty, falls back to CelestialSunEventTexture."
         ));
-        config.getCategory("client")
+        config.getCategory("celestial")
                 .get("CelestialSunEventTextures")
                 .set(celestialSunEventTextures);
 
         celestialSunEventTexture = config.getString(
                 "CelestialSunEventTexture",
-                "client",
+                "celestial",
                 "riftflux:textures/environment/sun_event.png",
                 "Legacy single sun texture for event days. Used only when CelestialSunEventTextures is empty."
         );
 
         celestialMoonEventChance = config.getFloat(
                 "CelestialMoonEventChance",
-                "client",
+                "celestial",
                 0.0F,
                 0.0F,
                 1.0F,
@@ -482,31 +691,103 @@ public class ModConfig {
 
         celestialMoonEventTextures = sanitizeCelestialTextureList(config.getStringList(
                 "CelestialMoonEventTextures",
-                "client",
+                "celestial",
                 new String[]{"riftflux:textures/environment/moon_event_phases.png"},
                 "List of candidate moon phase-sheet textures for event days. One is picked each event day.\n" +
                         "Each texture must be a vanilla-style 4x2 phase sheet.\n" +
                         "A default tiled sheet based on the included moon event texture is provided.\n" +
                         "If empty, falls back to CelestialMoonEventTexture."
         ));
-        config.getCategory("client")
+        config.getCategory("celestial")
                 .get("CelestialMoonEventTextures")
                 .set(celestialMoonEventTextures);
 
         celestialMoonEventTexture = config.getString(
                 "CelestialMoonEventTexture",
-                "client",
+                "celestial",
                 "textures/environment/moon_phases.png",
                 "Legacy single moon texture for event days. Used only when CelestialMoonEventTextures is empty."
+        );
+        celestialFullSunriseSunsetTint = config.getBoolean(
+                "CelestialFullSunriseSunsetTint",
+                "celestial",
+                true,
+                "If true, sunrise and sunset tint the full sky and fog instead of only the direction you are looking."
+        );
+        celestialFogMatchesSky = config.getBoolean(
+                "CelestialFogMatchesSky",
+                "celestial",
+                true,
+                "If true, normal overworld-style fog inherits the current sky tint, including biome sky color."
+        );
+        celestialBetaStyleFogBiomeTint = config.getBoolean(
+                "CelestialBetaStyleFogBiomeTint",
+                "celestial",
+                false,
+                "If true, overworld fog keeps a desaturated beta-style grey and only tints toward non-default biome sky colors. Takes precedence over CelestialFogMatchesSky. [WIP]"
+        );
+        celestialBlackNightFog = config.getBoolean(
+                "CelestialBlackNightFog",
+                "celestial",
+                true,
+                "If true, night-time fog is forced fully black after sunrise and sunset tint have finished. Ignored while CelestialFogMatchesSky or CelestialBetaStyleFogBiomeTint is enabled."
+        );
+        celestialVoidFogStartHeight = config.getInt(
+                "CelestialVoidFogStartHeight",
+                "celestial",
+                28,
+                -256,
+                512,
+                "Approximate Y height where vanilla void fog starts ramping in. Vanilla behavior is about 28."
+        );
+        celestialVoidParticleStartHeight = config.getInt(
+                "CelestialVoidParticleStartHeight",
+                "celestial",
+                8,
+                -256,
+                512,
+                "Y height below which vanilla void particles can spawn. Vanilla behavior is 8."
         );
         if (celestialMoonEventTextures.length == 1
                 && "textures/environment/moon_phases.png".equalsIgnoreCase(celestialMoonEventTextures[0])
                 && "textures/environment/moon_phases.png".equalsIgnoreCase(celestialMoonEventTexture)) {
             celestialMoonEventTextures = new String[]{"riftflux:textures/environment/moon_event_phases.png"};
-            config.getCategory("client")
+            config.getCategory("celestial")
                     .get("CelestialMoonEventTextures")
                     .set(celestialMoonEventTextures);
         }
+
+        betaStarsEnabled = config.getBoolean(
+                "EnableBetaStars",
+                "celestial",
+                true,
+                "If true, replaces vanilla sky stars with larger beta-style stars."
+        );
+
+        betaStarsCount = config.getInt(
+                "BetaStarsCount",
+                "celestial",
+                1500,
+                0,
+                20000,
+                "How many RiftFlux beta-style stars to render. Higher values increase sky density."
+        );
+
+        betaStarsSizeMultiplier = config.getFloat(
+                "BetaStarsSizeMultiplier",
+                "celestial",
+                1.0F,
+                0.1F,
+                8.0F,
+                "Size multiplier for beta-style stars. 1.0 = default RiftFlux beta-star size."
+        );
+
+        betaStarsDisableBetterSkiesStars = config.getBoolean(
+                "BetaStarsDisableBetterSkiesStars",
+                "celestial",
+                true,
+                "If true, suppresses MCPatcherForge/BetterSkies star layers while beta stars are enabled so RiftFlux beta stars replace them."
+        );
 
         zeldaHeartsEnabled = config.getBoolean(
                 "EnableHeartsModule",
@@ -771,7 +1052,7 @@ public class ModConfig {
         blessingsPillarGenChance = config.getInt(
                 "BlessingsPillarGenChance",
                 "Blessings",
-                75,
+                33,
                 1,
                 Integer.MAX_VALUE,
                 "1 in N chance per chunk to attempt placing blessing pillars."
@@ -780,7 +1061,7 @@ public class ModConfig {
         blessingsPillarMaxPerChunk = config.getInt(
                 "BlessingsPillarMaxPerChunk",
                 "Blessings",
-                3,
+                1,
                 1,
                 64,
                 "Maximum blessing pillars that can generate in a chunk when generation triggers."
@@ -861,7 +1142,7 @@ public class ModConfig {
         blessingDrunkNegativePotionIds = parsePotionIdList(config.getStringList(
                 "BlessingDrunkNegativePotionIds",
                 "Blessings",
-                new String[]{"2", "4", "6", "9", "15", "17", "18", "19", "20"},
+                new String[]{"2", "4", "9", "15", "17", "18", "19", "20"},
                 "Potion IDs eligible for the Drunk blessing negative effect."
         ));
 
@@ -870,6 +1151,12 @@ public class ModConfig {
                 "avatar",
                 true,
                 "If true, gliders can be recolored with dyes in a crafting grid."
+        );
+        gliderStackable = config.getBoolean(
+                "GliderStackable",
+                "avatar",
+                false,
+                "If true, Avatar gliders can stack. If false, each glider is unstackable."
         );
 
         gliderUseItemInHand = config.getBoolean(
@@ -883,6 +1170,13 @@ public class ModConfig {
                 "avatar",
                 true,
                 "If true, holding the jump key while gliding prevents downward motion and consumes stamina at sprint rate. Works best with DSS enabled."
+        );
+
+        blockEtFuturumElytraWhileAvatarGliding = config.getBoolean(
+                "BlockEtFuturumElytraWhileAvatarGliding",
+                "avatar",
+                true,
+                "If true, Et Futurum Requiem Elytra cannot be activated while Avatar glider mode is active."
         );
 
         appaRequireTameToRide = config.getBoolean(
@@ -936,6 +1230,959 @@ public class ModConfig {
                 0.0F,
                 2.0F,
                 "Base movement speed for Appa. Lower values make Appa slower."
+        );
+
+        enableTerraModule = config.getBoolean(
+                "EnableTerraModule",
+                "terraria",
+                true,
+                "Master switch for the Terraria module (Demon Eye, Eye of Cthulhu, Suspicious Looking Eye, lenses, and Ice Rod)."
+        );
+
+        enableDemonEyeSpawning = config.getBoolean(
+                "EnableDemonEyeSpawning",
+                "terraria",
+                true,
+                "If true, Demon Eyes can spawn naturally at night."
+        );
+
+        demonEyeHealth = config.getFloat(
+                "DemonEyeHealth",
+                "terraria",
+                14.0F,
+                1.0F,
+                2048.0F,
+                "Max health for Demon Eye."
+        );
+
+        eyeOfCthulhuHealth = config.getFloat(
+                "EyeOfCthulhuHealth",
+                "terraria",
+                400.0F,
+                1.0F,
+                2048.0F,
+                "Max health for Eye of Cthulhu."
+        );
+
+        eyeOfCthulhuExperience = config.getInt(
+                "EyeOfCthulhuExperience",
+                "terraria",
+                3600,
+                0,
+                1000000,
+                "Total experience dropped by Eye of Cthulhu during its death sequence."
+        );
+
+        lensDropChance = config.getFloat(
+                "LensDropChance",
+                "terraria",
+                0.23F,
+                0.0F,
+                1.0F,
+                "Chance (0.0-1.0) for a Demon Eye to drop a Lens."
+        );
+
+        blackLensDropChance = config.getFloat(
+                "BlackLensDropChance",
+                "terraria",
+                0.01F,
+                0.0F,
+                1.0F,
+                "Chance (0.0-1.0) for a Demon Eye to drop a Black Lens."
+        );
+
+        eyeOfCthulhuDrops = config.getStringList(
+                "EyeOfCthulhuDrops",
+                "terraria",
+                new String[]{
+                        "riftflux:glider_red*1|1.0",
+                        "riftflux:whoopie_cushion*1|1.0",
+                        "riftflux:ice_rod*1|1.0"
+                },
+                "Drops for Eye of Cthulhu.\n" +
+                        "Format: modid:item[@meta][*count]|chance (chance can be 0-1 or percent)."
+        );
+
+        eyeOfCthulhuMusicEnabled = config.getBoolean(
+                "EyeOfCthulhuMusicEnabled",
+                "terraria",
+                true,
+                "If true, plays riftflux:eyeofcthulu while an Eye of Cthulhu is within render distance."
+        );
+
+        eyeOfCthulhuDemonEyeWaveCount = config.getInt(
+                "EyeOfCthulhuDemonEyeWaveCount",
+                "terraria",
+                3,
+                0,
+                128,
+                "How many Demon Eyes Eye of Cthulhu summons per wave. Set to 0 to disable wave summoning."
+        );
+
+        eyeOfCthulhuDemonEyeWaveIntervalSeconds = config.getInt(
+                "EyeOfCthulhuDemonEyeWaveIntervalSeconds",
+                "terraria",
+                12,
+                1,
+                3600,
+                "Seconds between Eye of Cthulhu Demon Eye summon waves."
+        );
+
+        eyeOfCthulhuDemonEyeCap = config.getInt(
+                "EyeOfCthulhuDemonEyeCap",
+                "terraria",
+                18,
+                0,
+                512,
+                "Maximum number of Eye of Cthulhu-summoned Demon Eyes alive at once. Set to 0 to disable wave summoning."
+        );
+
+        iceRodBlockLifetimeSeconds = config.getFloat(
+                "IceRodBlockLifetimeSeconds",
+                "terraria",
+                16.0F,
+                0.05F,
+                300.0F,
+                "How long Ice Rod summoned blocks last before disappearing."
+        );
+
+        iceRodDurability = config.getInt(
+                "IceRodDurability",
+                "terraria",
+                1024,
+                0,
+                32767,
+                "Max durability for Ice Rod. Set to 0 for infinite durability."
+        );
+
+        iceRodSpawnDistance = config.getFloat(
+                "IceRodSpawnDistance",
+                "terraria",
+                3.0F,
+                1.0F,
+                16.0F,
+                "Distance in blocks in front of the player where Ice Rod places Magic Ice when no block is targeted. Supports decimals (for example 2.5)."
+        );
+
+        iceRodPlacementPreviewEnabled = config.getBoolean(
+                "IceRodPlacementPreviewEnabled",
+                "terraria",
+                true,
+                "If true, holding the Ice Rod shows a preview box of the block position that will be placed."
+        );
+
+        iceRodUseLegendGearMana = config.getBoolean(
+                "IceRodUseLegendGearMana",
+                "terraria",
+                true,
+                "If true, Ice Rod uses LegendGear mana (shows mana HUD while held and consumes IceRodLegendGearManaCost mana units per cast)."
+        );
+
+        iceRodLegendGearManaCost = config.getFloat(
+                "IceRodLegendGearManaCost",
+                "terraria",
+                0.25F,
+                0.0F,
+                40.0F,
+                "LegendGear mana consumed per Ice Rod cast when IceRodUseLegendGearMana is enabled. 1.0 = half a mana star."
+        );
+
+        magicIceRequireSilkTouch = config.getBoolean(
+                "MagicIceRequireSilkTouch",
+                "terraria",
+                true,
+                "If true, temporary Magic Ice only drops permanent Magic Ice when broken with Silk Touch."
+        );
+
+        demonEyeSpawnWeight = config.getInt(
+                "DemonEyeSpawnWeight",
+                "terraria",
+                2,
+                0,
+                200,
+                "Spawn weight for Demon Eye. Lower is rarer. Set to 0 to disable natural spawning without disabling the module."
+        );
+
+        whoopieCushionKnockbackEnabled = config.getBoolean(
+                "WhoopieCushionKnockbackEnabled",
+                "terraria",
+                true,
+                "If true, right-clicking Whoopie Cushion knocks nearby mobs upward and away."
+        );
+
+        whoopieCushionKnockbackRadius = config.getFloat(
+                "WhoopieCushionKnockbackRadius",
+                "terraria",
+                2.5F,
+                0.0F,
+                16.0F,
+                "Radius around the player to affect mobs when using Whoopie Cushion."
+        );
+
+        whoopieCushionKnockbackStrength = config.getFloat(
+                "WhoopieCushionKnockbackStrength",
+                "terraria",
+                2.5F,
+                0.0F,
+                10.0F,
+                "Knockback strength multiplier for Whoopie Cushion mob launch."
+        );
+
+        terraMushroomSpawnAttempts = config.getInt(
+                "TerraMushroomSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Terra Mushroom (surface). 0 disables spawning."
+        );
+
+        daybloomSpawnAttempts = config.getInt(
+                "DaybloomSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Daybloom (surface). 0 disables spawning."
+        );
+
+        blinkrootSpawnAttempts = config.getInt(
+                "BlinkrootSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Blinkroot (underground). 0 disables spawning."
+        );
+
+        waterleafSpawnAttempts = config.getInt(
+                "WaterleafSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Waterleaf (underground). 0 disables spawning."
+        );
+
+        deathweedSpawnAttempts = config.getInt(
+                "DeathweedSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Deathweed (underground). 0 disables spawning."
+        );
+
+        fireblossomSpawnAttempts = config.getInt(
+                "FireblossomSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Fireblossom (underground). 0 disables spawning."
+        );
+
+        jungleSporeSpawnAttempts = config.getInt(
+                "JungleSporeSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Jungle Spore (underground jungle). 0 disables spawning."
+        );
+
+        moonglowSpawnAttempts = config.getInt(
+                "MoonglowSpawnAttempts",
+                "terraria",
+                1,
+                0,
+                64,
+                "Generation attempts per chunk for Moonglow (underground jungle). 0 disables spawning."
+        );
+
+        terraMushroomRequireShears = config.getBoolean(
+                "TerraMushroomRequireShears",
+                "terraria",
+                false,
+                "If true, Terra Mushroom only drops itself when harvested with shears."
+        );
+
+        daybloomRequireShears = config.getBoolean(
+                "DaybloomRequireShears",
+                "terraria",
+                false,
+                "If true, Daybloom only drops itself when harvested with shears."
+        );
+
+        blinkrootRequireShears = config.getBoolean(
+                "BlinkrootRequireShears",
+                "terraria",
+                false,
+                "If true, Blinkroot only drops itself when harvested with shears."
+        );
+
+        waterleafRequireShears = config.getBoolean(
+                "WaterleafRequireShears",
+                "terraria",
+                false,
+                "If true, Waterleaf only drops itself when harvested with shears."
+        );
+
+        deathweedRequireShears = config.getBoolean(
+                "DeathweedRequireShears",
+                "terraria",
+                false,
+                "If true, Deathweed only drops itself when harvested with shears."
+        );
+
+        fireblossomRequireShears = config.getBoolean(
+                "FireblossomRequireShears",
+                "terraria",
+                false,
+                "If true, Fireblossom only drops itself when harvested with shears."
+        );
+
+        jungleSporeRequireShears = config.getBoolean(
+                "JungleSporeRequireShears",
+                "terraria",
+                false,
+                "If true, Jungle Spore only drops itself when harvested with shears."
+        );
+
+        moonglowRequireShears = config.getBoolean(
+                "MoonglowRequireShears",
+                "terraria",
+                false,
+                "If true, Moonglow only drops itself when harvested with shears."
+        );
+
+        enableLegendGearModule = config.getBoolean(
+                "EnableLegendGearModule",
+                "legendgear",
+                true,
+                "Master switch for integrated LegendGear content (items, blocks, entities, rituals, mana, and worldgen)."
+        );
+
+        legendGearMagicProtectionId = config.getInt(
+                "magicProtectionID",
+                "legendgear",
+                110,
+                0,
+                255,
+                "Enchantment ID for Magic Protection."
+        );
+
+        legendGearSpellReachId = config.getInt(
+                "spellReachID",
+                "legendgear",
+                111,
+                0,
+                255,
+                "Enchantment ID for Reach."
+        );
+
+        legendGearSpellSpreadId = config.getInt(
+                "spellSpreadID",
+                "legendgear",
+                112,
+                0,
+                255,
+                "Enchantment ID for Spread."
+        );
+
+        legendGearSpellArmoredId = config.getInt(
+                "spellArmoredID",
+                "legendgear",
+                113,
+                0,
+                255,
+                "Enchantment ID for Fortitude."
+        );
+
+        legendGearAllowEmeraldDrops = config.getBoolean(
+                "allowEmeraldDrops",
+                "legendgear",
+                false,
+                "Allow emerald shard drops from mobs and grass."
+        );
+
+        legendGearAllowHeartDrops = config.getBoolean(
+                "allowHeartDrops",
+                "legendgear",
+                true,
+                "Allow heart drops from mobs and grass."
+        );
+
+        legendGearItemSoundVolume = config.getFloat(
+                "itemSoundVolume",
+                "legendgear",
+                0.3F,
+                0.0F,
+                1.0F,
+                "Volume of heart and emerald pickup sounds."
+        );
+
+        legendGearFancyExperience = config.getBoolean(
+                "fancyExperience",
+                "legendgear",
+                true,
+                "Render fancy rainbow experience orbs."
+        );
+
+        int legacyLegendGearManaDatawatcherId = config.getInt(
+                "manaDatawatcherID",
+                "legendgear",
+                20,
+                PLAYER_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "Legacy key for player mana datawatcher ID. Kept for compatibility."
+        );
+
+        legendGearManaDatawatcherId = config.getInt(
+                "LegendGearManaDatawatcherID",
+                "datawatchers",
+                legacyLegendGearManaDatawatcherId,
+                PLAYER_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for LegendGear mana on players."
+        );
+
+        legendGearGlideDatawatcherId = config.getInt(
+                "LegendGearGlideDatawatcherID",
+                "datawatchers",
+                Math.min(DATAWATCHER_MAX_ID, legendGearManaDatawatcherId + 1),
+                PLAYER_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for LegendGear glide state on players."
+        );
+
+        legendGearMaxStarwellRetries = config.getInt(
+                "maxStarwellRetries",
+                "legendgear",
+                16,
+                0,
+                16,
+                "Times to retry placing a starwell in a chunk if invalid."
+        );
+
+        legendGearFallingStarDamageEnabled = config.getBoolean(
+                "fallingStarDamageEnabled",
+                "legendgear",
+                true,
+                "If true, Falling Stars can deal damage on impact and while descending."
+        );
+
+        legendGearFallingStarDamage = config.getFloat(
+                "fallingStarDamage",
+                "legendgear",
+                25.0F,
+                0.0F,
+                2048.0F,
+                "Damage dealt by Falling Stars to entities hit mid-air and in the 3x3x3 impact area."
+        );
+
+        legendGearMagicBoomerangInfiniteDurability = config.getBoolean(
+                "magicBoomerangInfiniteDurability",
+                "legendgear",
+                true,
+                "If true, the Magic Boomerang does not lose durability."
+        );
+
+        legendGearMagicBoomerangDamage = config.getFloat(
+                "magicBoomerangDamage",
+                "legendgear",
+                12.0F,
+                0.0F,
+                1024.0F,
+                "Damage dealt by a direct Magic Boomerang hit."
+        );
+
+        legendGearMagicBoomerangBreakPlants = config.getBoolean(
+                "magicBoomerangBreakPlants",
+                "legendgear",
+                true,
+                "If true, a thrown Magic Boomerang breaks plant/vine blocks it hits."
+        );
+
+        legendGearEnableBadBow = config.getBoolean(
+                "enableBadBow",
+                "legendgear",
+                true,
+                "If false, disables registration and recipes for legendgear:badBow."
+        );
+
+        legendGearDashRingMaxAirJumps = config.getInt(
+                "dashRingMaxAirJumps",
+                "legendgear",
+                2,
+                0,
+                8,
+                "Maximum extra mid-air jumps granted by the dash ring behavior."
+        );
+
+        legendGearDashRingUseOriginalBehavior = config.getBoolean(
+                "dashRingUseOriginalBehavior",
+                "legendgear",
+                false,
+                "If true, restores the original dash ring behavior (unlimited mid-air dashes) and ignores dashRingMaxAirJumps."
+        );
+
+        legendGearSprinkleStardustRequireSneak = config.getBoolean(
+                "sprinkleStardustRequireSneak",
+                "legendgear",
+                true,
+                "If true, Infused Stardust only sprinkles when crouch right-clicking."
+        );
+
+        legendGearSpottingScopeConsumesMana = config.getBoolean(
+                "spottingScopeConsumesMana",
+                "legendgear",
+                false,
+                "If false, the spotting scope ping does not consume mana and can be used at zero mana."
+        );
+        legendGearTwinkleStaffDurability = config.getInt(
+                "twinkleStaffDurability",
+                "legendgear",
+                128,
+                0,
+                32767,
+                "Durability for the Twinkle Staff. Set to 0 for unlimited durability."
+        );
+        legendGearFireStaffDurability = config.getInt(
+                "fireStaffDurability",
+                "legendgear",
+                128,
+                0,
+                32767,
+                "Durability for the Ember Staff. Set to 0 for unlimited durability."
+        );
+        legendGearZapStaffDurability = config.getInt(
+                "zapStaffDurability",
+                "legendgear",
+                128,
+                0,
+                32767,
+                "Durability for the Zap Staff. Set to 0 for unlimited durability."
+        );
+        legendGearIceStaffDurability = config.getInt(
+                "iceStaffDurability",
+                "legendgear",
+                128,
+                0,
+                32767,
+                "Durability for the Ice Staff. Set to 0 for unlimited durability."
+        );
+        legendGearStarPieceInfuseLevels = config.getInt(
+                "starPieceInfuseLevels",
+                "legendgear",
+                3,
+                0,
+                1000,
+                "XP levels required to infuse a Star Piece into an Infused Star Piece."
+        );
+
+        legendGearEmberStaffFireSeconds = config.getFloat(
+                "emberStaffFireSeconds",
+                "legendgear",
+                3.0F,
+                0.0F,
+                600.0F,
+                "How long Ember Staff fire spells ignite entities for (in seconds, fractional allowed). Set to 0 to disable burning."
+        );
+
+        enableAsgardShieldModule = config.getBoolean(
+                "EnableAsgardShieldModule",
+                "asgardshield",
+                true,
+                "Master switch for integrated Asgard Shield content (core + addon shields/swords, guard logic, and HUD)."
+        );
+
+        asgardShieldEquipmentDurabilityMultiplier = config.getInt(
+                "EquipmentDurabilityMultiplier",
+                "asgardshield",
+                1,
+                1,
+                64,
+                "Multiplier applied to Asgard shield and giant sword durability."
+        );
+
+        asgardShieldHarkenVitalityAugmentId = config.getInt(
+                "HarkenScytheVitalityAugmentID",
+                "asgardshield",
+                206,
+                0,
+                255,
+                "Enchantment ID used for Harken Scythe Vitality augment compatibility."
+        );
+
+        asgardShieldHarkenExudeAugmentId = config.getInt(
+                "HarkenScytheExudeAugmentID",
+                "asgardshield",
+                207,
+                0,
+                255,
+                "Enchantment ID used for Harken Scythe Exude augment compatibility."
+        );
+
+        asgardShieldHarkenWardAugmentId = config.getInt(
+                "HarkenScytheWardAugmentID",
+                "asgardshield",
+                210,
+                0,
+                255,
+                "Enchantment ID used for Harken Scythe Ward augment compatibility."
+        );
+
+        asgardShieldHarkenSanguinaryAugmentId = config.getInt(
+                "HarkenScytheSanguinaryAugmentID",
+                "asgardshield",
+                211,
+                0,
+                255,
+                "Enchantment ID used for Harken Scythe Sanguinary augment compatibility."
+        );
+
+        asgardShieldEnableVanguard = config.getBoolean(
+                "EnableVanguard",
+                "asgardshield",
+                true,
+                "If true, the Vanguard charge/activation mechanic is enabled."
+        );
+
+        asgardShieldHudVanguardYOffset = config.getInt(
+                "HudVanguardYOffset",
+                "asgardshield",
+                0,
+                -32,
+                32,
+                "Vertical offset for the Vanguard HUD icon. Value is in 16px steps."
+        );
+
+        asgardShieldHudGuardGaugeYOffset = config.getInt(
+                "HudGuardGaugeYOffset",
+                "asgardshield",
+                0,
+                -32,
+                32,
+                "Vertical offset for the Guard Gauge HUD bar. Value is in 9px steps."
+        );
+
+        asgardShieldColorWood = config.getInt(
+                "ColorWood",
+                "asgardshield",
+                10454093,
+                0,
+                0xFFFFFF,
+                "Default tint color for Wooden shields."
+        );
+
+        asgardShieldColorStone = config.getInt(
+                "ColorStone",
+                "asgardshield",
+                0xCDCDCD,
+                0,
+                0xFFFFFF,
+                "Default tint color for Stone shields."
+        );
+
+        asgardShieldColorIron = config.getInt(
+                "ColorIron",
+                "asgardshield",
+                0xC6C6C6,
+                0,
+                0xFFFFFF,
+                "Default tint color for Iron shields."
+        );
+
+        asgardShieldColorDiamond = config.getInt(
+                "ColorDiamond",
+                "asgardshield",
+                3402699,
+                0,
+                0xFFFFFF,
+                "Default tint color for Diamond shields."
+        );
+
+        asgardShieldColorNether = config.getInt(
+                "ColorNether",
+                "asgardshield",
+                15065046,
+                0,
+                0xFFFFFF,
+                "Default tint color for Nether Quartz shields."
+        );
+
+        asgardShieldColorEnder = config.getInt(
+                "ColorEnder",
+                "asgardshield",
+                6314865,
+                0,
+                0xFFFFFF,
+                "Default tint color for Ender shields."
+        );
+
+        asgardShieldColorSkull = config.getInt(
+                "ColorSkull",
+                "asgardshield",
+                16184280,
+                0,
+                0xFFFFFF,
+                "Default tint color for Skull shields."
+        );
+
+        asgardShieldColorPatchwork = config.getInt(
+                "ColorPatchwork",
+                "asgardshield",
+                44975,
+                0,
+                0xFFFFFF,
+                "Default tint color for Patchwork shields."
+        );
+
+        asgardShieldColorLivingmetal = config.getInt(
+                "ColorLivingmetal",
+                "asgardshield",
+                12905471,
+                0,
+                0xFFFFFF,
+                "Default tint color for Livingmetal shields."
+        );
+
+        asgardShieldColorBiomass = config.getInt(
+                "ColorBiomass",
+                "asgardshield",
+                13136249,
+                0,
+                0xFFFFFF,
+                "Default tint color for Biomass shields."
+        );
+
+        healAltarSoulHeartsDatawatcherId = config.getInt(
+                "HealingAltarSoulHeartsDatawatcherID",
+                "datawatchers",
+                Math.min(DATAWATCHER_MAX_ID, legendGearGlideDatawatcherId + 1),
+                PLAYER_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for Healing Altar soul hearts on players."
+        );
+
+        appaFamiliarNameDatawatcherId = config.getInt(
+                "AppaFamiliarNameDatawatcherID",
+                "datawatchers",
+                19,
+                ENTITY_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for familiar name sync."
+        );
+
+        appaBisonSeatParentDatawatcherId = config.getInt(
+                "AppaBisonSeatParentDatawatcherID",
+                "datawatchers",
+                20,
+                ENTITY_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for bison seat parent entity ID."
+        );
+
+        appaBisonSeatIndexDatawatcherId = config.getInt(
+                "AppaBisonSeatIndexDatawatcherID",
+                "datawatchers",
+                21,
+                ENTITY_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for bison seat index."
+        );
+
+        terrariaDemonEyeFlagsDatawatcherId = config.getInt(
+                "TerrariaDemonEyeFlagsDatawatcherID",
+                "datawatchers",
+                16,
+                ENTITY_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for Demon Eye state flags."
+        );
+
+        resolveDatawatcherConflicts();
+        persistDatawatcherConfigValue("legendgear", "manaDatawatcherID", legendGearManaDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "LegendGearManaDatawatcherID", legendGearManaDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "LegendGearGlideDatawatcherID", legendGearGlideDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "HealingAltarSoulHeartsDatawatcherID", healAltarSoulHeartsDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "AppaFamiliarNameDatawatcherID", appaFamiliarNameDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "AppaBisonSeatParentDatawatcherID", appaBisonSeatParentDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "AppaBisonSeatIndexDatawatcherID", appaBisonSeatIndexDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "TerrariaDemonEyeFlagsDatawatcherID", terrariaDemonEyeFlagsDatawatcherId);
+
+        enableSoulHeartsModule = config.getBoolean(
+                "EnableSoulHeartsModule",
+                "soulhearts",
+                true,
+                "Master switch for integrated Soul Hearts content."
+        );
+
+        soulHeartsDamageMultiplier = config.getFloat(
+                "SoulDamageMultiplier",
+                "soulhearts",
+                2.0F,
+                1.0F,
+                5.0F,
+                "Legacy soul-damage multiplier for non-per-hit behavior."
+        );
+
+        soulHeartsConsumeOneHeartPerHit = config.getBoolean(
+                "SoulHeartsConsumeOneHeartPerHit",
+                "soulhearts",
+                true,
+                "If true, any incoming damage consumes exactly 1 soul heart (2 points) to absorb damage."
+        );
+
+        enableHeartCrystalModule = config.getBoolean(
+                "EnableHeartCrystalModule",
+                "heartcrystal",
+                true,
+                "Master switch for integrated Heart Crystal content."
+        );
+
+        heartCrystalHeartsPerCrystal = config.getInt(
+                "HeartsPerCrystal",
+                "heartcrystal",
+                2,
+                1,
+                20,
+                "How many hearts (2 HP each) one Heart Crystal grants."
+        );
+
+        heartCrystalMiningLevel = config.getInt(
+                "MiningLevel",
+                "heartcrystal",
+                2,
+                0,
+                10,
+                "Required pickaxe harvest level for Heart Crystal ore. 2 = iron pickaxe."
+        );
+
+        heartCrystalMaxHearts = config.getInt(
+                "MaxHearts",
+                "heartcrystal",
+                10,
+                0,
+                Integer.MAX_VALUE,
+                "How many extra hearts a player can gain from heart crystals."
+        );
+
+        heartCrystalGenHeight = config.getInt(
+                "GenHeight",
+                "heartcrystal",
+                20,
+                1,
+                256,
+                "Generation height ceiling for heart crystals."
+        );
+
+        heartCrystalGenCount = config.getInt(
+                "GenCount",
+                "heartcrystal",
+                4,
+                0,
+                1000,
+                "Generation attempts per chunk for heart crystals."
+        );
+
+        heartCrystalKeptRate = config.getFloat(
+                "KeptRate",
+                "heartcrystal",
+                0.0F,
+                0.0F,
+                1.0F,
+                "Chance of retaining each extra heart on death."
+        );
+
+        heartCrystalOldModel = config.getBoolean(
+                "OldModel",
+                "heartcrystal",
+                false,
+                "If true, use the old 3D heart crystal model."
+        );
+
+        heartLanternAuraEnabled = config.getBoolean(
+                "HeartLanternAuraEnabled",
+                "heartcrystal",
+                true,
+                "If true, heart lanterns apply configurable potion effects to players inside the configured radius."
+        );
+
+        heartLanternAuraRadius = config.getFloat(
+                "HeartLanternAuraRadius",
+                "heartcrystal",
+                6.0F,
+                0.0F,
+                64.0F,
+                "Radius around a heart lantern that receives the configured aura effects."
+        );
+
+        heartLanternAuraEffects = config.getStringList(
+                "HeartLanternAuraEffects",
+                "heartcrystal",
+                new String[]{"regeneration,0"},
+                "Potion effects applied by heart lanterns.\n" +
+                        "Format per entry: potionNameOrId,amplifier\n" +
+                        "Examples: regeneration,0  or  moveSpeed,1"
+        );
+
+        enableArmorOverlayModule = config.getBoolean(
+                "EnableArmorOverlayModule",
+                "armoroverlay",
+                true,
+                "Master switch for integrated Armor Overlay rendering."
+        );
+
+        armorOverlayLevels = config.getInt(
+                "OverlayLevels",
+                "armoroverlay",
+                3,
+                3,
+                20,
+                "Max armor icon tiers: 3, 5, 10, or 20."
+        );
+        if (armorOverlayLevels <= 3) {
+            armorOverlayLevels = 3;
+        } else if (armorOverlayLevels <= 5) {
+            armorOverlayLevels = 5;
+        } else if (armorOverlayLevels <= 10) {
+            armorOverlayLevels = 10;
+        } else {
+            armorOverlayLevels = 20;
+        }
+
+        armorOverlayArmorPieces = config.getInt(
+                "ArmorPieces",
+                "armoroverlay",
+                2,
+                1,
+                4,
+                "Number of armor points to make 1 full armor icon. can be 1, 2 or 4"
+        );
+        if (armorOverlayArmorPieces == 3 || armorOverlayArmorPieces > 4) {
+            armorOverlayArmorPieces = 4;
+        }
+        if (armorOverlayArmorPieces < 1) {
+            armorOverlayArmorPieces = 1;
+        }
+
+        armorOverlayShowNumbers = config.getBoolean(
+                "DisplayNumber",
+                "armoroverlay",
+                false,
+                "If true, show raw armor values next to the overlay."
+        );
+
+        persistDatawatcherConfigValue("armoroverlay", "OverlayLevels", armorOverlayLevels);
+        persistDatawatcherConfigValue("armoroverlay", "ArmorPieces", armorOverlayArmorPieces);
+
+        divineRpgDisableHaliteExtraArmorPieceRender = config.getBoolean(
+                "DisableHaliteExtraArmorPieceRender",
+                "divinerpg",
+                true,
+                "If true, disables DivineRPG's extra Halite full-set half-armor HUD piece rendering."
         );
 
         zyinQuickDepositEnabled = config.getBoolean(
@@ -1093,6 +2340,22 @@ public class ModConfig {
                 "How many hotbar rows (9 slots each)."
         );
 
+        dualHotbarHeldItemTooltipAboveBars = config.getBoolean(
+                "HeldItemTooltipAboveBars",
+                "dualhotbar",
+                true,
+                "If true, the held-item tooltip is raised to stay above the armor bar and LegendGear mana bar when visible."
+        );
+
+        dualHotbarHeldItemTooltipPadding = config.getInt(
+                "HeldItemTooltipPadding",
+                "dualhotbar",
+                2,
+                0,
+                32,
+                "Extra pixels of vertical padding between the held-item tooltip and the top-most armor/mana bar."
+        );
+
         // --- Satchels ---
         satchelsHotSwap = config.getBoolean(
                 "SatchelsHotSwap", "satchels", false,
@@ -1229,8 +2492,8 @@ public class ModConfig {
         protectItemsFromExplosions = config.get("general", "protectItemsFromExplosions", true,
                 "Stops explosions from deleting items").getBoolean(true);
 
-        enableItemRenderLimiter = config.get("client", "enableItemRenderLimiter", true,
-                        "If true, dynamically limits how many dropped items are rendered each frame.")
+        enableDroppedItemRenderTweaks = config.get("client", "EnableDroppedItemRenderTweaks", true,
+                        "If true, applies RiftFlux dropped-item render tweaks, including the nearest-item limiter and extra render-distance override.")
                 .getBoolean(true);
 
         droppedItemLimit = config.get("client", "droppedItemLimit", 512,
@@ -1602,7 +2865,7 @@ public class ModConfig {
                 "enableHangingLadders",
                 "tweaks",
                 true,
-                "Enables Hanging Ladders, extend a ladder downward by right-clicking an existing ladder with another ladder also enables holding jump to climb ladders."
+                "Enables Hanging Ladders, extend a ladder downward by right-clicking an existing ladder with another ladder also enables holding jump to climb ladders. [WIP]"
         );
 
         floatingLaddersRequireSneak = config.getBoolean(
@@ -1760,6 +3023,92 @@ public class ModConfig {
         zelda.Config.syncFromModConfig();
 
         config.save();
+    }
+
+    private static void resolveDatawatcherConflicts() {
+        Set<Integer> used = new HashSet<Integer>();
+
+        legendGearManaDatawatcherId = reserveUniqueDatawatcherId(legendGearManaDatawatcherId, PLAYER_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+        legendGearGlideDatawatcherId = reserveUniqueDatawatcherId(legendGearGlideDatawatcherId, PLAYER_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+        healAltarSoulHeartsDatawatcherId = reserveUniqueDatawatcherId(healAltarSoulHeartsDatawatcherId, PLAYER_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+        appaFamiliarNameDatawatcherId = reserveUniqueDatawatcherId(appaFamiliarNameDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+        appaBisonSeatParentDatawatcherId = reserveUniqueDatawatcherId(appaBisonSeatParentDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+        appaBisonSeatIndexDatawatcherId = reserveUniqueDatawatcherId(appaBisonSeatIndexDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+        terrariaDemonEyeFlagsDatawatcherId = reserveUniqueDatawatcherId(terrariaDemonEyeFlagsDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+    }
+
+    private static int reserveUniqueDatawatcherId(int requested, int min, int max, Set<Integer> used) {
+        int candidate = Math.max(min, Math.min(max, requested));
+        if (!used.contains(candidate)) {
+            used.add(candidate);
+            return candidate;
+        }
+        for (int i = min; i <= max; i++) {
+            if (!used.contains(i)) {
+                used.add(i);
+                return i;
+            }
+        }
+        return candidate;
+    }
+
+    private static void persistDatawatcherConfigValue(String category, String key, int value) {
+        config.get(category, key, value).set(value);
+    }
+
+    public static boolean isValidPlayerDatawatcherId(int id) {
+        return id >= PLAYER_DATAWATCHER_MIN_ID && id <= DATAWATCHER_MAX_ID;
+    }
+
+    public static boolean isValidEntityDatawatcherId(int id) {
+        return id >= ENTITY_DATAWATCHER_MIN_ID && id <= DATAWATCHER_MAX_ID;
+    }
+
+    private static void migrateCelestialConfigCategory() {
+        moveConfigPropertyIfMissing("client", "celestial", "EnableCelestialEventTextures");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialSunEventChance");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialSunEventTextures");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialSunEventTexture");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialMoonEventChance");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialMoonEventTextures");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialMoonEventTexture");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialFullSunriseSunsetTint");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialFogMatchesSky");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialBetaStyleFogBiomeTint");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialBlackNightFog");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialVoidFogStartHeight");
+        moveConfigPropertyIfMissing("client", "celestial", "CelestialVoidParticleStartHeight");
+        moveConfigPropertyIfMissing("client", "celestial", "EnableBetaStars");
+        moveConfigPropertyIfMissing("client", "celestial", "BetaStarsCount");
+        moveConfigPropertyIfMissing("client", "celestial", "BetaStarsSizeMultiplier");
+        moveConfigPropertyIfMissing("client", "celestial", "BetaStarsDisableBetterSkiesStars");
+        renameConfigPropertyIfMissing("celestial", "BetaStarsDisableBetterSkiesLayers", "BetaStarsDisableBetterSkiesStars");
+    }
+
+    private static void migrateClientConfigKeys() {
+        renameConfigPropertyIfMissing("client", "enableItemRenderLimiter", "EnableDroppedItemRenderTweaks");
+    }
+
+    private static void moveConfigPropertyIfMissing(String oldCategory, String newCategory, String key) {
+        if (!config.hasKey(oldCategory, key) || config.hasKey(newCategory, key)) {
+            return;
+        }
+        config.moveProperty(oldCategory, key, newCategory);
+    }
+
+    private static void renameConfigPropertyIfMissing(String category, String oldKey, String newKey) {
+        if (!config.hasKey(category, oldKey) || config.hasKey(category, newKey)) {
+            return;
+        }
+        if (config.getCategory(category) == null) {
+            return;
+        }
+        net.minecraftforge.common.config.Property property = config.getCategory(category).remove(oldKey);
+        if (property == null) {
+            return;
+        }
+        property.setName(newKey);
+        config.getCategory(category).put(newKey, property);
     }
 
     private static String[] sanitizeAppaPassengerFilter(String[] values) {
@@ -2208,6 +3557,48 @@ public class ModConfig {
         } finally {
             allowCustomPaintingInsert = previousAllow;
         }
+    }
+
+    private static int parseToroHealthColor(String color, int fallback) {
+        if (color == null) {
+            return fallback;
+        }
+
+        String value = color.trim();
+        if (value.isEmpty()) {
+            return fallback;
+        }
+
+        String hex = value;
+        if (hex.charAt(0) == '#') {
+            hex = hex.substring(1);
+        } else if (hex.length() > 2 && (hex.startsWith("0x") || hex.startsWith("0X"))) {
+            hex = hex.substring(2);
+        }
+
+        if (hex.matches("(?i)[0-9a-f]{6}")) {
+            try {
+                return Integer.parseInt(hex, 16);
+            } catch (NumberFormatException ignored) {
+                return fallback;
+            }
+        }
+
+        String key = value.toUpperCase(Locale.ROOT);
+        if ("RED".equals(key)) return 0xFF0000;
+        if ("GREEN".equals(key) || "LIME".equals(key)) return 0x00FF00;
+        if ("BLUE".equals(key)) return 0x0000FF;
+        if ("YELLOW".equals(key)) return 0xFFFF00;
+        if ("ORANGE".equals(key)) return 0xFFA500;
+        if ("BLACK".equals(key)) return 0x000000;
+        if ("PURPLE".equals(key)) return 0x960096;
+        if ("WHITE".equals(key)) return 0xFFFFFF;
+        if ("GOLD".equals(key)) return 0xFFD700;
+        if ("CYAN".equals(key)) return 0x00FFFF;
+        if ("MAGENTA".equals(key)) return 0xFF00FF;
+        if ("GRAY".equals(key)) return 0x808080;
+        if ("LIGHT_GRAY".equals(key)) return 0xC0C0C0;
+        return fallback;
     }
 
     // parse the string of IDs into a set

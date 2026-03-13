@@ -1,10 +1,15 @@
 package com.voidsrift.riftflux.legendgear;
 
 import baubles.api.BaublesApi;
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.compat.BackhandCompat;
+import com.voidsrift.riftflux.terramine.TerrariaContent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
 import net.nmccoy.legendgear.magic.IMana;
+import net.nmccoy.legendgear.LegendGear2;
 
 public final class LegendGearClientState {
     private LegendGearClientState() {
@@ -24,6 +29,21 @@ public final class LegendGearClientState {
             return true;
         }
 
+        if (BackhandCompat.isAvailable()) {
+            ItemStack offhand = BackhandCompat.getOffhandItem(player);
+            if (isManaItem(offhand)) {
+                return true;
+            }
+        }
+
+        if (player.inventory != null && player.inventory.armorInventory != null) {
+            for (ItemStack stack : player.inventory.armorInventory) {
+                if (isManaItem(stack)) {
+                    return true;
+                }
+            }
+        }
+
         try {
             IInventory baubles = BaublesApi.getBaubles(player);
             if (baubles != null) {
@@ -40,13 +60,34 @@ public final class LegendGearClientState {
         return false;
     }
 
+    public static boolean isHoldingIceRodWithLegendGearManaDisabled(EntityPlayer player) {
+        if (player == null || ModConfig.iceRodUseLegendGearMana) {
+            return false;
+        }
+        if (isIceRod(player.getItemInUse()) || isIceRod(player.getHeldItem())) {
+            return true;
+        }
+        if (BackhandCompat.isAvailable()) {
+            return isIceRod(BackhandCompat.getOffhandItem(player));
+        }
+        return false;
+    }
+
     private static boolean isManaItem(ItemStack stack) {
         if (stack == null || stack.getItem() == null) {
             return false;
         }
-        if (stack.getItem() instanceof IMana) {
+        Item item = stack.getItem();
+        if (isIceRod(stack)) {
+            return ModConfig.iceRodUseLegendGearMana;
+        }
+        if (item instanceof IMana) {
             return true;
         }
-        return stack.getItem().getClass().getName().startsWith("net.nmccoy.legendgear");
+        return item == LegendGear2.magicRing || item == LegendGear2.charmPendant;
+    }
+
+    private static boolean isIceRod(ItemStack stack) {
+        return stack != null && stack.getItem() == TerrariaContent.iceRod;
     }
 }

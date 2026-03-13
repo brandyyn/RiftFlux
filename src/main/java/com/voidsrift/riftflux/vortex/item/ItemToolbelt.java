@@ -20,16 +20,23 @@ public class ItemToolbelt extends Item implements IBauble {
    public ItemToolbelt() {
       this.setMaxStackSize(1);
       this.setCreativeTab(CreativeTabs.tabTools);
+      this.setTextureName("riftflux:toolbelt");
    }
 
    @SideOnly(Side.CLIENT)
    public void registerIcons(IIconRegister p_94581_1_) {
-      this.icon = p_94581_1_.registerIcon("riftflux:toolbelt");
+      this.itemIcon = p_94581_1_.registerIcon("riftflux:toolbelt");
+      this.icon = this.itemIcon;
    }
 
    @SideOnly(Side.CLIENT)
    public IIcon getIconFromDamage(int par1) {
-      return this.icon;
+      return this.icon != null ? this.icon : this.itemIcon;
+   }
+
+   @SideOnly(Side.CLIENT)
+   public IIcon getIcon(ItemStack stack, int pass) {
+      return this.getIconFromDamage(stack == null ? 0 : stack.getItemDamage());
    }
 
    public int getMaxItemUseDuration(ItemStack p_77626_1_) {

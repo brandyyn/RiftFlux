@@ -1,5 +1,9 @@
 package com.voidsrift.riftflux.avatar.glider;
 
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.compat.BackhandCompat;
+import com.voidsrift.riftflux.compat.EtFuturumElytraCompat;
+import com.voidsrift.riftflux.terramine.ItemIceRod;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -17,11 +21,15 @@ public class ItemGlider extends Item {
         this.color = color;
         this.setCreativeTab(CreativeTabs.tabTransport);
         this.setTextureName(ItemGlider.getOpenTexture(this.color));
+        this.setMaxStackSize(ModConfig.gliderStackable ? 64 : 1);
     }
 
     @Override
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
         if (player == null) {
+            return stack;
+        }
+        if (shouldIgnoreOffhandActivation(stack, player)) {
             return stack;
         }
         String playerName = player.getDisplayName();
@@ -34,7 +42,13 @@ public class ItemGlider extends Item {
             return stack;
         }
         LAST_TOGGLE_TICK.put(playerName, tick);
-        if (!GliderState.isPlayerGliding(playerName)) {
+        boolean enablingGlider = !GliderState.isPlayerGliding(playerName);
+        if (enablingGlider
+                && ModConfig.blockEtFuturumElytraWhileAvatarGliding
+                && EtFuturumElytraCompat.isElytraFlying(player)) {
+            EtFuturumElytraCompat.clearElytraFlight(player);
+        }
+        if (enablingGlider) {
             GliderState.addGlidingPlayerName(playerName);
         } else {
             GliderState.removeGlidingPlayerName(playerName);
@@ -84,4 +98,41 @@ public class ItemGlider extends Item {
     public int getColor() {
         return this.color;
     }
+
+    private static boolean shouldIgnoreOffhandActivation(ItemStack stack, EntityPlayer player) {
+        if (!BackhandCompat.isAvailable() || stack == null || player == null) {
+            return false;
+        }
+        if (!BackhandCompat.isOffhandStack(player, stack)) {
+            return false;
+        }
+        return shouldBlockOffhandByMainhand(player);
+    }
+
+    public static boolean canUseFromOffhand(ItemStack stack, EntityPlayer player) {
+        if (!BackhandCompat.isAvailable() || player == null || stack == null) {
+            return true;
+        }
+        if (!BackhandCompat.isOffhandStack(player, stack)) {
+            return true;
+        }
+        return !shouldBlockOffhandByMainhand(player);
+    }
+
+    private static boolean shouldBlockOffhandByMainhand(EntityPlayer player) {
+        if (BackhandCompat.isMainhandUsingItem(player)) {
+            return true;
+        }
+        ItemStack mainhand = BackhandCompat.getMainhandItem(player);
+        return isIceRodOrGlider(mainhand) || BackhandCompat.mainhandConsumesRightClick(mainhand);
+    }
+
+    private static boolean isIceRodOrGlider(ItemStack stack) {
+        if (stack == null || stack.getItem() == null) {
+            return false;
+        }
+        Item item = stack.getItem();
+        return item instanceof ItemGlider || item instanceof ItemIceRod;
+    }
+
 }

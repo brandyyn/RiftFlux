@@ -69,9 +69,16 @@ implements IExtendedEntityProperties {
     }
 
     public void copy(RINPlayer2 props) {
+        if (props == null) {
+            return;
+        }
         this.setSprintime(props.getSprintime());
         this.setOvercharged(props.isOvercharged());
         this.setRetime(props.getRetime());
+        this.MaxSprintingtime = props.MaxSprintingtime;
+        this.Overchargetime = props.Overchargetime;
+        this.StaminaRegen = props.StaminaRegen;
+        this.rendertime = props.rendertime;
     }
 
     public void saveNBTData(NBTTagCompound compound) {
@@ -86,13 +93,22 @@ implements IExtendedEntityProperties {
     }
 
     public void loadNBTData(NBTTagCompound compound) {
+        if (compound == null) {
+            return;
+        }
         NBTTagCompound properties = (NBTTagCompound)compound.getTag(RINS_PROP_NAME);
+        if (properties == null) {
+            return;
+        }
         this.sprintime = properties.getDouble("sprintime");
         this.retime = properties.getDouble("retime");
         this.isOvercharged = properties.getBoolean("isOvercharged");
         this.Overchargetime = properties.getDouble("Overchargetime");
         this.MaxSprintingtime = properties.getDouble("MaxSprintingtime");
         this.StaminaRegen = properties.getDouble("StaminaRegen");
+        if (this.rendertime < 0.0f) {
+            this.rendertime = 0.0f;
+        }
     }
 
     public void init(Entity entity, World world) {
@@ -204,11 +220,18 @@ implements IExtendedEntityProperties {
                     KeyBinding.setKeyBindState((int)Minecraft.getMinecraft().gameSettings.keyBindSprint.getKeyCode(), (boolean)false);
                 }
                 if (this.player.isSprinting() || this.sprintime != 0.0) {
-                    if (this.rendertime <= (float)(ConfigurationMoD2.transparency / 100.0)) {
+                    float maxAlpha = (float)(ConfigurationMoD2.transparency / 100.0);
+                    if (this.rendertime <= maxAlpha) {
                         this.rendertime += 0.1f;
+                        if (this.rendertime > maxAlpha) {
+                            this.rendertime = maxAlpha;
+                        }
                     }
                 } else if (this.retime == 0.0 && this.sprintime == 0.0 && this.rendertime >= 0.0f) {
                     this.rendertime -= 0.05f;
+                    if (this.rendertime < 0.0f) {
+                        this.rendertime = 0.0f;
+                    }
                 }
             }
         }

@@ -21,15 +21,13 @@ import com.voidsrift.riftflux.mixin.accessor.GuiScreenAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
-import net.minecraft.client.resources.I18n;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import org.lwjgl.input.Keyboard;
 
 public class SatchelsProxyClient extends SatchelsProxyCommon {
     
@@ -98,12 +96,8 @@ public class SatchelsProxyClient extends SatchelsProxyCommon {
             ((TooltippedItem)event.itemStack.getItem()).getTooltips(linesNormal, linesDetails, event);
             
             event.toolTip.addAll(linesNormal);
-            if(!linesDetails.isEmpty()) {
-                if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
-                    event.toolTip.addAll(linesDetails);
-                } else {
-                    event.toolTip.add(I18n.format("tooltip.satchels.holdCtrl"));
-                }
+            if (!linesDetails.isEmpty()) {
+                event.toolTip.addAll(linesDetails);
             }
         }
     }

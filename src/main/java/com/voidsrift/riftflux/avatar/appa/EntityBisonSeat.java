@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.avatar.appa;
 
+import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -7,8 +8,8 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
 public class EntityBisonSeat extends Entity {
-    private static final int DATA_PARENT = 20;
-    private static final int DATA_INDEX = 21;
+    private static final int DEFAULT_DATA_PARENT = 20;
+    private static final int DEFAULT_DATA_INDEX = 21;
     private EntityBison cachedParent;
 
     public EntityBisonSeat(World world) {
@@ -28,21 +29,21 @@ public class EntityBisonSeat extends Entity {
 
     @Override
     protected void entityInit() {
-        this.dataWatcher.addObject(DATA_PARENT, Integer.valueOf(-1));
-        this.dataWatcher.addObject(DATA_INDEX, Integer.valueOf(0));
+        this.dataWatcher.addObject(getParentWatcherId(), Integer.valueOf(-1));
+        this.dataWatcher.addObject(getIndexWatcherId(), Integer.valueOf(0));
     }
 
     public void setParent(EntityBison parent) {
         this.cachedParent = parent;
         int id = parent != null ? parent.getEntityId() : -1;
-        this.dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(id));
+        this.dataWatcher.updateObject(getParentWatcherId(), Integer.valueOf(id));
     }
 
     public EntityBison getParent() {
         if (this.cachedParent != null && !this.cachedParent.isDead && this.cachedParent.worldObj == this.worldObj) {
             return this.cachedParent;
         }
-        int id = this.dataWatcher.getWatchableObjectInt(DATA_PARENT);
+        int id = this.dataWatcher.getWatchableObjectInt(getParentWatcherId());
         if (id < 0) {
             return null;
         }
@@ -55,11 +56,11 @@ public class EntityBisonSeat extends Entity {
     }
 
     public void setSeatIndex(int seatIndex) {
-        this.dataWatcher.updateObject(DATA_INDEX, Integer.valueOf(seatIndex));
+        this.dataWatcher.updateObject(getIndexWatcherId(), Integer.valueOf(seatIndex));
     }
 
     public int getSeatIndex() {
-        return this.dataWatcher.getWatchableObjectInt(DATA_INDEX);
+        return this.dataWatcher.getWatchableObjectInt(getIndexWatcherId());
     }
 
     @Override
@@ -146,17 +147,17 @@ public class EntityBisonSeat extends Entity {
     @Override
     protected void readEntityFromNBT(NBTTagCompound tag) {
         if (tag.hasKey("Parent")) {
-            this.dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(tag.getInteger("Parent")));
+            this.dataWatcher.updateObject(getParentWatcherId(), Integer.valueOf(tag.getInteger("Parent")));
         }
         if (tag.hasKey("SeatIndex")) {
-            this.dataWatcher.updateObject(DATA_INDEX, Integer.valueOf(tag.getInteger("SeatIndex")));
+            this.dataWatcher.updateObject(getIndexWatcherId(), Integer.valueOf(tag.getInteger("SeatIndex")));
         }
     }
 
     @Override
     protected void writeEntityToNBT(NBTTagCompound tag) {
-        tag.setInteger("Parent", this.dataWatcher.getWatchableObjectInt(DATA_PARENT));
-        tag.setInteger("SeatIndex", this.dataWatcher.getWatchableObjectInt(DATA_INDEX));
+        tag.setInteger("Parent", this.dataWatcher.getWatchableObjectInt(getParentWatcherId()));
+        tag.setInteger("SeatIndex", this.dataWatcher.getWatchableObjectInt(getIndexWatcherId()));
     }
 
     @Override
@@ -203,5 +204,24 @@ public class EntityBisonSeat extends Entity {
     @Override
     public boolean shouldRenderInPass(int pass) {
         return false;
+    }
+
+    private static int getParentWatcherId() {
+        int id = ModConfig.appaBisonSeatParentDatawatcherId;
+        if (ModConfig.isValidEntityDatawatcherId(id)) {
+            return id;
+        }
+        return DEFAULT_DATA_PARENT;
+    }
+
+    private static int getIndexWatcherId() {
+        int id = ModConfig.appaBisonSeatIndexDatawatcherId;
+        if (ModConfig.isValidEntityDatawatcherId(id) && id != getParentWatcherId()) {
+            return id;
+        }
+        if (DEFAULT_DATA_INDEX != getParentWatcherId()) {
+            return DEFAULT_DATA_INDEX;
+        }
+        return DEFAULT_DATA_PARENT + 1;
     }
 }

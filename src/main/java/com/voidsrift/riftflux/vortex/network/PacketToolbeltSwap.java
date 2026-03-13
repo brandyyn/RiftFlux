@@ -88,7 +88,7 @@ public class PacketToolbeltSwap implements IMessage, IMessageHandler<PacketToolb
             }
             case 1: { // insert into first empty slot
                ItemStack held = player.inventory.getCurrentItem();
-               if (held != null) {
+               if (held != null && ContainerHelper.toolbeltValid(held)) {
                   for (int i = 0; i < toolbelt.getSizeInventory(); ++i) {
                      if (toolbelt.getStackInSlot(i) == null) {
                         toolbelt.setInventorySlotContents(i, held);
@@ -104,15 +104,21 @@ public class PacketToolbeltSwap implements IMessage, IMessageHandler<PacketToolb
                ItemStack slotStack = toolbelt.getStackInSlot(slotId);
                if (message.toolbeltItem == null) {
                   ItemStack held = player.inventory.getCurrentItem();
+                  if (held != null && !ContainerHelper.toolbeltValid(held)) {
+                     break;
+                  }
                   if (slotStack != null || held != null) {
                      toolbelt.setInventorySlotContents(slotId, held);
                      player.inventory.setInventorySlotContents(player.inventory.currentItem, slotStack);
                      changed = true;
                   }
                } else if (ItemStack.areItemStacksEqual(slotStack, message.toolbeltItem)) {
-                  toolbelt.setInventorySlotContents(slotId, player.inventory.getCurrentItem());
-                  player.inventory.setInventorySlotContents(player.inventory.currentItem, message.toolbeltItem);
-                  changed = true;
+                  ItemStack held = player.inventory.getCurrentItem();
+                  if (held == null || ContainerHelper.toolbeltValid(held)) {
+                     toolbelt.setInventorySlotContents(slotId, held);
+                     player.inventory.setInventorySlotContents(player.inventory.currentItem, message.toolbeltItem);
+                     changed = true;
+                  }
                }
                break;
             }

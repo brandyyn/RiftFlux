@@ -10,8 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Random;
-
 /**
  * Restricts hostile mob spawns:
  * - Only allow spawns when BLOCK light level is exactly 0.
@@ -33,20 +31,14 @@ public abstract class MixinEntityMob_ZeroBlockLightSpawn {
 
         EntityMob self = (EntityMob) (Object) this;
         World world = self.worldObj;
-        Random rand = world.rand; // use world's Random instead of self.rand
 
         int x = MathHelper.floor_double(self.posX);
         int y = MathHelper.floor_double(self.boundingBox.minY);
         int z = MathHelper.floor_double(self.posZ);
 
-        // --- Keep vanilla "no spawns in bright daytime sky" behaviour ---
-        if (world.isDaytime()) {
-            int skyLight = world.getSavedLightValue(EnumSkyBlock.Sky, x, y, z);
-            if (skyLight > rand.nextInt(32)) {
-                // Too bright from sky during the day -> no spawn
-                cir.setReturnValue(false);
-                return;
-            }
+        if (world.isDaytime() && world.canBlockSeeTheSky(x, y, z)) {
+            cir.setReturnValue(false);
+            return;
         }
 
         // --- Our rule: only allow spawns if BLOCK light is exactly 0 ---

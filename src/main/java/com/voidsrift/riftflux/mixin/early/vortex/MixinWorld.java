@@ -7,16 +7,14 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.ReportedException;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin({World.class})
 public abstract class MixinWorld {
-   @Shadow
-   public boolean isRemote;
-
+   @Overwrite
    public void notifyBlockOfNeighborChange(int p_147460_1_, int p_147460_2_, int p_147460_3_, final Block p_147460_4_) {
       World world = (World)(Object)this;
-      if (!this.isRemote) {
+      if (!world.isRemote) {
          Block block = world.getBlock(p_147460_1_, p_147460_2_, p_147460_3_);
 
          try {

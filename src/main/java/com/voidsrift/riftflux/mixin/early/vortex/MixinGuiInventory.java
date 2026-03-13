@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early.vortex;
 
+import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import com.voidsrift.riftflux.blessings.BlessingHelper;
@@ -7,6 +8,7 @@ import com.voidsrift.riftflux.mixin.accessor.GuiContainerAccessor;
 import com.voidsrift.riftflux.mixin.accessor.GuiScreenAccessor;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.EntityLivingBase;
 import org.spongepowered.asm.mixin.Mixin;
@@ -61,6 +63,9 @@ public abstract class MixinGuiInventory {
       at = {@At("RETURN")}
    )
    private void onDrawScreen(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+      if (!ModConfig.blessingsEnabled) {
+         return;
+      }
       EntityPlayer player = Minecraft.getMinecraft().thePlayer;
       if (player == null) {
          return;
@@ -86,9 +91,9 @@ public abstract class MixinGuiInventory {
          }
          List<String> rawLines = new ArrayList<String>();
          if (blessing == null || blessing.isEmpty()) {
-            rawLines.add(EnumChatFormatting.YELLOW + "Blessing: None");
+            rawLines.add(EnumChatFormatting.YELLOW + rf$translate("blessing.riftflux.none", "Blessing: None"));
          } else {
-            rawLines.add(EnumChatFormatting.YELLOW + "Blessing of the " + blessing);
+            rawLines.add(EnumChatFormatting.YELLOW + BlessingHelper.getLocalizedTitle(blessing));
             String description = BlessingHelper.getDescription(blessing);
             if (description != null && !description.isEmpty()) {
                rawLines.add(EnumChatFormatting.YELLOW.toString() + EnumChatFormatting.ITALIC + description);
@@ -110,5 +115,14 @@ public abstract class MixinGuiInventory {
          }
          ((GuiScreenAccessor)(Object)this).callDrawHoveringText(lines, mouseX, mouseY);
       }
+   }
+
+   @Unique
+   private static String rf$translate(String key, String fallback) {
+      String translated = StatCollector.translateToLocal(key);
+      if (translated == null || translated.isEmpty() || key.equals(translated)) {
+         return fallback;
+      }
+      return translated;
    }
 }

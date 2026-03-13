@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.avatar.glider;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.compat.EtFuturumElytraCompat;
 import com.voidsrift.riftflux.net.MsgGliderHover;
 import com.voidsrift.riftflux.net.RFNetwork;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -27,6 +28,14 @@ public class GliderClientEvents {
         String playerName = player.getDisplayName();
         if (playerName == null) {
             return;
+        }
+
+        if (holdingGlider
+                && GliderState.isPlayerGliding(playerName)
+                && ModConfig.blockEtFuturumElytraWhileAvatarGliding
+                && isLocal
+                && EtFuturumElytraCompat.isElytraFlying(player)) {
+            EtFuturumElytraCompat.clearElytraFlight(player);
         }
 
         if (holdingGlider) {
@@ -65,6 +74,12 @@ public class GliderClientEvents {
         String playerName = player.getDisplayName();
         if (playerName == null) {
             return;
+        }
+        if (holdingGlider
+                && GliderState.isPlayerGliding(playerName)
+                && ModConfig.blockEtFuturumElytraWhileAvatarGliding
+                && EtFuturumElytraCompat.isElytraFlying(player)) {
+            EtFuturumElytraCompat.clearElytraFlight(player);
         }
         boolean shouldRenderGlider = holdingGlider && !player.isInWater()
                 && GliderState.isPlayerGliding(playerName);

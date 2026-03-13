@@ -6,6 +6,7 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
@@ -31,6 +32,9 @@ public final class PickupNotifierHud {
 
     private static final int FIRST_DELAY_TICKS = 8;
     private static int firstDelayTicks = 0;
+    private static long pauseClockOffsetMs = 0L;
+    private static long pauseClockStartMs = 0L;
+    private static boolean pauseClockFrozen = false;
 
     private static int  secToTicks(float s){ return Math.max(1, Math.round(s*20f)); }
     private static long nowMs()              { return System.nanoTime() / 1_000_000L; }
@@ -152,7 +156,13 @@ public final class PickupNotifierHud {
         if (e.phase != TickEvent.Phase.END) return;
         if (entries.isEmpty()) return;
 
-        final long now = nowMs();
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null) return;
+        final long now = overlayNowMs(mc);
+
+        if (isPauseMenuOpen(mc)) {
+            return;
+        }
 
         for (Entry en : entries) if (en.ttl > 0) en.ttl--;
 
@@ -211,7 +221,7 @@ public final class PickupNotifierHud {
         ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         final int sw = sr.getScaledWidth(), sh = sr.getScaledHeight();
         final int right = sw - 4;
-        final long now = nowMs();
+        final long now = overlayNowMs(mc);
 
         Entry first = entries.get(0);
         float visT;
@@ -256,10 +266,12 @@ public final class PickupNotifierHud {
                 RenderHelper.enableGUIStandardItemLighting();
                 GL11.glEnable(GL11.GL_DEPTH_TEST);
                 ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
                 RenderHelper.disableStandardItemLighting();
-
+                GL11.glDisable(GL11.GL_LIGHTING);
+                GL11.glDepthMask(false);
                 mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
+                GL11.glDepthMask(true);
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
 
                 GL11.glPopMatrix();
             }
@@ -271,5 +283,30 @@ public final class PickupNotifierHud {
             GL11.glColor4f(1,1,1,1);
             GL11.glPopAttrib();
         }
+    }
+
+    private static boolean isPauseMenuOpen(Minecraft mc) {
+        if (mc == null) {
+            return false;
+        }
+        GuiScreen screen = mc.currentScreen;
+        return screen != null && screen.doesGuiPauseGame();
+    }
+
+    private static long overlayNowMs(Minecraft mc) {
+        long now = nowMs();
+        if (isPauseMenuOpen(mc)) {
+            if (!pauseClockFrozen) {
+                pauseClockFrozen = true;
+                pauseClockStartMs = now;
+            }
+            return pauseClockStartMs - pauseClockOffsetMs;
+        }
+
+        if (pauseClockFrozen) {
+            pauseClockOffsetMs += Math.max(0L, now - pauseClockStartMs);
+            pauseClockFrozen = false;
+        }
+        return now - pauseClockOffsetMs;
     }
 }

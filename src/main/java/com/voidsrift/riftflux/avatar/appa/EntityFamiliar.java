@@ -14,6 +14,7 @@ import java.util.Random;
 import com.voidsrift.riftflux.ModConfig;
 
 public abstract class EntityFamiliar extends EntityCreature implements EntityChatListener {
+    private static final int DEFAULT_NAME_WATCHER = 19;
     public String owner = "";
     public int mood = 0;
     private int moodrandom = 0;
@@ -26,7 +27,7 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     @Override
     protected void entityInit() {
         super.entityInit();
-        this.dataWatcher.addObject(19, "");
+        this.dataWatcher.addObject(getNameWatcherId(), "");
     }
 
     public void setOwner(EntityPlayer owner) {
@@ -43,12 +44,12 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     }
 
     public void setName(String name) {
-        this.dataWatcher.updateObject(19, name);
+        this.dataWatcher.updateObject(getNameWatcherId(), name);
         this.sendNameUpdate();
     }
 
     public String getName() {
-        return this.dataWatcher.getWatchableObjectString(19);
+        return this.dataWatcher.getWatchableObjectString(getNameWatcherId());
     }
 
     @Override
@@ -149,7 +150,7 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     @Override
     public void writeEntityToNBT(NBTTagCompound tag) {
         super.writeEntityToNBT(tag);
-        tag.setString("Name", this.dataWatcher.getWatchableObjectString(19));
+        tag.setString("Name", this.dataWatcher.getWatchableObjectString(getNameWatcherId()));
         tag.setString("Owner", this.owner);
     }
 
@@ -157,9 +158,17 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     public void readEntityFromNBT(NBTTagCompound tag) {
         super.readEntityFromNBT(tag);
         if (tag.getString("Name") != null) {
-            this.dataWatcher.updateObject(19, tag.getString("Name"));
+            this.dataWatcher.updateObject(getNameWatcherId(), tag.getString("Name"));
         }
         this.owner = tag.getString("Owner");
+    }
+
+    private static int getNameWatcherId() {
+        int id = ModConfig.appaFamiliarNameDatawatcherId;
+        if (ModConfig.isValidEntityDatawatcherId(id)) {
+            return id;
+        }
+        return DEFAULT_NAME_WATCHER;
     }
 
     public static EntityFamiliar getFamiliarByOwner(EntityPlayer owner) {

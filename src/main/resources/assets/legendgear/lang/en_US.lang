@@ -1,0 +1,219 @@
+item.shardEmerald.name=Emerald Shard
+item.pieceEmerald.name=Emerald Piece
+item.fulgurite.name=Fulgurite
+
+item.starDust.name=Stardust
+item.starPiece.name=Star Piece
+item.starStone.name=Starstone
+item.starDustCharged.name=Infused Stardust
+item.starPieceCharged.name=Infused Star Piece
+item.starStoneCharged.name=Infused Starstone
+
+
+item.ingotStarglass.name=Starglass Lump
+item.ingotStarsteel.name=Starsteel Ingot
+item.starglassSword.name=Starglass Sword
+item.magicBoomerang.name=Magic Boomerang
+item.dustStarsteel.name=Starry Iron Dust
+item.spottingScope.name=Spotting Scope
+
+item.dimensionalCatalyst.name=Dimensional Catalyst
+item.abstractionGel.name=Abstraction Gel
+
+item.milkChocolate.name=Milk Chocolate
+item.reedPipes.name=Reed Pipes
+item.badBow.name=Bow?
+
+item.orb.empty.name=Starglass Shell
+item.orb.lava.name=Lava Shell
+item.orb.water.name=Water Shell
+item.orb.milk.name=Milk Shell
+item.orb.blast.name=Blast Shell
+item.orb.twinkle.name=Glittering Orb
+item.orb.fire.name=Burning Orb
+item.orb.zap.name=Shocking Orb
+item.orb.ice.name=Freezing Orb
+
+item.nucleusFIRE.name=Fire Nucleus
+item.gemFIRE.name=Fire Gem
+item.nucleusICE.name=Ice Nucleus
+item.gemICE.name=Ice Gem
+item.nucleusLIGHTNING.name=Lightning Nucleus
+item.gemLIGHTNING.name=Lightning Gem
+item.nucleusCUT.name=Cut Nucleus
+item.gemCUT.name=Cut Gem
+item.nucleusSKY.name=Sky Nucleus
+item.gemSKY.name=Sky Gem
+item.nucleusSUN.name=Sun Nucleus
+item.gemSUN.name=Sun Gem
+item.nucleusNAVIGATE.name=Find Nucleus
+item.gemNAVIGATE.name=Find Gem
+item.nucleusWEALTH.name=Money Nucleus
+item.gemWEALTH.name=Money Gem
+item.nucleusDARK.name=Dark Nucleus
+item.gemDARK.name=Dark Gem
+item.nucleusHEALTH.name=Health Nucleus
+item.gemHEALTH.name=Health Gem
+item.nucleusWEAPON.name=Weapon Nucleus
+item.gemWEAPON.name=Weapon Gem
+item.nucleusSTAR.name=Star Nucleus
+item.gemSTAR.name=Star Gem
+
+item.tome.RAYFIRE.name=Rayfire Tome
+item.tome.SCYTHEWIND.name=Scythewind Tome
+item.tome.EXEUNT.name=Exeunt Tome
+
+
+item.dustBreak.name=Lysis Dust
+item.dustJoin.name=Juncture Dust
+item.dustSacrifice.name=Pyre Dust
+item.tuningFork.name=Tuning Fork
+item.fortuneCookie.name=Fortune Cookie
+item.phoenixFeather.name=Phoenix Feather
+item.azuriteDust.name=Azurite Dust
+item.azuriteDot.name=Azurite Dot
+item.azuriteSphere.name=Azurite Sphere
+item.blankSpellbook.name=Blank Spellbook
+item.blankEmblem.name=Blank Emblem
+item.phoenixEmblem.name=Phoenix Emblem
+item.phoenixCharm.name=Phoenix Charm
+item.blastCharm.name=Blast Charm
+item.featherCharm.name=Feather Charm
+
+item.sunfireDiamond.name=Sunfire Diamond
+item.azureFeather.name=Azure Feather
+item.azureMantle.name=Azure Mantle
+item.phoenixMantle.name=Phoenix Mantle
+
+
+item.twinkleStaff.name=Twinkle Staff
+item.fireStaff.name=Ember Staff
+item.iceStaff.name=Frost Staff
+item.zapStaff.name=Jolt Staff
+item.infernoScroll.name=Inferno Scroll
+item.scythewindScroll.name=Scythewind Scroll
+
+item.SPEED_RING.name=Dash Ring
+item.SPEED_RING.desc=Sprint faster
+item.SOFT_FALL_RING.name=Descent Ring
+item.SOFT_FALL_RING.desc=Gentle landings
+item.CONVECTION_RING.name=Convection Ring
+item.CONVECTION_RING.desc=Float above lava
+item.RESONANCE_RING.name=Resonance Ring
+item.RESONANCE_RING.desc=Increase efficiency of other rings
+item.WISH_RING.name=Wish Ring
+item.WISH_RING.desc=Stars fall a bit more often
+item.MAGE_RING.name=Mage's Ring
+item.MAGE_RING.desc=Reduce magic cost of spells
+item.WARRIOR_RING.name=Warrior's Ring
+item.WARRIOR_RING.desc=Empowers melee attacks
+item.THIEF_RING.name=Thief's Ring
+item.THIEF_RING.desc=Invisible while sneaking
+item.PLAIN_RING.name=Plain Ring
+item.PLAIN_RING.desc=Has potential
+item.PHOENIX_RING.name=Phoenix Ring
+item.PHOENIX_RING.desc=Absorb fire
+item.COLDFEET_RING.name=Coldfeet Ring
+item.COLDFEET_RING.desc=Freeze water underfoot
+item.ARROWFIND_RING.name=Archer's Luck Ring
+item.ARROWFIND_RING.desc=Sometimes find arrows
+item.AZUREFIND_RING.name=Sky Luck Ring
+item.AZUREFIND_RING.desc=Occasionally find azurite
+item.FORTUNE_RING.name=Fortune Ring
+item.FORTUNE_RING.desc=Find more emerald shards
+
+
+
+item.record.dragondot.name=Music Disc
+item.record.dragondot.desc=Dragondot's Return
+
+entity.fallingStar.name=Falling Star
+
+tile.starstoneBlock.name=Starstone Block
+tile.infusedStarstoneBlock.name=Infused Starstone Block
+tile.starSand.name=Starry Sand
+tile.starGlass.name=Starglass
+tile.caltrops.name=Caltrops
+tile.azuriteOre.name=Azurite Ore
+tile.starAltar.name=Phoenix Altar
+tile.fragstoneBlock.name=Fragstone
+tile.struckSand.name=Lightning-Struck Sand
+tile.struckDirt.name=Lightning-Struck Dirt
+tile.starwellFrame.name=Starwell Frame
+tile.starwellCore.name=Starwell Core
+tile.starwellCoreActive.name=Starwell Core (Active)
+tile.thawingIce.name=Thawing Ice
+tile.ritualBlock.name=Ritual Locus
+tile.skylensBlock.name=Sky Lens
+
+
+
+death.attack.soul=%1$s paid too high a price
+death.attack.caltrops=%1$s died of perforated feet
+death.attack.caltrops.player=%1$s stepped on caltrops whilst trying to escape %2$s
+death.attack.magic.Explosion=%1$s was careless with explosives
+death.attack.magic.Explosion.player=%1$s got blown up by %1$s
+death.attack.magic.Lightning=%1$s was electrocuted by magic
+death.attack.magic.Lightning.player=%1$s was electrocuted by %2$s's spell
+death.attack.magic.Fire=%1$s was incinerated by magic
+death.attack.magic.Fire.player=%1$s was roasted by %2$s's spell
+death.attack.magic.Ice=%1$s was frozen solid by magic
+death.attack.magic.Ice.player=%1$s was put on ice by %2$s
+death.attack.magic.Star=%1$s was twinkled to death
+death.attack.magic.Star.player=%1$s was fatally scintillated by %2$s's magic
+death.attack.magic.Wind=%1$s experienced some turbulence
+death.attack.magic.Wind.player=%1$s was blown away by %2$s's magic
+death.attack.magic.Radiant=%1$s saw the light
+death.attack.magic.Radiant.player=%1$s was enlightened by %2$s
+
+death.attack.exhaustion=%1$s died of exhaustion
+
+
+
+enchantment.magicProtection=Magic Protection
+enchantment.spellReach=Reach
+enchantment.spellSpread=Spread
+enchantment.spellArmored=Fortitude
+
+achievement.starGet=Star Catcher
+achievement.starGet.desc=Collect a fallen star before it fades away
+achievement.ritualist=Ritualist
+achievement.ritualist.desc=Successfully invoke a ritual
+achievement.mage=Wizardry
+achievement.mage.desc=Cast a spell using a staff
+achievement.readScroll=Read Magic
+achievement.readScroll.desc=Cast a spell using a scroll
+achievement.phoenixBoon=Favor of the Phoenix
+achievement.phoenixBoon.desc=Be granted a boon by the Phoenix
+achievement.fortunate=Fortunate
+achievement.fortunate.desc=Eat a fortune cookie
+achievement.boomerang=Loyal Weaponry
+achievement.boomerang.desc=Craft a boomerang
+achievement.dayRitual=Play It By Ear
+achievement.dayRitual.desc=Perform a ritual during the day
+achievement.starsteel=Meteoric
+achievement.starsteel.desc=Create starsteel
+achievement.literate=Literate
+achievement.literate.desc=Cast a spell using a tome
+achievement.achvAzurite=More Dots
+achievement.achvAzurite.desc=Obtain unbroken azurite
+achievement.flight=To The Skies!
+achievement.flight.desc=Take flight
+achievement.sunfireDiamond=Phoenix's Treasure
+achievement.sunfireDiamond.desc=Collect a Sunfire Diamond
+
+
+itemGroup.lgTab=LegendGear 2
+
+attribute.name.lg2.criticalBonus=Critical Strike Damage
+attribute.name.lg2.arcanePower=Spell Damage
+attribute.name.lg2.spellSurgePower=Surge Boost
+attribute.name.lg2.spellRange=Spell Range
+attribute.name.lg2.spellRadius=Spell Radius
+
+attribute.name.lg2.spellDamageRatio=Spell Damage Ratio
+attribute.name.lg2.spellDurationRatio=Spell Duration Ratio
+attribute.name.lg2.armorPenaltyScaling=Armor Penalty Multiplier
+
+lg2text.armorPenaltyAnnotation=(Armored: -%1$d%% casting speed)
+

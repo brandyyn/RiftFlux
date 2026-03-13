@@ -31,9 +31,71 @@ entity.riftflux.RuneThanatos.name=Rune of Thanatos
 
 gui.runegameover.blurb1=...or can you?
 gui.runegameover.blurb2=You feel the anchor of the rune...
+gui.riftflux.respawn_delay=Respawn available in %1$d%2$s
+gui.riftflux.respawn_delay_suffix=s
 
 tile.riftflux.floating_ladder.name=Hanging Ladder
 tile.riftflux.blessing_pillar.name=Alien Artifact
+blessing.riftflux.none=Blessing: None
+blessing.riftflux.title=Blessing of the %s
+
+blessing.riftflux.name.miner=Miner
+blessing.riftflux.name.lumberjack=Lumberjack
+blessing.riftflux.name.warrior=Warrior
+blessing.riftflux.name.hunter=Hunter
+blessing.riftflux.name.swamp=Swamp
+blessing.riftflux.name.thief=Thief
+blessing.riftflux.name.gambler=Gambler
+blessing.riftflux.name.drunk=Drunk
+blessing.riftflux.name.ninja=Ninja
+blessing.riftflux.name.mechanic=Mechanic
+blessing.riftflux.name.alchemist=Alchemist
+blessing.riftflux.name.scout=Scout
+blessing.riftflux.name.guardian=Guardian
+blessing.riftflux.name.vampire=Vampire
+blessing.riftflux.name.inferno=Inferno
+blessing.riftflux.name.diver=Diver
+blessing.riftflux.name.berserker=Berserker
+blessing.riftflux.name.rogue=Rogue
+blessing.riftflux.name.paratrooper=Paratrooper
+blessing.riftflux.name.porcupine=Porcupine
+
+blessing.riftflux.desc.miner=+25% mining speed with pickaxes, but non-pickaxe blocks are 40% slower
+blessing.riftflux.desc.lumberjack=+25% breaking speed with axes, and +35% damage with axes
+blessing.riftflux.desc.warrior=+20% melee damage
+blessing.riftflux.desc.hunter=+20% projectile damage
+blessing.riftflux.desc.swamp=Attacks will slow enemies
+blessing.riftflux.desc.thief=Mobs may drop additional items (5% chance each by default)
+blessing.riftflux.desc.gambler=Take 20% extra damage, but gain 60% more EXP from orbs
+blessing.riftflux.desc.drunk=Deal 50% more damage, but gain a negative potion effect when you take damage
+blessing.riftflux.desc.ninja=While sneaking you are invisible and attacks on full-health enemies do double damage. Invisibility breaks on attack and has a 30s combat cooldown
+blessing.riftflux.desc.mechanic=Take 25% less explosive damage
+blessing.riftflux.desc.alchemist=Drinking potions grants an extra random positive effect
+blessing.riftflux.desc.scout=Move 20% faster, but take double fall damage
+blessing.riftflux.desc.guardian=Take 20% less damage from all sources
+blessing.riftflux.desc.vampire=Heal 7% of damage dealt to enemies and, in direct sunlight, you take 20% more damage and deal 20% less damage
+blessing.riftflux.desc.inferno=You don't take fire damage, and do +35% damage while on fire
+blessing.riftflux.desc.diver=You can breathe underwater
+blessing.riftflux.desc.berserker=Kills are counted until 10 - Key to toggle berserk mode. While active you deal 33% more damage, move 33% faster, take 33% less damage, and gain extra health - You lose 1 kill every 2 seconds, regain by bloodshed
+blessing.riftflux.desc.rogue=The lower your health, the higher your damage, to a maximum of +100%
+blessing.riftflux.desc.paratrooper=You don't take fall damage
+blessing.riftflux.desc.porcupine=Melee attackers receive damage
+
+blessing.riftflux.artifact.taken=This artifact's blessing is currently taken by another.
+blessing.riftflux.artifact.monsters=Cannot activate pillar with monsters nearby.
+blessing.riftflux.granted=You have been granted a blessing
+blessing.riftflux.granted.with_desc=%s - %s
+blessing.riftflux.granted.without_desc=%s.
+blessing.riftflux.command.only_player=This command can only be used by a player.
+blessing.riftflux.command.none=You don't currently have a blessing.
+blessing.riftflux.command.current.no_desc=Current Blessing - %s.
+blessing.riftflux.command.current.with_desc=Current Blessing - %s: %s
+blessing.riftflux.command.set.disabled_module=Blessings are currently disabled in config.
+blessing.riftflux.command.set.cleared=Blessing cleared.
+blessing.riftflux.command.set.no_available=No enabled blessings are available to assign.
+blessing.riftflux.command.set.unknown=Unknown blessing: %s
+blessing.riftflux.command.set.disabled_blessing=That blessing is disabled in config: %s
+blessing.riftflux.command.set.success=Set your blessing to %s.
 
 item.glider_white.name=Glider (White)
 item.glider_orange.name=Glider (Orange)
@@ -54,3 +116,60 @@ item.glider_black.name=Glider (Black)
 item.appa_spawn_egg.name=Appa Spawn Egg
 
 entity.riftflux.Bison.name=Appa
+
+item.lens.name=Lens
+item.black_lens.name=Black Lens
+item.suspicious_looking_eye.name=Suspicious Looking Eye
+item.ice_rod.name=Ice Rod
+item.demon_eye_spawn_egg.name=Demon Eye Spawn Egg
+item.whoopie_cushion.name=Whoopie Cushion
+tile.magic_ice.name=Magic Ice
+tile.magic_ice_temp.name=Magic Ice
+tile.terra_mushroom.name=Terra Mushroom
+tile.daybloom.name=Daybloom
+tile.blinkroot.name=Blinkroot
+tile.waterleaf.name=Waterleaf
+tile.deathweed.name=Deathweed
+tile.fireblossom.name=Fireblossom
+tile.jungle_spore.name=Jungle Spore
+tile.moonglow.name=Moonglow
+entity.DemonEye.name=Demon Eye
+entity.EyeOfCthulhu.name=Eye of Cthulhu
+entity.riftflux.DemonEye.name=Demon Eye
+entity.riftflux.EyeOfCthulhu.name=Eye of Cthulhu
+
+item.ASShieldWood.name=Wooden Shield
+item.ASShieldStone.name=Stone Shield
+item.ASShieldIron.name=Iron Shield
+item.ASShieldDiamond.name=Diamond Shield
+item.ASShieldWoodGilded.name=Gilded Wooden Shield
+item.ASShieldStoneGilded.name=Gilded Stone Shield
+item.ASShieldIronGilded.name=Gilded Iron Shield
+item.ASShieldDiamondGilded.name=Gilded Diamond Shield
+
+item.ASGiantSwordWood.name=Wooden Giant Sword
+item.ASGiantSwordStone.name=Stone Giant Sword
+item.ASGiantSwordIron.name=Iron Giant Sword
+item.ASGiantSwordGold.name=Golden Giant Sword
+item.ASGiantSwordDiamond.name=Diamond Giant Sword
+
+item.ASShieldNether.name=Nether Quartz Shield
+item.ASShieldEnder.name=Ender Shield
+item.ASShieldNetherGilded.name=Gilded Nether Quartz Shield
+item.ASShieldEnderGilded.name=Gilded Ender Shield
+item.ASGiantSwordNether.name=Nether Quartz Giant Sword
+item.ASGiantSwordEnder.name=Ender Giant Sword
+
+item.ASShieldSkull.name=Skull Shield
+item.ASShieldPatchwork.name=Patchwork Shield
+item.ASShieldSkullGilded.name=Gilded Skull Shield
+item.ASShieldPatchworkGilded.name=Gilded Patchwork Shield
+item.ASGiantSwordSkull.name=Skull Giant Sword
+item.ASGiantSwordPatchwork.name=Patchwork Giant Sword
+
+item.ASShieldLivingmetal.name=Livingmetal Shield
+item.ASShieldBiomass.name=Biomass Shield
+item.ASShieldLivingmetalGilded.name=Gilded Livingmetal Shield
+item.ASShieldBiomassGilded.name=Gilded Biomass Shield
+item.ASGiantSwordLivingmetal.name=Livingmetal Giant Sword
+item.ASGiantSwordBiomass.name=Biomass Giant Sword

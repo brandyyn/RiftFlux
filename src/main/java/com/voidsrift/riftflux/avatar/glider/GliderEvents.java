@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.avatar.glider;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import de.rinonline.korinrpg.Helper.NBT.RINPlayer2;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.compat.EtFuturumElytraCompat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -33,11 +34,14 @@ public class GliderEvents {
             return;
         }
 
+        if (ModConfig.blockEtFuturumElytraWhileAvatarGliding && EtFuturumElytraCompat.isElytraFlying(player)) {
+            EtFuturumElytraCompat.clearElytraFlight(player);
+        }
+
         if (player.isInWater()) {
             GliderState.removeGlidingPlayerName(playerName);
             return;
         }
-
         if (player.onGround) {
             return;
         }
@@ -74,8 +78,8 @@ public class GliderEvents {
     @SubscribeEvent
     public void onFall(LivingFallEvent evt) {
         if (evt.entityLiving instanceof EntityPlayer) {
-            ItemStack gliderStack = GliderItemHelper.getGliderStack((EntityPlayer) evt.entityLiving);
-            if (gliderStack != null) {
+            EntityPlayer player = (EntityPlayer) evt.entityLiving;
+            if (GliderItemHelper.isGliderEnabled(player)) {
                 evt.distance = 1.1f;
             }
         }
