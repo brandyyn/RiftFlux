@@ -153,6 +153,14 @@ public class BlockFurnitureWindowDecoration extends Block {
         this.setCurtainClosedState(world, x, y, z, closed);
         this.setConnectedCurtainState(world, x, y, z, this.getRotation(metadata), FurnitureBlockHelper.CURTAIN_LEFT, closed);
         this.setConnectedCurtainState(world, x, y, z, this.getRotation(metadata), FurnitureBlockHelper.CURTAIN_RIGHT, closed);
+        world.playSoundEffect(
+                x + 0.5D,
+                y + 0.1D,
+                z + 0.5D,
+                "gui.button.press",
+                1.0F,
+                1.0F
+        );
         return true;
     }
 

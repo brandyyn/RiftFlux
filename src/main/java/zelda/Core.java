@@ -21,12 +21,15 @@ public class Core {
     public static final String NAME = "Zelda";
     public static final String VERSION = "0.2";
     public static CommonProxy proxy;
-    public static final CreativeTabs tab = new CreativeTabZelda();
+    public static CreativeTabs tab;
 
     public static void preInit(FMLPreInitializationEvent e) {
         Config.syncFromModConfig();
         if (!Config.HEARTS_ENABLED) {
             return;
+        }
+        if (tab == null) {
+            tab = new CreativeTabZelda();
         }
         ZItems.init();
         ZBlocks.init();

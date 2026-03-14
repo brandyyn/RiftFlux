@@ -127,7 +127,7 @@ public class RenderWindowDecoration implements ISimpleBlockRenderingHandler {
 
         if (closed) {
             renderer.setOverrideBlockTexture(Blocks.wool.getIcon(0, curtainColor));
-            FurnitureRenderHelper.setRenderBounds(renderer, rotation, 0.9375D, 0.0625D, 0.0D, 1.0D, 0.875D, 1.0001D);
+            FurnitureRenderHelper.setRenderBounds(renderer, rotation, 0.9375D, 0.125D, 0.0D, 1.0D, 0.9375D, 1.0001D);
             FurnitureRenderHelper.renderBlock(renderer, block, x, y, z);
             renderer.setOverrideBlockTexture(Blocks.gold_block.getBlockTextureFromSide(0));
             this.renderClosedCurtainTrim(block, renderer, x, y, z, rotation);
@@ -153,7 +153,7 @@ public class RenderWindowDecoration implements ISimpleBlockRenderingHandler {
                                          int y,
                                          int z,
                                          int rotation) {
-        this.renderTrimBand(block, renderer, x, y, z, rotation, 0.1875D, 0.25D, 0.0D, 1.0D);
+        this.renderTrimBand(block, renderer, x, y, z, rotation, 0.25D, 0.3125D, 0.0D, 1.0D);
     }
 
     private void renderTrimBand(Block block,

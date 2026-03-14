@@ -140,8 +140,8 @@ public final class FurnitureContent {
             return;
         }
 
-        GameRegistry.addRecipe(new ItemStack(cabinet), "***", "*@*", "***", '*', Blocks.planks, '@', Blocks.chest);
-        GameRegistry.addRecipe(new ItemStack(bedsideCabinet), "***", "*@*", "*@*", '*', Blocks.planks, '@', Blocks.chest);
+        GameRegistry.addRecipe(new ItemStack(cabinet), "***", "*@*", "***", '*', Blocks.planks, '@', Blocks.trapdoor);
+        GameRegistry.addRecipe(new ItemStack(bedsideCabinet), "***", "*@*", "*@*", '*', Blocks.planks, '@', Blocks.trapdoor);
         for (int color = 0; color < curtains.length; ++color) {
             GameRegistry.addRecipe(
                     new ItemStack(curtains[color], 2),
@@ -149,13 +149,13 @@ public final class FurnitureContent {
                     "* *",
                     "@ @",
                     '*',
-                    Items.gold_ingot,
+                    Items.gold_nugget,
                     '@',
                     new ItemStack(Blocks.wool, 1, color)
             );
         }
         GameRegistry.addRecipe(new ItemStack(blind, 2), "***", "***", "***", '*', Items.stick);
-        GameRegistry.addRecipe(new ItemStack(stonePath, 8), "**", '*', Blocks.cobblestone);
+        GameRegistry.addRecipe(new ItemStack(stonePath, 8), "* *", " * ", "* *", '*', Blocks.cobblestone);
         GameRegistry.addShapelessRecipe(new ItemStack(whiteFence, 2), Blocks.fence, new ItemStack(Items.dye, 1, 15));
         GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(blackFence, 2), Blocks.fence, "dyeBlack"));
         GameRegistry.addShapelessRecipe(new ItemStack(doorBell), Blocks.noteblock, Blocks.stone_button);
