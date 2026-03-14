@@ -1,7 +1,15 @@
 package com.voidsrift.riftflux.vortex.proxy;
 
+import com.voidsrift.riftflux.furniture.FurnitureGuiIds;
+import com.voidsrift.riftflux.furniture.client.gui.GuiBedsideCabinet;
+import com.voidsrift.riftflux.furniture.client.gui.GuiCabinet;
+import com.voidsrift.riftflux.furniture.container.ContainerBedsideCabinet;
+import com.voidsrift.riftflux.furniture.container.ContainerCabinet;
+import com.voidsrift.riftflux.furniture.tileentity.TileEntityBedsideCabinet;
+import com.voidsrift.riftflux.furniture.tileentity.TileEntityCabinet;
 import cpw.mods.fml.common.network.IGuiHandler;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import com.voidsrift.riftflux.vortex.client.gui.GuiInventoryGluttonyCharm;
 import com.voidsrift.riftflux.vortex.client.gui.GuiInventoryToolbelt;
@@ -28,6 +36,18 @@ public class GuiProxy implements IGuiHandler {
          return player.inventoryContainer;
       case 2:
          return new ContainerGluttonyCharm(player);
+      case FurnitureGuiIds.CABINET: {
+         TileEntity tileEntity = world.getTileEntity(x, y, z);
+         return tileEntity instanceof TileEntityCabinet
+                 ? new ContainerCabinet(player.inventory, (TileEntityCabinet) tileEntity)
+                 : null;
+      }
+      case FurnitureGuiIds.BEDSIDE_CABINET: {
+         TileEntity tileEntity = world.getTileEntity(x, y, z);
+         return tileEntity instanceof TileEntityBedsideCabinet
+                 ? new ContainerBedsideCabinet(player.inventory, (TileEntityBedsideCabinet) tileEntity)
+                 : null;
+      }
       case GuiHandler.ID_EQUIPMENT:
          return new ContainerEquipment(player.inventory, !player.worldObj.isRemote, player);
       case GuiHandler.ID_POUCH: {
@@ -47,6 +67,18 @@ public class GuiProxy implements IGuiHandler {
          return (player.inventoryContainer instanceof ContainerSatchels) ? new GuiSatchelsInventory(player) : new net.minecraft.client.gui.inventory.GuiInventory(player);
       case 2:
          return new GuiInventoryGluttonyCharm(player);
+      case FurnitureGuiIds.CABINET: {
+         TileEntity tileEntity = world.getTileEntity(x, y, z);
+         return tileEntity instanceof TileEntityCabinet
+                 ? new GuiCabinet(player.inventory, (TileEntityCabinet) tileEntity)
+                 : null;
+      }
+      case FurnitureGuiIds.BEDSIDE_CABINET: {
+         TileEntity tileEntity = world.getTileEntity(x, y, z);
+         return tileEntity instanceof TileEntityBedsideCabinet
+                 ? new GuiBedsideCabinet(player.inventory, (TileEntityBedsideCabinet) tileEntity)
+                 : null;
+      }
       case GuiHandler.ID_EQUIPMENT:
          return new GuiEquipment(player);
       case GuiHandler.ID_POUCH: {

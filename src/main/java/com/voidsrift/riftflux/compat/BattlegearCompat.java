@@ -1,32 +1,34 @@
 package com.voidsrift.riftflux.compat;
 
 import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.Optional;
-import mods.battlegear2.api.core.IInventoryPlayerBattle;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
+import java.lang.reflect.Method;
+
 public final class BattlegearCompat {
-    private static Boolean classPresentCache;
+    private static Boolean availableCache;
 
     private BattlegearCompat() {
     }
 
     public static boolean isAvailable() {
-        if (Loader.isModLoaded("battlegear2")) {
-            return true;
+        if (availableCache != null) {
+            return availableCache.booleanValue();
         }
-        if (classPresentCache != null) {
-            return classPresentCache.booleanValue();
-        }
-        boolean present;
+
+        boolean present = Loader.isModLoaded("battlegear2");
         try {
-            Class.forName("mods.battlegear2.api.core.IInventoryPlayerBattle", false, BattlegearCompat.class.getClassLoader());
+            Class.forName(
+                    "mods.battlegear2.api.core.IInventoryPlayerBattle",
+                    false,
+                    BattlegearCompat.class.getClassLoader()
+            );
             present = true;
         } catch (Throwable ignored) {
-            present = false;
+            // If the mod is present but its API class is missing, reflection below still fails closed.
         }
-        classPresentCache = Boolean.valueOf(present);
+        availableCache = Boolean.valueOf(present);
         return present;
     }
 
@@ -44,19 +46,26 @@ public final class BattlegearCompat {
         return getOffhandItemInternal(player);
     }
 
-    @Optional.Method(modid = "battlegear2")
     private static boolean isBattlemodeInternal(EntityPlayer player) {
-        if (player.inventory instanceof IInventoryPlayerBattle) {
-            return ((IInventoryPlayerBattle) player.inventory).battlegear2$isBattlemode();
-        }
-        return false;
+        Object result = invokeInventoryMethod(player, "battlegear2$isBattlemode");
+        return result instanceof Boolean && ((Boolean) result).booleanValue();
     }
 
-    @Optional.Method(modid = "battlegear2")
     private static ItemStack getOffhandItemInternal(EntityPlayer player) {
-        if (player.inventory instanceof IInventoryPlayerBattle) {
-            return ((IInventoryPlayerBattle) player.inventory).battlegear2$getCurrentOffhandWeapon();
+        Object result = invokeInventoryMethod(player, "battlegear2$getCurrentOffhandWeapon");
+        return result instanceof ItemStack ? (ItemStack) result : null;
+    }
+
+    private static Object invokeInventoryMethod(EntityPlayer player, String methodName) {
+        if (player == null || player.inventory == null) {
+            return null;
         }
-        return null;
+
+        try {
+            Method method = player.inventory.getClass().getMethod(methodName);
+            return method.invoke(player.inventory);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 }

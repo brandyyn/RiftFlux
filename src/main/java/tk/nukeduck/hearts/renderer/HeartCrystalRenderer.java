@@ -93,7 +93,7 @@ extends TileEntitySpecialRenderer {
         GL11.glRotatef((float)this.getRotation(tileentity, partialTicks), (float)0.0f, (float)1.0f, (float)0.0f);
         GL11.glTranslatef((float)0.0f, (float)0.0f, (float)MODERN_CRYSTAL_Z_OFFSET);
         GL11.glScalef((float)MODERN_CRYSTAL_XY_SCALE, (float)MODERN_CRYSTAL_XY_SCALE, (float)MODERN_CRYSTAL_Z_SCALE);
-        this.renderModernCrystalItem(this.crystalStack);
+        this.renderModernCrystalGeometry(this.crystalStack, FRAME_ITEM_DEPTH * 0.5f);
         GL11.glPopMatrix();
     }
 

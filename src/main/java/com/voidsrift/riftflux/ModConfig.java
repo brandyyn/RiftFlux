@@ -275,6 +275,9 @@ public class ModConfig {
     public static float heartLanternAuraRadius;
     public static String[] heartLanternAuraEffects;
 
+    // Furniture
+    public static boolean enableFurnitureModule;
+
     // Armor Overlay
     public static boolean enableArmorOverlayModule;
     public static int armorOverlayLevels;
@@ -2057,7 +2060,7 @@ public class ModConfig {
                 2,
                 0,
                 10,
-                "Required pickaxe harvest level for Heart Crystal ore. 2 = iron pickaxe."
+                "Required pickaxe harvest level for Heart Crystals. 2 = iron pickaxe."
         );
 
         heartCrystalMaxHearts = config.getInt(
@@ -2126,6 +2129,13 @@ public class ModConfig {
                 "Potion effects applied by heart lanterns.\n" +
                         "Format per entry: potionNameOrId,amplifier\n" +
                         "Examples: regeneration,0  or  moveSpeed,1"
+        );
+
+        enableFurnitureModule = config.getBoolean(
+                "EnableFurnitureModule",
+                "furniture",
+                true,
+                "Master switch for integrated furniture content."
         );
 
         enableArmorOverlayModule = config.getBoolean(

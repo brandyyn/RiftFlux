@@ -131,5 +131,32 @@
       "stream": true
     }
   ]
-}
+  },
+  "doorbell": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "doorbell",
+        "stream": false
+      }
+    ]
+  },
+  "cabinetopen": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "cabinetopen",
+        "stream": false
+      }
+    ]
+  },
+  "cabinetclose": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "cabinetclose",
+        "stream": false
+      }
+    ]
+  }
 }

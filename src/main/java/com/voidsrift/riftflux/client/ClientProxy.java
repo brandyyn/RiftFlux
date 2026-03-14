@@ -12,6 +12,7 @@ import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
 import com.voidsrift.riftflux.painting.GuiPaintingSelector;
 import com.voidsrift.riftflux.blessings.BlessingContent;
+import com.voidsrift.riftflux.furniture.FurnitureContent;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
 import cpw.mods.fml.common.Loader;
@@ -117,6 +118,7 @@ public class ClientProxy extends CommonProxy {
         TerrariaContent.initClient();
         AsgardShieldContent.initClient();
         BlessingContent.initClient();
+        FurnitureContent.initClient();
         if (Loader.isModLoaded("Hats")) {
             HatsKeybinds.ensureRegistered();
         }

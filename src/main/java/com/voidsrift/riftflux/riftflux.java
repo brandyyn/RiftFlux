@@ -12,6 +12,7 @@ import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
+import com.voidsrift.riftflux.furniture.FurnitureContent;
 import de.rinonline.korinrpg.Springmain;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
@@ -60,6 +61,7 @@ public class riftflux {
             ZyinHUD.preInit(event);
         }
         BlessingContent.preInit(event);
+        FurnitureContent.preInit(event);
         TerrariaContent.preInit(event);
         LegendGearContent.preInit(event);
         AsgardShieldContent.preInit(event);
@@ -73,6 +75,7 @@ public class riftflux {
         com.voidsrift.riftflux.net.RFNetwork.init();
         ToroHealthContent.init(event);
         BlessingContent.init();
+        FurnitureContent.init();
 
         com.voidsrift.riftflux.tweaks.ladder.RiftFluxLadderContent.init();
 
