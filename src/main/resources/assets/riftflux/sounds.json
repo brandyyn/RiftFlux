@@ -158,5 +158,142 @@
         "stream": false
       }
     ]
+  },
+  "axolotl_attack": {
+    "category": "neutral",
+    "sounds": [
+      { "name": "axolotl/attack1", "stream": false },
+      { "name": "axolotl/attack2", "stream": false },
+      { "name": "axolotl/attack3", "stream": false },
+      { "name": "axolotl/attack4", "stream": false }
+    ]
+  },
+  "axolotl_death": {
+    "category": "neutral",
+    "sounds": [
+      { "name": "axolotl/death1", "stream": false },
+      { "name": "axolotl/death2", "stream": false }
+    ]
+  },
+  "axolotl_hurt": {
+    "category": "neutral",
+    "sounds": [
+      { "name": "axolotl/hurt1", "stream": false },
+      { "name": "axolotl/hurt2", "stream": false },
+      { "name": "axolotl/hurt3", "stream": false },
+      { "name": "axolotl/hurt4", "stream": false }
+    ]
+  },
+  "axolotl_idle_water": {
+    "category": "neutral",
+    "sounds": [
+      { "name": "axolotl/idle1", "stream": false },
+      { "name": "axolotl/idle2", "stream": false },
+      { "name": "axolotl/idle3", "stream": false },
+      { "name": "axolotl/idle4", "stream": false },
+      { "name": "axolotl/idle5", "stream": false }
+    ]
+  },
+  "axolotl_idle_air": {
+    "category": "neutral",
+    "sounds": [
+      { "name": "axolotl/idle_air1", "stream": false },
+      { "name": "axolotl/idle_air2", "stream": false },
+      { "name": "axolotl/idle_air3", "stream": false },
+      { "name": "axolotl/idle_air4", "stream": false },
+      { "name": "axolotl/idle_air5", "stream": false }
+    ]
+  },
+  "axolotl_bucket_fill": {
+    "category": "neutral",
+    "sounds": [
+      { "name": "axolotl/fill_axolotl1", "stream": false },
+      { "name": "axolotl/fill_axolotl2", "stream": false },
+      { "name": "axolotl/fill_axolotl3", "stream": false }
+    ]
+  },
+  "cyclops_bad_thing": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/cyclops_bad_thing", "stream": false }
+    ]
+  },
+  "cyclops_eat": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/cyclops_eat", "stream": false }
+    ]
+  },
+  "cyclops_growl": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/cyclops_growl", "stream": false }
+    ]
+  },
+  "cyclops_noooo": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/cyclops_noooo", "stream": false }
+    ]
+  },
+  "cyclops_roar": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/cyclops_roar", "stream": false }
+    ]
+  },
+  "cyclops_where_eye": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/cyclops_where_eye", "stream": false }
+    ]
+  },
+  "wam_heavy_walk": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/heavy_walk", "stream": false }
+    ]
+  },
+  "ender_troll_idle": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/ender_troll", "stream": false }
+    ]
+  },
+  "ender_troll_hurt": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/ender_troll_hurt", "stream": false }
+    ]
+  },
+  "ender_troll_death": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/ender_troll_death", "stream": false }
+    ]
+  },
+  "jaxx_idle": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/jaxx", "stream": false }
+    ]
+  },
+  "jaxx_hurt": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/jaxx_hurt", "stream": false }
+    ]
+  },
+  "jaxx_death": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/jaxx_death", "stream": false }
+    ]
+  },
+  "jaxx_step": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "wam/jaxx_step", "stream": false }
+    ]
   }
 }

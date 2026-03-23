@@ -1,0 +1,10 @@
+{
+
+  "gunpowder.ignite": {
+    "category": "block",
+    "sounds": [
+      "fizzle"
+    ]
+  }
+
+}

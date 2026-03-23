@@ -25,6 +25,7 @@ public class HeartsConfig {
     private float keptRate;
     private boolean oldModel;
     private boolean lanternAuraEnabled;
+    private int lanternAuraDurationSeconds;
     private float lanternAuraRadius;
     private List<LanternAuraEffect> lanternAuraEffects = Collections.emptyList();
 
@@ -39,9 +40,9 @@ public class HeartsConfig {
             this.miningLevel = Math.max(0, ModConfig.heartCrystalMiningLevel);
             this.genHeight = ModConfig.heartCrystalGenHeight;
             this.genCount = ModConfig.heartCrystalGenCount;
-            this.keptRate = ModConfig.heartCrystalKeptRate;
             this.oldModel = ModConfig.heartCrystalOldModel;
             this.lanternAuraEnabled = ModConfig.heartLanternAuraEnabled;
+            this.lanternAuraDurationSeconds = Math.max(1, ModConfig.heartLanternAuraDurationSeconds);
             this.lanternAuraRadius = Math.max(0.0f, ModConfig.heartLanternAuraRadius);
             this.lanternAuraEffects = this.parseLanternAuraEffects(ModConfig.heartLanternAuraEffects);
             return this;
@@ -56,6 +57,7 @@ public class HeartsConfig {
         this.keptRate = this.config.getFloat("keptRate", "general", 0.0f, 0.0f, 1.0f, "Sets the chance of retaining individual hearts upon death. 0.0F to always drop hearts, 1.0F to always keep them.");
         this.oldModel = this.config.getBoolean("oldModel", "general", false, "Enable this to use the old 3D model for heart crystals.");
         this.lanternAuraEnabled = this.config.getBoolean("heartLanternAuraEnabled", "general", false, "If true, heart lanterns apply configurable potion effects in a radius.");
+        this.lanternAuraDurationSeconds = this.config.getInt("heartLanternAuraDurationSeconds", "general", 4, 1, 60, "How long heart lantern aura potion effects last, in seconds.");
         this.lanternAuraRadius = this.config.getFloat("heartLanternAuraRadius", "general", 6.0f, 0.0f, 64.0f, "Radius around a heart lantern that receives the configured aura effects.");
         this.lanternAuraEffects = this.parseLanternAuraEffects(this.config.getStringList("heartLanternAuraEffects", "general", new String[]{"regeneration,0"}, "Format per entry: potionNameOrId,amplifier"));
         this.config.save();
@@ -96,6 +98,10 @@ public class HeartsConfig {
 
     public float getLanternAuraRadius() {
         return this.lanternAuraRadius;
+    }
+
+    public int getLanternAuraDurationSeconds() {
+        return this.lanternAuraDurationSeconds;
     }
 
     public List<LanternAuraEffect> getLanternAuraEffects() {

@@ -242,7 +242,15 @@ public class BlockBlessingPillar extends BlockContainer {
         if (!world.isRemote && ModConfig.loseBlessingOnArtifactBreak) {
             int dim = world.provider != null ? world.provider.dimensionId : 0;
             BlessingPillarData.markBroken(world, baseX, baseY, baseZ, dim);
-            for (Object obj : world.playerEntities) {
+            List<?> players = null;
+            MinecraftServer server = MinecraftServer.getServer();
+            if (server != null && server.getConfigurationManager() != null) {
+                players = server.getConfigurationManager().playerEntityList;
+            }
+            if (players == null) {
+                players = world.playerEntities;
+            }
+            for (Object obj : players) {
                 if (!(obj instanceof EntityPlayer)) {
                     continue;
                 }
@@ -251,6 +259,8 @@ public class BlockBlessingPillar extends BlockContainer {
                     BlessingHelper.clearBlessing(player);
                     BlessingHelper.clearBlessingSource(player);
                     BlessingHelper.resetBlessingState(player);
+                    BlessingLossNotifier.clear(player);
+                    BlessingLossNotifier.sendNow(player);
                     if (player instanceof EntityPlayerMP && RFNetwork.CH != null) {
                         RFNetwork.CH.sendTo(new MsgSyncBlessing(player), (EntityPlayerMP) player);
                     }
@@ -314,6 +324,7 @@ public class BlockBlessingPillar extends BlockContainer {
         BlessingHelper.setBlessing(player, blessing);
         BlessingHelper.resetBlessingState(player);
         BlessingHelper.setBlessingSource(player, x, y, z, world.provider.dimensionId);
+        BlessingLossNotifier.clear(player);
         world.playSoundEffect(
                 x + 0.5D,
                 y + 1.0D,

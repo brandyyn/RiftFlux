@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@IFMLLoadingPlugin.SortingIndex(1200)
 public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     public RFEarlyMixins() {
@@ -35,6 +36,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableStackOverflowGuard) {
             mixins.add("early.MixinCrashReportCategory_NoRecurse");
             mixins.add("early.MixinWorld_GetBlockDepthLimit");
+        }
+        if (ModConfig.disableFalseCrashImprover) {
+            mixins.add("early.MixinCrashReport_NoFalseCrashImprover");
         }
         if (ModConfig.enableSafeEntityTick) {
             mixins.add("early.MixinEntitySafeTick");
@@ -61,6 +65,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.allowPlantsOnAnyBlock) {
             mixins.add("early.MixinBlockBush_AnySupport");
+            mixins.add("early.MixinBlockDoublePlant_AnySupport");
             mixins.add("early.MixinBlock_PlayerPlacedBushMarker");
             mixins.add("early.MixinBiomeGenBase_WorldGenContext");
         }
@@ -78,6 +83,20 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
+        }
+        if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            if (hasClass("Reika.ChromatiCraft.ChromaClientEventController")
+                    && ModConfig.optimizeChromatiCraftRenderEventFastPaths) {
+                mixins.add("early.chromaticraft.MixinChromaClientEventController_OptimizeClientRenderHooks");
+            }
+        }
+        if (ModConfig.optimizeChromatiCraftCliffsChunkGeneration) {
+            if (hasClass("Reika.ChromatiCraft.World.IWG.GlowingCliffsAuxGenerator")) {
+                mixins.add("early.chromaticraft.MixinGlowingCliffsAuxGenerator_SkipIrrelevantChunks");
+            }
+            if (hasClass("Reika.ChromatiCraft.World.IWG.CaveIndicatorGenerator")) {
+                mixins.add("early.chromaticraft.MixinCaveIndicatorGenerator_SkipIrrelevantChunks");
+            }
         }
         if (ModConfig.enableArmorMixin) {
             mixins.add("early.MixinArmorProperties");
@@ -130,6 +149,10 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinItemDoor_ReplaceTallGrass");
             mixins.add("early.MixinBlock_DoorShiftOnReplaceable");
         }
+        if (ModConfig.protectCircuitryFromWater) {
+            mixins.add("early.MixinBlockDynamicLiquid_ProtectCircuitryFromWater");
+            mixins.add("early.MixinItemBucket_ProtectCircuitryFromWater");
+        }
         if (ModConfig.enablePodzolDirtTexture && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("early.MixinBlockDirt_PodzolTextures");
             mixins.add("early.MixinBlockMycelium_BottomDirtTexture");
@@ -142,6 +165,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.playerOnlyHurtSound) {
             mixins.add("early.MixinEntityPlayer_CustomHurtSound");
+            mixins.add("early.MixinEntityLivingBase_DrownPlayerHurtSoundFix");
             if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
                 mixins.add("early.MixinEntityLivingBase_CustomPlayerHurtSound");
             }
@@ -156,12 +180,31 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enablePaintingSelection) {
             mixins.add("early.MixinItemHangingEntity_PaintingSelection");
         }
+        if (ModConfig.enableFenceTextureModule) {
+            mixins.add("early.MixinBlockFence_InfdevPlusConnection");
+        }
+        if (ModConfig.disableFencePumpkinConnections) {
+            mixins.add("early.MixinBlockFence_NoPumpkinConnections");
+        }
+        if (ModConfig.enableJackOLanternHelmet) {
+            mixins.add("early.MixinItem_JackOLanternHelmet");
+            mixins.add("early.MixinEntityLiving_JackOLanternArmorPosition");
+            mixins.add("early.MixinEntityEnderman_JackOLanternNoAggro");
+        }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            mixins.add("accessor.GuiChatAccessor");
+            mixins.add("accessor.GuiNewChatAccessor");
             mixins.add("accessor.GuiScreenAccessor");
             mixins.add("accessor.GuiContainerAccessor");
             mixins.add("accessor.GuiYesNoAccessor");
             mixins.add("accessor.ModelBoxAccessor");
             mixins.add("accessor.PlayerControllerMPAccessor");
+            if (ModConfig.enableFenceTextureModule) {
+                mixins.add("early.MixinBlockFence_InfdevPlusTexture");
+            }
+            if (ModConfig.enableJackOLanternHelmet) {
+                mixins.add("early.MixinGuiIngame_JackOLanternBlur");
+            }
             mixins.add("early.MixinRenderGlobal_SunriseTint");
             mixins.add("early.MixinEntityRenderer_BlackNightFog");
             mixins.add("early.MixinEntityRenderer_BetaStyleFogDistance");
@@ -184,12 +227,21 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.enableHotbarSelectorTexture) {
                 mixins.add("early.MixinGuiIngame_HotbarSelectorTexture");
             }
+            if (ModConfig.disablePumpkinOverlay) {
+                mixins.add("early.MixinGuiIngame_NoPumpkinOverlay");
+            }
+            if (ModConfig.disableUnderwaterOverlay) {
+                mixins.add("early.MixinItemRenderer_NoUnderwaterOverlay");
+            }
             if (ModConfig.enableAsgardShieldModule) {
                 mixins.add("early.asgardshield.MixinGuiIngameForge_AsgardAirOffset");
             }
             if (ModConfig.allowChatOnDeathScreen) {
                 mixins.add("early.MixinGuiGameOver_AllowChat");
                 mixins.add("early.vortex.MixinGuiRuneGameOver_AllowChat");
+            }
+            if (ModConfig.enableChatSelectionCopy) {
+                mixins.add("early.MixinGuiChat_ChatSelection");
             }
             if (ModConfig.enableTerraModule) {
                 mixins.add("early.MixinGuiIngame_EyeBossBarColor");
@@ -237,12 +289,15 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         // vortex mixins (always enabled)
         mixins.add("early.vortex.MixinArmorProperties");
         mixins.add("early.vortex.MixinBlockLiquid");
+        mixins.add("early.vortex.MixinChestGenHooksRandomGlint");
         mixins.add("early.vortex.MixinContainer");
         mixins.add("early.vortex.MixinEnchantmentHelper");
         mixins.add("early.vortex.MixinEntityItemBackpackPickup");
         mixins.add("early.vortex.MixinEntityPlayer");
+        mixins.add("early.vortex.MixinItemEnchantedBookRandomGlint");
         mixins.add("early.vortex.MixinInventoryPlayerBackpackPickup");
         mixins.add("early.vortex.MixinItemStackCustomGlint");
+        mixins.add("early.vortex.MixinItemStackRandomGlint");
         mixins.add("early.vortex.MixinItemStack_BackpackBreakDrop");
         mixins.add("early.vortex.MixinRenderItem");
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {

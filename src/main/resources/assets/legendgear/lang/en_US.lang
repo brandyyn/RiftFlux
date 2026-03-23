@@ -128,6 +128,8 @@ item.record.dragondot.name=Music Disc
 item.record.dragondot.desc=Dragondot's Return
 
 entity.fallingStar.name=Falling Star
+potion.legendgearManaRegen=Mana Regeneration
+potion.legendgearJumpPenalty=Grounded
 
 tile.starstoneBlock.name=Starstone Block
 tile.infusedStarstoneBlock.name=Infused Starstone Block

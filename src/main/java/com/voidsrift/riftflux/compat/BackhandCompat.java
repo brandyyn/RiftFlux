@@ -135,6 +135,14 @@ public final class BackhandCompat {
         return isOffhandItemInUseInternal(player);
     }
 
+    @SafeVarargs
+    public static void addOffhandPriorityItems(Class<? extends Item>... itemClasses) {
+        if (!isAvailable() || itemClasses == null || itemClasses.length == 0) {
+            return;
+        }
+        addOffhandPriorityItemsInternal(itemClasses);
+    }
+
     public static void setOffhandItemInUse(EntityPlayer player, boolean inUse) {
         if (!isAvailable() || player == null) {
             return;
@@ -238,6 +246,12 @@ public final class BackhandCompat {
             return ((IBackhandPlayer) player).isOffhandItemInUse();
         }
         return false;
+    }
+
+    @SafeVarargs
+    @Optional.Method(modid = "backhand")
+    private static void addOffhandPriorityItemsInternal(Class<? extends Item>... itemClasses) {
+        BackhandUtils.addOffhandPriorityItem(itemClasses);
     }
 
     @Optional.Method(modid = "backhand")

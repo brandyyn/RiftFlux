@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.terramine;
 
+import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.riftflux;
 import cpw.mods.fml.client.registry.RenderingRegistry;
@@ -13,10 +14,13 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.init.Items;
 import net.minecraftforge.common.ChestGenHooks;
+import net.minecraftforge.client.MinecraftForgeClient;
+import cpw.mods.fml.client.registry.ClientRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +44,8 @@ public final class TerrariaContent {
     public static Block fireblossomBlock;
     public static Block jungleSporeBlock;
     public static Block moonglowBlock;
+    public static Block demonAltarBlock;
+    public static Block hellForgeBlock;
 
     private static boolean preInited;
     private static boolean initialized;
@@ -74,6 +80,8 @@ public final class TerrariaContent {
         fireblossomBlock = new BlockTerraPlant("fireblossom", "fireblossom", BlockTerraPlant.PlacementRule.ANY_SOLID);
         jungleSporeBlock = new BlockTerraPlant("jungle_spore", "jungle_spore", BlockTerraPlant.PlacementRule.ANY_SOLID);
         moonglowBlock = new BlockTerraPlant("moonglow", "moonglow", BlockTerraPlant.PlacementRule.ANY_SOLID);
+        demonAltarBlock = new BlockDemonAltar();
+        hellForgeBlock = new BlockHellForge();
 
         GameRegistry.registerItem(lens, "lens");
         GameRegistry.registerItem(blackLens, "black_lens");
@@ -91,6 +99,10 @@ public final class TerrariaContent {
         GameRegistry.registerBlock(fireblossomBlock, "fireblossom");
         GameRegistry.registerBlock(jungleSporeBlock, "jungle_spore");
         GameRegistry.registerBlock(moonglowBlock, "moonglow");
+        GameRegistry.registerBlock(demonAltarBlock, "demon_altar");
+        GameRegistry.registerBlock(hellForgeBlock, "hellforge");
+        GameRegistry.registerTileEntity(TileEntityDemonAltar.class, Constants.MODID + ":demon_altar");
+        GameRegistry.registerTileEntity(TileEntityHellForge.class, Constants.MODID + ":hellforge");
         iceRod.setHarvestLevel("sword", 0);
 
         registerEntities();
@@ -133,6 +145,31 @@ public final class TerrariaContent {
 
         RenderingRegistry.registerEntityRenderingHandler(EntityDemonEye.class, new RenderDemonEye(new ModelDemonEye(), 0.5F));
         RenderingRegistry.registerEntityRenderingHandler(EntityEyeOfCthulhu.class, new RenderEyeOfCthulhu(new ModelEyeOfCthulhu(), 0.5F));
+
+        ResourceLocation demonAltarTexture = new ResourceLocation(Constants.MODID, "textures/models/demon_altar.png");
+        ResourceLocation hellForgeTexture = new ResourceLocation(Constants.MODID, "textures/models/hellforge.png");
+
+        ClientRegistry.bindTileEntitySpecialRenderer(
+                TileEntityDemonAltar.class,
+                new RenderTerraModelTileEntity(demonAltarTexture, new ModelDemonAltar(), 270.0F, 90.0F, 0.0F, 180.0F)
+        );
+        ClientRegistry.bindTileEntitySpecialRenderer(
+                TileEntityHellForge.class,
+                new RenderTerraModelTileEntity(hellForgeTexture, new ModelHellForge(), 90.0F, 270.0F, 180.0F, 0.0F)
+        );
+
+        if (demonAltarBlock != null) {
+            MinecraftForgeClient.registerItemRenderer(
+                    Item.getItemFromBlock(demonAltarBlock),
+                    new RenderTerraModelItem(demonAltarTexture, new ModelDemonAltar(), 225.0F)
+            );
+        }
+        if (hellForgeBlock != null) {
+            MinecraftForgeClient.registerItemRenderer(
+                    Item.getItemFromBlock(hellForgeBlock),
+                    new RenderTerraModelItem(hellForgeTexture, new ModelHellForge(), 225.0F)
+            );
+        }
     }
 
     private static void registerEntities() {

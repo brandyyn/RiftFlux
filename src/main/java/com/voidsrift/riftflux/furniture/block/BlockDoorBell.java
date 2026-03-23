@@ -117,6 +117,7 @@ public class BlockDoorBell extends Block {
     @Override
     public void onNeighborBlockChange(World world, int x, int y, int z, Block block) {
         if (!this.canPlaceBlockAt(world, x, y, z)) {
+            this.notifyDoorBellNeighbors(world, x, y, z, world.getBlockMetadata(x, y, z));
             this.dropBlockAsItem(world, x, y, z, 0, 0);
             world.setBlockToAir(x, y, z);
         }
@@ -146,6 +147,7 @@ public class BlockDoorBell extends Block {
 
         world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, Constants.MODID + ":doorbell", 0.75F, 1.0F);
         world.setBlockMetadataWithNotify(x, y, z, metadata | 8, 3);
+        this.notifyDoorBellNeighbors(world, x, y, z, metadata | 8);
         world.markBlockRangeForRenderUpdate(x, y, z, x, y, z);
         world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
         return true;
@@ -157,9 +159,29 @@ public class BlockDoorBell extends Block {
             int metadata = world.getBlockMetadata(x, y, z);
             if ((metadata & 8) != 0) {
                 world.setBlockMetadataWithNotify(x, y, z, metadata & 7, 3);
+                this.notifyDoorBellNeighbors(world, x, y, z, metadata & 7);
                 world.markBlockRangeForRenderUpdate(x, y, z, x, y, z);
             }
         }
+    }
+
+    @Override
+    public boolean canProvidePower() {
+        return true;
+    }
+
+    @Override
+    public int isProvidingWeakPower(IBlockAccess world, int x, int y, int z, int side) {
+        return (world.getBlockMetadata(x, y, z) & 8) != 0 ? 15 : 0;
+    }
+
+    @Override
+    public int isProvidingStrongPower(IBlockAccess world, int x, int y, int z, int side) {
+        int metadata = world.getBlockMetadata(x, y, z);
+        if ((metadata & 8) == 0) {
+            return 0;
+        }
+        return side == this.getPoweredSide(metadata) ? 15 : 0;
     }
 
     @Override
@@ -199,5 +221,40 @@ public class BlockDoorBell extends Block {
     @Override
     public void registerBlockIcons(IIconRegister register) {
         this.blockIcon = register.registerIcon("riftflux:furniture_doorbell");
+    }
+
+    private void notifyDoorBellNeighbors(World world, int x, int y, int z, int metadata) {
+        if (world == null) {
+            return;
+        }
+
+        world.notifyBlocksOfNeighborChange(x, y, z, this);
+        int direction = metadata & 7;
+        if (direction == 0) {
+            world.notifyBlocksOfNeighborChange(x, y, z + 1, this);
+        } else if (direction == 1) {
+            world.notifyBlocksOfNeighborChange(x - 1, y, z, this);
+        } else if (direction == 2) {
+            world.notifyBlocksOfNeighborChange(x, y, z - 1, this);
+        } else if (direction == 3) {
+            world.notifyBlocksOfNeighborChange(x + 1, y, z, this);
+        }
+    }
+
+    private int getPoweredSide(int metadata) {
+        int direction = metadata & 7;
+        if (direction == 0) {
+            return 2;
+        }
+        if (direction == 1) {
+            return 5;
+        }
+        if (direction == 2) {
+            return 3;
+        }
+        if (direction == 3) {
+            return 4;
+        }
+        return 0;
     }
 }

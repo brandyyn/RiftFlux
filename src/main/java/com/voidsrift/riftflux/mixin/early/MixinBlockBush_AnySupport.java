@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,6 +63,10 @@ public abstract class MixinBlockBush_AnySupport {
             return;
         }
 
+        if (((Object) this) instanceof BlockDoublePlant) {
+            return;
+        }
+
         // Only relax placement for ItemBlock-based (i.e. player) placement
         if (!riftflux$isItemPlacementCall()) {
             return;
@@ -99,6 +104,10 @@ public abstract class MixinBlockBush_AnySupport {
     private void riftflux$allowStayOnAnySolid(World world, int x, int y, int z,
                                               CallbackInfoReturnable<Boolean> cir) {
         if (!ModConfig.allowPlantsOnAnyBlock) {
+            return;
+        }
+
+        if (((Object) this) instanceof BlockDoublePlant) {
             return;
         }
 

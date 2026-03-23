@@ -89,11 +89,12 @@ implements IWorldGenerator {
         int tz = 0;
         boolean success = false;
         for (int attempt = 0; attempt < LegendGear2.CONFIG_MAX_STARWELL_ATTEMPTS && !success; ++attempt) {
-            tx = random.nextInt(16) + chunkX * 16;
-            if (!this.suitableSurface(world, tx, ty = world.getPrecipitationHeight(tx, tz = random.nextInt(16) + chunkZ * 16), tz)) continue;
+            tx = random.nextInt(14) + 1 + chunkX * 16;
+            tz = random.nextInt(14) + 1 + chunkZ * 16;
+            ty = world.getPrecipitationHeight(tx, tz);
+            if (!this.suitableSurface(world, tx, ty, tz)) continue;
             this.buildWell(world, tx, ty, tz);
             success = true;
         }
     }
 }
-

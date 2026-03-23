@@ -115,7 +115,7 @@ extends TileEntitySpecialRenderer {
         GL11.glScaled((double)0.4, (double)0.4, (double)0.4);
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)this.getRotation(tileentity, partialTicks), (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindTexture(oldTexture);
+        this.bindOldCrystalTexture();
         this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
@@ -162,7 +162,7 @@ extends TileEntitySpecialRenderer {
         }
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)this.getRotation(tileentity, partialTicks), (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindTexture(oldTexture);
+        this.bindOldCrystalTexture();
         this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
@@ -176,7 +176,7 @@ extends TileEntitySpecialRenderer {
         GL11.glTranslatef((float)0.0f, (float)0.6f, (float)0.0f);
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)rotation, (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindTexture(oldTexture);
+        this.bindOldCrystalTexture();
         this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
@@ -191,7 +191,7 @@ extends TileEntitySpecialRenderer {
         GL11.glScaled((double)0.4, (double)0.4, (double)0.4);
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)rotation, (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindTexture(oldTexture);
+        this.bindOldCrystalTexture();
         this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
@@ -244,6 +244,10 @@ extends TileEntitySpecialRenderer {
 
     private ItemStack getRenderStack(ItemStack stack) {
         return stack != null ? stack : this.crystalStack;
+    }
+
+    private void bindOldCrystalTexture() {
+        Minecraft.getMinecraft().getTextureManager().bindTexture(oldTexture);
     }
 
     static boolean isTooltipPreviewRender() {

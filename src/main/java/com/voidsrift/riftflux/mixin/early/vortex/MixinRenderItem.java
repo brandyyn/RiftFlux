@@ -124,16 +124,10 @@ public abstract class MixinRenderItem {
    )
    public int onDraw(Tessellator tessellator) {
       if (hasCustomGlintGuiStack) {
-         if (doSubtractGuiStack) {
-            GL14.glBlendEquation(32779);
-         }
-
+         beginCustomGlintPass(doSubtractGuiStack);
          GL11.glColor4f(customColorsGuiStack[0], customColorsGuiStack[1], customColorsGuiStack[2], 1.0F);
          int result = tessellator.draw();
-         if (doSubtractGuiStack) {
-            GL14.glBlendEquation(32774);
-         }
-
+         endCustomGlintPass(doSubtractGuiStack);
          return result;
       } else {
          return tessellator.draw();
@@ -231,19 +225,29 @@ public abstract class MixinRenderItem {
    public void onRenderItemIn2D(Tessellator p_78439_0_, float p_78439_1_, float p_78439_2_, float p_78439_3_, float p_78439_4_, int p_78439_5_, int p_78439_6_, float p_78439_7_) {
       if (hasCustomGlintDroppedStack) {
          if (!doNullDroppedStack) {
-            if (doSubtractDroppedStack) {
-               GL14.glBlendEquation(32779);
-            }
-
+            beginCustomGlintPass(doSubtractDroppedStack);
             GL11.glColor4f(customColorsDroppedStack[0], customColorsDroppedStack[1], customColorsDroppedStack[2], 1.0F);
             ItemRenderer.renderItemIn2D(p_78439_0_, p_78439_1_, p_78439_2_, p_78439_3_, p_78439_4_, p_78439_5_, p_78439_6_, p_78439_7_);
-            if (doSubtractDroppedStack) {
-               GL14.glBlendEquation(32774);
-            }
+            endCustomGlintPass(doSubtractDroppedStack);
          }
       } else {
          ItemRenderer.renderItemIn2D(p_78439_0_, p_78439_1_, p_78439_2_, p_78439_3_, p_78439_4_, p_78439_5_, p_78439_6_, p_78439_7_);
       }
 
+   }
+
+   private static void beginCustomGlintPass(boolean subtractive) {
+      GL11.glColorMask(true, true, true, false);
+      if (subtractive) {
+         GL14.glBlendEquation(GL14.GL_FUNC_REVERSE_SUBTRACT);
+      }
+   }
+
+   private static void endCustomGlintPass(boolean subtractive) {
+      if (subtractive) {
+         GL14.glBlendEquation(GL14.GL_FUNC_ADD);
+      }
+      GL11.glColorMask(true, true, true, true);
+      GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
    }
 }

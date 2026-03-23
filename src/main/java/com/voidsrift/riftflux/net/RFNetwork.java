@@ -62,5 +62,8 @@ public final class RFNetwork {
 
         // Respawn delay sync (ID 10)
         CH.registerMessage(MsgSyncRespawnDelay.Handler.class, MsgSyncRespawnDelay.class, 10, Side.CLIENT);
+
+        // Fence override sync (ID 11)
+        CH.registerMessage(MsgSyncFenceOverrides.Handler.class, MsgSyncFenceOverrides.class, 11, Side.CLIENT);
     }
 }

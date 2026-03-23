@@ -36,6 +36,7 @@
 package net.nmccoy.legendgear;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.ConfigResolver;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -49,11 +50,14 @@ import cpw.mods.fml.relauncher.Side;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.Achievement;
 import net.minecraftforge.common.AchievementPage;
 import net.minecraftforge.common.MinecraftForge;
@@ -126,11 +130,18 @@ import net.nmccoy.legendgear.item.spell.StaffZap;
 import net.nmccoy.legendgear.item.spell.Tome;
 import net.nmccoy.legendgear.network.StarwellMessage;
 import net.nmccoy.legendgear.network.StarwellMessageHandler;
+import net.nmccoy.legendgear.potion.LegendGearPotions;
 import net.nmccoy.legendgear.ritual.RitualManager;
 
 public class LegendGear2 {
     public static final String MODID = "legendgear";
     public static final String VERSION = "2.b.2.1";
+    private static final int VANILLA_POTION_ID_SLOWNESS = 2;
+    private static final int VANILLA_POTION_ID_CONFUSION = 9;
+    private static final int VANILLA_POTION_ID_REGENERATION = 10;
+    private static final int VANILLA_POTION_ID_RESISTANCE = 11;
+    private static final int VANILLA_POTION_ID_FIRE_RESISTANCE = 12;
+    private static final int VANILLA_POTION_ID_INVISIBILITY = 14;
     public static float manaRechargeRate = 4.0f;
     public static float fatiguedRechargeRate = 0.75f;
     public static float manaRechargeDelay = 2.0f;
@@ -164,6 +175,28 @@ public class LegendGear2 {
     public static boolean CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = false;
     public static boolean CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = false;
     public static boolean CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = true;
+    public static int CONFIG_MANA_REGEN_POTION_ID = 24;
+    public static int CONFIG_GROUNDED_POTION_ID = 25;
+    public static float CONFIG_MANA_REGEN_POTION_PER_SECOND = 1.0f;
+    public static int CONFIG_STONESKIN_RESISTANCE_POTION_ID = VANILLA_POTION_ID_RESISTANCE;
+    public static boolean CONFIG_CALTROPS_BREAK_ON_TRIGGER = true;
+    public static boolean CONFIG_CALTROPS_TRIGGER_DROP_ENABLED = true;
+    public static float CONFIG_CALTROPS_MOB_DAMAGE = 3.0f;
+    public static float CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT = 20.0f;
+    public static boolean CONFIG_CALTROPS_UNDERGROUND_GEN_ENABLED = true;
+    public static int CONFIG_CALTROPS_UNDERGROUND_SPAWN_CHANCE = 3;
+    public static int CONFIG_CALTROPS_UNDERGROUND_MIN_Y = 12;
+    public static int CONFIG_CALTROPS_UNDERGROUND_MAX_Y = 48;
+    public static int CONFIG_CALTROPS_SLOWNESS_POTION_ID = VANILLA_POTION_ID_SLOWNESS;
+    public static int CONFIG_EXIT_CONFUSION_POTION_ID = VANILLA_POTION_ID_CONFUSION;
+    public static int CONFIG_ICE_SPELL_SLOWNESS_POTION_ID = VANILLA_POTION_ID_SLOWNESS;
+    public static int CONFIG_PHOENIX_REVIVE_RESISTANCE_POTION_ID = VANILLA_POTION_ID_RESISTANCE;
+    public static int CONFIG_PHOENIX_REVIVE_REGENERATION_POTION_ID = VANILLA_POTION_ID_REGENERATION;
+    public static int CONFIG_PHOENIX_REVIVE_FIRE_RESISTANCE_POTION_ID = VANILLA_POTION_ID_FIRE_RESISTANCE;
+    public static int CONFIG_THIEF_RING_INVISIBILITY_POTION_ID = VANILLA_POTION_ID_INVISIBILITY;
+    public static int CONFIG_PHOENIX_EMBLEM_FIRE_RESISTANCE_POTION_ID = VANILLA_POTION_ID_FIRE_RESISTANCE;
+    public static Potion manaRegenPotion;
+    public static Potion jumpPenaltyPotion;
     public static Item.ToolMaterial starglassMaterial;
     public static Item.ToolMaterial starsteelMaterial;
     public static RitualManager ritualManager;
@@ -258,6 +291,85 @@ public class LegendGear2 {
         return scan;
     }
 
+    public static Potion resolveConfiguredPotion(int configuredId, Potion fallback) {
+        if (configuredId >= 0 && configuredId < Potion.potionTypes.length) {
+            Potion configured = Potion.potionTypes[configuredId];
+            if (configured != null) {
+                return configured;
+            }
+        }
+        return fallback;
+    }
+
+    public static void applyJumpPenalty(EntityLivingBase target, int duration, int reductionSteps, boolean ambient) {
+        if (target == null || duration <= 0 || reductionSteps <= 0) {
+            return;
+        }
+
+        target.removePotionEffect(Potion.jump.id);
+
+        if (LegendGear2.jumpPenaltyPotion != null) {
+            target.removePotionEffect(LegendGear2.jumpPenaltyPotion.id);
+            target.addPotionEffect(new PotionEffect(LegendGear2.jumpPenaltyPotion.id, duration, reductionSteps - 1, ambient));
+            return;
+        }
+
+        target.addPotionEffect(new PotionEffect(Potion.jump.id, duration, -(reductionSteps + 1), ambient));
+    }
+
+    public static void addConfiguredPotionEffect(EntityLivingBase target, int configuredId, Potion fallback, int duration, int amplifier, boolean ambient) {
+        if (target == null) {
+            return;
+        }
+        Potion potion = LegendGear2.resolveConfiguredPotion(configuredId, fallback);
+        if (potion == null) {
+            return;
+        }
+        target.addPotionEffect(new PotionEffect(potion.id, duration, amplifier, ambient));
+    }
+
+    public static void replaceConfiguredPotionEffect(EntityLivingBase target, int configuredId, Potion fallback, int duration, int amplifier, boolean ambient) {
+        if (target == null) {
+            return;
+        }
+        Potion potion = LegendGear2.resolveConfiguredPotion(configuredId, fallback);
+        if (potion == null) {
+            return;
+        }
+        target.removePotionEffect(potion.id);
+        target.addPotionEffect(new PotionEffect(potion.id, duration, amplifier, ambient));
+    }
+
+    public static void addConfiguredPotionEffect(EntityLivingBase target, int configuredId, Potion fallback, int duration) {
+        if (target == null) {
+            return;
+        }
+        Potion potion = LegendGear2.resolveConfiguredPotion(configuredId, fallback);
+        if (potion == null) {
+            return;
+        }
+        target.addPotionEffect(new PotionEffect(potion.id, duration));
+    }
+
+    private static int[] getConfiguredPotionIdList(String key, String legacyKey, int defaultId, String comment) {
+        String[] defaults = new String[]{String.valueOf(defaultId)};
+        if (!config.hasKey("general", key) && config.hasKey("general", legacyKey)) {
+            defaults = new String[]{String.valueOf(config.getInt(legacyKey, "general", defaultId, 0, 255, comment))};
+        }
+        return ConfigResolver.parseIntegerList(config.getStringList(key, "general", defaults, comment));
+    }
+
+    private static int resolveConfiguredPotionIdList(int[] configuredIds, int fallback) {
+        if (configuredIds != null) {
+            for (int configuredId : configuredIds) {
+                if (configuredId >= 0) {
+                    return configuredId;
+                }
+            }
+        }
+        return fallback;
+    }
+
     public static void syncConfig() {
         enchMagicProtectionID = config.getInt("magicProtectionID", "general", LegendGear2.scanEnchantmentID(110), 0, 255, "Enchantment ID for Magic Protection");
         enchSpellReachID = config.getInt("spellReachID", "general", LegendGear2.scanEnchantmentID(111), 0, 255, "Enchantment ID for Reach");
@@ -285,6 +397,26 @@ public class LegendGear2 {
         CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = config.getBoolean("dashRingUseOriginalBehavior", "general", false, "If true, restores original unlimited dash ring mid-air behavior and ignores dashRingMaxAirJumps");
         CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = config.getBoolean("sprinkleStardustRequireSneak", "general", false, "If true, infused stardust requires sneaking to sprinkle");
         CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = config.getBoolean("spottingScopeConsumesMana", "general", true, "If false, spotting scope pings do not consume mana");
+        CONFIG_MANA_REGEN_POTION_ID = config.getInt("manaRegenPotionId", "general", 24, 0, 255, "Potion ID reserved for the LegendGear mana regeneration effect");
+        CONFIG_GROUNDED_POTION_ID = config.getInt("groundedPotionId", "general", 25, 0, 255, "Potion ID reserved for the LegendGear Grounded jump-penalty effect");
+        CONFIG_MANA_REGEN_POTION_PER_SECOND = config.getFloat("manaRegenPotionManaPerSecond", "general", 1.0f, 0.0f, 100.0f, "Mana restored per second by the LegendGear mana regeneration potion effect at amplifier 0");
+        CONFIG_STONESKIN_RESISTANCE_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("stoneskinResistancePotionIds", "stoneskinResistancePotionId", VANILLA_POTION_ID_RESISTANCE, "Potion IDs considered for the Stoneskin ritual. The first ID in the list is used."), VANILLA_POTION_ID_RESISTANCE);
+        CONFIG_CALTROPS_BREAK_ON_TRIGGER = config.getBoolean("caltropsBreakOnTrigger", "general", true, "If true, caltrops break when triggered. If false, they stay placed and can trigger again after a short cooldown");
+        CONFIG_CALTROPS_TRIGGER_DROP_ENABLED = config.getBoolean("caltropsTriggerDropEnabled", "general", true, "If true, caltrops have their normal random chance to drop as an item when triggered");
+        CONFIG_CALTROPS_MOB_DAMAGE = config.getFloat("caltropsMobDamageHearts", "general", 1.5f, 0.0f, 1024.0f, "Damage dealt by caltrops to non-player living entities, measured in hearts") * 2.0f;
+        CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT = config.getFloat("caltropsPlayerDamagePercent", "general", 20.0f, 0.0f, 1000.0f, "Percent of a player's max health dealt by caltrops");
+        CONFIG_CALTROPS_UNDERGROUND_GEN_ENABLED = config.getBoolean("caltropsUndergroundGenEnabled", "general", true, "If true, caltrops may generate underground in caves");
+        CONFIG_CALTROPS_UNDERGROUND_SPAWN_CHANCE = config.getInt("caltropsUndergroundSpawnChance", "general", 3, 0, 256, "Underground caltrops spawn attempts per chunk when enabled");
+        CONFIG_CALTROPS_UNDERGROUND_MIN_Y = config.getInt("caltropsUndergroundMinY", "general", 12, 1, 255, "Minimum Y level for underground caltrops generation");
+        CONFIG_CALTROPS_UNDERGROUND_MAX_Y = config.getInt("caltropsUndergroundMaxY", "general", 48, 1, 255, "Maximum Y level for underground caltrops generation");
+        CONFIG_CALTROPS_SLOWNESS_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("caltropsSlownessPotionIds", "caltropsSlownessPotionId", VANILLA_POTION_ID_SLOWNESS, "Potion IDs considered by caltrops for movement slowdown. The first ID in the list is used."), VANILLA_POTION_ID_SLOWNESS);
+        CONFIG_EXIT_CONFUSION_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("exitConfusionPotionIds", "exitConfusionPotionId", VANILLA_POTION_ID_CONFUSION, "Potion IDs considered for the Exit spell side effect. The first ID in the list is used."), VANILLA_POTION_ID_CONFUSION);
+        CONFIG_ICE_SPELL_SLOWNESS_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("iceSpellSlownessPotionIds", "iceSpellSlownessPotionId", VANILLA_POTION_ID_SLOWNESS, "Potion IDs considered by critical Ice spell hits for slowdown. The first ID in the list is used."), VANILLA_POTION_ID_SLOWNESS);
+        CONFIG_PHOENIX_REVIVE_RESISTANCE_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixReviveResistancePotionIds", "phoenixReviveResistancePotionId", VANILLA_POTION_ID_RESISTANCE, "Potion IDs considered by phoenix revival effects for resistance. The first ID in the list is used."), VANILLA_POTION_ID_RESISTANCE);
+        CONFIG_PHOENIX_REVIVE_REGENERATION_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixReviveRegenerationPotionIds", "phoenixReviveRegenerationPotionId", VANILLA_POTION_ID_REGENERATION, "Potion IDs considered by phoenix revival effects for regeneration. The first ID in the list is used."), VANILLA_POTION_ID_REGENERATION);
+        CONFIG_PHOENIX_REVIVE_FIRE_RESISTANCE_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixReviveFireResistancePotionIds", "phoenixReviveFireResistancePotionId", VANILLA_POTION_ID_FIRE_RESISTANCE, "Potion IDs considered by phoenix revival effects for fire resistance. The first ID in the list is used."), VANILLA_POTION_ID_FIRE_RESISTANCE);
+        CONFIG_THIEF_RING_INVISIBILITY_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("thiefRingInvisibilityPotionIds", "thiefRingInvisibilityPotionId", VANILLA_POTION_ID_INVISIBILITY, "Potion IDs considered while the Thief Ring is active. The first ID in the list is used."), VANILLA_POTION_ID_INVISIBILITY);
+        CONFIG_PHOENIX_EMBLEM_FIRE_RESISTANCE_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixEmblemFireResistancePotionIds", "phoenixEmblemFireResistancePotionId", VANILLA_POTION_ID_FIRE_RESISTANCE, "Potion IDs considered by Phoenix Emblem interventions for fire resistance. The first ID in the list is used."), VANILLA_POTION_ID_FIRE_RESISTANCE);
         EntityMagicBoomerang.BOOMERANG_DAMAGE = CONFIG_MAGIC_BOOMERANG_DAMAGE;
         if (config.hasChanged()) {
             config.save();
@@ -318,12 +450,25 @@ public class LegendGear2 {
             CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = ModConfig.legendGearDashRingUseOriginalBehavior;
             CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = ModConfig.legendGearSprinkleStardustRequireSneak;
             CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = ModConfig.legendGearSpottingScopeConsumesMana;
+            CONFIG_MANA_REGEN_POTION_ID = ModConfig.legendGearManaRegenPotionId;
+            CONFIG_GROUNDED_POTION_ID = ModConfig.legendGearGroundedPotionId;
+            CONFIG_MANA_REGEN_POTION_PER_SECOND = ModConfig.legendGearManaRegenPotionManaPerSecond;
+            CONFIG_STONESKIN_RESISTANCE_POTION_ID = ModConfig.legendGearStoneskinResistancePotionId;
+            CONFIG_CALTROPS_SLOWNESS_POTION_ID = ModConfig.legendGearCaltropsSlownessPotionId;
+            CONFIG_EXIT_CONFUSION_POTION_ID = ModConfig.legendGearExitConfusionPotionId;
+            CONFIG_ICE_SPELL_SLOWNESS_POTION_ID = ModConfig.legendGearIceSpellSlownessPotionId;
+            CONFIG_PHOENIX_REVIVE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixReviveResistancePotionId;
+            CONFIG_PHOENIX_REVIVE_REGENERATION_POTION_ID = ModConfig.legendGearPhoenixReviveRegenerationPotionId;
+            CONFIG_PHOENIX_REVIVE_FIRE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixReviveFireResistancePotionId;
+            CONFIG_THIEF_RING_INVISIBILITY_POTION_ID = ModConfig.legendGearThiefRingInvisibilityPotionId;
+            CONFIG_PHOENIX_EMBLEM_FIRE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixEmblemFireResistancePotionId;
         }
 
         if (config == null) {
             config = new Configuration(event.getSuggestedConfigurationFile());
             LegendGear2.syncConfig();
         }
+        LegendGearPotions.init();
         EntityMagicBoomerang.BOOMERANG_DAMAGE = CONFIG_MAGIC_BOOMERANG_DAMAGE;
         snw = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
         if (FMLCommonHandler.instance().getSide().isClient()) {
@@ -523,6 +668,7 @@ public class LegendGear2 {
         EntityRegistry.registerModEntity(EntityHeart.class, (String)"heartItem", (int)id++, modEntityOwner, (int)128, (int)10, (boolean)true);
         EntityRegistry.registerModEntity(EntityPing.class, (String)"ping", (int)id++, modEntityOwner, (int)1024, (int)10, (boolean)true);
         GameRegistry.registerWorldGenerator((IWorldGenerator)new AzuriteGenerator(), (int)3);
+        GameRegistry.registerWorldGenerator((IWorldGenerator)new CaltropsUndergroundGenerator(), (int)3);
         GameRegistry.registerWorldGenerator((IWorldGenerator)new StarwellGenerator(), (int)3);
         ritualManager = new RitualManager();
     }

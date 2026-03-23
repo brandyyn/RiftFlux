@@ -1,5 +1,6 @@
 tile.heartCrystal.name=Heart Crystal
 tile.heartLantern.name=Heart Lantern
+tile.starLantern.name=Star Lantern
 item.heartShard.name=Heart Shard
 updater.newVersion=A new version is available: [%s]
 updater.behindBy.multiple=%s versions behind

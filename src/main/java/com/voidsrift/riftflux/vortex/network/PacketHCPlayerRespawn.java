@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.vortex.network;
 
+import com.voidsrift.riftflux.vortex.respawn.RespawnDelayHelper;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -53,6 +54,10 @@ public class PacketHCPlayerRespawn implements IMessage, IMessageHandler<PacketHC
          EntityPlayer player = ctx.getServerHandler().playerEntity;
          EntityPlayerMP reviver = MinecraftServer.getServer().getConfigurationManager().respawnPlayer((EntityPlayerMP)player, message.dim, false);
          reviver.playerNetServerHandler.playerEntity = reviver;
+         RespawnDelayHelper.clearDeathTimer(reviver);
+         RespawnDelayHelper.sync(reviver);
+         RespawnDelayHelper.markPendingSync(reviver, 10);
+         RespawnDelayHelper.markPendingRespawnStabilize(reviver, 2);
          if (message.doToggle) {
             WorldHelper.setPlayerHCRevive(player, false);
             return new PacketWorldDataSync(WorldHelper.getGlobalCustomData(world).getData(), message.disableGui);

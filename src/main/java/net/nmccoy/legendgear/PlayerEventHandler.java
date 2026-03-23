@@ -325,7 +325,8 @@ public class PlayerEventHandler {
                 this.addUseLine(event, "Effect: Radiant fire burst, extra effective against undead.");
                 break;
             case Exit:
-                this.addUseLine(event, "Effect: Teleport spell using your stored sky location, with confusion/fall-risk side effects.");
+                this.addUseLine(event, "Effect: Teleports you to the first open surface space above your current position in the Overworld.");
+                this.addUseLine(event, "Fails if bedrock is above you. Non-critical casts also cause confusion.");
                 break;
             default:
                 this.addUseLine(event, "Effect: Casts this item's bound spell.");
@@ -736,9 +737,9 @@ public class PlayerEventHandler {
 
     private void revivePlayer(EntityPlayer player) {
         player.setHealth(1.0f);
-        player.addPotionEffect(new PotionEffect(Potion.resistance.id, 140, 4));
-        player.addPotionEffect(new PotionEffect(Potion.regeneration.id, 28, 4));
-        player.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 140, 0));
+        LegendGear2.addConfiguredPotionEffect(player, LegendGear2.CONFIG_PHOENIX_REVIVE_RESISTANCE_POTION_ID, Potion.resistance, 140, 4, false);
+        LegendGear2.addConfiguredPotionEffect(player, LegendGear2.CONFIG_PHOENIX_REVIVE_REGENERATION_POTION_ID, Potion.regeneration, 28, 4, false);
+        LegendGear2.addConfiguredPotionEffect(player, LegendGear2.CONFIG_PHOENIX_REVIVE_FIRE_RESISTANCE_POTION_ID, Potion.fireResistance, 140, 0, false);
         player.setFire(7);
         player.worldObj.playSoundAtEntity((Entity)player, "legendgear:revive", 1.0f, 1.0f);
         if (!player.worldObj.isRemote) {
@@ -765,6 +766,21 @@ public class PlayerEventHandler {
                 return;
             }
         }
+    }
+
+    @SubscribeEvent
+    public void applyLegendGearJumpPenalty(LivingEvent.LivingJumpEvent event) {
+        if (event == null || event.entityLiving == null || LegendGear2.jumpPenaltyPotion == null) {
+            return;
+        }
+
+        PotionEffect effect = event.entityLiving.getActivePotionEffect(LegendGear2.jumpPenaltyPotion);
+        if (effect == null) {
+            return;
+        }
+
+        double reducedMotionY = event.entityLiving.motionY - (double)(effect.getAmplifier() + 1) * 0.1D;
+        event.entityLiving.motionY = Math.max(0.02D, reducedMotionY);
     }
 
     @SubscribeEvent

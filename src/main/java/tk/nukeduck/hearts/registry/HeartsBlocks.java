@@ -16,13 +16,15 @@ import net.minecraft.creativetab.CreativeTabs;
 import tk.nukeduck.hearts.HeartCrystal;
 import tk.nukeduck.hearts.block.BlockHeartCrystal;
 import tk.nukeduck.hearts.block.BlockLantern;
-import tk.nukeduck.hearts.block.ItemBlock16;
+import tk.nukeduck.hearts.block.BlockStarLantern;
 import tk.nukeduck.hearts.item.ItemHeartCrystal;
 import tk.nukeduck.hearts.item.ItemHeartLantern;
+import tk.nukeduck.hearts.item.ItemStarLantern;
 
 public class HeartsBlocks {
     public static BlockHeartCrystal crystal;
     public static BlockLantern lantern;
+    public static BlockStarLantern starLantern;
 
     public static final void init() {
         crystal = new BlockHeartCrystal();
@@ -37,5 +39,9 @@ public class HeartsBlocks {
         lantern.setBlockName("heartLantern").setHardness(0.2f).setResistance(0.2f).setStepSound(Block.soundTypeGlass).setHarvestLevel("pickaxe", 0);
         lantern.setCreativeTab(CreativeTabs.tabDecorations);
         GameRegistry.registerBlock((Block)lantern, ItemHeartLantern.class, (String)"heart_lantern");
+        starLantern = new BlockStarLantern(Material.glass);
+        starLantern.setBlockName("starLantern").setHardness(0.2f).setResistance(0.2f).setStepSound(Block.soundTypeGlass).setHarvestLevel("pickaxe", 0);
+        starLantern.setCreativeTab(CreativeTabs.tabDecorations);
+        GameRegistry.registerBlock((Block)starLantern, ItemStarLantern.class, (String)"star_lantern");
     }
 }

@@ -83,13 +83,12 @@ public final class AsgardShieldHud extends Gui {
 
     private void renderGuardGauge(Minecraft mc, EntityPlayer player, int width, int height, int hotbarShiftY) {
         int gauge = AsgardShieldState.getGuardGauge(player);
-        ItemStack inUse = player.getItemInUse();
         boolean blocking = AsgardShieldLogic.isBlockingWithAsgardItem(player);
         if (!blocking && gauge <= 0) {
             return;
         }
 
-        ItemStack active = inUse != null ? inUse : player.getHeldItem();
+        ItemStack active = AsgardShieldLogic.getEquippedAsgardItem(player);
         boolean gilded = active != null
                 && active.getItem() instanceof ItemAsgardShield
                 && ((ItemAsgardShield) active.getItem()).isGilded();
@@ -132,7 +131,7 @@ public final class AsgardShieldHud extends Gui {
         if (!ModConfig.enableAsgardShieldModule || player == null) {
             return false;
         }
-        return AsgardShieldLogic.isAsgardItem(player.getHeldItem());
+        return AsgardShieldLogic.isAsgardItem(AsgardShieldLogic.getEquippedAsgardItem(player));
     }
 
     public static boolean isGuardGaugeVisible(EntityPlayer player) {
@@ -175,10 +174,10 @@ public final class AsgardShieldHud extends Gui {
 
     public static int getTargetAirBubbleTopY(EntityPlayer player, int screenHeight, int defaultAirTopY) {
         int guardY = getGuardGaugeY(player, screenHeight);
-        if (guardY == Integer.MIN_VALUE) {
-            return defaultAirTopY;
+        if (guardY != Integer.MIN_VALUE) {
+            return Math.min(defaultAirTopY, guardY - 10);
         }
-        return Math.min(defaultAirTopY, guardY - 10);
+        return defaultAirTopY;
     }
 
     private static int getConfiguredEnchantLevel(int enchantId, ItemStack stack) {

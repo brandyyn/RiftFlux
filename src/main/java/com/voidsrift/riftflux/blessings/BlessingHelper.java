@@ -56,7 +56,7 @@ public final class BlessingHelper {
             "Take 20% extra damage, but gain 60% more EXP from orbs",
             "Deal 50% more damage, but gain a negative potion effect when you take damage",
             "While sneaking you are invisible and attacks on full-health enemies do double damage. Invisibility breaks on attack and has a 30s combat cooldown",
-            "Take 25% less explosive damage",
+            "Take 25% less explosive damage, and spike traps and caltrops don't affect you",
             "Drinking potions grants an extra random positive effect",
             "Move 20% faster, but take double fall damage",
             "Take 20% less damage from all sources",
@@ -435,6 +435,13 @@ public final class BlessingHelper {
     }
 
     public static String getDescription(String blessing) {
+        if ("Vampire".equals(blessing)) {
+            String key = getDescriptionKey(blessing);
+            String translated = StatCollector.translateToLocalFormatted(key, formatPercent(ModConfig.blessingVampireHealPercent));
+            if (translated != null && !translated.isEmpty() && !key.equals(translated)) {
+                return translated;
+            }
+        }
         String key = getDescriptionKey(blessing);
         if (!key.isEmpty()) {
             String translated = StatCollector.translateToLocal(key);
@@ -447,6 +454,20 @@ public final class BlessingHelper {
             return "";
         }
         return DESCRIPTIONS[idx];
+    }
+
+    private static String formatPercent(float value) {
+        if (value == (long) value) {
+            return String.format(Locale.ROOT, "%d", (long) value);
+        }
+        String out = String.format(Locale.ROOT, "%.2f", value);
+        while (out.endsWith("0")) {
+            out = out.substring(0, out.length() - 1);
+        }
+        if (out.endsWith(".")) {
+            out = out.substring(0, out.length() - 1);
+        }
+        return out;
     }
 
     private static String toBlessingKeySuffix(String blessing) {

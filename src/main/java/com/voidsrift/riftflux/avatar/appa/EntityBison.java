@@ -2,7 +2,6 @@ package com.voidsrift.riftflux.avatar.appa;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.EnumCreatureAttribute;
@@ -19,6 +18,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.ConfigResolver;
 import net.minecraft.util.MathHelper;
 
 public class EntityBison extends EntityFamiliar {
@@ -501,25 +501,7 @@ public class EntityBison extends EntityFamiliar {
         if (filter == null || filter.length == 0) {
             return !whitelist;
         }
-        String entityId = EntityList.getEntityString(entity);
-        String simpleName = entity.getClass().getSimpleName();
-        String className = entity.getClass().getName();
-        boolean match = false;
-        for (String raw : filter) {
-            if (raw == null) {
-                continue;
-            }
-            String entry = raw.trim();
-            if (entry.isEmpty()) {
-                continue;
-            }
-            if ((entityId != null && entry.equalsIgnoreCase(entityId))
-                    || entry.equalsIgnoreCase(simpleName)
-                    || entry.equalsIgnoreCase(className)) {
-                match = true;
-                break;
-            }
-        }
+        boolean match = ConfigResolver.matchesConfiguredEntity(entity, filter);
         return whitelist ? match : !match;
     }
 

@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux;
 
+import com.voidsrift.riftflux.util.ConfigResolver;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import java.util.HashSet;
@@ -18,6 +19,12 @@ public class ModConfig {
     public static final int DATAWATCHER_MAX_ID = 65536;
     public static final int PLAYER_DATAWATCHER_MIN_ID = 20;
     public static final int ENTITY_DATAWATCHER_MIN_ID = 16;
+    private static final int VANILLA_POTION_ID_SLOWNESS = 2;
+    private static final int VANILLA_POTION_ID_CONFUSION = 9;
+    private static final int VANILLA_POTION_ID_REGENERATION = 10;
+    private static final int VANILLA_POTION_ID_RESISTANCE = 11;
+    private static final int VANILLA_POTION_ID_FIRE_RESISTANCE = 12;
+    private static final int VANILLA_POTION_ID_INVISIBILITY = 14;
 
     public static boolean enableChromatiCraftMixin;
 
@@ -28,11 +35,15 @@ public class ModConfig {
 
     public static boolean playerOnlyHurtSound;
     public static double playerOnlyHurtSoundOofChance;
+    public static boolean otherPlayersOOF;
     public static boolean hasShader;
 
     public static boolean disableStrataVents;
 
     public static boolean disableStrataOreVeins;
+    public static boolean disableDragonAPILogging;
+    public static boolean optimizeChromatiCraftRenderEventFastPaths;
+    public static boolean optimizeChromatiCraftCliffsChunkGeneration;
     public static boolean disableThermalDynamicsFacades;
     public static boolean fixChocolateQuestDivideByZero;
     public static boolean hideChocolateQuestGeneratingStructureOverlay;
@@ -79,6 +90,11 @@ public class ModConfig {
     public static boolean itemPickupStarShowHotbarHud;
     public static boolean enableHotbarSelectorTexture;
     public static boolean hotbarSelectorAboveItemText;
+    public static boolean enableFenceTextureModule;
+    public static boolean disableFencePumpkinConnections;
+    public static boolean enableJackOLanternHelmet;
+    public static boolean disablePumpkinOverlay;
+    public static boolean disableUnderwaterOverlay;
     public static boolean enableCelestialEventTextures;
     public static float celestialSunEventChance;
     public static float celestialMoonEventChance;
@@ -141,6 +157,7 @@ public class ModConfig {
     public static int artifactActiveLightLevel;
     public static boolean artifactExclusiveActivation;
     public static int blessingNinjaInvisCooldownSeconds;
+    public static float blessingVampireHealPercent;
     public static boolean loseBlessingOnArtifactBreak;
     public static boolean artifactActivationAroundMonsters;
     public static boolean loseBlessingOnDeath;
@@ -203,6 +220,65 @@ public class ModConfig {
     public static boolean jungleSporeRequireShears;
     public static boolean moonglowRequireShears;
 
+    // Wheatfield biome
+    public static boolean enableWheatfieldBiome;
+    public static int wheatfieldBiomeId;
+    public static int wheatfieldBiomeWeight;
+    public static boolean wheatfieldAllowVillage;
+    public static int wheatfieldBarleyPerChunk;
+    public static int wheatfieldBarleyFistDropChancePercent;
+    public static boolean wheatfieldBarleyOnlyDropsWhenSheared;
+    public static boolean wheatfieldRestrictHostileSpawns;
+    public static String[] wheatfieldAllowedHostileMobIds;
+
+    // Witches and More ports
+    public static boolean enableWitchesAndMoreModule;
+    public static boolean enableCyclopsMob;
+    public static int cyclopsSpawnWeight;
+    public static int cyclopsMaxHealth;
+    public static boolean cyclopsUseBiomeWhitelist;
+    public static String[] cyclopsBiomeList;
+    public static boolean enableFlowerManMob;
+    public static int flowerManSpawnWeight;
+    public static int flowerManMaxHealth;
+    public static boolean flowerManUseBiomeWhitelist;
+    public static String[] flowerManBiomeList;
+    public static boolean enableEnderTrollMob;
+    public static int enderTrollSpawnWeight;
+    public static int enderTrollMaxHealth;
+    public static boolean enderTrollUseBiomeWhitelist;
+    public static String[] enderTrollBiomeList;
+    public static boolean enableJaxxMob;
+    public static int jaxxSpawnWeight;
+    public static int jaxxMaxHealth;
+    public static boolean jaxxUseBiomeWhitelist;
+    public static String[] jaxxBiomeList;
+    public static boolean enableBlackWidowMob;
+    public static int blackWidowSpawnWeight;
+    public static int blackWidowMaxHealth;
+    public static boolean blackWidowUseBiomeWhitelist;
+    public static String[] blackWidowBiomeList;
+    public static boolean enableWitchHouseStructure;
+    public static int witchHouseChunkChance;
+    public static int witchHouseMinDistanceBlocks;
+    public static int witchHouseInsideMobCount;
+    public static int witchHouseOutsideMobCount;
+    public static String[] witchHouseInsideMobIds;
+    public static String[] witchHouseOutsideMobIds;
+    public static String[] witchHouseChestLootEntries;
+
+    // SpecialArmor integration
+    public static boolean specialArmorLootSlimeHelmet;
+    public static boolean specialArmorLootDoubleJumpBoots;
+    public static boolean specialArmorLootSkates;
+    public static boolean specialArmorLootHeavyBoots;
+
+    // Axolotl module
+    public static boolean enableAxolotlModule;
+    public static boolean enableAxolotlNaturalSpawning;
+    public static int axolotlSpawnWeight;
+    public static float axolotlMaxHealth;
+
     // LegendGear module
     public static boolean enableLegendGearModule;
     public static int legendGearMagicProtectionId;
@@ -232,6 +308,26 @@ public class ModConfig {
     public static int legendGearIceStaffDurability;
     public static int legendGearStarPieceInfuseLevels;
     public static float legendGearEmberStaffFireSeconds;
+    public static int legendGearManaRegenPotionId;
+    public static int legendGearGroundedPotionId;
+    public static float legendGearManaRegenPotionManaPerSecond;
+    public static int legendGearStoneskinResistancePotionId;
+    public static boolean legendGearCaltropsBreakOnTrigger;
+    public static boolean legendGearCaltropsTriggerDropEnabled;
+    public static float legendGearCaltropsMobDamageHearts;
+    public static float legendGearCaltropsPlayerDamagePercent;
+    public static boolean legendGearCaltropsUndergroundGenEnabled;
+    public static int legendGearCaltropsUndergroundSpawnChance;
+    public static int legendGearCaltropsUndergroundMinY;
+    public static int legendGearCaltropsUndergroundMaxY;
+    public static int legendGearCaltropsSlownessPotionId;
+    public static int legendGearExitConfusionPotionId;
+    public static int legendGearIceSpellSlownessPotionId;
+    public static int legendGearPhoenixReviveResistancePotionId;
+    public static int legendGearPhoenixReviveRegenerationPotionId;
+    public static int legendGearPhoenixReviveFireResistancePotionId;
+    public static int legendGearThiefRingInvisibilityPotionId;
+    public static int legendGearPhoenixEmblemFireResistancePotionId;
     public static boolean enableAsgardShieldModule;
     public static int asgardShieldEquipmentDurabilityMultiplier;
     public static int asgardShieldHarkenVitalityAugmentId;
@@ -256,6 +352,7 @@ public class ModConfig {
     public static int appaBisonSeatParentDatawatcherId;
     public static int appaBisonSeatIndexDatawatcherId;
     public static int terrariaDemonEyeFlagsDatawatcherId;
+    public static int axolotlStateDatawatcherId;
 
     // Soul Hearts
     public static boolean enableSoulHeartsModule;
@@ -269,9 +366,9 @@ public class ModConfig {
     public static int heartCrystalMaxHearts;
     public static int heartCrystalGenHeight;
     public static int heartCrystalGenCount;
-    public static float heartCrystalKeptRate;
     public static boolean heartCrystalOldModel;
     public static boolean heartLanternAuraEnabled;
+    public static int heartLanternAuraDurationSeconds;
     public static float heartLanternAuraRadius;
     public static String[] heartLanternAuraEffects;
 
@@ -340,6 +437,7 @@ public class ModConfig {
     public static int     safeEntityTickMaxErrorsBeforeRemove;
 
     public static boolean enableStackOverflowGuard;
+    public static boolean disableFalseCrashImprover;
     public static int     stackOverflowMaxDepth;
 
     public static boolean protectItemsFromExplosions;
@@ -352,6 +450,18 @@ public class ModConfig {
     public static boolean shearsDamageOnAnyBlock;
     public static int deathRespawnDelaySeconds;
     public static boolean allowChatOnDeathScreen;
+    public static boolean enableChatSelectionCopy;
+    public static boolean enableWorldTooltips;
+    public static boolean worldTooltipsHideModName;
+    public static int worldTooltipsMaxDistance;
+    public static boolean worldTooltipsOverrideOutline;
+    public static float worldTooltipsTransparency;
+    public static float worldTooltipsVerticalOffset;
+    public static float worldTooltipsTextScale;
+    public static double worldTooltipsHoverRadiusHorizontal;
+    public static double worldTooltipsHoverRadiusVertical;
+    public static int worldTooltipsBackgroundColor;
+    public static int worldTooltipsOutlineColor;
 
     public static boolean disableBonemeal;
     public static double bonemealFlowerChance;
@@ -372,6 +482,7 @@ public class ModConfig {
 
     public static boolean enableNetherrackTweak;
     public static boolean enableDoorAirPlacement;
+    public static boolean protectCircuitryFromWater;
     public static boolean enablePodzolDirtTexture;
     public static boolean enableCustomPaintings;
     public static boolean enablePaintingSelection;
@@ -406,6 +517,10 @@ public class ModConfig {
     public static boolean enableUnloader;
     public static int[] unloaderBlacklistedDimensions;
     public static boolean enablePlacedItem;
+    public static boolean enablePlaceableGunpowder;
+    public static boolean placeableGunpowderSetsFireBelow;
+    public static boolean placeableGunpowderEmitsRedstone;
+    public static boolean placeableGunpowderIgnitesHbmBarrels;
     public static int butterflyKnifeDurability;
     public static float butterflyKnifeDamage;
     public static float butterflyKnifeBackstabDamage;
@@ -419,6 +534,8 @@ public class ModConfig {
     public static boolean backpackDurability;
     public static int backpackDurabilityAmount;
     public static int backpackArmorPoints;
+    public static boolean vortexGlintRuneDungeonLoot;
+    public static boolean randomizeEnchantedGlintColors;
     public static boolean GluttonyCharm;
     public static int highlanderPotionEffectId;
 
@@ -451,12 +568,39 @@ public class ModConfig {
                 1.0F,
                 "Chance (0.0-1.0) for player hurt sound to use the roblox instead of riftflux:player_hurt when PlayerOnlyHurtSound is enabled."
         );
+        otherPlayersOOF = config.getBoolean(
+                "OtherPlayersOOF",
+                "general",
+                true,
+                "If PlayerOnlyHurtSound is enabled, allows player-vs-player hurt sounds to use the roblox oof chance too."
+        );
 
         hasShader= config.getBoolean("ShaderEffect","general",false,"Toggles progression's shader effects");
 
         disableStrataVents = config.getBoolean("DisableStrataVents","general",false,"Toggles GeoStrata's vent spawn");
 
         disableStrataOreVeins = config.getBoolean("DisableStrataOreVeins","general",false,"Toggles GeoStrata's ore vein spawn");
+
+        disableDragonAPILogging = config.getBoolean(
+                "DisableDragonAPILogging",
+                "general",
+                true,
+                "If true, suppresses DragonAPI's logging sinks and logger entry points with the ASM core transformer. This also silences Reika mod logging routed through DragonAPI's shared logger classes. Requires restart."
+        );
+
+        optimizeChromatiCraftRenderEventFastPaths = config.getBoolean(
+                "OptimizeChromatiCraftRenderEventFastPaths",
+                "chromaticraft",
+                true,
+                "If true, adds common-path short-circuits to ChromatiCraft's DragonAPI block, entity, and tile render listeners. This keeps the DragonAPI callbacks intact for ChromatiCraft while skipping most work when none of ChromatiCraft's special render features are active. Requires restart."
+        );
+
+        optimizeChromatiCraftCliffsChunkGeneration = config.getBoolean(
+                "OptimizeChromatiCraftCliffsChunkGeneration",
+                "chromaticraft",
+                true,
+                "If true, skips ChromatiCraft's Glowing Cliffs auxiliary generation and cave-indicator passes on chunks that do not actually contain any Glowing Cliffs biome cells. This does not change generated content in relevant chunks; it only avoids wasted work in unrelated chunks. Requires restart."
+        );
 
         disableThermalDynamicsFacades = config.getBoolean(
                 "DisableThermalDynamicsFacades",
@@ -629,6 +773,41 @@ public class ModConfig {
                 "If true, render the hotbar selector above item count text. If false, render beneath text like vanilla."
         );
 
+        enableFenceTextureModule = config.getBoolean(
+                "EnableFenceTextureModule",
+                "client",
+                true,
+                "Master toggle for the custom fence textures, fence connections, and axe-based original-texture overrides."
+        );
+
+        disableFencePumpkinConnections = config.getBoolean(
+                "DisableFencePumpkinConnections",
+                "general",
+                true,
+                "If true, fences will not connect to pumpkins or jack o'lanterns."
+        );
+
+        enableJackOLanternHelmet = config.getBoolean(
+                "EnableJackOLanternHelmet",
+                "general",
+                true,
+                "If true, jack o' lanterns can be worn in the head slot and behave like pumpkins for overlays and Endermen."
+        );
+
+        disablePumpkinOverlay = config.getBoolean(
+                "DisablePumpkinOverlay",
+                "client",
+                true,
+                "If true, hides the pumpkin blur overlay while wearing a pumpkin."
+        );
+
+        disableUnderwaterOverlay = config.getBoolean(
+                "DisableUnderwaterOverlay",
+                "client",
+                true,
+                "If true, hides the underwater distortion overlay while submerged."
+        );
+
         deathRespawnDelaySeconds = config.getInt(
                 "DeathRespawnDelaySeconds",
                 "client",
@@ -644,6 +823,113 @@ public class ModConfig {
                 true,
                 "If true, pressing chat/command keys on the death screen opens chat so you can type before respawning."
         );
+
+        enableChatSelectionCopy = config.getBoolean(
+                "EnableChatSelectionCopy",
+                "client",
+                true,
+                "Allow click-drag selection in chat and copy the exact visible text, including clickable command output."
+        );
+
+        enableWorldTooltips = config.getBoolean(
+                "EnableWorldTooltips",
+                "client",
+                true,
+                "Render hovered item tooltips directly in the world."
+        );
+
+        worldTooltipsHideModName = config.getBoolean(
+                "WorldTooltipsHideModName",
+                "client",
+                true,
+                "Hide mod names on world item tooltips."
+        );
+
+        worldTooltipsMaxDistance = config.getInt(
+                "WorldTooltipsMaxDistance",
+                "client",
+                5,
+                2,
+                64,
+                "Maximum distance in blocks where world item tooltips can be shown."
+        );
+
+        worldTooltipsOverrideOutline = config.getBoolean(
+                "WorldTooltipsOverrideOutline",
+                "client",
+                false,
+                "If true, world item tooltips use WorldTooltipsOutlineColor instead of item rarity colors."
+        );
+
+        worldTooltipsTransparency = config.getFloat(
+                "WorldTooltipsTransparency",
+                "client",
+                0.0F,
+                0.0F,
+                1.0F,
+                "Opacity for world item tooltips. 0.0 is fully transparent and 1.0 is fully opaque."
+        );
+
+        worldTooltipsVerticalOffset = config.getFloat(
+                "WorldTooltipsVerticalOffset",
+                "client",
+                0.55F,
+                -2.0F,
+                4.0F,
+                "Vertical anchor offset for world item tooltips in blocks. Negative values move the tooltip down; positive values move it up."
+        );
+
+        float worldTooltipsTextScaleDefault = 1.0F;
+        if (!config.hasKey("client", "WorldTooltipsTextScale") && config.hasKey("client", "WorldTooltipsTextSize")) {
+            int legacyTextSize = config.getInt(
+                    "WorldTooltipsTextSize",
+                    "client",
+                    8,
+                    2,
+                    32,
+                    "Legacy key for WorldTooltipsTextScale."
+            );
+            worldTooltipsTextScaleDefault = Math.max(0.25F, Math.min(4.0F, legacyTextSize / 8.0F));
+        }
+
+        worldTooltipsTextScale = config.getFloat(
+                "WorldTooltipsTextScale",
+                "client",
+                worldTooltipsTextScaleDefault,
+                0.25F,
+                4.0F,
+                "Scale multiplier for world tooltip text and its background. 1.0 is the default size."
+        );
+        removeConfigProperty("client", "WorldTooltipsTextSize");
+
+        worldTooltipsHoverRadiusHorizontal = config.get(
+                "client",
+                "WorldTooltipsHoverRadiusHorizontal",
+                0.12D,
+                "Extra horizontal hover radius used when aiming at dropped-item world tooltips. Higher values make tooltips easier to trigger."
+        ).getDouble(0.12D);
+
+        worldTooltipsHoverRadiusVertical = config.get(
+                "client",
+                "WorldTooltipsHoverRadiusVertical",
+                0.12D,
+                "Extra vertical hover radius used when aiming at dropped-item world tooltips. Higher values make tooltips easier to trigger."
+        ).getDouble(0.12D);
+
+        String worldTooltipsBackgroundColorRaw = config.getString(
+                "WorldTooltipsBackgroundColor",
+                "client",
+                "0x100010",
+                "Background color for world item tooltips. Accepts #RRGGBB, 0xRRGGBB, or RRGGBB."
+        );
+        String worldTooltipsOutlineColorRaw = config.getString(
+                "WorldTooltipsOutlineColor",
+                "client",
+                "0x5000FF",
+                "Outline color for world item tooltips when WorldTooltipsOverrideOutline is enabled. Accepts #RRGGBB, 0xRRGGBB, or RRGGBB."
+        );
+        worldTooltipsBackgroundColor = parseRgbColor(worldTooltipsBackgroundColorRaw, 0x100010);
+        worldTooltipsOutlineColor = parseRgbColor(worldTooltipsOutlineColorRaw, 0x5000FF);
 
         migrateClientConfigKeys();
         migrateCelestialConfigCategory();
@@ -1093,6 +1379,15 @@ public class ModConfig {
                 0,
                 3600,
                 "Cooldown in seconds before Ninja invisibility can be applied again."
+        );
+
+        blessingVampireHealPercent = config.getFloat(
+                "BlessingVampireHealPercent",
+                "Blessings",
+                7.0F,
+                0.0F,
+                1000.0F,
+                "Percent of damage dealt that Vampire heals back."
         );
 
         loseBlessingOnArtifactBreak = config.getBoolean(
@@ -1792,6 +2087,169 @@ public class ModConfig {
                 600.0F,
                 "How long Ember Staff fire spells ignite entities for (in seconds, fractional allowed). Set to 0 to disable burning."
         );
+        legendGearManaRegenPotionId = config.getInt(
+                "manaRegenPotionId",
+                "legendgear",
+                24,
+                0,
+                255,
+                "Potion ID reserved for the LegendGear mana regeneration effect. If occupied, the next free ID is used."
+        );
+        legendGearGroundedPotionId = config.getInt(
+                "groundedPotionId",
+                "legendgear",
+                25,
+                0,
+                255,
+                "Potion ID reserved for the LegendGear Grounded jump-penalty effect. If occupied, the next free ID is used."
+        );
+        legendGearManaRegenPotionManaPerSecond = config.getFloat(
+                "manaRegenPotionManaPerSecond",
+                "legendgear",
+                0.5F,
+                0.0F,
+                100.0F,
+                "Mana restored per second by the LegendGear mana regeneration potion effect at amplifier 0."
+        );
+        legendGearStoneskinResistancePotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "stoneskinResistancePotionIds",
+                        "stoneskinResistancePotionId",
+                        VANILLA_POTION_ID_RESISTANCE,
+                        "Potion IDs considered for the Stoneskin ritual. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_RESISTANCE
+        );
+        legendGearCaltropsBreakOnTrigger = config.getBoolean(
+                "caltropsBreakOnTrigger",
+                "legendgear",
+                false,
+                "If true, caltrops break when triggered. If false, they stay placed and can trigger again after a short cooldown."
+        );
+        legendGearCaltropsTriggerDropEnabled = config.getBoolean(
+                "caltropsTriggerDropEnabled",
+                "legendgear",
+                false,
+                "If true, caltrops have their normal random chance to drop as an item when triggered and broken."
+        );
+        legendGearCaltropsMobDamageHearts = config.getFloat(
+                "caltropsMobDamageHearts",
+                "legendgear",
+                1.5F,
+                0.0F,
+                1024.0F,
+                "Damage dealt by caltrops to non-player living entities, measured in hearts."
+        );
+        legendGearCaltropsPlayerDamagePercent = config.getFloat(
+                "caltropsPlayerDamagePercent",
+                "legendgear",
+                20.0F,
+                0.0F,
+                1000.0F,
+                "Percent of a player's max health dealt by caltrops."
+        );
+        legendGearCaltropsUndergroundGenEnabled = config.getBoolean(
+                "caltropsUndergroundGenEnabled",
+                "legendgear",
+                true,
+                "If true, caltrops may generate underground in caves."
+        );
+        legendGearCaltropsUndergroundSpawnChance = config.getInt(
+                "caltropsUndergroundSpawnChance",
+                "legendgear",
+                3,
+                0,
+                256,
+                "Underground caltrops spawn attempts per chunk when enabled. Higher values try more random cave-floor placements and can place multiple caltrops in one chunk."
+        );
+        legendGearCaltropsUndergroundMinY = config.getInt(
+                "caltropsUndergroundMinY",
+                "legendgear",
+                12,
+                1,
+                255,
+                "Minimum Y level for underground caltrops generation."
+        );
+        legendGearCaltropsUndergroundMaxY = config.getInt(
+                "caltropsUndergroundMaxY",
+                "legendgear",
+                48,
+                1,
+                255,
+                "Maximum Y level for underground caltrops generation."
+        );
+        legendGearCaltropsSlownessPotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "caltropsSlownessPotionIds",
+                        "caltropsSlownessPotionId",
+                        VANILLA_POTION_ID_SLOWNESS,
+                        "Potion IDs considered by caltrops for movement slowdown. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_SLOWNESS
+        );
+        legendGearExitConfusionPotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "exitConfusionPotionIds",
+                        "exitConfusionPotionId",
+                        VANILLA_POTION_ID_CONFUSION,
+                        "Potion IDs considered for the Exit spell side effect. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_CONFUSION
+        );
+        legendGearIceSpellSlownessPotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "iceSpellSlownessPotionIds",
+                        "iceSpellSlownessPotionId",
+                        VANILLA_POTION_ID_SLOWNESS,
+                        "Potion IDs considered by critical Ice spell hits for slowdown. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_SLOWNESS
+        );
+        legendGearPhoenixReviveResistancePotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "phoenixReviveResistancePotionIds",
+                        "phoenixReviveResistancePotionId",
+                        VANILLA_POTION_ID_RESISTANCE,
+                        "Potion IDs considered by phoenix revival effects for resistance. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_RESISTANCE
+        );
+        legendGearPhoenixReviveRegenerationPotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "phoenixReviveRegenerationPotionIds",
+                        "phoenixReviveRegenerationPotionId",
+                        VANILLA_POTION_ID_REGENERATION,
+                        "Potion IDs considered by phoenix revival effects for regeneration. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_REGENERATION
+        );
+        legendGearPhoenixReviveFireResistancePotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "phoenixReviveFireResistancePotionIds",
+                        "phoenixReviveFireResistancePotionId",
+                        VANILLA_POTION_ID_FIRE_RESISTANCE,
+                        "Potion IDs considered by phoenix revival effects for fire resistance. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_FIRE_RESISTANCE
+        );
+        legendGearThiefRingInvisibilityPotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "thiefRingInvisibilityPotionIds",
+                        "thiefRingInvisibilityPotionId",
+                        VANILLA_POTION_ID_INVISIBILITY,
+                        "Potion IDs considered while the Thief Ring is active. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_INVISIBILITY
+        );
+        legendGearPhoenixEmblemFireResistancePotionId = resolveConfiguredPotionIdList(
+                getLegendGearPotionIdList(
+                        "phoenixEmblemFireResistancePotionIds",
+                        "phoenixEmblemFireResistancePotionId",
+                        VANILLA_POTION_ID_FIRE_RESISTANCE,
+                        "Potion IDs considered by Phoenix Emblem interventions for fire resistance. The first ID in the list is used."
+                ),
+                VANILLA_POTION_ID_FIRE_RESISTANCE
+        );
 
         enableAsgardShieldModule = config.getBoolean(
                 "EnableAsgardShieldModule",
@@ -2005,6 +2463,18 @@ public class ModConfig {
                 "DataWatcher ID for Demon Eye state flags."
         );
 
+        axolotlStateDatawatcherId = config.getInt(
+                "AxolotlStateDatawatcherID",
+                "datawatchers",
+                18,
+                ENTITY_DATAWATCHER_MIN_ID,
+                DATAWATCHER_MAX_ID,
+                "DataWatcher ID for axolotl variant and state sync."
+        );
+        if (axolotlStateDatawatcherId < 18) {
+            axolotlStateDatawatcherId = 18;
+        }
+
         resolveDatawatcherConflicts();
         persistDatawatcherConfigValue("legendgear", "manaDatawatcherID", legendGearManaDatawatcherId);
         persistDatawatcherConfigValue("datawatchers", "LegendGearManaDatawatcherID", legendGearManaDatawatcherId);
@@ -2014,6 +2484,7 @@ public class ModConfig {
         persistDatawatcherConfigValue("datawatchers", "AppaBisonSeatParentDatawatcherID", appaBisonSeatParentDatawatcherId);
         persistDatawatcherConfigValue("datawatchers", "AppaBisonSeatIndexDatawatcherID", appaBisonSeatIndexDatawatcherId);
         persistDatawatcherConfigValue("datawatchers", "TerrariaDemonEyeFlagsDatawatcherID", terrariaDemonEyeFlagsDatawatcherId);
+        persistDatawatcherConfigValue("datawatchers", "AxolotlStateDatawatcherID", axolotlStateDatawatcherId);
 
         enableSoulHeartsModule = config.getBoolean(
                 "EnableSoulHeartsModule",
@@ -2084,19 +2555,10 @@ public class ModConfig {
         heartCrystalGenCount = config.getInt(
                 "GenCount",
                 "heartcrystal",
-                4,
+                1,
                 0,
                 1000,
                 "Generation attempts per chunk for heart crystals."
-        );
-
-        heartCrystalKeptRate = config.getFloat(
-                "KeptRate",
-                "heartcrystal",
-                0.0F,
-                0.0F,
-                1.0F,
-                "Chance of retaining each extra heart on death."
         );
 
         heartCrystalOldModel = config.getBoolean(
@@ -2113,10 +2575,19 @@ public class ModConfig {
                 "If true, heart lanterns apply configurable potion effects to players inside the configured radius."
         );
 
+        heartLanternAuraDurationSeconds = config.getInt(
+                "HeartLanternAuraDurationSeconds",
+                "heartcrystal",
+                4,
+                1,
+                60,
+                "How long heart lantern aura potion effects last, in seconds."
+        );
+
         heartLanternAuraRadius = config.getFloat(
                 "HeartLanternAuraRadius",
                 "heartcrystal",
-                6.0F,
+                12.0F,
                 0.0F,
                 64.0F,
                 "Radius around a heart lantern that receives the configured aura effects."
@@ -2125,10 +2596,394 @@ public class ModConfig {
         heartLanternAuraEffects = config.getStringList(
                 "HeartLanternAuraEffects",
                 "heartcrystal",
-                new String[]{"regeneration,0"},
+                new String[]{"regeneration,1"},
                 "Potion effects applied by heart lanterns.\n" +
                         "Format per entry: potionNameOrId,amplifier\n" +
                         "Examples: regeneration,0  or  moveSpeed,1"
+        );
+
+        enableWheatfieldBiome = config.getBoolean(
+                "EnableWheatfieldBiome",
+                "wheatfield",
+                true,
+                "Master switch for Wheatfield biome and its barley block."
+        );
+
+        wheatfieldBiomeId = config.getInt(
+                "BiomeId",
+                "wheatfield",
+                192,
+                0,
+                255,
+                "Preferred biome ID for Wheatfield. RiftFlux will fall back to a free ID if this slot is occupied."
+        );
+
+        wheatfieldBiomeWeight = config.getInt(
+                "BiomeWeight",
+                "wheatfield",
+                8,
+                0,
+                1000,
+                "Generation weight for Wheatfield in the warm biome list. Set to 0 to stop natural generation without disabling the biome entirely."
+        );
+
+        wheatfieldAllowVillage = config.getBoolean(
+                "AllowVillages",
+                "wheatfield",
+                true,
+                "If true, villages may generate in the Wheatfield biome."
+        );
+
+        wheatfieldBarleyPerChunk = config.getInt(
+                "BarleyPerChunk",
+                "wheatfield",
+                999,
+                0,
+                4096,
+                "Pasture-style barley attempts per chunk in Wheatfield."
+        );
+
+        wheatfieldBarleyFistDropChancePercent = config.getInt(
+                "BarleyFistDropChancePercent",
+                "wheatfield",
+                20,
+                0,
+                100,
+                "Percent chance for barley to drop when broken by hand without shears."
+        );
+
+        wheatfieldBarleyOnlyDropsWhenSheared = config.getBoolean(
+                "BarleyOnlyDropsWhenSheared",
+                "wheatfield",
+                false,
+                "If true, barley only drops when harvested with shears."
+        );
+
+        wheatfieldRestrictHostileSpawns = config.getBoolean(
+                "RestrictHostileSpawns",
+                "wheatfield",
+                false,
+                "If true, only the configured hostile mob ids may naturally spawn in Wheatfield."
+        );
+
+        wheatfieldAllowedHostileMobIds = config.getStringList(
+                "AllowedHostileMobIds",
+                "wheatfield",
+                new String[0],
+                "Normalized hostile mob ids allowed to naturally spawn in Wheatfield when RestrictHostileSpawns is true.\n"
+                        + "Examples: zombie, spider, cyclops, demoneye, blackwidow\n"
+                        + "RiftFlux rebuilds Wheatfield's hostile spawn list from these ids, copying default spawn weights and group sizes from existing natural spawns."
+        );
+
+        enableWitchesAndMoreModule = config.getBoolean(
+                "EnableWitchesAndMoreModule",
+                "witchesandmore",
+                true,
+                "Master switch for integrated Witches and More content, including mobs, spawn eggs, events, and structures."
+        );
+
+        enableCyclopsMob = config.getBoolean(
+                "EnableCyclops",
+                "witchesandmore",
+                true,
+                "If true, Cyclops are registered and may spawn from eggs, natural spawning, and structures."
+        );
+
+        cyclopsSpawnWeight = config.getInt(
+                "CyclopsSpawnWeight",
+                "witchesandmore",
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Cyclops in overworld biomes at night."
+        );
+
+        cyclopsMaxHealth = config.getInt(
+                "CyclopsMaxHealth",
+                "witchesandmore",
+                60,
+                1,
+                2048,
+                "Base max health for Cyclops. The eyeless state still scales down from this value."
+        );
+
+        cyclopsUseBiomeWhitelist = config.getBoolean(
+                "CyclopsUseBiomeWhitelist",
+                "witchesandmore",
+                false,
+                "If true, CyclopsBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
+        );
+
+        cyclopsBiomeList = config.getStringList(
+                "CyclopsBiomeList",
+                "witchesandmore",
+                new String[0],
+                "Biome filters for natural Cyclops spawns.\n"
+                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
+        );
+
+        enableFlowerManMob = config.getBoolean(
+                "EnableFlowerMan",
+                "witchesandmore",
+                true,
+                "If true, Flower Men are registered and may spawn from eggs, natural spawning, and structures."
+        );
+
+        flowerManSpawnWeight = config.getInt(
+                "FlowerManSpawnWeight",
+                "witchesandmore",
+                4,
+                0,
+                1000,
+                "Natural spawn weight for Flower Men in forest-type biomes."
+        );
+
+        flowerManMaxHealth = config.getInt(
+                "FlowerManMaxHealth",
+                "witchesandmore",
+                4,
+                1,
+                2048,
+                "Base max health for Flower Men."
+        );
+
+        flowerManUseBiomeWhitelist = config.getBoolean(
+                "FlowerManUseBiomeWhitelist",
+                "witchesandmore",
+                false,
+                "If true, FlowerManBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
+        );
+
+        flowerManBiomeList = config.getStringList(
+                "FlowerManBiomeList",
+                "witchesandmore",
+                new String[0],
+                "Biome filters for natural Flower Man spawns.\n"
+                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
+        );
+
+        enableEnderTrollMob = config.getBoolean(
+                "EnableEnderTroll",
+                "witchesandmore",
+                true,
+                "If true, Ender Trolls are registered and may spawn from eggs, natural spawning, and structures."
+        );
+
+        enderTrollSpawnWeight = config.getInt(
+                "EnderTrollSpawnWeight",
+                "witchesandmore",
+                2,
+                0,
+                1000,
+                "Natural spawn weight for Ender Trolls in forest-type biomes at night."
+        );
+
+        enderTrollMaxHealth = config.getInt(
+                "EnderTrollMaxHealth",
+                "witchesandmore",
+                80,
+                1,
+                2048,
+                "Base max health for Ender Trolls."
+        );
+
+        enderTrollUseBiomeWhitelist = config.getBoolean(
+                "EnderTrollUseBiomeWhitelist",
+                "witchesandmore",
+                false,
+                "If true, EnderTrollBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
+        );
+
+        enderTrollBiomeList = config.getStringList(
+                "EnderTrollBiomeList",
+                "witchesandmore",
+                new String[0],
+                "Biome filters for natural Ender Troll spawns.\n"
+                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
+        );
+
+        enableJaxxMob = config.getBoolean(
+                "EnableJaxx",
+                "witchesandmore",
+                true,
+                "If true, JAXX are registered and may spawn from eggs, natural spawning, and structures."
+        );
+
+        jaxxSpawnWeight = config.getInt(
+                "JaxxSpawnWeight",
+                "witchesandmore",
+                1,
+                0,
+                1000,
+                "Natural spawn weight for JAXX in forest-type biomes at night."
+        );
+
+        jaxxMaxHealth = config.getInt(
+                "JaxxMaxHealth",
+                "witchesandmore",
+                140,
+                1,
+                2048,
+                "Base max health for JAXX."
+        );
+
+        jaxxUseBiomeWhitelist = config.getBoolean(
+                "JaxxUseBiomeWhitelist",
+                "witchesandmore",
+                false,
+                "If true, JaxxBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
+        );
+
+        jaxxBiomeList = config.getStringList(
+                "JaxxBiomeList",
+                "witchesandmore",
+                new String[0],
+                "Biome filters for natural JAXX spawns.\n"
+                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
+        );
+
+        enableBlackWidowMob = config.getBoolean(
+                "EnableBlackWidow",
+                "witchesandmore",
+                true,
+                "If true, Black Widows are registered and may spawn from eggs, natural spawning, and structures."
+        );
+
+        blackWidowSpawnWeight = config.getInt(
+                "BlackWidowSpawnWeight",
+                "witchesandmore",
+                4,
+                0,
+                1000,
+                "Natural spawn weight for Black Widows in forest-type biomes at night."
+        );
+
+        blackWidowMaxHealth = config.getInt(
+                "BlackWidowMaxHealth",
+                "witchesandmore",
+                24,
+                1,
+                2048,
+                "Base max health for Black Widows."
+        );
+
+        blackWidowUseBiomeWhitelist = config.getBoolean(
+                "BlackWidowUseBiomeWhitelist",
+                "witchesandmore",
+                false,
+                "If true, BlackWidowBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
+        );
+
+        blackWidowBiomeList = config.getStringList(
+                "BlackWidowBiomeList",
+                "witchesandmore",
+                new String[0],
+                "Biome filters for natural Black Widow spawns.\n"
+                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
+        );
+
+        enableWitchHouseStructure = config.getBoolean(
+                "EnableWitchHouse",
+                "witchesandmore",
+                true,
+                "If true, witch houses may generate in Wheatfield biomes."
+        );
+
+        witchHouseChunkChance = config.getInt(
+                "WitchHouseChunkChance",
+                "witchesandmore",
+                48,
+                1,
+                100000,
+                "One witch house generation attempt per this many chunks in Wheatfield."
+        );
+
+        witchHouseMinDistanceBlocks = config.getInt(
+                "WitchHouseMinDistanceBlocks",
+                "witchesandmore",
+                256,
+                0,
+                100000,
+                "Minimum distance in blocks between witch house placements. Set to 0 to disable spacing enforcement."
+        );
+
+        witchHouseInsideMobCount = config.getInt(
+                "WitchHouseInsideMobCount",
+                "witchesandmore",
+                2,
+                0,
+                32,
+                "How many configured mobs to spawn inside each witch house."
+        );
+
+        witchHouseOutsideMobCount = config.getInt(
+                "WitchHouseOutsideMobCount",
+                "witchesandmore",
+                1,
+                0,
+                32,
+                "How many configured mobs to spawn outside each witch house."
+        );
+
+        witchHouseInsideMobIds = config.getStringList(
+                "WitchHouseInsideMobIds",
+                "witchesandmore",
+                new String[]{"black_widow"},
+                "Mob ids that may spawn inside witch houses.\n" +
+                        "Accepted ids: WAM aliases (cyclops, flower_man, ender_troll, jaxx, black_widow) or any registered EntityLiving name/class alias such as Witch, Zombie, EntityWitch, RiftFluxCyclops, etc."
+        );
+
+        witchHouseOutsideMobIds = config.getStringList(
+                "WitchHouseOutsideMobIds",
+                "witchesandmore",
+                new String[]{"cyclops"},
+                "Mob ids that may spawn outside witch houses.\n" +
+                        "Accepted ids: WAM aliases (cyclops, flower_man, ender_troll, jaxx, black_widow) or any registered EntityLiving name/class alias such as Witch, Zombie, EntityWitch, RiftFluxCyclops, etc."
+        );
+
+        witchHouseChestLootEntries = config.getStringList(
+                "WitchHouseChestLootEntries",
+                "witchesandmore",
+                new String[]{
+                        "riftflux:as_shield_patchwork|15",
+                        "riftflux:as_shield_patchwork_gilded|15",
+                        "riftflux:as_giant_sword_patchwork|15",
+                        "riftflux:as_shield_skull|15",
+                        "riftflux:as_shield_skull_gilded|15",
+                        "riftflux:as_giant_sword_skull|15"
+                },
+                "Potential loot entries for witch house chests.\n" +
+                        "Format per entry: modid:item*count@meta|chance\n" +
+                        "Examples: riftflux:as_shield_patchwork|15  or  minecraft:gold_ingot*3|0.25\n" +
+                        "Chance values above 1 are treated as percentages."
+        );
+
+        specialArmorLootSlimeHelmet = config.getBoolean(
+                "LootSlimeHelmet",
+                "specialarmor",
+                true,
+                "If true, Slime Helmet can appear in dungeon chests."
+        );
+
+        specialArmorLootDoubleJumpBoots = config.getBoolean(
+                "LootDoubleJumpBoots",
+                "specialarmor",
+                true,
+                "If true, Double Jump Boots can appear in dungeon chests."
+        );
+
+        specialArmorLootSkates = config.getBoolean(
+                "LootSkates",
+                "specialarmor",
+                true,
+                "If true, Skates can appear in dungeon chests."
+        );
+
+        specialArmorLootHeavyBoots = config.getBoolean(
+                "LootHeavyBoots",
+                "specialarmor",
+                true,
+                "If true, Heavy Boots can appear in dungeon chests."
         );
 
         enableFurnitureModule = config.getBoolean(
@@ -2136,6 +2991,45 @@ public class ModConfig {
                 "furniture",
                 true,
                 "Master switch for integrated furniture content."
+        );
+
+        enableAxolotlModule = config.getBoolean(
+                "EnableAxolotlModule",
+                "axolotl",
+                true,
+                "Master switch for integrated axolotl content."
+        );
+
+        enableAxolotlNaturalSpawning = config.getBoolean(
+                "EnableNaturalSpawning",
+                "axolotl",
+                true,
+                "If true, axolotls naturally spawn in wet overworld biomes."
+        );
+
+        axolotlSpawnWeight = config.getInt(
+                "SpawnWeight",
+                "axolotl",
+                6,
+                0,
+                1000,
+                "Spawn weight for natural axolotl spawning."
+        );
+
+        axolotlMaxHealth = config.getFloat(
+                "MaxHealth",
+                "axolotl",
+                14.0F,
+                1.0F,
+                1024.0F,
+                "Base max health for axolotls."
+        );
+
+        protectCircuitryFromWater = config.getBoolean(
+                "ProtectCircuitryFromWater",
+                "general",
+                true,
+                "If true, water will not wash away redstone dust, repeaters, comparators, buttons, rails, and similar circuitry."
         );
 
         enableArmorOverlayModule = config.getBoolean(
@@ -2291,7 +3185,7 @@ public class ModConfig {
         zyinItemSelectorHudOffsetY = config.getInt(
                 "ItemSelectorHudOffsetY",
                 "itemselector",
-                30,
+                33,
                 -2000,
                 2000,
                 "Pixels to move the item selector overlay up (positive moves up)."
@@ -2496,6 +3390,16 @@ public class ModConfig {
         enableStackOverflowGuard = config.get("general", "EnableStackOverflowGuard", true,
                 "Avoids StackOverflowError in crash reporting and deep world lookups.").getBoolean(true);
 
+        boolean disableFalseCrashImproverDefault = true;
+        if (config.hasKey("general", "DisableFalsePatternLibCrashLogAppend")) {
+            disableFalseCrashImproverDefault = config.get("general", "DisableFalsePatternLibCrashLogAppend", true,
+                    "Legacy key for DisableFalseCrashImprover.").getBoolean(true);
+        }
+
+        disableFalseCrashImprover = config.get("general", "DisableFalseCrashImprover", disableFalseCrashImproverDefault,
+                "If true, prevents FalsePatternLib from appending the full latest FML log to crash reports.")
+                .getBoolean(disableFalseCrashImproverDefault);
+
         stackOverflowMaxDepth = config.get("general", "StackOverflowMaxDepth", 512,
                 "Max recursion depth for World.getBlock before returning air.").getInt(512);
 
@@ -2551,7 +3455,7 @@ public class ModConfig {
         strictMobSpawnsZeroBlockLight = config.getBoolean(
                 "StrictMobSpawnsZeroBlockLight",
                 "general",
-                true,
+                false,
                 "If true, hostile mobs (EntityMob) may only spawn when BLOCK light level is 0.\n" +
                         "Sky light is only used for the vanilla daytime check. Torches etc. fully prevent spawns."
         );
@@ -2928,6 +3832,34 @@ public class ModConfig {
                 "If true, you can place the held item into the world using the Place Item keybind."
         );
 
+        enablePlaceableGunpowder = config.getBoolean(
+                "EnablePlaceableGunpowder",
+                "placeable_gunpowder",
+                true,
+                "Master switch for the integrated Placeable Gunpowder block and placement behavior."
+        );
+
+        placeableGunpowderSetsFireBelow = config.getBoolean(
+                "SetsFireBelow",
+                "placeable_gunpowder",
+                true,
+                "If true, exploding placeable gunpowder can ignite flammable blocks directly below it."
+        );
+
+        placeableGunpowderEmitsRedstone = config.getBoolean(
+                "EmitsRedstoneWhileLit",
+                "placeable_gunpowder",
+                true,
+                "If true, ignited placeable gunpowder emits a weak redstone signal until it detonates."
+        );
+
+        placeableGunpowderIgnitesHbmBarrels = config.getBoolean(
+                "IgniteHbmExplosiveBarrels",
+                "placeable_gunpowder",
+                true,
+                "If true, ignited placeable gunpowder directly ignites adjacent HBM NTM explosive barrels, which normally only react to fire."
+        );
+
         butterflyKnifeDurability = config.getInt(
                 "butterflyKnifeDurability",
                 "vortex",
@@ -3017,6 +3949,20 @@ public class ModConfig {
         backpackArmorPoints = config.getInt("backpackArmorPoints", "vortex", 2, 0, 20,
                 "Armor points granted by the backpack (0 = no armor).");
 
+        vortexGlintRuneDungeonLoot = config.getBoolean(
+                "glintRuneDungeonLoot",
+                "vortex",
+                true,
+                "If true, all Glint Rune colors can appear in dungeon chests."
+        );
+
+        randomizeEnchantedGlintColors = config.getBoolean(
+                "randomizeEnchantedGlintColors",
+                "vortex",
+                true,
+                "If true, enchanted items without a custom glint rune color get a random Quark-style glint color when they are first enchanted or generated as loot."
+        );
+
         GluttonyCharm = config.getBoolean("GluttonyCharm", "vortex", false,
                 "Gives the gluttony charm an autofeeding functionality. Right-click to put in food items.");
 
@@ -3045,6 +3991,7 @@ public class ModConfig {
         appaBisonSeatParentDatawatcherId = reserveUniqueDatawatcherId(appaBisonSeatParentDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
         appaBisonSeatIndexDatawatcherId = reserveUniqueDatawatcherId(appaBisonSeatIndexDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
         terrariaDemonEyeFlagsDatawatcherId = reserveUniqueDatawatcherId(terrariaDemonEyeFlagsDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
+        axolotlStateDatawatcherId = reserveUniqueDatawatcherId(axolotlStateDatawatcherId, 18, DATAWATCHER_MAX_ID, used);
     }
 
     private static int reserveUniqueDatawatcherId(int requested, int min, int max, Set<Integer> used) {
@@ -3119,6 +4066,13 @@ public class ModConfig {
         }
         property.setName(newKey);
         config.getCategory(category).put(newKey, property);
+    }
+
+    private static void removeConfigProperty(String category, String key) {
+        if (!config.hasKey(category, key) || config.getCategory(category) == null) {
+            return;
+        }
+        config.getCategory(category).remove(key);
     }
 
     private static String[] sanitizeAppaPassengerFilter(String[] values) {
@@ -3570,6 +4524,10 @@ public class ModConfig {
     }
 
     private static int parseToroHealthColor(String color, int fallback) {
+        return parseRgbColor(color, fallback);
+    }
+
+    private static int parseRgbColor(String color, int fallback) {
         if (color == null) {
             return fallback;
         }
@@ -3614,24 +4572,7 @@ public class ModConfig {
     // parse the string of IDs into a set
     private static void parseDisabledPotionIds(String raw) {
         disabledPotionIdsSet.clear();
-        if (raw == null) {
-            return;
-        }
-
-        String trimmed = raw.trim();
-        if (trimmed.isEmpty()) {
-            return;
-        }
-
-        String[] parts = trimmed.split("[,; ]+"); // commas / semicolons / spaces
-        for (String part : parts) {
-            try {
-                int id = Integer.parseInt(part.trim());
-                disabledPotionIdsSet.add(id);
-            } catch (NumberFormatException ignored) {
-                // ignore invalid entries
-            }
-        }
+        disabledPotionIdsSet.addAll(ConfigResolver.parseIntegerSet(raw));
     }
 
     // helper used by the mixin
@@ -3664,35 +4605,26 @@ public class ModConfig {
     }
 
     private static int[] parsePotionIdList(String[] entries) {
-        if (entries == null || entries.length == 0) {
-            return new int[0];
+        return ConfigResolver.parseIntegerList(entries);
+    }
+
+    private static int[] getLegendGearPotionIdList(String key, String legacyKey, int defaultId, String comment) {
+        String[] defaults = new String[]{String.valueOf(defaultId)};
+        if (!config.hasKey("legendgear", key) && config.hasKey("legendgear", legacyKey)) {
+            defaults = new String[]{String.valueOf(config.getInt(legacyKey, "legendgear", defaultId, 0, 255, comment))};
         }
-        List<Integer> out = new ArrayList<Integer>();
-        for (String entry : entries) {
-            if (entry == null) {
-                continue;
-            }
-            String trimmed = entry.trim();
-            if (trimmed.isEmpty()) {
-                continue;
-            }
-            String[] parts = trimmed.split("[,; ]+");
-            for (String part : parts) {
-                if (part == null || part.trim().isEmpty()) {
-                    continue;
-                }
-                try {
-                    out.add(Integer.parseInt(part.trim()));
-                } catch (NumberFormatException ignored) {
-                    // ignore invalid entries
+        return parsePotionIdList(config.getStringList(key, "legendgear", defaults, comment));
+    }
+
+    private static int resolveConfiguredPotionIdList(int[] configuredIds, int fallback) {
+        if (configuredIds != null) {
+            for (int configuredId : configuredIds) {
+                if (configuredId >= 0) {
+                    return configuredId;
                 }
             }
         }
-        int[] ids = new int[out.size()];
-        for (int i = 0; i < out.size(); i++) {
-            ids[i] = out.get(i);
-        }
-        return ids;
+        return fallback;
     }
 
 }

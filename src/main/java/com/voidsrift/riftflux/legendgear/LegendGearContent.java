@@ -102,6 +102,26 @@ public final class LegendGearContent {
         LegendGear2.CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = ModConfig.legendGearDashRingUseOriginalBehavior;
         LegendGear2.CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = ModConfig.legendGearSprinkleStardustRequireSneak;
         LegendGear2.CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = ModConfig.legendGearSpottingScopeConsumesMana;
+        LegendGear2.CONFIG_MANA_REGEN_POTION_ID = ModConfig.legendGearManaRegenPotionId;
+        LegendGear2.CONFIG_GROUNDED_POTION_ID = ModConfig.legendGearGroundedPotionId;
+        LegendGear2.CONFIG_MANA_REGEN_POTION_PER_SECOND = ModConfig.legendGearManaRegenPotionManaPerSecond;
+        LegendGear2.CONFIG_STONESKIN_RESISTANCE_POTION_ID = ModConfig.legendGearStoneskinResistancePotionId;
+        LegendGear2.CONFIG_CALTROPS_BREAK_ON_TRIGGER = ModConfig.legendGearCaltropsBreakOnTrigger;
+        LegendGear2.CONFIG_CALTROPS_TRIGGER_DROP_ENABLED = ModConfig.legendGearCaltropsTriggerDropEnabled;
+        LegendGear2.CONFIG_CALTROPS_MOB_DAMAGE = ModConfig.legendGearCaltropsMobDamageHearts * 2.0F;
+        LegendGear2.CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT = ModConfig.legendGearCaltropsPlayerDamagePercent;
+        LegendGear2.CONFIG_CALTROPS_UNDERGROUND_GEN_ENABLED = ModConfig.legendGearCaltropsUndergroundGenEnabled;
+        LegendGear2.CONFIG_CALTROPS_UNDERGROUND_SPAWN_CHANCE = ModConfig.legendGearCaltropsUndergroundSpawnChance;
+        LegendGear2.CONFIG_CALTROPS_UNDERGROUND_MIN_Y = ModConfig.legendGearCaltropsUndergroundMinY;
+        LegendGear2.CONFIG_CALTROPS_UNDERGROUND_MAX_Y = ModConfig.legendGearCaltropsUndergroundMaxY;
+        LegendGear2.CONFIG_CALTROPS_SLOWNESS_POTION_ID = ModConfig.legendGearCaltropsSlownessPotionId;
+        LegendGear2.CONFIG_EXIT_CONFUSION_POTION_ID = ModConfig.legendGearExitConfusionPotionId;
+        LegendGear2.CONFIG_ICE_SPELL_SLOWNESS_POTION_ID = ModConfig.legendGearIceSpellSlownessPotionId;
+        LegendGear2.CONFIG_PHOENIX_REVIVE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixReviveResistancePotionId;
+        LegendGear2.CONFIG_PHOENIX_REVIVE_REGENERATION_POTION_ID = ModConfig.legendGearPhoenixReviveRegenerationPotionId;
+        LegendGear2.CONFIG_PHOENIX_REVIVE_FIRE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixReviveFireResistancePotionId;
+        LegendGear2.CONFIG_THIEF_RING_INVISIBILITY_POTION_ID = ModConfig.legendGearThiefRingInvisibilityPotionId;
+        LegendGear2.CONFIG_PHOENIX_EMBLEM_FIRE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixEmblemFireResistancePotionId;
         EntityMagicBoomerang.BOOMERANG_DAMAGE = LegendGear2.CONFIG_MAGIC_BOOMERANG_DAMAGE;
     }
 }

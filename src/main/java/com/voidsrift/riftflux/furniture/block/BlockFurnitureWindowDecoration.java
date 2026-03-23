@@ -92,8 +92,22 @@ public class BlockFurnitureWindowDecoration extends Block {
                                         AxisAlignedBB axisAlignedBB,
                                         List list,
                                         Entity entity) {
-        this.applyBounds(this.getRotation(world.getBlockMetadata(x, y, z)));
+        int metadata = world.getBlockMetadata(x, y, z);
+        if (!this.blind && !this.isClosed(metadata)) {
+            return;
+        }
+        this.applyBounds(this.getRotation(metadata));
         super.addCollisionBoxesToList(world, x, y, z, axisAlignedBB, list, entity);
+    }
+
+    @Override
+    public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
+        int metadata = world.getBlockMetadata(x, y, z);
+        if (!this.blind && !this.isClosed(metadata)) {
+            return null;
+        }
+        this.applyBounds(this.getRotation(metadata));
+        return super.getCollisionBoundingBoxFromPool(world, x, y, z);
     }
 
     @Override
@@ -158,7 +172,7 @@ public class BlockFurnitureWindowDecoration extends Block {
                 y + 0.1D,
                 z + 0.5D,
                 "gui.button.press",
-                1.0F,
+                0.5F,
                 1.0F
         );
         return true;

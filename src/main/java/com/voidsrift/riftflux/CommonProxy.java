@@ -22,4 +22,8 @@ public class CommonProxy {
     public void applyRespawnDelaySync(long remainingMs) {
         // no-op on server
     }
+
+    public void applyFenceOverrideSync(boolean fullSync, int dimensionId, boolean enabled, int[] coordinates) {
+        // no-op on server
+    }
 }

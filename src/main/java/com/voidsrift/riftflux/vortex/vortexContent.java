@@ -17,6 +17,9 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.WeightedRandomChestContent;
+import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.MinecraftForge;
 
 
@@ -37,6 +40,7 @@ public final class vortexContent {
 
     public static void init(FMLInitializationEvent event) {
         ModRecipes.init();
+        registerDungeonLoot();
 
         // Events
         MinecraftForge.EVENT_BUS.register(new ModEvents());
@@ -96,5 +100,18 @@ public final class vortexContent {
     public static void postInit(FMLPostInitializationEvent event) {
         // Preserve optional compat hooks inside their own modules.
         ModItems.postInitCompat();
+    }
+
+    private static void registerDungeonLoot() {
+        if (!com.voidsrift.riftflux.ModConfig.vortexGlintRuneDungeonLoot || ModItems.glintRune == null) {
+            return;
+        }
+
+        for (int meta = 0; meta < 17; ++meta) {
+            ChestGenHooks.addItem(
+                    ChestGenHooks.DUNGEON_CHEST,
+                    new WeightedRandomChestContent(new ItemStack(ModItems.glintRune, 1, meta), 1, 1, 1)
+            );
+        }
     }
 }

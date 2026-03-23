@@ -105,9 +105,16 @@ public class RFLateMixins implements ILateMixinLoader {
             }
         }
 
+        if (ModConfig.enableFenceTextureModule
+                && FMLLaunchHandler.side() == Side.CLIENT
+                && hasAnyMod(loadedMods, "Forestry", "forestry")) {
+            mixins.add("late.forestry.MixinRenderFenceItem_FenceTextures");
+        }
+
         // vortex mixins
         if (loadedMods.contains("Thaumcraft")) {
             mixins.add("late.vortex.MixinInfusionEnchantmentRecipe");
+            mixins.add("late.thaumcraft.MixinThaumcraft_WarpSyncSafeLogin");
         }
 
         // AlternativeChunkloading compatibility fixes port

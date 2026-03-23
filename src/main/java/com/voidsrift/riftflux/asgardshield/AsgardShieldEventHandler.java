@@ -63,7 +63,27 @@ public class AsgardShieldEventHandler {
         if (AsgardShieldState.isGuardBroken(player)) {
             return;
         }
+
+        if (!AsgardShieldLogic.canResolveGuardHit(player, event.source)) {
+            return;
+        }
+
+        if ((float) player.hurtResistantTime > (float) player.maxHurtResistantTime / 2.0F) {
+            event.setCanceled(true);
+            return;
+        }
+
+        if (player.worldObj != null && player.worldObj.isRemote) {
+            player.hurtResistantTime = player.maxHurtResistantTime;
+            event.setCanceled(true);
+            return;
+        }
+
         if (AsgardShieldLogic.handleGuardHit(player, event.source, event.ammount)) {
+            player.hurtResistantTime = player.maxHurtResistantTime;
+            player.hurtTime = player.maxHurtTime = 10;
+            player.attackedAtYaw = 0.0F;
+            event.entityLiving.hurtResistantTime = event.entityLiving.maxHurtResistantTime;
             event.setCanceled(true);
         }
     }
@@ -79,11 +99,13 @@ public class AsgardShieldEventHandler {
     }
 
     private void tickGuardGauge(EntityPlayer player) {
+        AsgardShieldLogic.clearStaleOffhandGuardUse(player);
+
         int gauge = AsgardShieldState.getGuardGauge(player);
         boolean broken = AsgardShieldState.isGuardBroken(player);
         boolean guarding = AsgardShieldLogic.isBlockingWithAsgardItem(player) && !broken;
 
-        ItemStack inUse = player.getItemInUse();
+        ItemStack inUse = AsgardShieldLogic.getActiveGuardStack(player);
         boolean gildedShield = inUse != null
                 && inUse.getItem() instanceof ItemAsgardShield
                 && ((ItemAsgardShield) inUse.getItem()).isGilded();
@@ -109,7 +131,7 @@ public class AsgardShieldEventHandler {
             if (gauge >= 200) {
                 gauge = 200;
                 broken = true;
-                player.stopUsingItem();
+                AsgardShieldLogic.stopGuardUse(player, inUse);
             }
         }
 
@@ -153,7 +175,7 @@ public class AsgardShieldEventHandler {
         }
 
         boolean ready = count >= 7;
-        ItemStack inUse = player.getItemInUse();
+        ItemStack inUse = AsgardShieldLogic.getActiveGuardStack(player);
         boolean usingShield = AsgardShieldLogic.isBlockingWithAsgardItem(player)
                 && inUse != null
                 && inUse.getItem() instanceof ItemAsgardShield;
@@ -202,6 +224,10 @@ public class AsgardShieldEventHandler {
     private static boolean playerHasShieldInHotbar(EntityPlayer player) {
         if (player == null || player.inventory == null || player.inventory.mainInventory == null) {
             return false;
+        }
+        ItemStack offhand = com.voidsrift.riftflux.compat.BackhandCompat.getOffhandItem(player);
+        if (offhand != null && offhand.getItem() instanceof ItemAsgardShield) {
+            return true;
         }
         for (int i = 0; i < 9 && i < player.inventory.mainInventory.length; i++) {
             ItemStack stack = player.inventory.mainInventory[i];

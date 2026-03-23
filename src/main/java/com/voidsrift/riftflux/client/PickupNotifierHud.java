@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.opengl.GL11;
@@ -195,6 +196,10 @@ public final class PickupNotifierHud {
         return (int)Math.floor(y + 1.0e-4f);
     }
     private static float clamp01(float v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
+    private static int applyAlpha(int color, float alpha) {
+        int a = Math.max(0, Math.min(255, Math.round(clamp01(alpha) * 255f)));
+        return (a << 24) | (color & 0x00FFFFFF);
+    }
     private static float smootherstep(float t){
         t = clamp01(t);
         return t*t*t * (t*(t*6f - 15f) + 10f);
@@ -212,6 +217,19 @@ public final class PickupNotifierHud {
         if (entries.isEmpty()) return;
 
         Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null && mc.currentScreen != null) return;
+        renderHud(mc);
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onGuiDrawPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+        if (!ModConfig.enablePickupNotifier) return;
+        if (entries.isEmpty()) return;
+        if (e == null || e.gui == null) return;
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.currentScreen != e.gui) return;
+
         renderHud(mc);
     }
 
@@ -222,6 +240,8 @@ public final class PickupNotifierHud {
         final int sw = sr.getScaledWidth(), sh = sr.getScaledHeight();
         final int right = sw - 4;
         final long now = overlayNowMs(mc);
+        final boolean guiOpen = mc.currentScreen != null;
+        final float alpha = guiOpen ? 0.35f : 1.0f;
 
         Entry first = entries.get(0);
         float visT;
@@ -263,15 +283,24 @@ public final class PickupNotifierHud {
                 GL11.glPushMatrix();
                 GL11.glTranslatef(0f, yFrac, 0f);
 
+                boolean drawBehindGui = guiOpen;
+                GL11.glColor4f(1f, 1f, 1f, alpha);
                 RenderHelper.enableGUIStandardItemLighting();
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                if (drawBehindGui) {
+                    GL11.glDisable(GL11.GL_DEPTH_TEST);
+                    GL11.glDepthMask(false);
+                } else {
+                    GL11.glEnable(GL11.GL_DEPTH_TEST);
+                    GL11.glDepthMask(true);
+                }
                 ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
                 RenderHelper.disableStandardItemLighting();
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glDepthMask(false);
-                mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, en.color(), false);
+                mc.fontRenderer.drawString(text, x + ICON + PAD, yBase - ICON + TEXT_Y, applyAlpha(en.color(), alpha), false);
                 GL11.glDepthMask(true);
                 GL11.glDisable(GL11.GL_DEPTH_TEST);
+                GL11.glColor4f(1f, 1f, 1f, 1f);
 
                 GL11.glPopMatrix();
             }

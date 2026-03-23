@@ -13,9 +13,11 @@ import cpw.mods.fml.client.registry.RenderingRegistry;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import tk.nukeduck.hearts.block.TileEntityHeartCrystal;
 import tk.nukeduck.hearts.block.TileEntityHeartLantern;
+import tk.nukeduck.hearts.block.TileEntityStarLantern;
 import tk.nukeduck.hearts.network.IProxy;
 import tk.nukeduck.hearts.renderer.LanternRenderer;
 import tk.nukeduck.hearts.renderer.HeartCrystalRenderer;
+import tk.nukeduck.hearts.renderer.StarLanternRenderer;
 
 public class ClientProxy
 implements IProxy {
@@ -25,6 +27,7 @@ implements IProxy {
     public void renderInit() {
         renderId = RenderingRegistry.getNextAvailableRenderId();
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityHeartLantern.class, (TileEntitySpecialRenderer)new LanternRenderer());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityStarLantern.class, (TileEntitySpecialRenderer)new StarLanternRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityHeartCrystal.class, (TileEntitySpecialRenderer)new HeartCrystalRenderer());
     }
 }

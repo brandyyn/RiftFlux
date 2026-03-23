@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.asgardshield;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.compat.BackhandCompat;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -155,7 +156,7 @@ public class ItemAsgardShield extends Item {
         if (player == null || AsgardShieldState.isGuardBroken(player)) {
             return stack;
         }
-        player.setItemInUse(stack, this.getMaxItemUseDuration(stack));
+        player.setItemInUse(stack, getMaxItemUseDuration(stack));
         return stack;
     }
 

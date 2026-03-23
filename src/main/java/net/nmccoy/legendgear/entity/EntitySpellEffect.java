@@ -46,6 +46,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSourceIndirect;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.IBlockAccess;
@@ -53,7 +54,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IShearable;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.PlayerEventHandler;
-import net.nmccoy.legendgear.PlayerStarstatsExtension;
 import net.nmccoy.legendgear.block.TileEntityRitual;
 import net.nmccoy.legendgear.block.TileEntityStarwell;
 import net.nmccoy.legendgear.entity.SpellDecorator;
@@ -98,6 +98,29 @@ implements IEntityAdditionalSpawnData {
         if (fireSeconds > 0) {
             living.setFire(fireSeconds);
         }
+    }
+
+    private static boolean hasBedrockAbove(World world, int x, int y, int z) {
+        int startY = Math.max(0, y + 1);
+        int maxY = world.getActualHeight();
+        for (int scanY = startY; scanY < maxY; ++scanY) {
+            if (world.getBlock(x, scanY, z) == Blocks.bedrock) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int findSurfaceTeleportY(World world, int x, int z) {
+        int y = Math.max(1, world.getTopSolidOrLiquidBlock(x, z));
+        int maxY = Math.max(1, world.getActualHeight() - 1);
+        while (y < maxY && (!world.isAirBlock(x, y, z) || !world.isAirBlock(x, y + 1, z))) {
+            ++y;
+        }
+        if (y >= maxY) {
+            return -1;
+        }
+        return y;
     }
 
     public EntitySpellEffect(World world, SpellType id, EntityPlayer caster, Vec3 location, double radius, double power, boolean critical) {
@@ -320,34 +343,26 @@ implements IEntityAdditionalSpawnData {
 
             @Override
             public boolean affectLiving(EntitySpellEffect spell, EntityLivingBase elb) {
-                if (spell.caster != null) {
-                    PlayerStarstatsExtension data = PlayerStarstatsExtension.get(spell.caster);
-                    if (data == null) {
-                        return false;
-                    }
-                    if (elb.dimension != data.lastSkyWorld) {
-                        return false;
-                    }
-                    if (PlayerEventHandler.isUnderSky((Entity)elb)) {
-                        if (!spell.isCrit) {
-                            elb.addPotionEffect(new PotionEffect(Potion.confusion.id, 300));
-                        }
-                        elb.worldObj.playSoundEffect(elb.posX, elb.posY, elb.posZ, "mob.endermen.portal", 1.0f, 1.0f);
-                        elb.setPositionAndUpdate(elb.posX, elb.posY + 3.0 + spell.power, elb.posZ);
-                        return true;
-                    }
-                    int destX = data.lastSkyX;
-                    int destZ = data.lastSkyZ;
-                    int destY = spell.worldObj.getTopSolidOrLiquidBlock(destX, destZ);
-                    elb.worldObj.playSoundEffect(elb.posX, elb.posY, elb.posZ, "mob.endermen.portal", 1.0f, 1.0f);
-                    elb.setPositionAndUpdate((double)destX + 0.5, (double)(destY + 1), (double)destZ + 0.5);
-                    elb.attackEntityFrom(DamageSource.fall, (float)spell.power);
-                    if (!spell.isCrit) {
-                        elb.addPotionEffect(new PotionEffect(Potion.confusion.id, 300));
-                    }
-                    return true;
+                if (spell.caster == null || elb.dimension != 0) {
+                    return false;
                 }
-                return false;
+                int destX = MathHelper.floor_double(elb.posX);
+                int destZ = MathHelper.floor_double(elb.posZ);
+                int currentY = MathHelper.floor_double(elb.boundingBox.maxY);
+                if (EntitySpellEffect.hasBedrockAbove(elb.worldObj, destX, currentY, destZ)) {
+                    return false;
+                }
+                int destY = EntitySpellEffect.findSurfaceTeleportY(elb.worldObj, destX, destZ);
+                if (destY < 0) {
+                    return false;
+                }
+                elb.worldObj.playSoundEffect(elb.posX, elb.posY, elb.posZ, "mob.endermen.portal", 1.0f, 1.0f);
+                elb.setPositionAndUpdate((double)destX + 0.5, (double)destY, (double)destZ + 0.5);
+                elb.fallDistance = 0.0f;
+                if (!spell.isCrit) {
+                    LegendGear2.addConfiguredPotionEffect(elb, LegendGear2.CONFIG_EXIT_CONFUSION_POTION_ID, Potion.confusion, 300);
+                }
+                return true;
             }
         }
         ,
@@ -522,8 +537,8 @@ implements IEntityAdditionalSpawnData {
                 if (spell.isCrit) {
                     knockback = 0.2f;
                     if (this.element == Spell.Element.Ice) {
-                        living.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, (int)spell.power * 10, 5, false));
-                        living.addPotionEffect(new PotionEffect(Potion.jump.id, (int)spell.power * 10, -5, false));
+                        LegendGear2.addConfiguredPotionEffect(living, LegendGear2.CONFIG_ICE_SPELL_SLOWNESS_POTION_ID, Potion.moveSlowdown, (int)spell.power * 10, 5, false);
+                        LegendGear2.applyJumpPenalty(living, (int)spell.power * 10, 4, false);
                     }
                     if (this.element == Spell.Element.Lightning) {
                         knockback = 0.5f;

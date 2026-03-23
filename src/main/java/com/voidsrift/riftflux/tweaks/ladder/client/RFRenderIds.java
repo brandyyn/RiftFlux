@@ -11,4 +11,5 @@ public final class RFRenderIds {
 
     /** Set on client; -1 means "not assigned". */
     public static int doubleSidedLadderRenderId = -1;
+    public static int placeableGunpowderRenderId = -1;
 }

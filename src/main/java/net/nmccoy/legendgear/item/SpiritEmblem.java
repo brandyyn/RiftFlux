@@ -138,7 +138,7 @@ implements IMana {
     }
 
     private void phoenixInterveneEffect(EntityPlayer player) {
-        player.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 20, 0));
+        net.nmccoy.legendgear.LegendGear2.addConfiguredPotionEffect(player, net.nmccoy.legendgear.LegendGear2.CONFIG_PHOENIX_EMBLEM_FIRE_RESISTANCE_POTION_ID, Potion.fireResistance, 20, 0, false);
         player.setFire(1);
         player.worldObj.playSoundAtEntity((Entity)player, "legendgear:revive", 1.0f, 1.0f);
     }
@@ -186,4 +186,3 @@ implements IMana {
         }
     }
 }
-

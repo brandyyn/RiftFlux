@@ -45,7 +45,10 @@ public class RenderHandler {
     private static boolean battlegearOverlayErrorLogged;
     private static boolean toolHighlightTicksFieldChecked;
     private static Field toolHighlightTicksField;
+    private static boolean overlayMessageTicksFieldChecked;
+    private static Field overlayMessageTicksField;
     private static boolean toolHighlightShiftPushed;
+    private static boolean toolHighlightAttribPushed;
 
     private static boolean botaniaCompatChecked;
     private static boolean botaniaCompatAvailable;
@@ -61,6 +64,7 @@ public class RenderHandler {
     private static Method botaniaGetMaxManaMethod;
     private static Class<?> botaniaICreativeManaProvider;
     private static Method botaniaIsCreativeMethod;
+    private static Class<?> botaniaTwigWandClass;
 
     static {
         try {
@@ -384,6 +388,7 @@ public class RenderHandler {
             botaniaIsNoExportMethod = botaniaIManaItem.getMethod("isNoExport", ItemStack.class);
             botaniaGetManaMethod = botaniaIManaItem.getMethod("getMana", ItemStack.class);
             botaniaGetMaxManaMethod = botaniaIManaItem.getMethod("getMaxMana", ItemStack.class);
+            botaniaTwigWandClass = Class.forName("vazkii.botania.common.item.ItemTwigWand", false, loader);
 
             botaniaICreativeManaProvider = Class.forName("vazkii.botania.api.mana.ICreativeManaProvider", false, loader);
             botaniaIsCreativeMethod = botaniaICreativeManaProvider.getMethod("isCreative", ItemStack.class);
@@ -544,8 +549,14 @@ public class RenderHandler {
     public static void shiftUp() {
         if (!shouldShiftToolHighlight()) {
             toolHighlightShiftPushed = false;
+            toolHighlightAttribPushed = false;
             return;
         }
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthMask(false);
+        toolHighlightAttribPushed = true;
 
         int shiftY = getDualHotbarTooltipShiftY();
         shiftY += getOverlayAwareTooltipShiftY();
@@ -562,11 +573,15 @@ public class RenderHandler {
     public static void shiftDown() {
         if (!toolHighlightShiftPushed) {
             toolHighlightShiftPushed = false;
-            return;
+        } else {
+            GL11.glPopMatrix();
+            toolHighlightShiftPushed = false;
         }
 
-        GL11.glPopMatrix();
-        toolHighlightShiftPushed = false;
+        if (toolHighlightAttribPushed) {
+            GL11.glPopAttrib();
+            toolHighlightAttribPushed = false;
+        }
     }
 
     private static int getDualHotbarTooltipShiftY() {
@@ -593,11 +608,14 @@ public class RenderHandler {
 
         ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         int screenHeight = res.getScaledHeight();
+        int hotbarShiftY = AsgardShieldHud.getDualHotbarShiftY();
         int asgardTopY = AsgardShieldHud.getHudTopY(player, screenHeight);
         boolean airVisible = player.isInsideOfMaterial(Material.water);
+        int extraHotbarTooltipTopY = getAdditionalHotbarTooltipTopY(mc, player, screenHeight);
         if (!DualHotbarConfig.heldItemTooltipAboveBars
                 && !airVisible
-                && asgardTopY == Integer.MIN_VALUE) {
+                && asgardTopY == Integer.MIN_VALUE
+                && extraHotbarTooltipTopY == Integer.MAX_VALUE) {
             return 0;
         }
 
@@ -606,7 +624,7 @@ public class RenderHandler {
         if (DualHotbarConfig.heldItemTooltipAboveBars) {
             int healthRows = HudHealthRowHelper.getHealthRows(player);
 
-            int heartsTopY = screenHeight - 39 - (healthRows - 1) * 10;
+            int heartsTopY = screenHeight - 39 - (healthRows - 1) * 10 - hotbarShiftY;
             int barsTopY = heartsTopY;
             if (player.getTotalArmorValue() > 0) {
                 barsTopY -= 10;
@@ -617,8 +635,8 @@ public class RenderHandler {
             overlayTopY = Math.min(overlayTopY, barsTopY);
         }
 
-        if (airVisible) {
-            int airTopY = screenHeight - 39;
+        if (airVisible && asgardTopY == Integer.MIN_VALUE) {
+            int airTopY = screenHeight - 39 - hotbarShiftY;
             if (player.ridingEntity == null) {
                 airTopY -= 10;
             }
@@ -630,6 +648,10 @@ public class RenderHandler {
             overlayTopY = Math.min(overlayTopY, asgardTopY);
         }
 
+        if (extraHotbarTooltipTopY != Integer.MAX_VALUE) {
+            overlayTopY = Math.min(overlayTopY, extraHotbarTooltipTopY);
+        }
+
         if (overlayTopY == Integer.MAX_VALUE) {
             return 0;
         }
@@ -637,8 +659,13 @@ public class RenderHandler {
         int padding = DualHotbarConfig.heldItemTooltipAboveBars
                 ? Math.max(0, DualHotbarConfig.heldItemTooltipPadding)
                 : 0;
-        int targetY = overlayTopY - 10 - padding;
-        int defaultY = screenHeight - 59;
+        int targetY = overlayTopY - (DualHotbarConfig.heldItemTooltipAboveBars ? 8 : 10) - padding;
+        if (AsgardShieldHud.isHudVisible(player)) {
+            targetY -= 1;
+        }
+        // `shiftUp()` already applies the dual-hotbar vertical translation separately.
+        // Use that translated baseline here so overlay-aware offsets don't count it twice.
+        int defaultY = screenHeight - 59 + getDualHotbarTooltipShiftY();
         return targetY - defaultY;
     }
 
@@ -669,6 +696,55 @@ public class RenderHandler {
         }
     }
 
+    private static int getAdditionalHotbarTooltipTopY(Minecraft mc, EntityPlayer player, int screenHeight) {
+        int tooltipTopY = Integer.MAX_VALUE;
+        if (isOverlayMessageVisible(mc)) {
+            tooltipTopY = Math.min(tooltipTopY, screenHeight - 68);
+        }
+        if (isBotaniaWandModeDisplayVisible(mc, player)) {
+            tooltipTopY = Math.min(tooltipTopY, screenHeight - 70);
+        }
+        return tooltipTopY;
+    }
+
+    private static boolean isOverlayMessageVisible(Minecraft mc) {
+        if (mc == null || mc.ingameGUI == null) {
+            return false;
+        }
+
+        if (!overlayMessageTicksFieldChecked) {
+            overlayMessageTicksFieldChecked = true;
+            overlayMessageTicksField = findField(mc.ingameGUI.getClass(), "recordPlayingUpFor", "field_73845_h");
+        }
+
+        if (overlayMessageTicksField == null) {
+            return false;
+        }
+
+        try {
+            return overlayMessageTicksField.getInt(mc.ingameGUI) > 0;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private static boolean isBotaniaWandModeDisplayVisible(Minecraft mc, EntityPlayer player) {
+        if (mc == null || player == null) {
+            return false;
+        }
+
+        ItemStack held = player.getHeldItem();
+        if (held == null || held.getItem() == null) {
+            return false;
+        }
+
+        if (!ensureBotaniaCompat() || botaniaTwigWandClass == null || !botaniaTwigWandClass.isInstance(held.getItem())) {
+            return false;
+        }
+
+        return getRemainingHighlightTicks(mc) > 15;
+    }
+
     private static int getDisplaySelectedSlot(int currentItem, InventoryPlayer inventory) {
         if (isBattlegearBattlemode(inventory)) {
             return -1;
@@ -688,19 +764,27 @@ public class RenderHandler {
             return false;
         }
 
+        return getRemainingHighlightTicks(mc) > 0;
+    }
+
+    private static int getRemainingHighlightTicks(Minecraft mc) {
+        if (mc == null || mc.ingameGUI == null) {
+            return 0;
+        }
+
         if (!toolHighlightTicksFieldChecked) {
             toolHighlightTicksFieldChecked = true;
             toolHighlightTicksField = findField(mc.ingameGUI.getClass(), "field_92017_k", "remainingHighlightTicks");
         }
 
         if (toolHighlightTicksField == null) {
-            return false;
+            return 0;
         }
 
         try {
-            return toolHighlightTicksField.getInt(mc.ingameGUI) > 0;
+            return toolHighlightTicksField.getInt(mc.ingameGUI);
         } catch (Exception ignored) {
-            return false;
+            return 0;
         }
     }
 
@@ -731,20 +815,29 @@ public class RenderHandler {
         ItemStack itemstack = mc.thePlayer.inventory.mainInventory[slotIndex];
 
         if (itemstack != null) {
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+            RenderHelper.enableGUIStandardItemLighting();
             float anim = (float) itemstack.animationsToGo - partialTicks;
 
-            if (anim > 0.0F) {
-                GL11.glPushMatrix();
-                float scale = 1.0F + anim / 5.0F;
-                GL11.glTranslatef((float) (x + 8), (float) (y + 12), 0.0F);
-                GL11.glScalef(1.0F / scale, (scale + 1.0F) / 2.0F, 1.0F);
-                GL11.glTranslatef((float) (-(x + 8)), (float) (-(y + 12)), 0.0F);
-            }
+            try {
+                if (anim > 0.0F) {
+                    GL11.glPushMatrix();
+                    float scale = 1.0F + anim / 5.0F;
+                    GL11.glTranslatef((float) (x + 8), (float) (y + 12), 0.0F);
+                    GL11.glScalef(1.0F / scale, (scale + 1.0F) / 2.0F, 1.0F);
+                    GL11.glTranslatef((float) (-(x + 8)), (float) (-(y + 12)), 0.0F);
+                }
 
-            itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemstack, x, y);
+                itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemstack, x, y);
 
-            if (anim > 0.0F) {
-                GL11.glPopMatrix();
+                if (anim > 0.0F) {
+                    GL11.glPopMatrix();
+                }
+            } finally {
+                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+                GL11.glPopAttrib();
             }
 
         }
@@ -760,7 +853,14 @@ public class RenderHandler {
         ItemStack itemstack = mc.thePlayer.inventory.mainInventory[slotIndex];
 
         if (itemstack != null) {
+            GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glDepthMask(false);
+            itemRenderer.zLevel = 200.0F;
             itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemstack, x, y);
+            itemRenderer.zLevel = 0.0F;
+            GL11.glPopAttrib();
         }
     }
 

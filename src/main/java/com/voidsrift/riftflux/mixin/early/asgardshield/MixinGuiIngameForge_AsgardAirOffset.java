@@ -30,7 +30,7 @@ public abstract class MixinGuiIngameForge_AsgardAirOffset {
             return;
         }
 
-        int currentAirY = height - right_height;
+        int currentAirY = height - right_height - AsgardShieldHud.getDualHotbarShiftY();
         int targetAirY = AsgardShieldHud.getTargetAirBubbleTopY(player, height, currentAirY);
         int shiftAmount = currentAirY - targetAirY;
         if (shiftAmount <= 0) {

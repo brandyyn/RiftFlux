@@ -93,6 +93,7 @@ public class BlessingEvents {
                 BlessingHelper.clearBlessing(player);
                 BlessingHelper.clearBlessingSource(player);
                 BlessingHelper.resetBlessingState(player);
+                BlessingLossNotifier.queue(player, BlessingLossNotifier.OFFLINE_BREAK_DELAY_TICKS);
                 if (player instanceof EntityPlayerMP && RFNetwork.CH != null) {
                     RFNetwork.CH.sendTo(new MsgSyncBlessing(player), (EntityPlayerMP) player);
                 }
@@ -448,6 +449,7 @@ public class BlessingEvents {
             return;
         }
         tryPendingSync(player);
+        BlessingLossNotifier.tick(player);
         if (!ModConfig.blessingsEnabled) {
             applyScoutSpeed(player, false);
             clearNinjaDamageBoost(player);
@@ -612,7 +614,7 @@ public class BlessingEvents {
         }
 
         if ("Vampire".equals(blessing) && event.ammount > 0.0f) {
-            attacker.heal(event.ammount * 0.07f);
+            attacker.heal(event.ammount * (ModConfig.blessingVampireHealPercent / 100.0f));
         }
     }
 

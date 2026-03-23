@@ -7,11 +7,17 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.WorldServer;
 
 public final class RespawnDelayHelper {
     public static final String NBT_RESPAWN_UNLOCK_AT = "RiftFluxRespawnUnlockAt";
     private static final String NBT_PENDING_SYNC = "RiftFluxRespawnDelayPendingSync";
     private static final String NBT_PENDING_SYNC_DELAY = "RiftFluxRespawnDelayPendingSyncDelay";
+    private static final String NBT_PENDING_RESPAWN_STABILIZE = "RiftFluxRespawnPendingStabilize";
+    private static final String NBT_PENDING_RESPAWN_STABILIZE_DELAY = "RiftFluxRespawnPendingStabilizeDelay";
+    private static final String NBT_PENDING_RESPAWN_STABILIZE_TICKS = "RiftFluxRespawnPendingStabilizeTicks";
+    private static final int RESPAWN_STABILIZE_TICKS = 8;
 
     private RespawnDelayHelper() {
     }
@@ -44,6 +50,9 @@ public final class RespawnDelayHelper {
     public static void clearDeathTimer(EntityPlayer player) {
         setUnlockAtMs(player, 0L);
         clearPendingSync(player);
+        if (player != null) {
+            clearPendingRespawnStabilize(player.getEntityData());
+        }
     }
 
     public static boolean shouldBlockRespawn(EntityPlayer player) {
@@ -108,6 +117,54 @@ public final class RespawnDelayHelper {
         clearPendingSync(player);
     }
 
+    public static void markPendingRespawnStabilize(EntityPlayer player, int delayTicks) {
+        markPendingRespawnStabilize(player, delayTicks, RESPAWN_STABILIZE_TICKS);
+    }
+
+    public static void markPendingRespawnStabilize(EntityPlayer player, int delayTicks, int stabilizeTicks) {
+        if (!(player instanceof EntityPlayerMP)) {
+            return;
+        }
+        NBTTagCompound data = player.getEntityData();
+        data.setBoolean(NBT_PENDING_RESPAWN_STABILIZE, true);
+        data.setInteger(NBT_PENDING_RESPAWN_STABILIZE_DELAY, Math.max(0, delayTicks));
+        data.setInteger(NBT_PENDING_RESPAWN_STABILIZE_TICKS, Math.max(1, stabilizeTicks));
+    }
+
+    public static void tickPendingRespawnStabilize(TickEvent.PlayerTickEvent event) {
+        if (event == null || event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        EntityPlayer player = event.player;
+        if (!(player instanceof EntityPlayerMP) || player.worldObj == null || player.worldObj.isRemote) {
+            return;
+        }
+
+        NBTTagCompound data = player.getEntityData();
+        if (!data.getBoolean(NBT_PENDING_RESPAWN_STABILIZE)) {
+            return;
+        }
+
+        int delay = data.getInteger(NBT_PENDING_RESPAWN_STABILIZE_DELAY);
+        if (delay > 0) {
+            data.setInteger(NBT_PENDING_RESPAWN_STABILIZE_DELAY, delay - 1);
+            return;
+        }
+
+        int remainingTicks = data.getInteger(NBT_PENDING_RESPAWN_STABILIZE_TICKS);
+        if (remainingTicks <= 0) {
+            clearPendingRespawnStabilize(data);
+            return;
+        }
+
+        stabilizeRespawn((EntityPlayerMP) player);
+        if (remainingTicks <= 1) {
+            clearPendingRespawnStabilize(data);
+        } else {
+            data.setInteger(NBT_PENDING_RESPAWN_STABILIZE_TICKS, remainingTicks - 1);
+        }
+    }
+
     private static void clearPendingSync(EntityPlayer player) {
         if (player == null) {
             return;
@@ -115,6 +172,47 @@ public final class RespawnDelayHelper {
         NBTTagCompound data = player.getEntityData();
         data.removeTag(NBT_PENDING_SYNC);
         data.removeTag(NBT_PENDING_SYNC_DELAY);
+    }
+
+    private static void clearPendingRespawnStabilize(NBTTagCompound data) {
+        if (data == null) {
+            return;
+        }
+        data.removeTag(NBT_PENDING_RESPAWN_STABILIZE);
+        data.removeTag(NBT_PENDING_RESPAWN_STABILIZE_DELAY);
+        data.removeTag(NBT_PENDING_RESPAWN_STABILIZE_TICKS);
+    }
+
+    private static void stabilizeRespawn(EntityPlayerMP player) {
+        if (player == null || player.playerNetServerHandler == null) {
+            return;
+        }
+        WorldServer world = player.getServerForPlayer();
+        if (world == null) {
+            return;
+        }
+
+        int chunkX = MathHelper.floor_double(player.posX) >> 4;
+        int chunkZ = MathHelper.floor_double(player.posZ) >> 4;
+        for (int offsetX = -1; offsetX <= 1; ++offsetX) {
+            for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
+                world.theChunkProviderServer.loadChunk(chunkX + offsetX, chunkZ + offsetZ);
+            }
+        }
+        world.getPlayerManager().updatePlayerPertinentChunks(player);
+
+        player.motionX = 0.0D;
+        player.motionY = 0.0D;
+        player.motionZ = 0.0D;
+        player.fallDistance = 0.0F;
+        player.velocityChanged = true;
+        player.playerNetServerHandler.setPlayerLocation(
+                player.posX,
+                player.posY,
+                player.posZ,
+                player.rotationYaw,
+                player.rotationPitch
+        );
     }
 
     private static long getUnlockAtMs(EntityPlayer player) {

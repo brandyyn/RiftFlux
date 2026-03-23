@@ -27,6 +27,7 @@ import net.minecraftforge.common.MinecraftForge;
 import tk.nukeduck.hearts.HeartsConfig;
 import tk.nukeduck.hearts.block.TileEntityHeartCrystal;
 import tk.nukeduck.hearts.block.TileEntityHeartLantern;
+import tk.nukeduck.hearts.block.TileEntityStarLantern;
 import tk.nukeduck.hearts.event.CommonEvents;
 import tk.nukeduck.hearts.event.WorldGeneratorHearts;
 import tk.nukeduck.hearts.network.IProxy;
@@ -52,6 +53,7 @@ public class HeartCrystal {
     public void init(FMLInitializationEvent e) {
         GameRegistry.registerTileEntity(TileEntityHeartCrystal.class, (String)"HeartCrystal");
         GameRegistry.registerTileEntity(TileEntityHeartLantern.class, (String)"HeartLantern");
+        GameRegistry.registerTileEntity(TileEntityStarLantern.class, (String)"StarLantern");
         GameRegistry.registerWorldGenerator((IWorldGenerator)new WorldGeneratorHearts(), (int)1);
         events = new CommonEvents();
         MinecraftForge.EVENT_BUS.register((Object)events);

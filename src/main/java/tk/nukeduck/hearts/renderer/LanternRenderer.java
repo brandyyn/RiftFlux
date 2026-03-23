@@ -27,9 +27,20 @@ import tk.nukeduck.hearts.renderer.ModelLantern;
 
 public class LanternRenderer
 extends TileEntitySpecialRenderer {
-    private ResourceLocation texture = new ResourceLocation("hearts", "textures/models/lantern.png");
-    private ModelLantern model = new ModelLantern();
+    private final ModelLantern model = new ModelLantern();
     private final HeartCrystalRenderer crystalRenderer = new HeartCrystalRenderer();
+
+    protected ResourceLocation getLanternTexture() {
+        return new ResourceLocation("hearts", "textures/models/lantern.png");
+    }
+
+    protected void renderLanternCore(TileEntity tileEntity, float partialTicks) {
+        if (HeartCrystal.config.getOldModel()) {
+            this.crystalRenderer.renderOldCrystalInLantern(tileEntity, partialTicks);
+        } else {
+            this.crystalRenderer.renderModernCrystalInLantern(tileEntity, partialTicks);
+        }
+    }
 
     public void renderTileEntityAt(TileEntity tileEntity, double x, double y, double z, float p_147500_8_) {
         int metadata = tileEntity.getBlockMetadata();
@@ -39,15 +50,11 @@ extends TileEntitySpecialRenderer {
             GL11.glTranslatef((float)0.0f, (float)HeartCrystalRenderer.TOOLTIP_PREVIEW_LANTERN_Y_OFFSET, (float)0.0f);
             GL11.glScalef((float)HeartCrystalRenderer.TOOLTIP_PREVIEW_LANTERN_SCALE, (float)HeartCrystalRenderer.TOOLTIP_PREVIEW_LANTERN_SCALE, (float)HeartCrystalRenderer.TOOLTIP_PREVIEW_LANTERN_SCALE);
         }
-        GL11.glRotatef((float)(90 * (metadata % 4)), (float)0.0f, (float)1.0f, (float)0.0f);
-        if (HeartCrystal.config.getOldModel()) {
-            this.crystalRenderer.renderOldCrystalInLantern(tileEntity, p_147500_8_);
-        } else {
-            this.crystalRenderer.renderModernCrystalInLantern(tileEntity, p_147500_8_);
-        }
+        this.renderLanternCore(tileEntity, p_147500_8_);
         GL11.glColor3f((float)1.0f, (float)1.0f, (float)1.0f);
+        GL11.glRotatef((float)(90 * (metadata % 4)), (float)0.0f, (float)1.0f, (float)0.0f);
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
-        Minecraft.getMinecraft().getTextureManager().bindTexture(this.texture);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(this.getLanternTexture());
         this.model.render(metadata, 0.0625f);
         GL11.glPopMatrix();
     }

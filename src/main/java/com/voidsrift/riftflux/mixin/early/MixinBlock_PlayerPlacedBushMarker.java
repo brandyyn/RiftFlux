@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -39,5 +40,8 @@ public abstract class MixinBlock_PlayerPlacedBushMarker {
         }
 
         RFPlantContext.markPlayerPlaced(world, x, y, z);
+        if (((Object) this) instanceof BlockDoublePlant) {
+            RFPlantContext.markPlayerPlaced(world, x, y + 1, z);
+        }
     }
 }

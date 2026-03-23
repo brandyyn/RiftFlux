@@ -6,15 +6,23 @@ import com.voidsrift.riftflux.combat.torohealth.client.particle.DamageParticles;
 import com.voidsrift.riftflux.combat.torohealth.mixins.EntityLivingBaseExt;
 import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
+import com.voidsrift.riftflux.fence.FenceOverrideClientState;
+import com.voidsrift.riftflux.client.chatcopy.ChatSelectionManager;
+import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
+import com.voidsrift.riftflux.client.worldtooltips.WorldTooltipClient;
 import com.voidsrift.riftflux.terramine.EyeOfCthulhuMusicHandler;
 import com.voidsrift.riftflux.terramine.IceRodPlacementPreviewRenderer;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
 import com.voidsrift.riftflux.painting.GuiPaintingSelector;
+import com.voidsrift.riftflux.axolotl.AxolotlContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.furniture.FurnitureContent;
+import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
+import com.voidsrift.riftflux.wam.WAMContent;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
+import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.client.registry.RenderingRegistry;
@@ -90,6 +98,11 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
+    public void applyFenceOverrideSync(boolean fullSync, int dimensionId, boolean enabled, int[] coordinates) {
+        FenceOverrideClientState.applySync(fullSync, dimensionId, enabled, coordinates);
+    }
+
+    @Override
     public void initClientFeatures() {
         // Register NEI handler tab icon
         com.voidsrift.riftflux.nei.GTNHNeiHandlerInfo.register();
@@ -104,6 +117,12 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enablePickupNotifier) {
             PickupNotifierHud.bootstrap();
         }
+        if (ModConfig.enableChatSelectionCopy) {
+            ChatSelectionManager.bootstrap();
+        }
+        if (ModConfig.enableWorldTooltips) {
+            WorldTooltipClient.bootstrap();
+        }
         // Stars (tag new items so the GUI mixin can draw)
         if (ModConfig.enableItemPickupStar) {
             PickupStarClientTracker.bootstrap();
@@ -112,15 +131,23 @@ public class ClientProxy extends CommonProxy {
             }
         }
         com.voidsrift.riftflux.placeditem.PlacedItemContent.initClient();
+        PlaceableGunpowderContent.initClient();
         DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
         com.voidsrift.riftflux.avatar.AvatarTLBContent.initClient();
         TerrariaContent.initClient();
+        SpecialArmorContent.initClient();
         AsgardShieldContent.initClient();
         BlessingContent.initClient();
         FurnitureContent.initClient();
+        AxolotlContent.initClient();
+        WheatfieldContent.initClient();
+        WAMContent.initClient();
         if (Loader.isModLoaded("Hats")) {
             HatsKeybinds.ensureRegistered();
+        }
+        if (ModConfig.enableFenceTextureModule) {
+            MinecraftForge.EVENT_BUS.register(new FenceOverrideClientEvents());
         }
         MinecraftForge.EVENT_BUS.register(new IceRodDurabilityTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodPlacementPreviewRenderer());

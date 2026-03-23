@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.asgardshield;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.compat.BackhandCompat;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -49,14 +50,85 @@ public final class AsgardShieldLogic {
     }
 
     public static boolean isBlockingWithAsgardItem(EntityPlayer player) {
-        if (player == null || !player.isUsingItem()) {
+        if (player == null) {
             return false;
         }
+        return isAsgardItem(getActiveGuardStack(player));
+    }
+
+    public static ItemStack getActiveGuardStack(EntityPlayer player) {
+        if (player == null) {
+            return null;
+        }
+
         ItemStack inUse = player.getItemInUse();
-        if (inUse == null) {
-            return false;
+        if (isAsgardItem(inUse)) {
+            return inUse;
         }
-        return isAsgardItem(inUse);
+
+        if (isUsingOffhandAsgardItem(player)) {
+            return BackhandCompat.getOffhandItem(player);
+        }
+
+        if (player.isUsingItem() && isAsgardItem(inUse)) {
+            return inUse;
+        }
+
+        return null;
+    }
+
+    public static ItemStack getEquippedAsgardItem(EntityPlayer player) {
+        if (player == null) {
+            return null;
+        }
+
+        ItemStack active = getActiveGuardStack(player);
+        if (isAsgardItem(active)) {
+            return active;
+        }
+
+        ItemStack held = player.getHeldItem();
+        if (isAsgardItem(held)) {
+            return held;
+        }
+
+        ItemStack offhand = BackhandCompat.getOffhandItem(player);
+        return isAsgardItem(offhand) ? offhand : null;
+    }
+
+    public static void stopGuardUse(EntityPlayer player, ItemStack guardStack) {
+        if (player == null) {
+            return;
+        }
+
+        player.stopUsingItem();
+
+        if (!BackhandCompat.isAvailable()) {
+            return;
+        }
+
+        ItemStack offhand = BackhandCompat.getOffhandItem(player);
+        boolean usesOffhand = (guardStack != null && BackhandCompat.isOffhandStack(player, guardStack))
+                || (offhand != null && isAsgardItem(offhand) && BackhandCompat.isOffhandItemInUse(player));
+        if (usesOffhand) {
+            BackhandCompat.setOffhandItemInUse(player, false);
+        }
+    }
+
+    public static void clearStaleOffhandGuardUse(EntityPlayer player) {
+        if (player == null || !BackhandCompat.isAvailable() || !BackhandCompat.isOffhandItemInUse(player)) {
+            return;
+        }
+
+        ItemStack offhand = BackhandCompat.getOffhandItem(player);
+        if (!isAsgardItem(offhand)) {
+            return;
+        }
+
+        ItemStack inUse = player.getItemInUse();
+        if (!isAsgardItem(inUse)) {
+            BackhandCompat.setOffhandItemInUse(player, false);
+        }
     }
 
     public static float getPassiveDamageMultiplier(ItemStack held) {
@@ -73,15 +145,11 @@ public final class AsgardShieldLogic {
     }
 
     public static boolean handleGuardHit(EntityPlayer player, DamageSource source, float incomingDamage) {
-        if (player == null || source == null || source.isUnblockable()) {
+        if (!canResolveGuardHit(player, source)) {
             return false;
         }
 
-        ItemStack held = player.getHeldItem();
-        if (!isAsgardItem(held)) {
-            return false;
-        }
-
+        ItemStack held = getActiveGuardStack(player);
         int incoming = Math.max(1, MathHelper.ceiling_float_int(incomingDamage));
         incoming = absorbAuraDamage(player, incoming);
         if (incoming <= 0) {
@@ -102,7 +170,7 @@ public final class AsgardShieldLogic {
         if (result.itemDamage > 0 && held.stackSize > 0) {
             held.damageItem(result.itemDamage, player);
             if (held.stackSize <= 0) {
-                player.destroyCurrentEquippedItem();
+                destroyGuardItem(player, held);
             }
         }
 
@@ -115,6 +183,68 @@ public final class AsgardShieldLogic {
         }
 
         return true;
+    }
+
+    public static boolean canResolveGuardHit(EntityPlayer player, DamageSource source) {
+        if (player == null || source == null || source.isUnblockable()) {
+            return false;
+        }
+
+        ItemStack held = getActiveGuardStack(player);
+        if (!isAsgardItem(held)) {
+            return false;
+        }
+
+        if (held.getItem() instanceof ItemAsgardShield) {
+            ItemAsgardShield shield = (ItemAsgardShield) held.getItem();
+            Entity sourceEntity = source.getEntity();
+            if (shield.getPerkId() == 6 && (sourceEntity instanceof EntityEnderman || sourceEntity instanceof EntityDragon)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean isUsingOffhandAsgardItem(EntityPlayer player) {
+        if (!BackhandCompat.isAvailable() || player == null) {
+            return false;
+        }
+
+        ItemStack offhand = BackhandCompat.getOffhandItem(player);
+        if (!isAsgardItem(offhand)) {
+            return false;
+        }
+
+        if (BackhandCompat.isUsingOffhand(player) || BackhandCompat.isOffhandItemInUse(player)) {
+            return true;
+        }
+
+        ItemStack inUse = player.getItemInUse();
+        return inUse != null && BackhandCompat.isOffhandStack(player, inUse);
+    }
+
+    private static void destroyGuardItem(EntityPlayer player, ItemStack guardStack) {
+        if (player == null || guardStack == null) {
+            return;
+        }
+
+        if (BackhandCompat.isAvailable() && BackhandCompat.isOffhandStack(player, guardStack)) {
+            int offhandSlot = BackhandCompat.getOffhandSlot(player);
+            if (player.inventory != null
+                    && player.inventory.mainInventory != null
+                    && offhandSlot >= 0
+                    && offhandSlot < player.inventory.mainInventory.length
+                    && player.inventory.mainInventory[offhandSlot] == guardStack) {
+                player.inventory.mainInventory[offhandSlot] = null;
+                BackhandCompat.setOffhandItemInUse(player, false);
+                return;
+            }
+        }
+
+        if (player.getHeldItem() == guardStack) {
+            player.destroyCurrentEquippedItem();
+        }
     }
 
     private static GuardResult handleShieldGuard(EntityPlayer player,

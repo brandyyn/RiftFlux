@@ -91,7 +91,7 @@ public abstract class MixinGuiInventory {
          }
          List<String> rawLines = new ArrayList<String>();
          if (blessing == null || blessing.isEmpty()) {
-            rawLines.add(EnumChatFormatting.YELLOW + rf$translate("blessing.riftflux.none", "Blessing: None"));
+            rawLines.add(EnumChatFormatting.YELLOW + rf$translate("blessing.riftflux.none", "You are not blessed"));
          } else {
             rawLines.add(EnumChatFormatting.YELLOW + BlessingHelper.getLocalizedTitle(blessing));
             String description = BlessingHelper.getDescription(blessing);

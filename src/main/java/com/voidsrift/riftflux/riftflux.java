@@ -1,18 +1,24 @@
 package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.combat.StickTooltipHandler;
+import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
 import com.voidsrift.riftflux.combat.torohealth.ToroHealthContent;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.legendgear.LegendGearContent;
+import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
 import com.voidsrift.riftflux.soulhearts.SoulHeartsContent;
 import com.voidsrift.riftflux.heartcrystal.HeartCrystalContent;
 import com.voidsrift.riftflux.armoroverlay.ArmorOverlayContent;
+import com.voidsrift.riftflux.axolotl.AxolotlContent;
 import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
+import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.furniture.FurnitureContent;
+import com.voidsrift.riftflux.wam.WAMContent;
+import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import de.rinonline.korinrpg.Springmain;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
@@ -29,6 +35,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkCheckHandler;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.common.Loader;
 import makamys.satchels.SatchelsItems;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -51,6 +58,7 @@ public class riftflux {
     public void preInit(FMLPreInitializationEvent event) {
         vortexContent.preInit(event);
         com.voidsrift.riftflux.placeditem.PlacedItemContent.init();
+        PlaceableGunpowderContent.preInit();
         com.voidsrift.riftflux.avatar.AvatarTLBContent.preInit();
         makamys.satchels.Satchels.preInit(event);
         Core.preInit(event);
@@ -62,7 +70,11 @@ public class riftflux {
         }
         BlessingContent.preInit(event);
         FurnitureContent.preInit(event);
+        AxolotlContent.preInit(event);
         TerrariaContent.preInit(event);
+        WheatfieldContent.preInit(event);
+        WAMContent.preInit(event);
+        SpecialArmorContent.preInit(event);
         LegendGearContent.preInit(event);
         AsgardShieldContent.preInit(event);
         SoulHeartsContent.preInit(event);
@@ -76,6 +88,7 @@ public class riftflux {
         ToroHealthContent.init(event);
         BlessingContent.init();
         FurnitureContent.init();
+        AxolotlContent.init(event);
 
         com.voidsrift.riftflux.tweaks.ladder.RiftFluxLadderContent.init();
 
@@ -83,7 +96,17 @@ public class riftflux {
                 new com.voidsrift.riftflux.server.PickupStarServerEvents();
         MinecraftForge.EVENT_BUS.register(serverEvents);
         FMLCommonHandler.instance().bus().register(serverEvents);
+        if (ModConfig.enableFenceTextureModule) {
+            final com.voidsrift.riftflux.fence.FenceOverrideEvents fenceOverrideEvents =
+                    new com.voidsrift.riftflux.fence.FenceOverrideEvents();
+            MinecraftForge.EVENT_BUS.register(fenceOverrideEvents);
+            FMLCommonHandler.instance().bus().register(fenceOverrideEvents);
+        }
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
+        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.PlayerHurtSoundEventHandler());
+        if (Loader.isModLoaded("Thaumcraft")) {
+            MinecraftForge.EVENT_BUS.register(new ThaumcraftWarpSyncCompat());
+        }
 
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.tweaks.ladder.FloatingLadderEvents());
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.avatar.glider.GliderEvents());
@@ -103,6 +126,9 @@ public class riftflux {
 
         proxy.initClientFeatures();
         TerrariaContent.init(event);
+        WheatfieldContent.init(event);
+        WAMContent.init(event);
+        SpecialArmorContent.init(event);
         LegendGearContent.init(event);
         AsgardShieldContent.init(event);
         SoulHeartsContent.init(event);
@@ -124,6 +150,7 @@ public class riftflux {
         LegendGearContent.postInit(event);
         SoulHeartsContent.postInit(event);
         HeartCrystalContent.postInit(event);
+        AxolotlContent.postInit(event);
     }
 
     @EventHandler
@@ -148,17 +175,24 @@ public class riftflux {
 
             if (mapping.type == GameRegistry.Type.ITEM) {
                 Item target = null;
-                if (legendGearEnabled && isLegendGearNamespace(mapping.name)) {
+                target = resolvePlaceableGunpowderItemAlias(mapping.name);
+                if (target == null && legendGearEnabled && isLegendGearNamespace(mapping.name)) {
                     target = resolveLegendGearItemAlias(mapping.name);
                 }
                 if (target == null) {
                     target = resolveSatchelsItemAlias(mapping.name);
                 }
+                if (target == null) {
+                    target = resolveSpecialArmorItemAlias(mapping.name);
+                }
                 if (target != null) {
                     mapping.remap(target);
                 }
-            } else if (legendGearEnabled && mapping.type == GameRegistry.Type.BLOCK && isLegendGearNamespace(mapping.name)) {
-                Block target = resolveLegendGearBlockAlias(mapping.name);
+            } else if (mapping.type == GameRegistry.Type.BLOCK) {
+                Block target = resolvePlaceableGunpowderBlockAlias(mapping.name);
+                if (target == null && legendGearEnabled && isLegendGearNamespace(mapping.name)) {
+                    target = resolveLegendGearBlockAlias(mapping.name);
+                }
                 if (target != null) {
                     mapping.remap(target);
                 }
@@ -332,6 +366,62 @@ public class riftflux {
             default:
                 return null;
         }
+    }
+
+    private static String placeableGunpowderAliasKey(String fullName) {
+        int split = fullName.indexOf(':');
+        String path = split >= 0 ? fullName.substring(split + 1) : fullName;
+        return path.toLowerCase(Locale.ROOT)
+                .replace("_", "")
+                .replace("-", "")
+                .replace(".", "");
+    }
+
+    private static Item resolvePlaceableGunpowderItemAlias(String fullName) {
+        Block block = resolvePlaceableGunpowderBlockAlias(fullName);
+        return block == null ? null : Item.getItemFromBlock(block);
+    }
+
+    private static Block resolvePlaceableGunpowderBlockAlias(String fullName) {
+        if (PlaceableGunpowderContent.gunpowderBlock == null || fullName == null) {
+            return null;
+        }
+
+        String lower = fullName.toLowerCase(Locale.ROOT);
+        if (!(lower.startsWith("gunpowder:") || "gunpowder_block".equals(lower) || "gunpowderblock".equals(lower))) {
+            return null;
+        }
+
+        if ("gunpowderblock".equals(placeableGunpowderAliasKey(fullName))) {
+            return PlaceableGunpowderContent.gunpowderBlock;
+        }
+        return null;
+    }
+
+    private static Item resolveSpecialArmorItemAlias(String fullName) {
+        if (fullName == null) {
+            return null;
+        }
+
+        String lower = fullName.toLowerCase(Locale.ROOT);
+        if (!(lower.startsWith("specialarmor:") || lower.startsWith("tlspecialarmor:") || lower.startsWith("riftflux:"))) {
+            return null;
+        }
+
+        String key = satchelsAliasKey(fullName);
+        if ("slimehelmet".equals(key) || "saslimehelmet".equals(key)) {
+            return SpecialArmorContent.slimeHelmet;
+        }
+        if ("doublejumpboots".equals(key) || "sadoublejumpboots".equals(key)) {
+            return SpecialArmorContent.doubleJumpBoots;
+        }
+        if ("skates".equals(key) || "saskates".equals(key)) {
+            return SpecialArmorContent.skates;
+        }
+        if ("heavyboots".equals(key) || "saheavyboots".equals(key)) {
+            return SpecialArmorContent.heavyBoots;
+        }
+        return null;
     }
 
     @NetworkCheckHandler

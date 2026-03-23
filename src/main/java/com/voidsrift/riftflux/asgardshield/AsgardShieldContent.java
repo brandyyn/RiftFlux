@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.asgardshield;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.compat.BackhandCompat;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -95,6 +96,7 @@ public final class AsgardShieldContent {
             return;
         }
         initialized = true;
+        registerBackhandCompat();
         MinecraftForge.EVENT_BUS.register(new AsgardShieldEventHandler());
     }
 
@@ -347,6 +349,13 @@ public final class AsgardShieldContent {
         GILDED_VARIANTS.put(asgardShieldPatchwork, asgardShieldPatchworkGilded);
         GILDED_VARIANTS.put(asgardShieldLivingmetal, asgardShieldLivingmetalGilded);
         GILDED_VARIANTS.put(asgardShieldBiomass, asgardShieldBiomassGilded);
+    }
+
+    private static void registerBackhandCompat() {
+        if (!BackhandCompat.isAvailable()) {
+            return;
+        }
+        BackhandCompat.addOffhandPriorityItems(ItemAsgardShield.class, ItemAsgardGreatsword.class);
     }
 
     private static ItemStack resolveHarkenIngredient(String... candidates) {

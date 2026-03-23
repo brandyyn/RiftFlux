@@ -225,7 +225,7 @@ implements IBauble {
                 }
             }
             if (type == RingType.THIEF_RING && player.isSneaking() && PlayerStarstatsExtension.availableMana(player) > 0.0f) {
-                player.addPotionEffect(new PotionEffect(Potion.invisibility.id, 4, 0, true));
+                LegendGear2.addConfiguredPotionEffect(player, LegendGear2.CONFIG_THIEF_RING_INVISIBILITY_POTION_ID, Potion.invisibility, 4, 0, true);
                 MagicRing.spendRingMana(player, THIEF_RING_COST);
             }
         }

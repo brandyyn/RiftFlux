@@ -28,6 +28,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
@@ -52,18 +53,6 @@ implements ITileEntityProvider {
 
     @SideOnly(value=Side.CLIENT)
     public void randomDisplayTick(World world, int x, int y, int z, Random random) {
-        TileEntity tileEntity = world.getTileEntity(x, y, z);
-        if (!(tileEntity instanceof TileEntityHeartLantern)) {
-            return;
-        }
-        TileEntityHeartLantern lantern = (TileEntityHeartLantern)tileEntity;
-        float charge = lantern.chargeLevel;
-        for (int i = 0; i < (int)(HeartCrystal.random.nextFloat() * charge * 4.0f); ++i) {
-            double xRand = (double)x + this.getBlockBoundsMinX() + random.nextDouble() * (this.getBlockBoundsMaxX() - this.getBlockBoundsMinX());
-            double yRand = (double)y + this.getBlockBoundsMinX() + random.nextDouble() * (this.getBlockBoundsMaxX() - this.getBlockBoundsMinX());
-            double zRand = (double)z + this.getBlockBoundsMinX() + random.nextDouble() * (this.getBlockBoundsMaxX() - this.getBlockBoundsMinX());
-            world.spawnParticle(HeartsBlocks.crystal.getParticle(), xRand, yRand, zRand, random.nextDouble() * 0.7 + 0.3, 0.0, 0.0);
-        }
     }
 
     public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int p_149727_6_, float p_149727_7_, float p_149727_8_, float p_149727_9_) {
@@ -72,6 +61,16 @@ implements ITileEntityProvider {
             return false;
         }
         TileEntityHeartLantern lantern = (TileEntityHeartLantern)tileEntity;
+        ItemStack heldStack = player.getCurrentEquippedItem();
+        if (heldStack != null && lantern.canAcceptPotionEffects(heldStack)) {
+            if (world.isRemote) {
+                return true;
+            }
+            if (lantern.addPotionEffects(heldStack)) {
+                this.consumePotionItem(player, heldStack);
+                return true;
+            }
+        }
         if (lantern.chargeLevel >= CHARGE_TAKEN && player.getHealth() < player.getMaxHealth()) {
             if (world.isRemote) {
                 this.spawnHealParticles(world, x, y, z);
@@ -84,6 +83,22 @@ implements ITileEntityProvider {
             return true;
         }
         return false;
+    }
+
+    private void consumePotionItem(EntityPlayer player, ItemStack heldStack) {
+        if (player.capabilities.isCreativeMode) {
+            return;
+        }
+        ItemStack emptyBottle = new ItemStack(Items.glass_bottle);
+        if (heldStack.stackSize <= 1) {
+            player.inventory.setInventorySlotContents(player.inventory.currentItem, emptyBottle);
+        } else {
+            --heldStack.stackSize;
+            if (!player.inventory.addItemStackToInventory(emptyBottle)) {
+                player.entityDropItem(emptyBottle, 0.0f);
+            }
+        }
+        player.inventory.markDirty();
     }
 
     private void spawnHealParticles(World world, int x, int y, int z) {

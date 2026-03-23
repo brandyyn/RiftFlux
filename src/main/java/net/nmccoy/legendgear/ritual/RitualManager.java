@@ -314,7 +314,7 @@ public class RitualManager {
                     int count = stack.stackSize;
                     int baseDuration = 3600;
                     int bonusDuration = (count - 1) * 20 * 30;
-                    caster.addPotionEffect(new PotionEffect(Potion.resistance.id, baseDuration + bonusDuration, 1, true));
+                    LegendGear2.addConfiguredPotionEffect(caster, LegendGear2.CONFIG_STONESKIN_RESISTANCE_POTION_ID, Potion.resistance, baseDuration + bonusDuration, 1, true);
                     ei.setDead();
                     return true;
                 }

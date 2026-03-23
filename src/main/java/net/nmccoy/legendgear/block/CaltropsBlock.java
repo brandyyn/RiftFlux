@@ -19,15 +19,18 @@
  */
 package net.nmccoy.legendgear.block;
 
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.blessings.BlessingHelper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.IBlockAccess;
@@ -36,6 +39,8 @@ import net.nmccoy.legendgear.LegendGear2;
 
 public class CaltropsBlock
 extends Block {
+    private static final String NBT_CALTROPS_COOLDOWN_UNTIL = "RiftFluxCaltropsCooldownUntil";
+    private static final int PERSISTENT_CALTROPS_COOLDOWN_TICKS = 10;
     DamageSource caltropsDamage;
     public static float steppedOnDropChance = 0.5f;
 
@@ -107,13 +112,65 @@ extends Block {
         GameRegistry.addRecipe((ItemStack)new ItemStack((Block)this, 4), (Object[])new Object[]{" X ", " X ", "X X", Character.valueOf('X'), Items.iron_ingot});
     }
 
+    private boolean isImmuneToCaltrops(EntityLivingBase target) {
+        if (!(target instanceof EntityPlayer) || !ModConfig.blessingsEnabled) {
+            return false;
+        }
+        String blessing = BlessingHelper.getBlessing((EntityPlayer) target);
+        return "Mechanic".equals(blessing) && BlessingHelper.isBlessingEnabled(blessing);
+    }
+
+    private float getConfiguredDamage(EntityLivingBase target) {
+        if (target instanceof EntityPlayer) {
+            return Math.max(0.0f, target.getMaxHealth() * (LegendGear2.CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT / 100.0f));
+        }
+        return Math.max(0.0f, LegendGear2.CONFIG_CALTROPS_MOB_DAMAGE);
+    }
+
+    private boolean isOnPersistentTriggerCooldown(World world, EntityLivingBase target) {
+        if (world == null || target == null || LegendGear2.CONFIG_CALTROPS_BREAK_ON_TRIGGER) {
+            return false;
+        }
+        NBTTagCompound data = target.getEntityData();
+        return data != null && data.getLong(NBT_CALTROPS_COOLDOWN_UNTIL) > world.getTotalWorldTime();
+    }
+
+    private void markPersistentTriggerCooldown(World world, EntityLivingBase target) {
+        if (world == null || target == null || LegendGear2.CONFIG_CALTROPS_BREAK_ON_TRIGGER) {
+            return;
+        }
+        target.getEntityData().setLong(NBT_CALTROPS_COOLDOWN_UNTIL, world.getTotalWorldTime() + PERSISTENT_CALTROPS_COOLDOWN_TICKS);
+    }
+
     public void onEntityCollidedWithBlock(World par1World, int par2, int par3, int par4, Entity par5Entity) {
-        if (par5Entity instanceof EntityLivingBase && !par5Entity.isSneaking() && par5Entity.attackEntityFrom(this.caltropsDamage, 1.0f)) {
-            ((EntityLivingBase)par5Entity).addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 2, true));
-            ((EntityLivingBase)par5Entity).addPotionEffect(new PotionEffect(Potion.jump.id, 100, -3, true));
+        if (par1World == null || par1World.isRemote || !(par5Entity instanceof EntityLivingBase) || par5Entity.isSneaking()) {
+            return;
+        }
+
+        EntityLivingBase living = (EntityLivingBase) par5Entity;
+        if (this.isImmuneToCaltrops(living)) {
+            return;
+        }
+        if (this.isOnPersistentTriggerCooldown(par1World, living)) {
+            return;
+        }
+
+        float damage = this.getConfiguredDamage(living);
+        if (damage <= 0.0f || !living.attackEntityFrom(this.caltropsDamage, damage)) {
+            return;
+        }
+
+        LegendGear2.addConfiguredPotionEffect(living, LegendGear2.CONFIG_CALTROPS_SLOWNESS_POTION_ID, Potion.moveSlowdown, 100, 2, true);
+        LegendGear2.applyJumpPenalty(living, 100, 2, true);
+        if (LegendGear2.CONFIG_CALTROPS_BREAK_ON_TRIGGER) {
             par1World.setBlockToAir(par2, par3, par4);
+        } else {
+            this.markPersistentTriggerCooldown(par1World, living);
+        }
+        if (LegendGear2.CONFIG_CALTROPS_BREAK_ON_TRIGGER
+                && LegendGear2.CONFIG_CALTROPS_TRIGGER_DROP_ENABLED
+                && steppedOnDropChance > 0.0f) {
             this.dropBlockAsItemWithChance(par1World, par2, par3, par4, 0, steppedOnDropChance, 0);
         }
     }
 }
-
