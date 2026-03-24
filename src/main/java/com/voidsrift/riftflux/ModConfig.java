@@ -518,6 +518,8 @@ public class ModConfig {
     public static int[] unloaderBlacklistedDimensions;
     public static boolean enablePlacedItem;
     public static boolean enablePlaceableGunpowder;
+    public static boolean enableGlowstoneDust;
+    public static int glowstoneDustLightLevel;
     public static boolean placeableGunpowderSetsFireBelow;
     public static boolean placeableGunpowderEmitsRedstone;
     public static boolean placeableGunpowderIgnitesHbmBarrels;
@@ -3837,6 +3839,22 @@ public class ModConfig {
                 "placeable_gunpowder",
                 true,
                 "Master switch for the integrated Placeable Gunpowder block and placement behavior."
+        );
+
+        enableGlowstoneDust = config.getBoolean(
+                "EnableGlowstoneDust",
+                "glowstone_dust",
+                true,
+                "Master switch for the integrated placeable Glowstone Dust block and placement behavior."
+        );
+
+        glowstoneDustLightLevel = config.getInt(
+                "LightLevel",
+                "glowstone_dust",
+                8,
+                0,
+                15,
+                "Light level emitted by placed Glowstone Dust. Vanilla torch is 14 and glowstone block is 15."
         );
 
         placeableGunpowderSetsFireBelow = config.getBoolean(

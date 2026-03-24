@@ -17,6 +17,7 @@ import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.furniture.FurnitureContent;
+import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.wam.WAMContent;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import de.rinonline.korinrpg.Springmain;
@@ -59,6 +60,7 @@ public class riftflux {
         vortexContent.preInit(event);
         com.voidsrift.riftflux.placeditem.PlacedItemContent.init();
         PlaceableGunpowderContent.preInit();
+        GlowstoneDustContent.preInit();
         com.voidsrift.riftflux.avatar.AvatarTLBContent.preInit();
         makamys.satchels.Satchels.preInit(event);
         Core.preInit(event);
@@ -176,6 +178,9 @@ public class riftflux {
             if (mapping.type == GameRegistry.Type.ITEM) {
                 Item target = null;
                 target = resolvePlaceableGunpowderItemAlias(mapping.name);
+                if (target == null) {
+                    target = resolveGlowstoneDustItemAlias(mapping.name);
+                }
                 if (target == null && legendGearEnabled && isLegendGearNamespace(mapping.name)) {
                     target = resolveLegendGearItemAlias(mapping.name);
                 }
@@ -190,6 +195,9 @@ public class riftflux {
                 }
             } else if (mapping.type == GameRegistry.Type.BLOCK) {
                 Block target = resolvePlaceableGunpowderBlockAlias(mapping.name);
+                if (target == null) {
+                    target = resolveGlowstoneDustBlockAlias(mapping.name);
+                }
                 if (target == null && legendGearEnabled && isLegendGearNamespace(mapping.name)) {
                     target = resolveLegendGearBlockAlias(mapping.name);
                 }
@@ -394,6 +402,43 @@ public class riftflux {
 
         if ("gunpowderblock".equals(placeableGunpowderAliasKey(fullName))) {
             return PlaceableGunpowderContent.gunpowderBlock;
+        }
+        return null;
+    }
+
+    private static String glowstoneDustAliasKey(String fullName) {
+        int split = fullName.indexOf(':');
+        String path = split >= 0 ? fullName.substring(split + 1) : fullName;
+        return path.toLowerCase(Locale.ROOT)
+                .replace("_", "")
+                .replace("-", "")
+                .replace(".", "");
+    }
+
+    private static Item resolveGlowstoneDustItemAlias(String fullName) {
+        Block block = resolveGlowstoneDustBlockAlias(fullName);
+        return block == null ? null : Item.getItemFromBlock(block);
+    }
+
+    private static Block resolveGlowstoneDustBlockAlias(String fullName) {
+        if (GlowstoneDustContent.glowstoneDustBlock == null || fullName == null) {
+            return null;
+        }
+
+        String lower = fullName.toLowerCase(Locale.ROOT);
+        if (!(lower.startsWith("grygrflzr_glowstonewire:")
+                || lower.startsWith("glowstonedust:")
+                || lower.startsWith("glowstonewire:")
+                || "glowstone_wire".equals(lower)
+                || "glowstone_dust".equals(lower)
+                || "glowstonewire".equals(lower)
+                || "glowstonedust".equals(lower))) {
+            return null;
+        }
+
+        String key = glowstoneDustAliasKey(fullName);
+        if ("glowstonewire".equals(key) || "glowstonedust".equals(key)) {
+            return GlowstoneDustContent.glowstoneDustBlock;
         }
         return null;
     }

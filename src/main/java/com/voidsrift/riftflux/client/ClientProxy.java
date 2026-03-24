@@ -8,6 +8,7 @@ import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
 import com.voidsrift.riftflux.fence.FenceOverrideClientState;
 import com.voidsrift.riftflux.client.chatcopy.ChatSelectionManager;
+import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.client.worldtooltips.WorldTooltipClient;
 import com.voidsrift.riftflux.terramine.EyeOfCthulhuMusicHandler;
@@ -132,6 +133,7 @@ public class ClientProxy extends CommonProxy {
         }
         com.voidsrift.riftflux.placeditem.PlacedItemContent.initClient();
         PlaceableGunpowderContent.initClient();
+        GlowstoneDustContent.initClient();
         DualHotbarClient.init();
         com.voidsrift.riftflux.vortex.vortexContent.initClient();
         com.voidsrift.riftflux.avatar.AvatarTLBContent.initClient();
