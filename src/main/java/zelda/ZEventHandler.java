@@ -21,12 +21,11 @@
  */
 package zelda;
 
+import com.voidsrift.riftflux.util.ConfigResolver;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.util.Random;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.boss.EntityDragon;
-import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -70,9 +69,7 @@ public class ZEventHandler {
         }
         Random rand = new Random();
         if (FMLCommonHandler.instance().getEffectiveSide().isServer()) {
-            if (event.entity instanceof EntityDragon) {
-                event.entity.entityDropItem(new ItemStack(ZItems.heartContainer), 0.0f);
-            } else if (event.entity instanceof EntityWither) {
+            if (this.shouldDropHeartContainer(event)) {
                 event.entity.entityDropItem(new ItemStack(ZItems.heartContainer), 0.0f);
             } else if (event.entity instanceof EntityMob && Config.MOB_DROP > 0 && rand.nextInt(Config.MOB_DROP) == 0) {
                 event.entity.entityDropItem(new ItemStack(ZItems.heart), 0.0f);
@@ -201,5 +198,43 @@ public class ZEventHandler {
         if (event.block == Blocks.tallgrass && Config.BLOCK_DROP > 0 && rand.nextInt(Config.BLOCK_DROP) == 0) {
             event.drops.add(new ItemStack(ZItems.heart));
         }
+    }
+
+    private boolean shouldDropHeartContainer(LivingDeathEvent event) {
+        if (event == null || !ConfigResolver.matchesConfiguredEntity(event.entity, Config.HEART_CONTAINER_DROP_MOB_IDS)) {
+            return false;
+        }
+        if (!Config.HEART_CONTAINER_FIRST_KILL_ONLY) {
+            return true;
+        }
+
+        EntityPlayer killer = this.getKillingPlayer(event);
+        if (killer == null) {
+            return false;
+        }
+
+        ExtendedPlayerProperties props = ExtendedPlayerProperties.get(killer);
+        if (props == null) {
+            ExtendedPlayerProperties.register(killer);
+            props = ExtendedPlayerProperties.get(killer);
+        }
+        if (props == null) {
+            return false;
+        }
+
+        String mobId = ConfigResolver.getConfiguredEntityId(event.entity);
+        if (mobId.isEmpty() || props.hasKilledHeartContainerMob(mobId)) {
+            return false;
+        }
+
+        return props.addKilledHeartContainerMob(mobId);
+    }
+
+    private EntityPlayer getKillingPlayer(LivingDeathEvent event) {
+        if (event == null || event.source == null) {
+            return null;
+        }
+        Entity attacker = event.source.getEntity();
+        return attacker instanceof EntityPlayer ? (EntityPlayer)attacker : null;
     }
 }

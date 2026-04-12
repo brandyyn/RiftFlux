@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.vortex.event;
 
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -8,7 +9,9 @@ public class ModEvents {
       EntityEventHandler eventHandlerEntity = new EntityEventHandler();
       MinecraftForge.EVENT_BUS.register(eventHandlerEntity);
       FMLCommonHandler.instance().bus().register(eventHandlerEntity);
-      FMLCommonHandler.instance().bus().register(new WorldEventHandler());
+      if (ModConfig.enableUnloader) {
+         FMLCommonHandler.instance().bus().register(new WorldEventHandler());
+      }
       MinecraftForge.EVENT_BUS.register(new CraftingEventHandler());
    }
 }

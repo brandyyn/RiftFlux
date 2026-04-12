@@ -81,6 +81,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.invincibleOwnedMobs ) {
             mixins.add("early.MixinEntityLivingBase_PetInvincibility");
         }
+        mixins.add("early.MixinChunk_TeleportOwnedPetsOnUnload");
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
         }
@@ -211,6 +212,43 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinWorld_BetaStyleCloudColor");
             if (hasClass("com.gtnewhorizons.angelica.glsm.AngelicaFogService")) {
                 mixins.add("early.angelica.MixinAngelicaFogService_BetaStyleFog");
+            }
+            if (ModConfig.enableIsometricPhotoMode) {
+                mixins.add("early.MixinEntityRenderer_IsometricPhotoMode");
+                mixins.add("early.MixinMinecraft_IsometricPhotoMode");
+                mixins.add("early.MixinMovementInputFromOptions_IsometricPhotoMode");
+                mixins.add("early.MixinRenderGlobal_IsometricPhotoMode");
+                mixins.add("early.MixinEffectRenderer_IsometricPhotoMode");
+                if (hasClass("com.gtnewhorizons.angelica.glsm.AngelicaFogService")) {
+                    mixins.add("early.angelica.MixinAngelicaFogService_PhotoMode");
+                }
+                if (hasClass("com.gtnewhorizons.angelica.rendering.celeritas.AngelicaRenderSectionManager")) {
+                    mixins.add("early.angelica.MixinAngelicaRenderSectionManager_PhotoMode");
+                }
+                if (hasClass("org.embeddedt.embeddium.impl.render.chunk.RenderSectionManager")) {
+                    mixins.add("early.angelica.MixinEmbeddiumRenderSectionManager_PhotoMode");
+                }
+                if (hasClass("com.gtnewhorizons.angelica.rendering.celeritas.AngelicaChunkRenderer")) {
+                    mixins.add("early.angelica.MixinAngelicaChunkRenderer_PhotoMode");
+                }
+                if (hasClass("com.gtnewhorizons.angelica.rendering.celeritas.CeleritasWorldRenderer")) {
+                    mixins.add("early.angelica.MixinAngelicaCeleritasWorldRenderer_PhotoMode");
+                }
+                if (hasClass("org.embeddedt.embeddium.impl.render.chunk.DefaultChunkRenderer")) {
+                    mixins.add("early.angelica.MixinEmbeddiumDefaultChunkRenderer_PhotoMode");
+                }
+                if (hasClass("org.embeddedt.embeddium.impl.render.viewport.frustum.SimpleFrustum")) {
+                    mixins.add("early.angelica.MixinEmbeddiumSimpleFrustum_PhotoMode");
+                }
+                if (hasClass("org.embeddedt.embeddium.impl.render.chunk.occlusion.OcclusionCuller")) {
+                    mixins.add("early.angelica.MixinEmbeddiumOcclusionCuller_PhotoMode");
+                }
+                if (hasClass("org.embeddedt.embeddium.impl.render.terrain.SimpleWorldRenderer")) {
+                    mixins.add("early.angelica.MixinEmbeddiumSimpleWorldRenderer_PhotoMode");
+                }
+                if (hasClass("thaumcraft.client.fx.ParticleEngine")) {
+                    mixins.add("early.thaumcraft.MixinThaumcraftParticleEngine_PhotoMode");
+                }
             }
             mixins.add("early.MixinEntityRenderer_SunriseTint");
             mixins.add("early.MixinEntityRenderer_VoidFogHeight");

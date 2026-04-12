@@ -21,7 +21,13 @@ public class WorldEventHandler {
     private final Set<Integer> queuedDimensions = new HashSet<Integer>();
 
     public WorldEventHandler() {
-        LogHelper.info("[Unloader] WorldEventHandler registered.");
+        if (isEnabled()) {
+            LogHelper.info("[Unloader] WorldEventHandler registered.");
+        }
+    }
+
+    private static boolean isEnabled() {
+        return ModConfig.enableUnloader;
     }
 
     private boolean isBlacklisted(int dimension) {
@@ -38,6 +44,9 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event) {
+        if (!isEnabled()) {
+            return;
+        }
         if (!event.world.isRemote && event.world.provider != null) {
             queuedDimensions.remove(event.world.provider.dimensionId);
             LogHelper.info("[Unloader] Dimension " + event.world.provider.dimensionId + " unloaded.");
@@ -46,6 +55,9 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
+        if (!isEnabled()) {
+            return;
+        }
         if (!event.world.isRemote && event.world instanceof WorldServer) {
             MinecraftServer server = MinecraftServer.getServer();
             // Startup pass: if no players are online, unload preloaded dimensions immediately.
@@ -58,6 +70,9 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onWorldSave(WorldEvent.Save event) {
+        if (!isEnabled()) {
+            return;
+        }
         if (!event.world.isRemote && event.world instanceof WorldServer) {
             tryQueueUnload((WorldServer) event.world);
         }
@@ -65,6 +80,9 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onChunkUnload(ChunkEvent.Unload event) {
+        if (!isEnabled()) {
+            return;
+        }
         if (!event.world.isRemote && event.world instanceof WorldServer) {
             tryQueueUnload((WorldServer) event.world);
         }
@@ -72,11 +90,17 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onChunkForce(ForceChunkEvent event) {
+        if (!isEnabled()) {
+            return;
+        }
         // A forced chunk was added, so this world should remain active.
     }
 
     @SubscribeEvent
     public void onChunkUnforce(UnforceChunkEvent event) {
+        if (!isEnabled()) {
+            return;
+        }
         if (event.ticket != null && event.ticket.world != null && !event.ticket.world.isRemote) {
             tryQueueUnload((WorldServer) event.ticket.world);
         }
@@ -84,6 +108,9 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (!isEnabled()) {
+            return;
+        }
         WorldServer fromWorld = DimensionManager.getWorld(event.fromDim);
         if (fromWorld != null) {
             tryQueueUnload(fromWorld);
@@ -92,11 +119,17 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!isEnabled()) {
+            return;
+        }
         unloadIdleLoadedDimensions();
     }
 
     @SubscribeEvent
     public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (!isEnabled()) {
+            return;
+        }
         if (event.player != null && event.player.worldObj instanceof WorldServer) {
             tryQueueUnload((WorldServer) event.player.worldObj);
         }
@@ -117,7 +150,7 @@ public class WorldEventHandler {
     }
 
     private void tryQueueUnload(WorldServer world) {
-        if (!ModConfig.enableUnloader || world == null || world.provider == null) {
+        if (!isEnabled() || world == null || world.provider == null) {
             return;
         }
 

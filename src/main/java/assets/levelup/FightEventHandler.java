@@ -1,0 +1,154 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  cpw.mods.fml.common.eventhandler.SubscribeEvent
+ *  net.minecraft.entity.Entity
+ *  net.minecraft.entity.EntityLivingBase
+ *  net.minecraft.entity.monster.EntityMob
+ *  net.minecraft.entity.player.EntityPlayer
+ *  net.minecraft.util.ChatComponentTranslation
+ *  net.minecraft.util.DamageSource
+ *  net.minecraft.util.EntityDamageSourceIndirect
+ *  net.minecraft.util.IChatComponent
+ *  net.minecraft.util.MathHelper
+ *  net.minecraftforge.event.entity.living.LivingHurtEvent
+ *  net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent
+ */
+package assets.levelup;
+
+import com.voidsrift.riftflux.ModConfig;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSourceIndirect;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MathHelper;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
+
+public final class FightEventHandler {
+    public static final FightEventHandler INSTANCE = new FightEventHandler();
+
+    private FightEventHandler() {
+    }
+
+    @SubscribeEvent
+    public void onHurting(LivingHurtEvent event) {
+        int j;
+        DamageSource damagesource = event.source;
+        float i = event.ammount;
+        if (damagesource.getEntity() instanceof EntityPlayer) {
+            EntityPlayer entityplayer = (EntityPlayer)damagesource.getEntity();
+            if (damagesource instanceof EntityDamageSourceIndirect) {
+                if (!damagesource.damageType.equals("arrow")) {
+                    i *= 1.0f + (float)BowEventHandler.getArcherSkill(entityplayer) / 100.0f;
+                }
+                if (FightEventHandler.getDistance(event.entityLiving, (EntityLivingBase)entityplayer) < 256.0f && entityplayer.isSneaking() && !FightEventHandler.canSeePlayer(event.entityLiving) && !FightEventHandler.entityIsFacing(event.entityLiving, (EntityLivingBase)entityplayer)) {
+                    i *= 1.5f;
+                    entityplayer.addChatComponentMessage((IChatComponent)new ChatComponentTranslation("sneak.attack", new Object[]{1.5}));
+                }
+            } else {
+                if (entityplayer.getCurrentEquippedItem() != null) {
+                    j = this.getSwordSkill(entityplayer);
+                    if (entityplayer.getRNG().nextDouble() <= (double)j / 200.0) {
+                        i *= 2.0f;
+                    }
+                    i *= 1.0f + (float)(j / 5) / 20.0f;
+                }
+                if (ModConfig.levelUpEnableSneakAttackDoubleDamage
+                        && entityplayer.isSneaking()
+                        && !FightEventHandler.canSeePlayer(event.entityLiving)
+                        && !FightEventHandler.entityIsFacing(event.entityLiving, (EntityLivingBase)entityplayer)) {
+                    i *= 2.0f;
+                    entityplayer.addChatComponentMessage((IChatComponent)new ChatComponentTranslation("sneak.attack", new Object[]{2}));
+                }
+            }
+        }
+        if (event.entityLiving instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer)event.entityLiving;
+            j = this.getDefenseSkill(player);
+            if (!damagesource.isUnblockable()) {
+                i *= 1.0f - (float)(j / 5) / 20.0f;
+            }
+            if (player.isBlocking() && player.getRNG().nextFloat() < (float)j / 100.0f) {
+                i *= 0.0f;
+            }
+        }
+        event.ammount = i;
+    }
+
+    @SubscribeEvent
+    public void onTargetSet(LivingSetAttackTargetEvent event) {
+        if (event.target instanceof EntityPlayer && event.entityLiving instanceof EntityMob && event.target.isSneaking() && !FightEventHandler.entityHasVisionOf(event.entityLiving, (EntityPlayer)event.target) && event.entityLiving.func_142015_aE() != event.entityLiving.ticksExisted) {
+            ((EntityMob)event.entityLiving).setAttackTarget(null);
+        }
+    }
+
+    private int getDefenseSkill(EntityPlayer player) {
+        return PlayerExtendedProperties.getSkillFromIndex(player, 2);
+    }
+
+    private int getSwordSkill(EntityPlayer player) {
+        return PlayerExtendedProperties.getSkillFromIndex(player, 1);
+    }
+
+    public static boolean canSeePlayer(EntityLivingBase entityLiving) {
+        EntityPlayer entityplayer = entityLiving.worldObj.getClosestVulnerablePlayerToEntity((Entity)entityLiving, 16.0);
+        return entityplayer != null && entityLiving.canEntityBeSeen((Entity)entityplayer) && (!entityplayer.isSneaking() || FightEventHandler.entityHasVisionOf(entityLiving, entityplayer));
+    }
+
+    public static float getDistance(EntityLivingBase entityLiving, EntityLivingBase entityliving1) {
+        return MathHelper.floor_double_long((double)((entityliving1.posX - entityLiving.posX) * (entityliving1.posX - entityLiving.posX) + (entityliving1.posZ - entityLiving.posZ) * (entityliving1.posZ - entityLiving.posZ)));
+    }
+
+    public static float getPointDistance(double d, double d1, double d2, double d3) {
+        return MathHelper.floor_double_long((double)((d2 - d) * (d2 - d) + (d3 - d1) * (d3 - d1)));
+    }
+
+    public static boolean compareAngles(float f, float f1, float f2) {
+        if (MathHelper.abs((float)(f - f1)) < f2) {
+            return true;
+        }
+        if (f + f2 >= 360.0f && f + f2 - 360.0f > f1) {
+            return true;
+        }
+        return f1 + f2 >= 360.0f && f1 + f2 - 360.0f > f;
+    }
+
+    public static boolean entityHasVisionOf(EntityLivingBase entityLiving, EntityPlayer player) {
+        if (entityLiving == null || player == null) {
+            return false;
+        }
+        if (FightEventHandler.getDistance(entityLiving, (EntityLivingBase)player) > 256.0f - (float)(PlayerExtendedProperties.from(player).getSkillFromIndex("Sneaking") / 5) * 12.8f) {
+            return false;
+        }
+        return entityLiving.canEntityBeSeen((Entity)player) && FightEventHandler.entityIsFacing((EntityLivingBase)player, entityLiving);
+    }
+
+    public static boolean entityIsFacing(EntityLivingBase entityLiving, EntityLivingBase entityliving1) {
+        if (entityLiving == null || entityliving1 == null) {
+            return false;
+        }
+        float f = -((float)(entityliving1.posX - entityLiving.posX));
+        float f1 = (float)(entityliving1.posZ - entityLiving.posZ);
+        float f2 = entityLiving.rotationYaw;
+        if (f2 < 0.0f) {
+            float f3 = ((float)MathHelper.floor_float((float)(MathHelper.abs((float)f2) / 360.0f)) + 1.0f) * 360.0f;
+            f2 = f3 + f2;
+        } else {
+            while (f2 > 360.0f) {
+                f2 -= 360.0f;
+            }
+        }
+        float f4 = (float)(Math.atan2(f, f1) * 180.0 / Math.PI);
+        if (f < 0.0f) {
+            f4 = 360.0f + f4;
+        }
+        return FightEventHandler.compareAngles(f2, f4, 22.5f);
+    }
+}

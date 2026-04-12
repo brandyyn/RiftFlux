@@ -14,6 +14,9 @@
  */
 package zelda;
 
+import com.voidsrift.riftflux.util.ConfigResolver;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
@@ -31,14 +34,17 @@ implements IExtendedEntityProperties {
     private static final String PERSIST_TAG = "ForgeData";
     private static final String HEARTS_TAG = "RiftFluxZeldaHearts";
     private static final String FRESH_TAG = "RiftFluxZeldaFresh";
+    private static final String HEART_CONTAINER_KILLS_TAG = "RiftFluxZeldaHeartContainerKills";
     private final EntityPlayer player;
     private double hearts;
     private boolean fresh;
+    private final Set<String> heartContainerKills;
 
     public ExtendedPlayerProperties(EntityPlayer player) {
         this.player = player;
         this.hearts = Config.STARTING_HEARTS;
         this.fresh = true;
+        this.heartContainerKills = new LinkedHashSet<String>();
     }
 
     public static final void register(EntityPlayer player) {
@@ -57,6 +63,7 @@ implements IExtendedEntityProperties {
         NBTTagCompound props = new NBTTagCompound();
         props.setDouble("Hearts", this.hearts);
         props.setBoolean("Fresh", this.fresh);
+        props.setString("HeartContainerKills", this.serializeHeartContainerKills());
         compound.setTag(EXT_PROP_NAME, (NBTBase)props);
         this.saveToPersistedData();
     }
@@ -69,6 +76,10 @@ implements IExtendedEntityProperties {
         if (props != null && props.hasKey("Hearts")) {
             this.hearts = props.getDouble("Hearts");
             this.fresh = props.getBoolean("Fresh");
+            this.deserializeHeartContainerKills(props.getString("HeartContainerKills"));
+            if (this.heartContainerKills.isEmpty()) {
+                this.loadHeartContainerKillsFromPersistedData();
+            }
         } else {
             this.loadFromPersistedData();
         }
@@ -106,6 +117,20 @@ implements IExtendedEntityProperties {
 
     public boolean isFresh() {
         return this.fresh;
+    }
+
+    public boolean hasKilledHeartContainerMob(String mobId) {
+        String normalizedMobId = this.normalizeHeartContainerMobId(mobId);
+        return !normalizedMobId.isEmpty() && this.heartContainerKills.contains(normalizedMobId);
+    }
+
+    public boolean addKilledHeartContainerMob(String mobId) {
+        String normalizedMobId = this.normalizeHeartContainerMobId(mobId);
+        if (normalizedMobId.isEmpty() || !this.heartContainerKills.add(normalizedMobId)) {
+            return false;
+        }
+        this.saveToPersistedData();
+        return true;
     }
 
     private double clampHearts() {
@@ -158,6 +183,7 @@ implements IExtendedEntityProperties {
         NBTTagCompound persisted = root.getCompoundTag(PERSIST_TAG);
         persisted.setDouble(HEARTS_TAG, this.hearts);
         persisted.setBoolean(FRESH_TAG, this.fresh);
+        persisted.setString(HEART_CONTAINER_KILLS_TAG, this.serializeHeartContainerKills());
         root.setTag(PERSIST_TAG, persisted);
     }
 
@@ -172,6 +198,57 @@ implements IExtendedEntityProperties {
         }
         if (persisted.hasKey(FRESH_TAG)) {
             this.fresh = persisted.getBoolean(FRESH_TAG);
+        }
+        if (persisted.hasKey(HEART_CONTAINER_KILLS_TAG)) {
+            this.deserializeHeartContainerKills(persisted.getString(HEART_CONTAINER_KILLS_TAG));
+        }
+    }
+
+    private void loadHeartContainerKillsFromPersistedData() {
+        if (this.player == null) {
+            return;
+        }
+        NBTTagCompound root = this.player.getEntityData();
+        NBTTagCompound persisted = root.getCompoundTag(PERSIST_TAG);
+        if (persisted.hasKey(HEART_CONTAINER_KILLS_TAG)) {
+            this.deserializeHeartContainerKills(persisted.getString(HEART_CONTAINER_KILLS_TAG));
+        }
+    }
+
+    private String normalizeHeartContainerMobId(String mobId) {
+        return ConfigResolver.stripKnownEntityPrefixes(ConfigResolver.normalizeToken(mobId));
+    }
+
+    private String serializeHeartContainerKills() {
+        if (this.heartContainerKills.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder out = new StringBuilder();
+        for (String mobId : this.heartContainerKills) {
+            if (mobId == null || mobId.isEmpty()) {
+                continue;
+            }
+            if (out.length() > 0) {
+                out.append(',');
+            }
+            out.append(mobId);
+        }
+        return out.toString();
+    }
+
+    private void deserializeHeartContainerKills(String serialized) {
+        this.heartContainerKills.clear();
+        if (serialized == null || serialized.isEmpty()) {
+            return;
+        }
+
+        String[] entries = serialized.split(",");
+        for (String entry : entries) {
+            String normalizedEntry = this.normalizeHeartContainerMobId(entry);
+            if (!normalizedEntry.isEmpty()) {
+                this.heartContainerKills.add(normalizedEntry);
+            }
         }
     }
 }

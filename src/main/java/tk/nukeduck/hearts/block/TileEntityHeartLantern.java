@@ -119,8 +119,7 @@ extends TileEntity {
     }
 
     private void refreshLanternAura() {
-        HeartsConfig config = HeartCrystal.config;
-        if (config == null || !config.isLanternAuraEnabled()) {
+        if (!this.isAuraEnabled()) {
             return;
         }
 
@@ -129,7 +128,7 @@ extends TileEntity {
             return;
         }
 
-        float radius = config.getLanternAuraRadius();
+        float radius = this.getAuraRadius();
         if (radius <= 0.0f) {
             return;
         }
@@ -202,11 +201,7 @@ extends TileEntity {
     }
 
     private int getAuraDurationTicks() {
-        HeartsConfig config = HeartCrystal.config;
-        if (config == null) {
-            return DEFAULT_AURA_DURATION_TICKS;
-        }
-        return Math.max(MIN_AURA_DURATION_TICKS, config.getLanternAuraDurationSeconds() * 20);
+        return Math.max(MIN_AURA_DURATION_TICKS, this.getAuraDurationSeconds() * 20);
     }
 
     private int getAuraRefreshIntervalTicks() {
@@ -222,12 +217,34 @@ extends TileEntity {
         return ((long)this.xCoord * 31L + (long)this.yCoord * 17L + (long)this.zCoord * 13L) & 255L;
     }
 
+    protected boolean isAuraEnabled() {
+        HeartsConfig config = this.getLanternConfig();
+        return config != null && config.isHeartLanternAuraEnabled();
+    }
+
+    protected float getAuraRadius() {
+        HeartsConfig config = this.getLanternConfig();
+        return config != null ? config.getHeartLanternAuraRadius() : 0.0f;
+    }
+
+    protected int getAuraDurationSeconds() {
+        HeartsConfig config = this.getLanternConfig();
+        if (config == null) {
+            return DEFAULT_AURA_DURATION_TICKS / 20;
+        }
+        return config.getHeartLanternAuraDurationSeconds();
+    }
+
+    protected HeartsConfig getLanternConfig() {
+        return HeartCrystal.config;
+    }
+
     protected List<HeartsConfig.LanternAuraEffect> getBaseAuraEffects() {
-        HeartsConfig config = HeartCrystal.config;
+        HeartsConfig config = this.getLanternConfig();
         if (config == null) {
             return Collections.emptyList();
         }
-        List<HeartsConfig.LanternAuraEffect> effects = config.getLanternAuraEffects();
+        List<HeartsConfig.LanternAuraEffect> effects = config.getHeartLanternAuraEffects();
         return effects != null ? effects : Collections.<HeartsConfig.LanternAuraEffect>emptyList();
     }
 

@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.combat.torohealth.client.particle;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.EntityFX;
@@ -36,6 +37,9 @@ public class DamageParticles extends EntityFX {
 
     public static void spawnDamageParticle(EntityLivingBase entity, int damage) {
         if (!ModConfig.enableToroHealthModule || !ModConfig.toroHealthShowDamageParticles) {
+            return;
+        }
+        if (IsometricPhotoModeController.instance().isActive()) {
             return;
         }
         if (entity == null || entity.worldObj == null) {

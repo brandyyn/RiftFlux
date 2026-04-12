@@ -217,13 +217,31 @@ public final class ConfigResolver {
             return false;
         }
 
-        String entityString = stripKnownEntityPrefixes(normalizeToken(EntityList.getEntityString(entity)));
+        String entityString = getConfiguredEntityId(entity);
         String className = stripKnownEntityPrefixes(normalizeToken(entity.getClass().getSimpleName()));
         String fullClassName = normalizeToken(entity.getClass().getName());
 
         return normalizedEntry.equals(entityString)
                 || normalizedEntry.equals(className)
                 || normalizedEntry.equals(fullClassName);
+    }
+
+    public static String getConfiguredEntityId(Entity entity) {
+        if (entity == null) {
+            return "";
+        }
+
+        String entityString = stripKnownEntityPrefixes(normalizeToken(EntityList.getEntityString(entity)));
+        if (!entityString.isEmpty()) {
+            return entityString;
+        }
+
+        String className = stripKnownEntityPrefixes(normalizeToken(entity.getClass().getSimpleName()));
+        if (!className.isEmpty()) {
+            return className;
+        }
+
+        return normalizeToken(entity.getClass().getName());
     }
 
     public static boolean matchesConfiguredEntityClass(Class<?> entityClass, String[] entries) {

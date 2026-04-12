@@ -15,9 +15,11 @@ import cpw.mods.fml.common.IWorldGenerator;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
+import tk.nukeduck.hearts.block.TileEntityHeartCrystal;
 import tk.nukeduck.hearts.HeartCrystal;
 import tk.nukeduck.hearts.registry.HeartsBlocks;
 
@@ -68,7 +70,12 @@ implements IWorldGenerator {
                 continue;
             }
 
-            world.setBlock(x, candidateY, z, (Block)HeartsBlocks.crystal, 0, 0);
+            world.setBlock(x, candidateY, z, (Block)HeartsBlocks.crystal, 0, 3);
+            TileEntity tileEntity = world.getTileEntity(x, candidateY, z);
+            if (tileEntity instanceof TileEntityHeartCrystal) {
+                ((TileEntityHeartCrystal) tileEntity).setNaturallyGenerated(true);
+                tileEntity.markDirty();
+            }
         }
     }
 

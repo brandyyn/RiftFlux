@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.io.File;
@@ -119,6 +120,8 @@ public class ModConfig {
     public static int zeldaHeartPieceRarity;
     public static int zeldaStartingHearts;
     public static int zeldaMaximumHearts;
+    public static String[] zeldaHeartContainerDropMobIds;
+    public static boolean zeldaHeartContainerFirstKillOnly;
     public static int zeldaMobDrop;
     public static int zeldaBlockDrop;
 
@@ -146,6 +149,9 @@ public class ModConfig {
     public static int dssBarOffsetX;
     public static int dssBarOffsetY;
     public static double dssBarTransparencyPercent;
+    public static boolean enableLevelUpModule;
+    public static float levelUpHudPulseSpeedHz;
+    public static boolean levelUpEnableSneakAttackDoubleDamage;
 
     // Blessings
     public static boolean blessingsEnabled;
@@ -272,6 +278,141 @@ public class ModConfig {
     public static boolean specialArmorLootDoubleJumpBoots;
     public static boolean specialArmorLootSkates;
     public static boolean specialArmorLootHeavyBoots;
+    public static boolean enableInventoryPetsModule;
+    public static String[] inventoryPetsDungeonLootEntries;
+    public static int inventoryPetsDungeonLootWeight;
+    public static float inventoryPetsBananaDamage;
+
+    private static final String[] DEFAULT_INVENTORY_PET_DUNGEON_LOOT = new String[]{
+            "cow",
+            "cow_flux",
+            "sheep",
+            "sheep_flux",
+            "pig",
+            "pig_flux",
+            "chicken",
+            "chicken_flux",
+            "squid",
+            "squid_flux",
+            "ocelot",
+            "ocelot_flux",
+            "mooshroom",
+            "mooshroom_flux",
+            "ghast",
+            "ghast_flux",
+            "spider",
+            "spider_flux",
+            "iron_golem",
+            "iron_golem_flux",
+            "snow_golem",
+            "snow_golem_flux",
+            "enderman",
+            "enderman_flux",
+            "creeper",
+            "creeper_flux",
+            "magma_cube",
+            "magma_cube_flux",
+            "wither",
+            "wither_flux",
+            "blaze",
+            "blaze_flux",
+            "bed",
+            "bed_flux",
+            "chest",
+            "chest_flux",
+            "sated_chest",
+            "double_chest",
+            "double_chest_flux",
+            "sated_double_chest",
+            "ender_chest",
+            "ender_chest_flux",
+            "furnace",
+            "furnace_flux",
+            "crafting_table",
+            "crafting_table_flux",
+            "enchanting_table",
+            "enchanting_table_flux",
+            "jukebox",
+            "jukebox_flux",
+            "anvil",
+            "anvil_flux",
+            "brewing_stand",
+            "brewing_stand_flux",
+            "nether_portal",
+            "nether_portal_flux",
+            "end_portal",
+            "sponge",
+            "sponge_flux",
+            "purplicious_cow",
+            "purplicious_cow_flux",
+            "mickerson",
+            "mickerson_flux",
+            "pingot",
+            "dingot",
+            "quantum_crystal_monster",
+            "banana",
+            "loot",
+            "loot_flux",
+            "illuminati",
+            "illuminati_flux",
+            "juggernaut",
+            "juggernaut_flux",
+            "grave",
+            "quiver",
+            "quiver_flux",
+            "pacman",
+            "pacman_flux",
+            "cheetah",
+            "cheetah_flux",
+            "biome",
+            "house",
+            "house_flux",
+            "silverfish",
+            "silverfish_flux",
+            "wolf",
+            "wolf_flux",
+            "siamese",
+            "apple",
+            "apple_flux",
+            "sun",
+            "slime",
+            "slime_flux",
+            "cloud",
+            "cloud_flux",
+            "pixie",
+            "pufferfish",
+            "pufferfish_flux",
+            "black_hole",
+            "black_hole_flux",
+            "lead",
+            "saddle",
+            "flying_saddle",
+            "shield",
+            "shield_flux",
+            "torch",
+            "heart",
+            "heart_flux",
+            "moon",
+            "moon_flux",
+            "dubstep",
+            "dubstep_flux",
+            "custom",
+            "dirt",
+            "cobblestone",
+            "christmas_tree",
+            "christmas_tree_flux",
+            "menorah",
+            "menorah_flux",
+            "mishumaa_saba",
+            "mishumaa_saba_flux",
+            "politically_correct",
+            "politically_correct_flux",
+            "april_fool",
+            "april_fool_flux"
+    };
+
+    private static final String INVENTORY_PET_DUNGEON_LOOT_COMMENT =
+            Arrays.toString(DEFAULT_INVENTORY_PET_DUNGEON_LOOT);
 
     // Axolotl module
     public static boolean enableAxolotlModule;
@@ -367,10 +508,15 @@ public class ModConfig {
     public static int heartCrystalGenHeight;
     public static int heartCrystalGenCount;
     public static boolean heartCrystalOldModel;
+    public static float heartCrystalHeartPetDropChance;
     public static boolean heartLanternAuraEnabled;
     public static int heartLanternAuraDurationSeconds;
     public static float heartLanternAuraRadius;
     public static String[] heartLanternAuraEffects;
+    public static boolean starLanternAuraEnabled;
+    public static int starLanternAuraDurationSeconds;
+    public static float starLanternAuraRadius;
+    public static String[] starLanternAuraEffects;
 
     // Furniture
     public static boolean enableFurnitureModule;
@@ -451,6 +597,9 @@ public class ModConfig {
     public static int deathRespawnDelaySeconds;
     public static boolean allowChatOnDeathScreen;
     public static boolean enableChatSelectionCopy;
+    public static boolean enableIsometricPhotoMode;
+    public static double isometricPhotoModeMaxZoomOut;
+    public static float isometricPhotoModeHoldRotateDegreesPerTick;
     public static boolean enableWorldTooltips;
     public static boolean worldTooltipsHideModName;
     public static int worldTooltipsMaxDistance;
@@ -478,9 +627,13 @@ public class ModConfig {
 
     public static boolean invincibleRideableEntities;
 
+    public static boolean teleportOwnedPetsFromUnloadedChunks;
+    public static float teleportOwnedPetsMinimumDistance;
+
     public static boolean disableTintedSugarcane;
 
     public static boolean enableNetherrackTweak;
+    public static int netherliciousBigNetherTopY;
     public static boolean enableDoorAirPlacement;
     public static boolean protectCircuitryFromWater;
     public static boolean enablePodzolDirtTexture;
@@ -536,6 +689,10 @@ public class ModConfig {
     public static boolean backpackDurability;
     public static int backpackDurabilityAmount;
     public static int backpackArmorPoints;
+    public static int poptartFoodValue;
+    public static float poptartSaturation;
+    public static float poptartLegendGearManaRestore;
+    public static int poptartDungeonLootWeight;
     public static boolean vortexGlintRuneDungeonLoot;
     public static boolean randomizeEnchantedGlintColors;
     public static boolean GluttonyCharm;
@@ -833,6 +990,31 @@ public class ModConfig {
                 "Allow click-drag selection in chat and copy the exact visible text, including clickable command output."
         );
 
+        enableIsometricPhotoMode = config.getBoolean(
+                "EnableIsometricPhotoMode",
+                "client",
+                true,
+                "Master toggle for the isometric photo mode feature and its keybind/mixins."
+        );
+
+        isometricPhotoModeMaxZoomOut = config.getFloat(
+                "IsometricPhotoModeMaxZoomOut",
+                "client",
+                256.0F,
+                4.0F,
+                4096.0F,
+                "Maximum orthographic view height allowed when zooming out in isometric photo mode."
+        );
+
+        isometricPhotoModeHoldRotateDegreesPerTick = config.getFloat(
+                "IsometricPhotoModeHoldRotateDegreesPerTick",
+                "client",
+                3.3F,
+                0.05F,
+                10.0F,
+                "Continuous horizontal orbit speed in isometric photo mode while holding left/right, in degrees per client tick."
+        );
+
         enableWorldTooltips = config.getBoolean(
                 "EnableWorldTooltips",
                 "client",
@@ -1080,6 +1262,8 @@ public class ModConfig {
                 "If true, suppresses MCPatcherForge/BetterSkies star layers while beta stars are enabled so RiftFlux beta stars replace them."
         );
 
+        migrateZeldaConfigKeys();
+
         zeldaHeartsEnabled = config.getBoolean(
                 "EnableHeartsModule",
                 "zelda",
@@ -1119,6 +1303,24 @@ public class ModConfig {
                 1,
                 Integer.MAX_VALUE,
                 "The maximum amount of hearts you can have."
+        );
+
+        zeldaHeartContainerDropMobIds = config.getStringList(
+                "HeartContainerDropMobIds",
+                "zelda",
+                new String[]{"enderdragon", "wither", "eyeofcthulhu"},
+                "Normalized entity ids, simple class names, or full class names that should always drop a heart container.\n"
+                        + "Examples: wither, enderdragon, eyeofcthulhu, entitywither, net.minecraft.entity.boss.EntityWither\n"
+                        + "Leave empty to disable guaranteed heart container drops."
+        );
+
+        zeldaHeartContainerFirstKillOnly = config.getBoolean(
+                "HeartContainerFirstKillOnly",
+                "zelda",
+                true,
+                "If true, each configured entity in HeartContainerDropMobIds drops a heart container only the first time each player kills that specific entity.\n"
+                        + "Example: a player can get one from their first wither kill, one from their first ender dragon kill, and one from their first Eye of Cthulhu kill.\n"
+                        + "Only player-caused kills count when this is enabled."
         );
 
         zeldaMobDrop = config.getInt(
@@ -1311,6 +1513,29 @@ public class ModConfig {
                 100.0,
                 "Transparency in percent (10 = 10%)."
         ).getDouble(100.0);
+
+        enableLevelUpModule = config.getBoolean(
+                "EnableLevelUpModule",
+                "LevelUp",
+                true,
+                "Master switch for integrated LevelUp! content (skills, classes, HUD, items, and event handlers)."
+        );
+
+        levelUpHudPulseSpeedHz = config.getFloat(
+                "HudTextPulseSpeedHz",
+                "LevelUp",
+                0.33F,
+                0.0F,
+                5.0F,
+                "Pulse speed in cycles per second for LevelUp class selection prompt. Set to 0 for a constant full-bright color."
+        );
+
+        levelUpEnableSneakAttackDoubleDamage = config.getBoolean(
+                "EnableSneakAttackDoubleDamage",
+                "LevelUp",
+                false,
+                "If true, LevelUp!'s melee sneak attack from behind still deals 2x damage."
+        );
 
         blessingsEnabled = config.getBoolean(
                 "EnableBlessings",
@@ -2570,6 +2795,16 @@ public class ModConfig {
                 "If true, use the old 3D heart crystal model."
         );
 
+        heartCrystalHeartPetDropChance = config.getFloat(
+                "HeartPetDropChance",
+                "heartcrystal",
+                0.01F,
+                0.0F,
+                1.0F,
+                "Chance for a naturally generated Heart Crystal to also drop a Heart pet when broken.\n" +
+                        "1.0 = 100%, 0.01 = 1%."
+        );
+
         heartLanternAuraEnabled = config.getBoolean(
                 "HeartLanternAuraEnabled",
                 "heartcrystal",
@@ -2602,6 +2837,40 @@ public class ModConfig {
                 "Potion effects applied by heart lanterns.\n" +
                         "Format per entry: potionNameOrId,amplifier\n" +
                         "Examples: regeneration,0  or  moveSpeed,1"
+        );
+
+        starLanternAuraEnabled = config.getBoolean(
+                "StarLanternAuraEnabled",
+                "heartcrystal",
+                true,
+                "If true, star lanterns apply configurable potion effects to players inside the configured radius."
+        );
+
+        starLanternAuraDurationSeconds = config.getInt(
+                "StarLanternAuraDurationSeconds",
+                "heartcrystal",
+                4,
+                1,
+                60,
+                "How long star lantern aura potion effects last, in seconds."
+        );
+
+        starLanternAuraRadius = config.getFloat(
+                "StarLanternAuraRadius",
+                "heartcrystal",
+                12.0F,
+                0.0F,
+                64.0F,
+                "Radius around a star lantern that receives the configured aura effects."
+        );
+
+        starLanternAuraEffects = config.getStringList(
+                "StarLanternAuraEffects",
+                "heartcrystal",
+                new String[]{"legendgearManaRegen,0"},
+                "Potion effects applied by star lanterns.\n" +
+                        "Format per entry: potionNameOrId,amplifier\n" +
+                        "Examples: legendgearManaRegen,0  or  moveSpeed,1"
         );
 
         enableWheatfieldBiome = config.getBoolean(
@@ -2986,6 +3255,41 @@ public class ModConfig {
                 "specialarmor",
                 true,
                 "If true, Heavy Boots can appear in dungeon chests."
+        );
+
+        enableInventoryPetsModule = config.getBoolean(
+                "EnableInventoryPetsModule",
+                "inventorypets",
+                true,
+                "Master switch for integrated Inventory Pets content."
+        );
+
+        inventoryPetsDungeonLootEntries = config.getStringList(
+                "DungeonLootPets",
+                "inventorypets",
+                DEFAULT_INVENTORY_PET_DUNGEON_LOOT,
+                "Inventory Pets that may appear in dungeon chests.\n" +
+                        "Remove names from this list to stop those pets from spawning.\n" +
+                        "Valid names: " + INVENTORY_PET_DUNGEON_LOOT_COMMENT
+        );
+
+        inventoryPetsDungeonLootWeight = config.getInt(
+                "DungeonLootWeight",
+                "inventorypets",
+                1,
+                0,
+                Integer.MAX_VALUE,
+                "Dungeon chest weight for each enabled Inventory Pet.\n" +
+                        "Set to 0 to disable all Inventory Pet dungeon loot."
+        );
+
+        inventoryPetsBananaDamage = config.getFloat(
+                "BananaDamage",
+                "inventorypets",
+                6.0F,
+                0.0F,
+                1024.0F,
+                "Damage dealt by the Banana Pet boomerang."
         );
 
         enableFurnitureModule = config.getBoolean(
@@ -3493,6 +3797,25 @@ public class ModConfig {
                 "If true, any entity currently being ridden by a player is completely invincible."
         );
 
+        teleportOwnedPetsFromUnloadedChunks = config.getBoolean(
+                "teleportOwnedPetsFromUnloadedChunks",
+                "general",
+                true,
+                "If true, tamed player-owned EntityTameable pets that are not sitting or leashed " +
+                        "will snap to a safe spot near their owner before their old chunk unloads.\n" +
+                        "This helps pets keep up after long-distance teleports in the same dimension."
+        );
+
+        teleportOwnedPetsMinimumDistance = config.getFloat(
+                "teleportOwnedPetsMinimumDistance",
+                "general",
+                12.0F,
+                0.0F,
+                256.0F,
+                "Minimum distance in blocks before unloaded-chunk pet recovery teleporting is allowed.\n" +
+                        "Uses the same default 12 block threshold as vanilla follow-owner teleporting."
+        );
+
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,
                         "If true, replaces the original block highlight with a white pulsating cuboid highlight.")
                 .getBoolean(true);
@@ -3544,6 +3867,15 @@ public class ModConfig {
                 "general",
                 true,
                 "If true, Netherrack ONLY drops when you're in the Nether."
+        );
+
+        netherliciousBigNetherTopY = config.getInt(
+                "BigNetherTopY",
+                "netherlicious",
+                250,
+                128,
+                255,
+                "Highest Y used by Netherlicious' Bigger Nether / double tall Nether option. 255 matches Netherlicious' default; 250 moves the Nether roof to Y=250."
         );
 
         enableDoorAirPlacement = config.getBoolean(
@@ -3967,6 +4299,43 @@ public class ModConfig {
         backpackArmorPoints = config.getInt("backpackArmorPoints", "vortex", 2, 0, 20,
                 "Armor points granted by the backpack (0 = no armor).");
 
+        poptartFoodValue = config.getInt(
+                "poptartFoodValue",
+                "vortex",
+                6,
+                0,
+                20,
+                "Hunger restored by the Poptart."
+        );
+
+        poptartSaturation = config.getFloat(
+                "poptartSaturation",
+                "vortex",
+                0.6F,
+                0.0F,
+                20.0F,
+                "Saturation modifier for the Poptart."
+        );
+
+        poptartLegendGearManaRestore = config.getFloat(
+                "poptartLegendGearManaRestore",
+                "vortex",
+                6.0F,
+                0.0F,
+                20.0F,
+                "LegendGear mana restored by the Poptart. 2.0 = one full mana icon."
+        );
+
+        poptartDungeonLootWeight = config.getInt(
+                "poptartDungeonLootWeight",
+                "vortex",
+                8,
+                0,
+                1000,
+                "Dungeon chest weight for the Poptart. Set to 0 to disable dungeon loot."
+        );
+
+
         vortexGlintRuneDungeonLoot = config.getBoolean(
                 "glintRuneDungeonLoot",
                 "vortex",
@@ -4062,6 +4431,10 @@ public class ModConfig {
 
     private static void migrateClientConfigKeys() {
         renameConfigPropertyIfMissing("client", "enableItemRenderLimiter", "EnableDroppedItemRenderTweaks");
+    }
+
+    private static void migrateZeldaConfigKeys() {
+        renameConfigPropertyIfMissing("zelda", "HeartContainerFirstKillPerConfiguredEntity", "HeartContainerFirstKillOnly");
     }
 
     private static void moveConfigPropertyIfMissing(String oldCategory, String newCategory, String key) {

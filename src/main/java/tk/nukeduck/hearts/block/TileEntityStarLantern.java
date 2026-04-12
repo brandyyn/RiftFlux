@@ -2,16 +2,38 @@ package tk.nukeduck.hearts.block;
 
 import java.util.Collections;
 import java.util.List;
-import net.nmccoy.legendgear.LegendGear2;
 import tk.nukeduck.hearts.HeartsConfig;
 
 public class TileEntityStarLantern
 extends TileEntityHeartLantern {
     @Override
+    protected boolean isAuraEnabled() {
+        HeartsConfig config = this.getLanternConfig();
+        return config != null && config.isStarLanternAuraEnabled();
+    }
+
+    @Override
+    protected float getAuraRadius() {
+        HeartsConfig config = this.getLanternConfig();
+        return config != null ? config.getStarLanternAuraRadius() : 0.0f;
+    }
+
+    @Override
+    protected int getAuraDurationSeconds() {
+        HeartsConfig config = this.getLanternConfig();
+        if (config == null) {
+            return 4;
+        }
+        return config.getStarLanternAuraDurationSeconds();
+    }
+
+    @Override
     protected List<HeartsConfig.LanternAuraEffect> getBaseAuraEffects() {
-        if (LegendGear2.manaRegenPotion == null) {
+        HeartsConfig config = this.getLanternConfig();
+        if (config == null) {
             return Collections.emptyList();
         }
-        return Collections.singletonList(new HeartsConfig.LanternAuraEffect(LegendGear2.manaRegenPotion.id, 0));
+        List<HeartsConfig.LanternAuraEffect> effects = config.getStarLanternAuraEffects();
+        return effects != null ? effects : Collections.<HeartsConfig.LanternAuraEffect>emptyList();
     }
 }

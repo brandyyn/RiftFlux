@@ -16,11 +16,16 @@ package tk.nukeduck.hearts.block;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -74,6 +79,39 @@ implements ITileEntityProvider {
     public void breakBlock(World world, int x, int y, int z, Block block, int metadata) {
         super.breakBlock(world, x, y, z, block, metadata);
         world.removeTileEntity(x, y, z);
+    }
+
+    public void harvestBlock(World world, net.minecraft.entity.player.EntityPlayer player, int x, int y, int z, int metadata) {
+        TileEntity tileEntity = world.getTileEntity(x, y, z);
+        boolean naturallyGenerated = tileEntity instanceof TileEntityHeartCrystal
+                && ((TileEntityHeartCrystal) tileEntity).isNaturallyGenerated();
+
+        super.harvestBlock(world, player, x, y, z, metadata);
+
+        if (world.isRemote || !naturallyGenerated) {
+            return;
+        }
+
+        float chance = Math.max(0.0F, Math.min(1.0F, ModConfig.heartCrystalHeartPetDropChance));
+        if (chance <= 0.0F || world.rand.nextFloat() >= chance) {
+            return;
+        }
+
+        Item heartPet = InventoryPetsContent.getItemByKey("heart");
+        if (heartPet == null) {
+            return;
+        }
+
+        double offset = 0.35D;
+        EntityItem entity = new EntityItem(
+                world,
+                x + 0.5D + (world.rand.nextDouble() - 0.5D) * offset,
+                y + 0.5D,
+                z + 0.5D + (world.rand.nextDouble() - 0.5D) * offset,
+                new ItemStack(heartPet)
+        );
+        entity.delayBeforeCanPickup = 10;
+        world.spawnEntityInWorld(entity);
     }
 
     @SideOnly(value=Side.CLIENT)

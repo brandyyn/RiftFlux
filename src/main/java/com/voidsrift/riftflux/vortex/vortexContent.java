@@ -43,15 +43,16 @@ public final class vortexContent {
         registerDungeonLoot();
 
         // Events
-        MinecraftForge.EVENT_BUS.register(new ModEvents());
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.CraftingEventHandler());
         MinecraftForge.EVENT_BUS.register(new EntityEventHandler());
         RespawnDelayEventHandler respawnDelayEventHandler = new RespawnDelayEventHandler();
         MinecraftForge.EVENT_BUS.register(respawnDelayEventHandler);
         FMLCommonHandler.instance().bus().register(respawnDelayEventHandler);
-        WorldEventHandler worldEventHandler = new WorldEventHandler();
-        MinecraftForge.EVENT_BUS.register(worldEventHandler);
-        FMLCommonHandler.instance().bus().register(worldEventHandler);
+        if (com.voidsrift.riftflux.ModConfig.enableUnloader) {
+            WorldEventHandler worldEventHandler = new WorldEventHandler();
+            MinecraftForge.EVENT_BUS.register(worldEventHandler);
+            FMLCommonHandler.instance().bus().register(worldEventHandler);
+        }
 
         // GUI
         NetworkRegistry.INSTANCE.registerGuiHandler(riftflux.instance, new GuiProxy());
@@ -103,6 +104,16 @@ public final class vortexContent {
     }
 
     private static void registerDungeonLoot() {
+        if (ModItems.poptart != null) {
+            int poptartWeight = Math.max(0, com.voidsrift.riftflux.ModConfig.poptartDungeonLootWeight);
+            if (poptartWeight > 0) {
+                ChestGenHooks.addItem(
+                        ChestGenHooks.DUNGEON_CHEST,
+                        new WeightedRandomChestContent(new ItemStack(ModItems.poptart), 1, 2, poptartWeight)
+                );
+            }
+        }
+
         if (!com.voidsrift.riftflux.ModConfig.vortexGlintRuneDungeonLoot || ModItems.glintRune == null) {
             return;
         }

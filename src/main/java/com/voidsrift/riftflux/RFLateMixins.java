@@ -49,6 +49,9 @@ public class RFLateMixins implements ILateMixinLoader {
                 }
             }
         }
+        if (loadedMods.contains("musicchoices") && FMLLaunchHandler.side() == Side.CLIENT) {
+            mixins.add("late.musicchoices.MixinMusicChoicesEventHandler_NullSound");
+        }
         if(loadedMods.contains("chocolateQuest")) {
             if (ModConfig.fixChocolateQuestDivideByZero) {
                 mixins.add("late.chocolatequest.MixinWorldGeneratorNew_CatchBuilderArithmetic");
@@ -66,6 +69,11 @@ public class RFLateMixins implements ILateMixinLoader {
         if(loadedMods.contains("LambdaLib")) {
             mixins.add("late.MixinRenderImagPhaseLiquid_Optimize");
             mixins.add("late.MixinPhaseLiquidGenerator_ChunkAligned");
+        }
+
+        if (loadedMods.contains("netherlicious")) {
+            mixins.add("late.netherlicious.MixinNetherWorldProvider_CustomHeight");
+            mixins.add("late.netherlicious.MixinMaxHeightNetherChunkProvider_CustomHeight");
         }
 
         // --- Unconfigurable late mixins (disable third-party network checks / log spam) ---
@@ -86,6 +94,10 @@ public class RFLateMixins implements ILateMixinLoader {
 
         if (loadedMods.contains("ExtraUtilities")) {
             mixins.add("late.extrautilities.MixinEnderConstructorRecipesHandler");
+        }
+
+        if (loadedMods.contains("modtweaker2") && loadedMods.contains("TConstruct")) {
+            mixins.add("late.modtweaker.MixinSmelteryMeltingRecipe_SafeRenderer");
         }
 
         if (ModConfig.blockEtFuturumElytraWhileAvatarGliding
@@ -115,6 +127,7 @@ public class RFLateMixins implements ILateMixinLoader {
         if (loadedMods.contains("Thaumcraft")) {
             mixins.add("late.vortex.MixinInfusionEnchantmentRecipe");
             mixins.add("late.thaumcraft.MixinThaumcraft_WarpSyncSafeLogin");
+            mixins.add("late.thaumcraft.MixinResearchManager_LogEarlyWarpResearch");
         }
 
         // AlternativeChunkloading compatibility fixes port

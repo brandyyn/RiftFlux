@@ -8,7 +8,9 @@ import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
 import com.voidsrift.riftflux.fence.FenceOverrideClientState;
 import com.voidsrift.riftflux.client.chatcopy.ChatSelectionManager;
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeHandler;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
+import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.client.worldtooltips.WorldTooltipClient;
 import com.voidsrift.riftflux.terramine.EyeOfCthulhuMusicHandler;
@@ -118,6 +120,9 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enablePickupNotifier) {
             PickupNotifierHud.bootstrap();
         }
+        if (ModConfig.enableIsometricPhotoMode) {
+            IsometricPhotoModeHandler.bootstrap();
+        }
         if (ModConfig.enableChatSelectionCopy) {
             ChatSelectionManager.bootstrap();
         }
@@ -139,6 +144,7 @@ public class ClientProxy extends CommonProxy {
         com.voidsrift.riftflux.avatar.AvatarTLBContent.initClient();
         TerrariaContent.initClient();
         SpecialArmorContent.initClient();
+        InventoryPetsContent.initClient();
         AsgardShieldContent.initClient();
         BlessingContent.initClient();
         FurnitureContent.initClient();

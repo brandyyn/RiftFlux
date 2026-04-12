@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
 import com.voidsrift.riftflux.combat.torohealth.ToroHealthContent;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
+import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
 import com.voidsrift.riftflux.legendgear.LegendGearContent;
 import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
@@ -11,6 +12,7 @@ import com.voidsrift.riftflux.soulhearts.SoulHeartsContent;
 import com.voidsrift.riftflux.heartcrystal.HeartCrystalContent;
 import com.voidsrift.riftflux.armoroverlay.ArmorOverlayContent;
 import com.voidsrift.riftflux.axolotl.AxolotlContent;
+import com.voidsrift.riftflux.levelup.LevelUpContent;
 import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
@@ -20,6 +22,7 @@ import com.voidsrift.riftflux.furniture.FurnitureContent;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.wam.WAMContent;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
+import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import de.rinonline.korinrpg.Springmain;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
@@ -47,6 +50,7 @@ import java.util.Locale;
 
 @Mod(modid = Constants.MODID, version = Constants.VERSION)
 public class riftflux {
+    private static boolean legacyRegistryAliasesRegistered;
 
     @Instance(Constants.MODID)
     public static riftflux instance;
@@ -77,11 +81,13 @@ public class riftflux {
         WheatfieldContent.preInit(event);
         WAMContent.preInit(event);
         SpecialArmorContent.preInit(event);
+        InventoryPetsContent.preInit(event);
         LegendGearContent.preInit(event);
         AsgardShieldContent.preInit(event);
         SoulHeartsContent.preInit(event);
         HeartCrystalContent.preInit(event);
         ArmorOverlayContent.preInit(event);
+        LevelUpContent.preInit(event);
     }
 
     @EventHandler
@@ -131,11 +137,14 @@ public class riftflux {
         WheatfieldContent.init(event);
         WAMContent.init(event);
         SpecialArmorContent.init(event);
+        InventoryPetsContent.init(event);
         LegendGearContent.init(event);
         AsgardShieldContent.init(event);
         SoulHeartsContent.init(event);
         HeartCrystalContent.init(event);
         ArmorOverlayContent.init(event);
+        LevelUpContent.init(event);
+        registerLegacyRegistryAliases();
     }
 
     @EventHandler
@@ -181,6 +190,9 @@ public class riftflux {
                 if (target == null) {
                     target = resolveGlowstoneDustItemAlias(mapping.name);
                 }
+                if (target == null) {
+                    target = LevelUpContent.resolveLegacyItemAlias(mapping.name);
+                }
                 if (target == null && legendGearEnabled && isLegendGearNamespace(mapping.name)) {
                     target = resolveLegendGearItemAlias(mapping.name);
                 }
@@ -189,6 +201,9 @@ public class riftflux {
                 }
                 if (target == null) {
                     target = resolveSpecialArmorItemAlias(mapping.name);
+                }
+                if (target == null) {
+                    target = resolveInventoryPetsItemAlias(mapping.name);
                 }
                 if (target != null) {
                     mapping.remap(target);
@@ -467,6 +482,167 @@ public class riftflux {
             return SpecialArmorContent.heavyBoots;
         }
         return null;
+    }
+
+    private static Item resolveInventoryPetsItemAlias(String fullName) {
+        return InventoryPetsContent.resolveLegacyItemAlias(fullName);
+    }
+
+    private static void registerLegacyRegistryAliases() {
+        if (legacyRegistryAliasesRegistered) {
+            return;
+        }
+        legacyRegistryAliasesRegistered = true;
+
+        registerLevelUpLegacyAliases();
+        registerLegendGearLegacyAliases();
+        registerSatchelsLegacyAliases();
+        registerSpecialArmorLegacyAliases();
+        registerPlaceableGunpowderLegacyAliases();
+        registerGlowstoneDustLegacyAliases();
+        InventoryPetsContent.registerLegacyItemAliases();
+    }
+
+    private static void registerLevelUpLegacyAliases() {
+        registerItemAliasVariants(LevelUpContent.resolveLegacyItemAlias("levelup:xpTalisman"),
+                "levelup:xpTalisman",
+                "levelup:Talisman of Wonder");
+        registerItemAliasVariants(LevelUpContent.resolveLegacyItemAlias("levelup:respecBook"),
+                "levelup:respecBook",
+                "levelup:Book of Unlearning");
+    }
+
+    private static void registerLegendGearLegacyAliases() {
+        String[] itemAliases = {
+                "emeraldShard",
+                "starDust",
+                "ingotStarglass",
+                "ingotStarsteel",
+                "blankSpellbook",
+                "dustStarsteel",
+                "fulgurite",
+                "sunfireDiamond",
+                "emptyOrb",
+                "dimensionalCatalyst",
+                "twinkleStaff",
+                "fireStaff",
+                "zapStaff",
+                "iceStaff",
+                "tomeScythewind",
+                "tomeRayfire",
+                "tomeExit",
+                "charmPendant",
+                "magicBoomerang",
+                "nucleus",
+                "azurite",
+                "abstractionGel",
+                "tuningFork",
+                "record_dragondot",
+                "fortuneCookie",
+                "phoenixFeather",
+                "azureFeather",
+                "spiritEmblem",
+                "spottingScope",
+                "magicRing",
+                "milkChocolate",
+                "reedPipes",
+                "badBow"
+        };
+        String[] blockAliases = {
+                "starstoneBlock",
+                "infusedStarstoneBlock",
+                "thawingIce",
+                "starSand",
+                "struckGround",
+                "starAltar",
+                "starwellFrame",
+                "starwellCore",
+                "ritualBlock",
+                "skylensBlock",
+                "azuriteOre",
+                "caltrops"
+        };
+        for (String namespace : new String[]{"legendgear", "legendgear2", "legendgearreturns"}) {
+            for (String itemAlias : itemAliases) {
+                registerItemAliasVariants(resolveLegendGearItemAlias(namespace + ":" + itemAlias), namespace + ":" + itemAlias);
+            }
+            for (String blockAlias : blockAliases) {
+                Block block = resolveLegendGearBlockAlias(namespace + ":" + blockAlias);
+                registerBlockAliasVariants(block, namespace + ":" + blockAlias);
+                registerItemAliasVariants(block == null ? null : Item.getItemFromBlock(block), namespace + ":" + blockAlias);
+            }
+        }
+    }
+
+    private static void registerSatchelsLegacyAliases() {
+        registerItemAliasVariants(SatchelsItems.satchel,
+                "satchels:satchel",
+                "satchels:satchelitem");
+        registerItemAliasVariants(SatchelsItems.pouch,
+                "satchels:pouch",
+                "satchels:pouchitem");
+        registerItemAliasVariants(SatchelsItems.pouch_upgrade,
+                "satchels:pouch_upgrade",
+                "satchels:pouchUpgrade",
+                "satchels:pouchupgrade",
+                "satchels:satchelupgrade");
+    }
+
+    private static void registerSpecialArmorLegacyAliases() {
+        for (String namespace : new String[]{"specialarmor", "tlspecialarmor"}) {
+            registerItemAliasVariants(SpecialArmorContent.slimeHelmet, namespace + ":SAslimehelmet", namespace + ":slimehelmet");
+            registerItemAliasVariants(SpecialArmorContent.doubleJumpBoots, namespace + ":SAdoublejumpboots", namespace + ":doublejumpboots");
+            registerItemAliasVariants(SpecialArmorContent.skates, namespace + ":SAskates", namespace + ":skates");
+            registerItemAliasVariants(SpecialArmorContent.heavyBoots, namespace + ":SAheavyboots", namespace + ":heavyboots");
+        }
+    }
+
+    private static void registerPlaceableGunpowderLegacyAliases() {
+        Block block = resolvePlaceableGunpowderBlockAlias("gunpowder:gunpowderBlock");
+        Item item = block == null ? null : Item.getItemFromBlock(block);
+        registerBlockAliasVariants(block,
+                "gunpowder:gunpowderBlock",
+                "gunpowder:gunpowder_block");
+        registerItemAliasVariants(item,
+                "gunpowder:gunpowderBlock",
+                "gunpowder:gunpowder_block");
+    }
+
+    private static void registerGlowstoneDustLegacyAliases() {
+        Block block = resolveGlowstoneDustBlockAlias("glowstonewire:glowstone_wire");
+        Item item = block == null ? null : Item.getItemFromBlock(block);
+        registerBlockAliasVariants(block,
+                "grygrflzr_glowstonewire:glowstone_wire",
+                "glowstonewire:glowstone_wire",
+                "glowstonedust:glowstoneDust");
+        registerItemAliasVariants(item,
+                "grygrflzr_glowstonewire:glowstone_wire",
+                "glowstonewire:glowstone_wire",
+                "glowstonedust:glowstoneDust");
+    }
+
+    private static void registerItemAliasVariants(Item item, String... aliases) {
+        if (item == null || aliases == null) {
+            return;
+        }
+        for (String alias : aliases) {
+            if (alias == null || alias.isEmpty()) {
+                continue;
+            }
+            LegacyRegistryAliasHelper.registerItemAliases(item, alias, alias.toLowerCase(Locale.ROOT));
+        }
+    }
+
+    private static void registerBlockAliasVariants(Block block, String... aliases) {
+        if (block == null || aliases == null) {
+            return;
+        }
+        for (String alias : aliases) {
+            if (alias == null || alias.isEmpty()) {
+                continue;
+            }
+            LegacyRegistryAliasHelper.registerBlockAliases(block, alias, alias.toLowerCase(Locale.ROOT));
+        }
     }
 
     @NetworkCheckHandler

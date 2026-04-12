@@ -15,6 +15,7 @@ public class ModItems {
    public static Item runeThanatos;
    public static Item glintRune;
    public static Item gluttonyCharm;
+   public static Item poptart;
    public static ToolMaterial BUTTERFLYKNIFE;
    public static ArmorMaterial EFFECTLESS = EnumHelper.addArmorMaterial("effectless", 0, new int[]{0, 0, 0, 0}, 0);
    public static ArmorMaterial BACKPACK;
@@ -48,6 +49,11 @@ public class ModItems {
       GameRegistry.registerItem(glintRune, "glintrune");
       gluttonyCharm = (new ItemGluttonyCharm()).setUnlocalizedName("gluttonycharm");
       GameRegistry.registerItem(gluttonyCharm, "gluttonycharm");
+      poptart = (new ItemPoptart(
+              com.voidsrift.riftflux.ModConfig.poptartFoodValue,
+              com.voidsrift.riftflux.ModConfig.poptartSaturation
+      )).setUnlocalizedName("poptart");
+      GameRegistry.registerItem(poptart, "poptart");
       runeThanatos = (new ItemRuneThanatos()).setUnlocalizedName("runethanatos");
       GameRegistry.registerItem(runeThanatos, "runethanatos");
       toolbelt = (new ItemToolbelt()).setUnlocalizedName("riftflux_toolbelt");
