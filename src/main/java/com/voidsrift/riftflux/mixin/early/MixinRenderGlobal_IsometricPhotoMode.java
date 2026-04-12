@@ -5,6 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.util.AxisAlignedBB;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,6 +20,20 @@ public abstract class MixinRenderGlobal_IsometricPhotoMode {
         if (IsometricPhotoModeController.instance().isActive()) {
             cir.setReturnValue(Boolean.FALSE);
         }
+    }
+
+    @Redirect(
+            method = "renderSky(F)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/opengl/GL11;glColor4f(FFFF)V",
+                    ordinal = 0,
+                    remap = false
+            ),
+            require = 0
+    )
+    private void riftflux$hideSunAndMoonInPhotoMode(float red, float green, float blue, float alpha) {
+        GL11.glColor4f(red, green, blue, IsometricPhotoModeController.instance().isActive() ? 0.0F : alpha);
     }
 
     @Redirect(

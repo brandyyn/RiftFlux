@@ -310,6 +310,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.backhand.MixinGuiInventoryBackpack_BackhandSlot");
                 mixins.add("early.backhand.MixinGuiSatchelsInventory_BackhandSlot");
                 mixins.add("early.backhand.MixinContainerPlayer_BackhandSlot");
+                if (ModConfig.enableIsometricPhotoMode) {
+                    mixins.add("early.backhand.MixinSyncedKeybind_BackhandPhotoMode");
+                }
             }
             if (hasLegendGearClass()) {
                 mixins.add("early.legendgear.MixinGuiManaBar");

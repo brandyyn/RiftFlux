@@ -34,6 +34,9 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
     @Shadow
     protected abstract void renderCloudsCheck(RenderGlobal renderGlobal, float partialTicks);
 
+    @Shadow
+    public abstract void setupOverlayRendering();
+
     @Redirect(
             method = "setupCameraTransform(FI)V",
             at = @At(
@@ -66,6 +69,15 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
         IsometricPhotoModeController controller = IsometricPhotoModeController.instance();
         if (!controller.isCapturingInput()) {
             player.setAngles(yaw, pitch);
+        }
+    }
+
+    @Inject(method = "updateCameraAndRender", at = @At("RETURN"))
+    private void riftflux$renderPhotoModeControlStatus(float partialTicks, CallbackInfo ci) {
+        IsometricPhotoModeController controller = IsometricPhotoModeController.instance();
+        if (controller.isActive()) {
+            this.setupOverlayRendering();
+            controller.renderControlStatusOverlay(partialTicks);
         }
     }
 

@@ -54,6 +54,8 @@ public final class IsometricPhotoModeHandler {
             return;
         }
 
+        PhotoModeExternalKeySuppressions.tick();
+
         IsometricPhotoModeController controller = IsometricPhotoModeController.instance();
         boolean capturingInput = controller.isCapturingInput() && this.mc.currentScreen == null;
         controller.setRotationInputActive(capturingInput && this.isAnyRotationInputDown());
@@ -63,6 +65,9 @@ public final class IsometricPhotoModeHandler {
             this.jumpCenterHeld = false;
         }
         controller.tick();
+        if (controller.isActive() && controller.isPlayerControlled() && this.mc.currentScreen == null) {
+            this.tickPlayerControlCameraPan(controller);
+        }
 
         if (!controller.isCapturingInput() || this.mc.currentScreen != null) {
             controller.setRotationInputActive(false);
@@ -109,6 +114,9 @@ public final class IsometricPhotoModeHandler {
         }
 
         while (TOGGLE_PLAYER_CONTROL.isPressed()) {
+            if (controller.isCapturingInput()) {
+                PhotoModeExternalKeySuppressions.suppressBackhandSwapForCurrentPress();
+            }
             controller.togglePlayerControl();
         }
         while (this.mc.gameSettings.keyBindJump.isPressed()) {
@@ -169,6 +177,16 @@ public final class IsometricPhotoModeHandler {
     private void resetVerticalRotationHold() {
         this.verticalRotateDirection = 0;
         this.verticalRotateHoldTicks = 0;
+    }
+
+    private void tickPlayerControlCameraPan(IsometricPhotoModeController controller) {
+        controller.panCamera(
+                Keyboard.isKeyDown(Keyboard.KEY_LEFT),
+                Keyboard.isKeyDown(Keyboard.KEY_RIGHT),
+                Keyboard.isKeyDown(Keyboard.KEY_UP),
+                Keyboard.isKeyDown(Keyboard.KEY_DOWN),
+                this.mc.gameSettings.keyBindSprint.getIsKeyPressed()
+        );
     }
 
     private void tickCenterOnPlayer(IsometricPhotoModeController controller) {

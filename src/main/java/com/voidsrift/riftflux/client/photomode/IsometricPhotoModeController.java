@@ -5,11 +5,11 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -43,6 +43,8 @@ public final class IsometricPhotoModeController {
     private static final double ZOOM_SMOOTHING_FACTOR = 0.35D;
     private static final double ZOOM_SMOOTHING_EPSILON = 1.0E-3D;
     private static final float ROTATION_ANIMATION_TICKS = 12.0F;
+    private static final int CONTROL_STATUS_MESSAGE_TICKS = 60;
+    private static final int CONTROL_STATUS_MESSAGE_COLOR = 0xA0A0A0;
     private static final IsometricPhotoModeController INSTANCE = new IsometricPhotoModeController();
 
     private final Minecraft mc = Minecraft.getMinecraft();
@@ -107,6 +109,8 @@ public final class IsometricPhotoModeController {
     private float savedRenderPrevYawHead;
     private float savedRenderPitch;
     private float savedRenderPrevPitch;
+    private String controlStatusMessage = "";
+    private int controlStatusMessageTicks;
 
     public static IsometricPhotoModeController instance() {
         return INSTANCE;
@@ -224,6 +228,7 @@ public final class IsometricPhotoModeController {
         this.mc.gameSettings.hideGUI = true;
         AngelicaPhotoModeCompat.enablePhotoModeOverrides();
         AngelicaPhotoModeCompat.enforceNoFog();
+        this.tickControlStatusMessage();
         this.tickAnimation();
 
         if (this.playerControlled || this.mc.currentScreen != null || this.rotationInputActive
@@ -267,7 +272,7 @@ public final class IsometricPhotoModeController {
         }
 
         this.playerControlled = !this.playerControlled;
-        this.announce(this.playerControlled ? "Photo mode: controlling player" : "Photo mode: controlling camera");
+        this.showControlStatusMessage(this.playerControlled ? "Photo Mode: Controlling Player" : "Photo Mode: Controlling Camera");
     }
 
     public void rotateHorizontal(int direction) {
@@ -418,6 +423,35 @@ public final class IsometricPhotoModeController {
         this.rotationInputActive = rotationInputActive;
     }
 
+    public void panCamera(boolean moveLeft, boolean moveRight, boolean moveUp, boolean moveDown, boolean sprint) {
+        if (!this.active || this.cameraEntity == null || this.mc.currentScreen != null
+                || this.previousRotationProgress < 1.0F || this.rotationProgress < 1.0F) {
+            return;
+        }
+
+        double speed = CAMERA_PAN_SPEED * (sprint ? CAMERA_SPRINT_MULTIPLIER : 1.0D);
+        double yawRad = Math.toRadians(this.currentYaw);
+        double rightX = -Math.cos(yawRad);
+        double rightZ = -Math.sin(yawRad);
+        double dx = 0.0D;
+        double dy = 0.0D;
+        double dz = 0.0D;
+
+        if (moveLeft ^ moveRight) {
+            double direction = moveRight ? 1.0D : -1.0D;
+            dx += rightX * direction * speed;
+            dz += rightZ * direction * speed;
+        }
+
+        if (moveUp ^ moveDown) {
+            dy += (moveUp ? 1.0D : -1.0D) * speed;
+        }
+
+        if (dx != 0.0D || dy != 0.0D || dz != 0.0D) {
+            this.translateCameraAndFocus(dx, dy, dz);
+        }
+    }
+
     public double getOrthographicViewHeight() {
         return this.orthographicViewHeight;
     }
@@ -426,6 +460,39 @@ public final class IsometricPhotoModeController {
         double progress = this.clamp((double) partialTicks, 0.0D, 1.0D);
         return this.previousOrthographicViewHeight
                 + (this.orthographicViewHeight - this.previousOrthographicViewHeight) * progress;
+    }
+
+    public void renderControlStatusOverlay(float partialTicks) {
+        if (!this.isActive() || this.mc.currentScreen != null || this.controlStatusMessageTicks <= 0
+                || this.controlStatusMessage == null || this.controlStatusMessage.isEmpty()) {
+            return;
+        }
+
+        FontRenderer fontRenderer = this.mc.fontRenderer;
+        if (fontRenderer == null) {
+            return;
+        }
+
+        ScaledResolution resolution = new ScaledResolution(this.mc, this.mc.displayWidth, this.mc.displayHeight);
+        int width = resolution.getScaledWidth();
+        int height = resolution.getScaledHeight();
+        float remaining = (float) this.controlStatusMessageTicks - this.clampProgress(partialTicks);
+        int alpha = (int) (remaining * 255.0F / 20.0F);
+        if (alpha > 255) {
+            alpha = 255;
+        }
+        if (alpha <= 8) {
+            return;
+        }
+
+        int x = (width - fontRenderer.getStringWidth(this.controlStatusMessage)) / 2;
+        int y = height - 72;
+        GL11.glPushMatrix();
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        fontRenderer.drawString(this.controlStatusMessage, x, y, CONTROL_STATUS_MESSAGE_COLOR | (alpha << 24));
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glPopMatrix();
     }
 
     public int getTerrainRefreshToken() {
@@ -1119,6 +1186,8 @@ public final class IsometricPhotoModeController {
         this.rotationInputActive = false;
         this.hasRenderedDepthPivot = false;
         this.renderTweenStateApplied = false;
+        this.controlStatusMessage = "";
+        this.controlStatusMessageTicks = 0;
     }
 
     private void reloadRenderers() {
@@ -1127,11 +1196,14 @@ public final class IsometricPhotoModeController {
         }
     }
 
-    private void announce(String message) {
-        if (this.mc.thePlayer == null || message == null || message.isEmpty()) {
-            return;
-        }
+    private void showControlStatusMessage(String message) {
+        this.controlStatusMessage = message;
+        this.controlStatusMessageTicks = CONTROL_STATUS_MESSAGE_TICKS;
+    }
 
-        this.mc.thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + message));
+    private void tickControlStatusMessage() {
+        if (this.controlStatusMessageTicks > 0) {
+            this.controlStatusMessageTicks--;
+        }
     }
 }
