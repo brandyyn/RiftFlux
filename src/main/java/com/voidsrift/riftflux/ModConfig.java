@@ -661,6 +661,7 @@ public class ModConfig {
     public static boolean enableIsometricPhotoMode;
     public static double isometricPhotoModeMaxZoomOut;
     public static float isometricPhotoModeHoldRotateDegreesPerTick;
+    public static boolean isometricPhotoModeHideNetherNetherrackAndBedrock;
     public static boolean enableWorldTooltips;
     public static boolean worldTooltipsHideModName;
     public static int worldTooltipsMaxDistance;
@@ -1221,6 +1222,13 @@ public class ModConfig {
                 0.05F,
                 10.0F,
                 "Continuous horizontal orbit speed in isometric photo mode while holding left/right, in degrees per client tick."
+        );
+
+        isometricPhotoModeHideNetherNetherrackAndBedrock = config.getBoolean(
+                "IsometricPhotoModeHideNetherNetherrackAndBedrock",
+                "client",
+                true,
+                "If true, netherrack and bedrock are hidden while isometric photo mode is active in the Nether."
         );
 
         enableWorldTooltips = config.getBoolean(
@@ -1814,7 +1822,7 @@ public class ModConfig {
         levelUpUnlearningBookResetClass = config.getBoolean(
                 "UnlearningBookResetClass",
                 "LevelUp",
-                false,
+                true,
                 "If true, the Book of Unlearning also removes the player's class."
         );
         levelUpFarmingBlacklist = config.getStringList(

@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import com.voidsrift.riftflux.client.sky.SunriseSkyTintHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -8,6 +9,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -105,7 +107,6 @@ public abstract class MixinEntityRenderer_BlackNightFog {
         float finalGreen = green;
         float finalBlue = blue;
         WorldClient world = this.mc == null ? null : this.mc.theWorld;
-
         if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)
                 && this.mc != null
                 && this.mc.renderViewEntity instanceof EntityLivingBase

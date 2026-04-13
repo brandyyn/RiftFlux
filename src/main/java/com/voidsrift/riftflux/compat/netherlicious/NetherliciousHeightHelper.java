@@ -1,6 +1,5 @@
 package com.voidsrift.riftflux.compat.netherlicious;
 
-import DelirusCrux.Netherlicious.Common.BlockItemUtility.ModBlocks;
 import DelirusCrux.Netherlicious.Utility.Configuration.NetherliciousConfiguration;
 import DelirusCrux.Netherlicious.Utility.Configuration.WorldgenConfiguration;
 import com.voidsrift.riftflux.ModConfig;
@@ -14,6 +13,11 @@ public final class NetherliciousHeightHelper {
     public static final int DEFAULT_BIG_NETHER_TOP_Y = 255;
     private static final int MIN_BIG_NETHER_TOP_Y = 128;
     private static final int MAX_WORLD_Y = 255;
+    private static final String NETHERLICIOUS_MOD_BLOCKS_CLASS =
+            "DelirusCrux.Netherlicious.Common.BlockItemUtility.ModBlocks";
+    private static final String NETHERLICIOUS_BRITTLE_BEDROCK_FIELD = "BrittleBedrock";
+    private static boolean triedResolveBrittleBedrock;
+    private static Block resolvedBrittleBedrock;
 
     private NetherliciousHeightHelper() {
     }
@@ -133,9 +137,32 @@ public final class NetherliciousHeightHelper {
 
     private static Block getCeilingBlock() {
         if (NetherliciousConfiguration.BrittleBedrock && WorldgenConfiguration.BrittleBedrockCeiling) {
-            return ModBlocks.BrittleBedrock;
+            Block brittleBedrock = resolveBrittleBedrockBlock();
+            if (brittleBedrock != null) {
+                return brittleBedrock;
+            }
         }
         return Blocks.bedrock;
+    }
+
+    private static Block resolveBrittleBedrockBlock() {
+        if (triedResolveBrittleBedrock) {
+            return resolvedBrittleBedrock;
+        }
+
+        triedResolveBrittleBedrock = true;
+        try {
+            ClassLoader loader = NetherliciousHeightHelper.class.getClassLoader();
+            Class<?> modBlocks = Class.forName(NETHERLICIOUS_MOD_BLOCKS_CLASS, false, loader);
+            Object value = modBlocks.getField(NETHERLICIOUS_BRITTLE_BEDROCK_FIELD).get(null);
+            if (value instanceof Block) {
+                resolvedBrittleBedrock = (Block) value;
+            }
+        } catch (Throwable ignored) {
+            resolvedBrittleBedrock = null;
+        }
+
+        return resolvedBrittleBedrock;
     }
 
     private static long makeColumnSeed(long worldSeed, int worldX, int worldZ) {

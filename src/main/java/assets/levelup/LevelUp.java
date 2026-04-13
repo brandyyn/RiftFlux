@@ -107,11 +107,7 @@ public final class LevelUp {
 
     public void preInit(FMLPreInitializationEvent event) {
         config = ModConfig.config;
-        config.addCustomCategoryComment("LevelUp.HUD", "Entirely client side. No need to sync.");
         this.initClientProperties();
-        config.addCustomCategoryComment("LevelUp.Items", "Integrated LevelUp item settings.");
-        config.addCustomCategoryComment("LevelUp.Cheats", "Integrated LevelUp gameplay settings. These are synced to clients on dedicated servers.");
-        config.addCustomCategoryComment("LevelUp.BlackList", "Integrated LevelUp blacklist settings.");
         this.initServerProperties();
         boolean talismanEnabled = ModConfig.levelUpRegisterTalismanOfWonder;
         boolean bookEnabled = ModConfig.levelUpEnableUnlearningBook;
@@ -186,10 +182,10 @@ public final class LevelUp {
 
     private void initClientProperties() {
         this.clientProperties = new Property[]{
-                config.get("LevelUp.HUD", "AllowHud", ModConfig.levelUpAllowHud, "If anything from the LevelUp HUD should be rendered on screen at all.").setRequiresMcRestart(true),
-                config.get("LevelUp.HUD", "RenderHudOnTopLeft", ModConfig.levelUpRenderHudTopLeft),
-                config.get("LevelUp.HUD", "RenderHudOnExpBar", ModConfig.levelUpRenderHudExpBar),
-                config.get("LevelUp.FOV", "ChangeFovWithSpeed", ModConfig.levelUpChangeFovWithSpeed, "Should FOV change based on player speed from athletics / sneak skills.")
+                config.get("LevelUp", "AllowHud", ModConfig.levelUpAllowHud, "If anything from the LevelUp HUD should be rendered on screen at all.").setRequiresMcRestart(true),
+                config.get("LevelUp", "RenderHudOnTopLeft", ModConfig.levelUpRenderHudTopLeft),
+                config.get("LevelUp", "RenderHudOnExpBar", ModConfig.levelUpRenderHudExpBar),
+                config.get("LevelUp", "ChangeFovWithSpeed", ModConfig.levelUpChangeFovWithSpeed, "Should FOV change based on player speed from athletics / sneak skills.")
         };
         allowHUD = this.clientProperties[0].getBoolean();
         renderTopLeft = this.clientProperties[1].getBoolean();
@@ -202,22 +198,21 @@ public final class LevelUp {
     }
 
     private void initServerProperties() {
-        String cat = "Cheats";
         String limitedBonus = "This is a bonus related to a few classes";
         this.serverProperties = new Property[]{
-                config.get("LevelUp.Cheats", "MaxPointsPerSkill", ModConfig.levelUpMaxPointsPerSkill, "Minimum is 1"),
-                config.get("LevelUp.Cheats", "BonusPointsForClasses", ModConfig.levelUpBonusPointsForClasses, "Points given when choosing a class, allocated automatically.\n Minimum is 0, Maximum is max points per skill times 2"),
-                config.get("LevelUp.Cheats", "XpGainPerLevel", ModConfig.levelUpXpGainPerLevel, "Minimum is 0"),
-                config.get("LevelUp.Cheats", "SkillPointsLostOnDeathPercent", ModConfig.levelUpSkillPointsLostOnDeathPercent, "How much skill points are lost on death, in percent.").setMinValue(0).setMaxValue(100),
-                config.get("LevelUp.Cheats", "UseOldSpeedDirtAndGravelDigging", ModConfig.levelUpUseOldSpeedDirtAndGravelDigging),
-                config.get("LevelUp.Cheats", "UseOldSpeedRedstoneBreaking", ModConfig.levelUpUseOldSpeedRedstoneBreaking, "Makes the redstone ore mining efficient"),
-                config.get("LevelUp.Cheats", "ResetPlayerClassOnDeath", ModConfig.levelUpResetPlayerClassOnDeath, "Does the player lose the class they chose on death?"),
-                config.get("LevelUp.Cheats", "PreventDuplicatedOresPlacing", ModConfig.levelUpPreventDuplicatedOresPlacing, "Some skills duplicate ores; this prevents infinite duplication by placing them back down."),
-                config.get("LevelUp.Cheats", "AddBonusXpOnCraft", ModConfig.levelUpAddBonusXpOnCraft, limitedBonus),
-                config.get("LevelUp.Cheats", "AddBonusXpOnMining", ModConfig.levelUpAddBonusXpOnMining, limitedBonus),
-                config.get("LevelUp.Cheats", "AddXpOnCraftingSomeItems", ModConfig.levelUpAddXpOnCraftingSomeItems, "This is a global bonus, limited to a few craftable items"),
-                config.get("LevelUp.Cheats", "AddXpOnMiningSomeOre", ModConfig.levelUpAddXpOnMiningSomeOre, "This is a global bonus, limited to a few ores"),
-                config.get("LevelUp.Cheats", "AddBonusXpOnFighting", ModConfig.levelUpAddBonusXpOnFighting, limitedBonus)
+                config.get("LevelUp", "MaxPointsPerSkill", ModConfig.levelUpMaxPointsPerSkill, "Minimum is 1"),
+                config.get("LevelUp", "BonusPointsForClasses", ModConfig.levelUpBonusPointsForClasses, "Points given when choosing a class, allocated automatically.\n Minimum is 0, Maximum is max points per skill times 2"),
+                config.get("LevelUp", "XpGainPerLevel", ModConfig.levelUpXpGainPerLevel, "Minimum is 0"),
+                config.get("LevelUp", "SkillPointsLostOnDeathPercent", ModConfig.levelUpSkillPointsLostOnDeathPercent, "How much skill points are lost on death, in percent.").setMinValue(0).setMaxValue(100),
+                config.get("LevelUp", "UseOldSpeedDirtAndGravelDigging", ModConfig.levelUpUseOldSpeedDirtAndGravelDigging),
+                config.get("LevelUp", "UseOldSpeedRedstoneBreaking", ModConfig.levelUpUseOldSpeedRedstoneBreaking, "Makes the redstone ore mining efficient"),
+                config.get("LevelUp", "ResetPlayerClassOnDeath", ModConfig.levelUpResetPlayerClassOnDeath, "Does the player lose the class they chose on death?"),
+                config.get("LevelUp", "PreventDuplicatedOresPlacing", ModConfig.levelUpPreventDuplicatedOresPlacing, "Some skills duplicate ores; this prevents infinite duplication by placing them back down."),
+                config.get("LevelUp", "AddBonusXpOnCraft", ModConfig.levelUpAddBonusXpOnCraft, limitedBonus),
+                config.get("LevelUp", "AddBonusXpOnMining", ModConfig.levelUpAddBonusXpOnMining, limitedBonus),
+                config.get("LevelUp", "AddXpOnCraftingSomeItems", ModConfig.levelUpAddXpOnCraftingSomeItems, "This is a global bonus, limited to a few craftable items"),
+                config.get("LevelUp", "AddXpOnMiningSomeOre", ModConfig.levelUpAddXpOnMiningSomeOre, "This is a global bonus, limited to a few ores"),
+                config.get("LevelUp", "AddBonusXpOnFighting", ModConfig.levelUpAddBonusXpOnFighting, limitedBonus)
         };
     }
 

@@ -10,7 +10,6 @@ public final class AngelicaPhotoModeCompat {
     private static final String ANGELICA_MOD = "com.gtnewhorizons.angelica.AngelicaMod";
     private static final String GL_STATE_MANAGER = "com.gtnewhorizons.angelica.glsm.GLStateManager";
     private static final String BOOLEAN_STATE_STACK = "com.gtnewhorizons.angelica.glsm.stacks.BooleanStateStack";
-    private static final String FOG_STATE_STACK = "com.gtnewhorizons.angelica.glsm.stacks.FogStateStack";
 
     private static boolean initialized;
     private static boolean glStateAvailable;
@@ -18,14 +17,8 @@ public final class AngelicaPhotoModeCompat {
     private static boolean optionOverridesCaptured;
     private static Method disableFogMethod;
     private static Method getFogModeMethod;
-    private static Method getFogStateMethod;
     private static Method optionsMethod;
     private static Method setEnabledMethod;
-    private static Method setFogAlphaMethod;
-    private static Method setDensityMethod;
-    private static Method setStartMethod;
-    private static Method setEndMethod;
-    private static Method fogColorMethod;
     private static Field advancedField;
     private static Field performanceField;
     private static Field useParticleCullingField;
@@ -98,15 +91,6 @@ public final class AngelicaPhotoModeCompat {
                 setEnabledMethod.invoke(fogMode, Boolean.FALSE);
             }
 
-            Object fogState = getFogStateMethod.invoke(null);
-            if (fogState != null) {
-                setFogAlphaMethod.invoke(fogState, Float.valueOf(0.0F));
-                setDensityMethod.invoke(fogState, Float.valueOf(0.0F));
-                setStartMethod.invoke(fogState, Float.valueOf(Float.MAX_VALUE));
-                setEndMethod.invoke(fogState, Float.valueOf(Float.MAX_VALUE));
-            }
-
-            fogColorMethod.invoke(null, Float.valueOf(0.0F), Float.valueOf(0.0F), Float.valueOf(0.0F), Float.valueOf(0.0F));
             GL11.glDisable(GL11.GL_FOG);
         } catch (Throwable ignored) {
         }
@@ -122,17 +106,10 @@ public final class AngelicaPhotoModeCompat {
             ClassLoader loader = AngelicaPhotoModeCompat.class.getClassLoader();
             Class<?> glStateManagerClass = Class.forName(GL_STATE_MANAGER, false, loader);
             Class<?> booleanStateStackClass = Class.forName(BOOLEAN_STATE_STACK, false, loader);
-            Class<?> fogStateStackClass = Class.forName(FOG_STATE_STACK, false, loader);
 
             disableFogMethod = glStateManagerClass.getMethod("disableFog");
             getFogModeMethod = glStateManagerClass.getMethod("getFogMode");
-            getFogStateMethod = glStateManagerClass.getMethod("getFogState");
-            fogColorMethod = glStateManagerClass.getMethod("fogColor", Float.TYPE, Float.TYPE, Float.TYPE, Float.TYPE);
             setEnabledMethod = booleanStateStackClass.getMethod("setEnabled", Boolean.TYPE);
-            setFogAlphaMethod = fogStateStackClass.getMethod("setFogAlpha", Float.TYPE);
-            setDensityMethod = fogStateStackClass.getMethod("setDensity", Float.TYPE);
-            setStartMethod = fogStateStackClass.getMethod("setStart", Float.TYPE);
-            setEndMethod = fogStateStackClass.getMethod("setEnd", Float.TYPE);
             glStateAvailable = true;
         } catch (Throwable ignored) {
             glStateAvailable = false;

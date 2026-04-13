@@ -50,13 +50,17 @@ public final class IsometricPhotoModeHandler {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
+        IsometricPhotoModeController controller = IsometricPhotoModeController.instance();
+        if (this.mc.currentScreen == null) {
+            this.suppressPlayerVerticalKeyBindings(controller);
+        }
+
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
 
         PhotoModeExternalKeySuppressions.tick();
 
-        IsometricPhotoModeController controller = IsometricPhotoModeController.instance();
         boolean capturingInput = controller.isCapturingInput() && this.mc.currentScreen == null;
         controller.setRotationInputActive(capturingInput && this.isAnyRotationInputDown());
         if (capturingInput) {
@@ -267,6 +271,25 @@ public final class IsometricPhotoModeHandler {
         }
         while (this.mc.gameSettings.keyBindJump.isPressed()) {
             // Space recenters the photo camera instead of jumping the player.
+        }
+        while (this.mc.gameSettings.keyBindSneak.isPressed()) {
+            // Sneak is a photo-camera rotation modifier here, not a player descent key.
+        }
+        this.suppressPlayerVerticalKeyBindings(controller);
+    }
+
+    private void suppressPlayerVerticalKeyBindings(IsometricPhotoModeController controller) {
+        if (!controller.isCapturingInput()) {
+            return;
+        }
+
+        this.releaseKeyBinding(this.mc.gameSettings.keyBindJump);
+        this.releaseKeyBinding(this.mc.gameSettings.keyBindSneak);
+    }
+
+    private void releaseKeyBinding(KeyBinding keyBinding) {
+        if (keyBinding != null && keyBinding.getKeyCode() != 0) {
+            KeyBinding.setKeyBindState(keyBinding.getKeyCode(), false);
         }
     }
 

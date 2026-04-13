@@ -212,6 +212,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("accessor.GuiYesNoAccessor");
             mixins.add("accessor.ModelBoxAccessor");
             mixins.add("accessor.PlayerControllerMPAccessor");
+            mixins.add("accessor.ChunkCacheAccessor");
             if (ModConfig.enableFenceTextureModule) {
                 mixins.add("early.MixinBlockFence_InfdevPlusTexture");
             }
@@ -227,6 +228,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             }
             if (ModConfig.enableIsometricPhotoMode) {
                 mixins.add("early.MixinEntityRenderer_IsometricPhotoMode");
+                mixins.add("early.MixinEntityPlayerSP_IsometricPhotoMode");
                 mixins.add("early.MixinMinecraft_IsometricPhotoMode");
                 mixins.add("early.MixinMovementInputFromOptions_IsometricPhotoMode");
                 mixins.add("early.MixinRenderGlobal_IsometricPhotoMode");
@@ -257,6 +259,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 }
                 if (hasClass("org.embeddedt.embeddium.impl.render.terrain.SimpleWorldRenderer")) {
                     mixins.add("early.angelica.MixinEmbeddiumSimpleWorldRenderer_PhotoMode");
+                }
+                if (hasClass("org.embeddedt.embeddium.impl.render.chunk.ShaderChunkRenderer")) {
+                    mixins.add("early.angelica.MixinEmbeddiumShaderChunkRenderer_PhotoMode");
                 }
                 if (hasClass("thaumcraft.client.fx.ParticleEngine")) {
                     mixins.add("early.thaumcraft.MixinThaumcraftParticleEngine_PhotoMode");

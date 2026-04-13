@@ -1,7 +1,9 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
+import com.voidsrift.riftflux.client.photomode.AngelicaPhotoModeCompat;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.util.AxisAlignedBB;
@@ -11,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RenderGlobal.class)
 public abstract class MixinRenderGlobal_IsometricPhotoMode {
@@ -50,6 +53,14 @@ public abstract class MixinRenderGlobal_IsometricPhotoMode {
         }
 
         return entity.isInRangeToRender3d(x, y, z);
+    }
+
+    @Inject(method = "renderEntities", at = @At("HEAD"), require = 0)
+    private void riftflux$disableFogBeforeEntityPass(EntityLivingBase viewEntity, ICamera camera, float partialTicks, CallbackInfo ci) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            AngelicaPhotoModeCompat.enforceNoFog();
+            GL11.glDisable(GL11.GL_FOG);
+        }
     }
 
     @Redirect(

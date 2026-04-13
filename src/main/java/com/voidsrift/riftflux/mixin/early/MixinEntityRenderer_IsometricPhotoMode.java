@@ -54,7 +54,8 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
 
         double halfHeight = controller.getOrthographicViewHeight(partialTicks) * 0.5D;
         double halfWidth = halfHeight * (double) aspect;
-        double depthRange = Math.max((double) zFar * 1.25D, 512.0D);
+        double depthRange = Math.max((double) zFar * 4.0D, halfHeight * 16.0D);
+        depthRange = Math.max(depthRange, 4096.0D);
         GL11.glOrtho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depthRange, depthRange);
     }
 
@@ -165,6 +166,10 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
     @Inject(method = "renderWorld(FJ)V", at = @At("HEAD"))
     private void riftflux$disableCullFaceForPhotoWorld(float partialTicks, long finishTimeNano, CallbackInfo ci) {
         IsometricPhotoModeController.instance().applyRenderTweenState(partialTicks);
+        if (IsometricPhotoModeController.instance().isActive()) {
+            AngelicaPhotoModeCompat.enforceNoFog();
+            GL11.glDisable(GL11.GL_FOG);
+        }
         // Keep standard OpenGL cull state to avoid chunk seam artifacts.
     }
 

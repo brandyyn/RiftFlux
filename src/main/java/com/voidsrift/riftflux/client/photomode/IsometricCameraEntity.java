@@ -27,6 +27,7 @@ public class IsometricCameraEntity extends EntityPlayer {
         this.prevRotationPitch = this.rotationPitch;
         this.rotationYawHead = this.rotationYaw;
         this.prevRotationYawHead = this.rotationYaw;
+        this.dimension = player.dimension;
         this.noClip = true;
     }
 

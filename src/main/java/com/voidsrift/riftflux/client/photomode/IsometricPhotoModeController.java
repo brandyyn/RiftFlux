@@ -8,12 +8,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 
@@ -237,7 +240,7 @@ public final class IsometricPhotoModeController {
         }
 
         GameSettings settings = this.mc.gameSettings;
-        boolean rotateModifier = settings.keyBindSneak.getIsKeyPressed();
+        boolean rotateModifier = this.isPhysicalKeyDown(settings.keyBindSneak);
         boolean moveLeft = !rotateModifier && settings.keyBindLeft.getIsKeyPressed();
         boolean moveRight = !rotateModifier && settings.keyBindRight.getIsKeyPressed();
         boolean moveUp = !rotateModifier && settings.keyBindForward.getIsKeyPressed();
@@ -289,12 +292,9 @@ public final class IsometricPhotoModeController {
         }
         this.lockFocusToPivot();
 
-        float baseYaw = this.unwrapYawNear(
-                this.snapYawToNearestDiagonal(this.currentYaw),
-                this.targetYaw
-        );
+        float baseYaw = this.unwrapYawNear(this.snapYawToNearestDiagonal(this.currentYaw), this.currentYaw);
         this.beginRotationTween(baseYaw, this.clampPitch(this.currentPitch));
-        this.targetYaw = baseYaw + (float) (direction * 90);
+        this.targetYaw = this.unwrapYawNear(baseYaw + (float) (direction * 90), baseYaw);
         this.yawIndex = this.findClosestYawIndex(this.targetYaw);
     }
 
@@ -354,6 +354,7 @@ public final class IsometricPhotoModeController {
         float snappedYaw = directionPreference == 0
                 ? this.findNearestDiagonalYaw(startYawValue, 0)
                 : this.findNextDiagonalYaw(startYawValue, directionPreference);
+        snappedYaw = this.unwrapYawNear(snappedYaw, startYawValue);
         this.beginRotationTween(startYawValue, startPitchValue);
         this.targetYaw = snappedYaw;
         this.targetPitch = startPitchValue;
@@ -634,6 +635,26 @@ public final class IsometricPhotoModeController {
         };
     }
 
+    public boolean isOutsideHorizontalPhotoModeRenderBoundary(int x, int z) {
+        if (!this.isActive() || this.mc.gameSettings == null || this.cameraEntity == null) {
+            return false;
+        }
+
+        int renderDistance = Math.max(1, this.mc.gameSettings.renderDistanceChunks);
+        return this.isOutsideHorizontalRenderBoundary(x, z, this.cameraEntity.posX, this.cameraEntity.posZ, renderDistance);
+    }
+
+    public boolean touchesHorizontalPhotoModeRenderBoundary(int x, int z) {
+        if (!this.isActive()) {
+            return false;
+        }
+
+        return this.isOutsideHorizontalPhotoModeRenderBoundary(x + 1, z)
+                || this.isOutsideHorizontalPhotoModeRenderBoundary(x - 1, z)
+                || this.isOutsideHorizontalPhotoModeRenderBoundary(x, z + 1)
+                || this.isOutsideHorizontalPhotoModeRenderBoundary(x, z - 1);
+    }
+
     private void applyCameraState() {
         if (this.cameraEntity == null) {
             return;
@@ -684,6 +705,16 @@ public final class IsometricPhotoModeController {
         this.applyCameraState();
     }
 
+    private boolean isOutsideHorizontalRenderBoundary(int x, int z, double centerX, double centerZ, int renderDistance) {
+        int centerChunkX = MathHelper.floor_double(centerX) >> 4;
+        int centerChunkZ = MathHelper.floor_double(centerZ) >> 4;
+        int minBlockX = (centerChunkX - renderDistance) << 4;
+        int maxBlockX = ((centerChunkX + renderDistance + 1) << 4) - 1;
+        int minBlockZ = (centerChunkZ - renderDistance) << 4;
+        int maxBlockZ = ((centerChunkZ + renderDistance + 1) << 4) - 1;
+        return x < minBlockX || x > maxBlockX || z < minBlockZ || z > maxBlockZ;
+    }
+
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }
@@ -707,11 +738,12 @@ public final class IsometricPhotoModeController {
         if (this.rotationProgress < 1.0F) {
             this.rotationProgress = Math.min(1.0F, this.rotationProgress + 1.0F / ROTATION_ANIMATION_TICKS);
             float easedProgress = this.smootherStep(this.rotationProgress);
-            this.currentYaw = this.startYaw + (this.targetYaw - this.startYaw) * easedProgress;
+            float animationTargetYaw = this.unwrapYawNear(this.targetYaw, this.startYaw);
+            this.currentYaw = this.startYaw + (animationTargetYaw - this.startYaw) * easedProgress;
             this.currentPitch = this.clampPitch(this.startPitch + (this.targetPitch - this.startPitch) * easedProgress);
         } else {
             this.previousRotationProgress = 1.0F;
-            this.currentYaw = this.targetYaw;
+            this.currentYaw = this.unwrapYawNear(this.targetYaw, this.startYaw);
             this.currentPitch = this.targetPitch;
         }
 
@@ -1077,7 +1109,8 @@ public final class IsometricPhotoModeController {
 
     private void setCameraEntityToRenderState(float progress) {
         float easedProgress = this.smootherStep(progress);
-        float renderYaw = this.startYaw + (this.targetYaw - this.startYaw) * easedProgress;
+        float animationTargetYaw = this.unwrapYawNear(this.targetYaw, this.startYaw);
+        float renderYaw = this.startYaw + (animationTargetYaw - this.startYaw) * easedProgress;
         float renderPitch = this.clampPitch(this.startPitch + (this.targetPitch - this.startPitch) * easedProgress);
         double[] cameraPosition = this.calculateCameraPosition(renderYaw, renderPitch);
 
@@ -1205,5 +1238,14 @@ public final class IsometricPhotoModeController {
         if (this.controlStatusMessageTicks > 0) {
             this.controlStatusMessageTicks--;
         }
+    }
+
+    private boolean isPhysicalKeyDown(KeyBinding keyBinding) {
+        int keyCode = keyBinding.getKeyCode();
+        if (keyCode < 0) {
+            return Mouse.isButtonDown(keyCode + 100);
+        }
+
+        return keyCode > 0 && Keyboard.isKeyDown(keyCode);
     }
 }

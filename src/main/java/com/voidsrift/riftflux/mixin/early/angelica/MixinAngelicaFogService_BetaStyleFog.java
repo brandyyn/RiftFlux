@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early.angelica;
 
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import com.voidsrift.riftflux.client.sky.SunriseSkyTintHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -17,6 +18,10 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
 
     @Inject(method = "getFogColor", at = @At("HEAD"), cancellable = true, require = 0)
     private void riftflux$overrideFogColor(CallbackInfoReturnable<float[]> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
         Minecraft mc = Minecraft.getMinecraft();
         WorldClient world = mc == null ? null : mc.theWorld;
         if (!SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)) {
@@ -32,6 +37,10 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
 
     @Inject(method = "getFogStart", at = @At("HEAD"), cancellable = true, require = 0)
     private void riftflux$overrideFogStart(CallbackInfoReturnable<Float> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
         float[] fogDistance = riftflux$resolveFogDistance();
         if (fogDistance != null) {
             cir.setReturnValue(Float.valueOf(fogDistance[0]));
@@ -40,6 +49,10 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
 
     @Inject(method = "getFogEnd", at = @At("HEAD"), cancellable = true, require = 0)
     private void riftflux$overrideFogEnd(CallbackInfoReturnable<Float> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
         float[] fogDistance = riftflux$resolveFogDistance();
         if (fogDistance != null) {
             cir.setReturnValue(Float.valueOf(fogDistance[1]));
@@ -48,6 +61,10 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
 
     @Inject(method = "getFogCutoff", at = @At("HEAD"), cancellable = true, require = 0)
     private void riftflux$overrideFogCutoff(CallbackInfoReturnable<Float> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
         float[] fogDistance = riftflux$resolveFogDistance();
         if (fogDistance != null) {
             cir.setReturnValue(Float.valueOf(fogDistance[1]));
