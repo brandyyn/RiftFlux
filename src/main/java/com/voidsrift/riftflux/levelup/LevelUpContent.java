@@ -66,6 +66,9 @@ public final class LevelUpContent {
 
         String lower = fullName.toLowerCase(Locale.ROOT);
         if ("levelup:xptalisman".equals(lower) || "levelup:talisman of wonder".equals(lower)) {
+            if (!ModConfig.levelUpRegisterTalismanOfWonder) {
+                return null;
+            }
             return GameRegistry.findItem(LevelUp.ID, "xpTalisman");
         }
         if ("levelup:respecbook".equals(lower) || "levelup:book of unlearning".equals(lower)) {

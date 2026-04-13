@@ -40,13 +40,13 @@ import assets.levelup.PlayerEventHandler;
 import assets.levelup.PlayerExtendedProperties;
 import assets.levelup.SkillPacketHandler;
 import assets.levelup.SkillProxy;
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.FMLEventChannel;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -106,17 +106,18 @@ public final class LevelUp {
     }
 
     public void preInit(FMLPreInitializationEvent event) {
-        config = new Configuration(new File(event.getModConfigurationDirectory(), "levelup.cfg"));
-        config.addCustomCategoryComment("HUD", "Entirely client side. No need to sync.");
+        config = ModConfig.config;
+        config.addCustomCategoryComment("LevelUp.HUD", "Entirely client side. No need to sync.");
         this.initClientProperties();
-        config.addCustomCategoryComment("Items", "Need to be manually synced to the client on a dedicated server");
-        config.addCustomCategoryComment("Cheats", "Will be automatically synced to the client on a dedicated server");
+        config.addCustomCategoryComment("LevelUp.Items", "Integrated LevelUp item settings.");
+        config.addCustomCategoryComment("LevelUp.Cheats", "Integrated LevelUp gameplay settings. These are synced to clients on dedicated servers.");
+        config.addCustomCategoryComment("LevelUp.BlackList", "Integrated LevelUp blacklist settings.");
         this.initServerProperties();
-        boolean talismanEnabled = config.getBoolean("Enable Talisman", "Items", true, "Enable item and related recipes");
-        boolean bookEnabled = config.getBoolean("Enable Unlearning Book", "Items", true, "Enable item and related recipe");
-        boolean legacyRecipes = config.getBoolean("Enable Recipes", "Items", true, "Enable legacy pumpkin and flint recipes");
+        boolean talismanEnabled = ModConfig.levelUpRegisterTalismanOfWonder;
+        boolean bookEnabled = ModConfig.levelUpEnableUnlearningBook;
+        boolean legacyRecipes = ModConfig.levelUpEnableLegacyRecipes;
         this.useServerProperties();
-        List<String> blackList = Arrays.asList(config.getStringList("Crops for farming", "BlackList", new String[]{""}, "That won't be affected by farming growth skill, uses internal block name. No sync to client needed."));
+        List<String> blackList = Arrays.asList(ModConfig.levelUpFarmingBlacklist);
         FMLEventHandler.INSTANCE.addCropsToBlackList(blackList);
         if (config.hasChanged()) {
             config.save();
@@ -162,12 +163,15 @@ public final class LevelUp {
             GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "ingotIron"}));
             GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "ingotGold"}));
             GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Blocks.pumpkin});
+        } else {
+            xpTalisman = null;
+            towItems = null;
         }
         if (bookEnabled) {
             respecBook = new ItemRespecBook().setUnlocalizedName("respecBook").setTextureName("levelup:RespecBook").setCreativeTab(CreativeTabs.tabTools);
             GameRegistry.registerItem((Item)respecBook, (String)"respecBook");
             ItemStack output = new ItemStack(respecBook);
-            if (config.getBoolean("unlearning Book Reset Class", "Cheats", false, "Should unlearning book also remove class")) {
+            if (ModConfig.levelUpUnlearningBookResetClass) {
                 output.setItemDamage(1);
             }
             GameRegistry.addRecipe((ItemStack)output, (Object[])new Object[]{"OEO", "DBD", "ODO", Character.valueOf('O'), Blocks.obsidian, Character.valueOf('D'), new ItemStack(Items.dye), Character.valueOf('E'), Items.ender_pearl, Character.valueOf('B'), Items.book});
@@ -181,17 +185,40 @@ public final class LevelUp {
     }
 
     private void initClientProperties() {
-        this.clientProperties = new Property[]{config.get("HUD", "allow HUD", allowHUD, "If anything should be rendered on screen at all.").setRequiresMcRestart(true), config.get("HUD", "render HUD on Top Left", renderTopLeft), config.get("HUD", "render HUD on Exp Bar", renderExpBar), config.get("FOV", "speed based", changeFOV, "Should FOV change based on player speed from athletics / sneak skills.")};
+        this.clientProperties = new Property[]{
+                config.get("LevelUp.HUD", "AllowHud", ModConfig.levelUpAllowHud, "If anything from the LevelUp HUD should be rendered on screen at all.").setRequiresMcRestart(true),
+                config.get("LevelUp.HUD", "RenderHudOnTopLeft", ModConfig.levelUpRenderHudTopLeft),
+                config.get("LevelUp.HUD", "RenderHudOnExpBar", ModConfig.levelUpRenderHudExpBar),
+                config.get("LevelUp.FOV", "ChangeFovWithSpeed", ModConfig.levelUpChangeFovWithSpeed, "Should FOV change based on player speed from athletics / sneak skills.")
+        };
         allowHUD = this.clientProperties[0].getBoolean();
         renderTopLeft = this.clientProperties[1].getBoolean();
         renderExpBar = this.clientProperties[2].getBoolean();
         changeFOV = this.clientProperties[3].getBoolean();
+        ModConfig.levelUpAllowHud = allowHUD;
+        ModConfig.levelUpRenderHudTopLeft = renderTopLeft;
+        ModConfig.levelUpRenderHudExpBar = renderExpBar;
+        ModConfig.levelUpChangeFovWithSpeed = changeFOV;
     }
 
     private void initServerProperties() {
         String cat = "Cheats";
         String limitedBonus = "This is a bonus related to a few classes";
-        this.serverProperties = new Property[]{config.get(cat, "Max points per skill", ClassBonus.getMaxSkillPoints(), "Minimum is 1"), config.get(cat, "Bonus points for classes", ClassBonus.getBonusPoints(), "Points given when choosing a class, allocated automatically.\n Minimum is 0, Maximum is max points per skill times 2"), config.get(cat, "Xp gain per level", PlayerEventHandler.xpPerLevel, "Minimum is 0"), config.get(cat, "Skill points lost on death", (int)PlayerEventHandler.resetSkillOnDeath * 100, "How much skill points are lost on death, in percent.").setMinValue(0).setMaxValue(100), config.get(cat, "Use old speed for dirt and gravel digging", PlayerEventHandler.oldSpeedDigging), config.get(cat, "Use old speed for redstone breaking", PlayerEventHandler.oldSpeedRedstone, "Makes the redstone ore mining efficient"), config.get(cat, "Reset player class on death", PlayerEventHandler.resetClassOnDeath, "Do the player lose the class he choose on death ?"), config.get(cat, "Prevent duplicated ores placing", PlayerEventHandler.noPlaceDuplicate, "Some skill duplicate ores, this prevent infinite duplication by replacing"), config.get(cat, "Add Bonus XP on Craft", bonusCraftingXP, limitedBonus), config.get(cat, "Add Bonus XP on Mining", bonusMiningXP, limitedBonus), config.get(cat, "Add XP on Crafting some items", true, "This is a global bonus, limited to a few craftable items"), config.get(cat, "Add XP on Mining some ore", oreMiningXP, "This is a global bonus, limited to a few ores"), config.get(cat, "Add Bonus XP on Fighting", bonusFightingXP, limitedBonus)};
+        this.serverProperties = new Property[]{
+                config.get("LevelUp.Cheats", "MaxPointsPerSkill", ModConfig.levelUpMaxPointsPerSkill, "Minimum is 1"),
+                config.get("LevelUp.Cheats", "BonusPointsForClasses", ModConfig.levelUpBonusPointsForClasses, "Points given when choosing a class, allocated automatically.\n Minimum is 0, Maximum is max points per skill times 2"),
+                config.get("LevelUp.Cheats", "XpGainPerLevel", ModConfig.levelUpXpGainPerLevel, "Minimum is 0"),
+                config.get("LevelUp.Cheats", "SkillPointsLostOnDeathPercent", ModConfig.levelUpSkillPointsLostOnDeathPercent, "How much skill points are lost on death, in percent.").setMinValue(0).setMaxValue(100),
+                config.get("LevelUp.Cheats", "UseOldSpeedDirtAndGravelDigging", ModConfig.levelUpUseOldSpeedDirtAndGravelDigging),
+                config.get("LevelUp.Cheats", "UseOldSpeedRedstoneBreaking", ModConfig.levelUpUseOldSpeedRedstoneBreaking, "Makes the redstone ore mining efficient"),
+                config.get("LevelUp.Cheats", "ResetPlayerClassOnDeath", ModConfig.levelUpResetPlayerClassOnDeath, "Does the player lose the class they chose on death?"),
+                config.get("LevelUp.Cheats", "PreventDuplicatedOresPlacing", ModConfig.levelUpPreventDuplicatedOresPlacing, "Some skills duplicate ores; this prevents infinite duplication by placing them back down."),
+                config.get("LevelUp.Cheats", "AddBonusXpOnCraft", ModConfig.levelUpAddBonusXpOnCraft, limitedBonus),
+                config.get("LevelUp.Cheats", "AddBonusXpOnMining", ModConfig.levelUpAddBonusXpOnMining, limitedBonus),
+                config.get("LevelUp.Cheats", "AddXpOnCraftingSomeItems", ModConfig.levelUpAddXpOnCraftingSomeItems, "This is a global bonus, limited to a few craftable items"),
+                config.get("LevelUp.Cheats", "AddXpOnMiningSomeOre", ModConfig.levelUpAddXpOnMiningSomeOre, "This is a global bonus, limited to a few ores"),
+                config.get("LevelUp.Cheats", "AddBonusXpOnFighting", ModConfig.levelUpAddBonusXpOnFighting, limitedBonus)
+        };
     }
 
     public void useServerProperties() {
@@ -210,6 +237,19 @@ public final class LevelUp {
         bonusMiningXP = this.serverProperties[9].getBoolean();
         oreMiningXP = this.serverProperties[11].getBoolean();
         bonusFightingXP = this.serverProperties[12].getBoolean();
+        ModConfig.levelUpMaxPointsPerSkill = ClassBonus.getMaxSkillPoints();
+        ModConfig.levelUpBonusPointsForClasses = ClassBonus.getBonusPoints();
+        ModConfig.levelUpXpGainPerLevel = PlayerEventHandler.xpPerLevel;
+        ModConfig.levelUpSkillPointsLostOnDeathPercent = this.serverProperties[3].getInt();
+        ModConfig.levelUpUseOldSpeedDirtAndGravelDigging = PlayerEventHandler.oldSpeedDigging;
+        ModConfig.levelUpUseOldSpeedRedstoneBreaking = PlayerEventHandler.oldSpeedRedstone;
+        ModConfig.levelUpResetPlayerClassOnDeath = PlayerEventHandler.resetClassOnDeath;
+        ModConfig.levelUpPreventDuplicatedOresPlacing = PlayerEventHandler.noPlaceDuplicate;
+        ModConfig.levelUpAddBonusXpOnCraft = bonusCraftingXP;
+        ModConfig.levelUpAddBonusXpOnMining = bonusMiningXP;
+        ModConfig.levelUpAddXpOnCraftingSomeItems = this.serverProperties[10].getBoolean();
+        ModConfig.levelUpAddXpOnMiningSomeOre = oreMiningXP;
+        ModConfig.levelUpAddBonusXpOnFighting = bonusFightingXP;
         if (this.serverProperties[10].getBoolean()) {
             List<Item> ingrTier1 = Arrays.asList(Items.stick, Items.leather, Item.getItemFromBlock((Block)Blocks.stone));
             List<Item> ingrTier2 = Arrays.asList(Items.iron_ingot, Items.gold_ingot, Items.paper, Items.slime_ball);
@@ -237,6 +277,10 @@ public final class LevelUp {
             renderTopLeft = values[1];
             renderExpBar = values[2];
             changeFOV = values[3];
+            ModConfig.levelUpAllowHud = allowHUD;
+            ModConfig.levelUpRenderHudTopLeft = renderTopLeft;
+            ModConfig.levelUpRenderHudExpBar = renderExpBar;
+            ModConfig.levelUpChangeFovWithSpeed = changeFOV;
             for (int i = 0; i < values.length; ++i) {
                 this.clientProperties[i].set(values[i]);
             }

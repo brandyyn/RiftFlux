@@ -65,5 +65,19 @@ public final class RFNetwork {
 
         // Fence override sync (ID 11)
         CH.registerMessage(MsgSyncFenceOverrides.Handler.class, MsgSyncFenceOverrides.class, 11, Side.CLIENT);
+
+        // Chat bubble color sync (IDs 12-13)
+        CH.registerMessage(MsgSetChatBubbleColor.Handler.class, MsgSetChatBubbleColor.class, 12, Side.SERVER);
+        CH.registerMessage(MsgSyncChatBubbleColor.Handler.class, MsgSyncChatBubbleColor.class, 13, Side.CLIENT);
+
+        // Chat bubble size sync (ID 14)
+        CH.registerMessage(MsgSetChatBubbleSize.Handler.class, MsgSetChatBubbleSize.class, 14, Side.CLIENT);
+
+        // Chat bubble client config sync (ID 15)
+        CH.registerMessage(MsgSetChatBubblesConfig.Handler.class, MsgSetChatBubblesConfig.class, 15, Side.CLIENT);
+
+        // Chat bubble text color sync (IDs 16-17)
+        CH.registerMessage(MsgSetChatBubbleTextColor.Handler.class, MsgSetChatBubbleTextColor.class, 16, Side.SERVER);
+        CH.registerMessage(MsgSyncChatBubbleTextColor.Handler.class, MsgSyncChatBubbleTextColor.class, 17, Side.CLIENT);
     }
 }

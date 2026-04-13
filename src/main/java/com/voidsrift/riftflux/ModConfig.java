@@ -43,6 +43,9 @@ public class ModConfig {
 
     public static boolean disableStrataOreVeins;
     public static boolean disableDragonAPILogging;
+    public static boolean optimizeDragonAPIBlockRenderFastPaths;
+    public static boolean optimizeDragonAPIEntityRenderLoopFastPaths;
+    public static boolean optimizeDragonAPIParticleRenderFastPaths;
     public static boolean optimizeChromatiCraftRenderEventFastPaths;
     public static boolean optimizeChromatiCraftCliffsChunkGeneration;
     public static boolean disableThermalDynamicsFacades;
@@ -112,6 +115,11 @@ public class ModConfig {
     public static boolean betaStarsEnabled;
     public static int betaStarsCount;
     public static float betaStarsSizeMultiplier;
+    public static boolean betaStarsRandomBlink;
+    public static float betaStarsTwinkleSpeedMultiplier;
+    public static int betaStarsSunsetFadeStartTick;
+    public static int betaStarsSunsetFadeEndTick;
+    public static boolean betaStarsRenderBehindSunMoon;
     public static boolean betaStarsDisableBetterSkiesStars;
 
     // Zelda
@@ -150,6 +158,28 @@ public class ModConfig {
     public static int dssBarOffsetY;
     public static double dssBarTransparencyPercent;
     public static boolean enableLevelUpModule;
+    public static boolean levelUpAllowHud;
+    public static boolean levelUpRenderHudTopLeft;
+    public static boolean levelUpRenderHudExpBar;
+    public static boolean levelUpChangeFovWithSpeed;
+    public static boolean levelUpRegisterTalismanOfWonder;
+    public static boolean levelUpEnableUnlearningBook;
+    public static boolean levelUpEnableLegacyRecipes;
+    public static boolean levelUpUnlearningBookResetClass;
+    public static String[] levelUpFarmingBlacklist;
+    public static int levelUpMaxPointsPerSkill;
+    public static int levelUpBonusPointsForClasses;
+    public static double levelUpXpGainPerLevel;
+    public static int levelUpSkillPointsLostOnDeathPercent;
+    public static boolean levelUpUseOldSpeedDirtAndGravelDigging;
+    public static boolean levelUpUseOldSpeedRedstoneBreaking;
+    public static boolean levelUpResetPlayerClassOnDeath;
+    public static boolean levelUpPreventDuplicatedOresPlacing;
+    public static boolean levelUpAddBonusXpOnCraft;
+    public static boolean levelUpAddBonusXpOnMining;
+    public static boolean levelUpAddXpOnCraftingSomeItems;
+    public static boolean levelUpAddXpOnMiningSomeOre;
+    public static boolean levelUpAddBonusXpOnFighting;
     public static float levelUpHudPulseSpeedHz;
     public static boolean levelUpEnableSneakAttackDoubleDamage;
 
@@ -596,6 +626,37 @@ public class ModConfig {
     public static boolean shearsDamageOnAnyBlock;
     public static int deathRespawnDelaySeconds;
     public static boolean allowChatOnDeathScreen;
+    public static boolean allowChatOnPauseScreen;
+    public static boolean enableBetaLeavesLook;
+    public static boolean enableChatBubblesModule;
+    public static boolean chatBubblesShowOwnMessages;
+    public static boolean chatBubblesShowBackground;
+    public static boolean chatBubblesUseCustomOwnBubbleColor;
+    public static int chatBubblesOwnBubbleColor;
+    public static boolean chatBubblesUseCustomOwnTextColor;
+    public static int chatBubblesOwnTextColor;
+    public static boolean chatBubblesRandomizeTextColorByUuid;
+    public static boolean chatBubblesBlackTextBackground;
+    public static final int CHAT_BUBBLES_MESSAGE_GAP_DEFAULT = 1;
+    public static final int CHAT_BUBBLES_MESSAGE_GAP_MIN = 0;
+    public static final int CHAT_BUBBLES_MESSAGE_GAP_MAX = 8;
+    public static final String CHAT_BUBBLES_MESSAGE_GAP_COMMENT =
+            "Number of blank line gaps between stacked chat bubble messages. 0 = no extra gap; 1 = default.";
+    public static int chatBubblesMessageGap = CHAT_BUBBLES_MESSAGE_GAP_DEFAULT;
+    public static final float CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_DEFAULT = 1.0F;
+    public static final float CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MIN = 0.0F;
+    public static final float CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MAX = 1.0F;
+    public static final String CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_COMMENT =
+            "Opacity for the solid black chat bubble text bar. 0.0 = transparent; 1.0 = fully opaque.";
+    public static float chatBubblesBlackTextBackgroundOpacity = CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_DEFAULT;
+    public static final float CHAT_BUBBLES_TEXT_SCALE_DEFAULT = 1.0F;
+    public static final float CHAT_BUBBLES_TEXT_SCALE_MIN = 0.25F;
+    public static final float CHAT_BUBBLES_TEXT_SCALE_MAX = 4.0F;
+    public static final String CHAT_BUBBLES_TEXT_SCALE_COMMENT =
+            "Multiplier for rendered chat bubble text and bubble size. 1.0 = default.";
+    public static float chatBubblesTextScale = CHAT_BUBBLES_TEXT_SCALE_DEFAULT;
+    public static int chatBubblesMessageLifetimeSeconds;
+    public static int chatBubblesMaxLineLength;
     public static boolean enableChatSelectionCopy;
     public static boolean enableIsometricPhotoMode;
     public static double isometricPhotoModeMaxZoomOut;
@@ -745,6 +806,27 @@ public class ModConfig {
                 "general",
                 true,
                 "If true, suppresses DragonAPI's logging sinks and logger entry points with the ASM core transformer. This also silences Reika mod logging routed through DragonAPI's shared logger classes. Requires restart."
+        );
+
+        optimizeDragonAPIBlockRenderFastPaths = config.getBoolean(
+                "OptimizeDragonAPIBlockRenderFastPaths",
+                "dragonapi",
+                true,
+                "If true, skips DragonAPI's block render listener bus for blocks that cannot use its water-submerge overlay path. This preserves DragonAPI block render behavior while avoiding per-block callback overhead on normal blocks. Requires restart."
+        );
+
+        optimizeDragonAPIEntityRenderLoopFastPaths = config.getBoolean(
+                "OptimizeDragonAPIEntityRenderLoopFastPaths",
+                "dragonapi",
+                true,
+                "If true, skips DragonAPI's per-entity-render-loop event post unless its debug change-packet renderer is active. This removes a Forge event post from the normal entity render path. Requires restart."
+        );
+
+        optimizeDragonAPIParticleRenderFastPaths = config.getBoolean(
+                "OptimizeDragonAPIParticleRenderFastPaths",
+                "dragonapi",
+                true,
+                "If true, removes DragonAPI's per-particle frustum visibility gate so its particle renderer follows the same broad hot path vanilla uses. This avoids the extra culling overhead that can make DragonAPI particles slower than vanilla. Requires restart."
         );
 
         optimizeChromatiCraftRenderEventFastPaths = config.getBoolean(
@@ -981,6 +1063,132 @@ public class ModConfig {
                 "client",
                 true,
                 "If true, pressing chat/command keys on the death screen opens chat so you can type before respawning."
+        );
+
+        allowChatOnPauseScreen = config.getBoolean(
+                "AllowChatOnPauseScreen",
+                "client",
+                true,
+                "If true, pressing chat/command keys on the pause screen opens chat without leaving the pause menu."
+        );
+
+        enableBetaLeavesLook = config.getBoolean(
+                "EnableBetaLeavesLook",
+                "client",
+                true,
+                "If true, uses beta-style leaf interior shading while keeping normal leaf shadows below trees. Requires restart."
+        );
+
+        enableChatBubblesModule = config.getBoolean(
+                "EnableChatBubblesModule",
+                "chatbubbles",
+                true,
+                "If true, renders chat bubbles above players when their chat messages can be parsed."
+        );
+        chatBubblesShowOwnMessages = config.getBoolean(
+                "ChatBubblesShowOwnMessages",
+                "chatbubbles",
+                true,
+                "If true, your own parsed chat messages can render above your own head in third-person, including in singleplayer."
+        );
+        chatBubblesShowBackground = config.getBoolean(
+                "ChatBubblesShowBackground",
+                "chatbubbles",
+                false,
+                "If true, chat bubbles render their speech-bubble background and tail behind the text."
+        );
+        String chatBubblesOwnBubbleColorRaw = config.getString(
+                "ChatBubblesOwnBubbleColor",
+                "chatbubbles",
+                "",
+                "Optional custom color for your own player's chat bubble. Leave blank or set to AUTO to use local gold for yourself and UUID-based colors for others. Accepts #RRGGBB, 0xRRGGBB, or named colors; custom values are advertised to the server so other RiftFlux clients can see them."
+        );
+        String chatBubblesOwnBubbleColorValue =
+                chatBubblesOwnBubbleColorRaw == null ? "" : chatBubblesOwnBubbleColorRaw.trim();
+        chatBubblesUseCustomOwnBubbleColor =
+                !chatBubblesOwnBubbleColorValue.isEmpty()
+                        && !"AUTO".equalsIgnoreCase(chatBubblesOwnBubbleColorValue);
+        chatBubblesOwnBubbleColor = parseRgbColor(
+                chatBubblesUseCustomOwnBubbleColor ? chatBubblesOwnBubbleColorValue : null,
+                0xFFD700
+        );
+        String chatBubblesOwnTextColorDefault = "AUTO";
+        if (!config.hasKey("chatbubbles", "ChatBubblesOwnTextColor")
+                && config.hasKey("chatbubbles", "ChatBubblesWhiteText")
+                && !config.get("chatbubbles", "ChatBubblesWhiteText", true).getBoolean(true)) {
+            chatBubblesOwnTextColorDefault = "black";
+        }
+        String chatBubblesOwnTextColorRaw = config.getString(
+                "ChatBubblesOwnTextColor",
+                "chatbubbles",
+                chatBubblesOwnTextColorDefault,
+                "Optional custom color for your own player's chat bubble text. Leave blank or set to AUTO for the default white text, or UUID-random text if ChatBubblesRandomizeTextColorByUuid is enabled. Accepts #RRGGBB, 0xRRGGBB, or named colors; custom values are advertised to the server so other RiftFlux clients can see them."
+        );
+        String chatBubblesOwnTextColorValue =
+                chatBubblesOwnTextColorRaw == null ? "" : chatBubblesOwnTextColorRaw.trim();
+        chatBubblesUseCustomOwnTextColor =
+                !chatBubblesOwnTextColorValue.isEmpty()
+                        && !"AUTO".equalsIgnoreCase(chatBubblesOwnTextColorValue);
+        chatBubblesOwnTextColor = parseRgbColor(
+                chatBubblesUseCustomOwnTextColor ? chatBubblesOwnTextColorValue : null,
+                0xFFFFFF
+        );
+        chatBubblesRandomizeTextColorByUuid = config.getBoolean(
+                "ChatBubblesRandomizeTextColorByUuid",
+                "chatbubbles",
+                false,
+                "If true, chat bubble text uses a stable UUID-based random color for players who have not set their own synced text color."
+        );
+        boolean legacyRemoveMessageGap = config.hasKey("chatbubbles", "ChatBubblesRemoveMessageGap")
+                && config.get("chatbubbles", "ChatBubblesRemoveMessageGap", false).getBoolean(false);
+        chatBubblesMessageGap = config.getInt(
+                "ChatBubblesMessageGap",
+                "chatbubbles",
+                legacyRemoveMessageGap ? 0 : CHAT_BUBBLES_MESSAGE_GAP_DEFAULT,
+                CHAT_BUBBLES_MESSAGE_GAP_MIN,
+                CHAT_BUBBLES_MESSAGE_GAP_MAX,
+                CHAT_BUBBLES_MESSAGE_GAP_COMMENT
+        );
+        chatBubblesBlackTextBackground = config.getBoolean(
+                "ChatBubblesBlackTextBackground",
+                "chatbubbles",
+                false,
+                "If true, draws a solid black bar behind each chat bubble text line."
+        );
+        chatBubblesBlackTextBackgroundOpacity = clampChatBubblesBlackTextBackgroundOpacity(config.getFloat(
+                "ChatBubblesBlackTextBackgroundOpacity",
+                "chatbubbles",
+                CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_DEFAULT,
+                CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MIN,
+                CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MAX,
+                CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_COMMENT
+        ));
+
+        chatBubblesTextScale = clampChatBubblesTextScale(config.getFloat(
+                "ChatBubblesTextScale",
+                "chatbubbles",
+                CHAT_BUBBLES_TEXT_SCALE_DEFAULT,
+                CHAT_BUBBLES_TEXT_SCALE_MIN,
+                CHAT_BUBBLES_TEXT_SCALE_MAX,
+                CHAT_BUBBLES_TEXT_SCALE_COMMENT
+        ));
+
+        chatBubblesMessageLifetimeSeconds = config.getInt(
+                "ChatBubblesMessageLifetimeSeconds",
+                "chatbubbles",
+                12,
+                1,
+                120,
+                "How long chat bubbles remain visible, in seconds."
+        );
+
+        chatBubblesMaxLineLength = config.getInt(
+                "ChatBubblesMaxLineLength",
+                "chatbubbles",
+                30,
+                8,
+                120,
+                "Maximum approximate characters per rendered chat bubble line before wrapping."
         );
 
         enableChatSelectionCopy = config.getBoolean(
@@ -1254,6 +1462,47 @@ public class ModConfig {
                 8.0F,
                 "Size multiplier for beta-style stars. 1.0 = default RiftFlux beta-star size."
         );
+        betaStarsRandomBlink = config.getBoolean(
+                "BetaStarsTwinkle",
+                "celestial",
+                true,
+                "If true, RiftFlux beta stars use subtle per-star randomized twinkling."
+        );
+        betaStarsTwinkleSpeedMultiplier = config.getFloat(
+                "BetaStarsTwinkleSpeedMultiplier",
+                "celestial",
+                0.25F,
+                0.05F,
+                4.0F,
+                "Speed multiplier for beta-star twinkling. Lower values twinkle less frequently; 0.25 is slow and subtle, 1.0 is the original faster twinkle."
+        );
+
+        betaStarsSunsetFadeStartTick = config.getInt(
+                "BetaStarsSunsetFadeStartTick",
+                "celestial",
+                13200,
+                12000,
+                18000,
+                "World time when RiftFlux beta stars start fading in during sunset. Increase this if stars appear too early."
+        );
+        betaStarsSunsetFadeEndTick = config.getInt(
+                "BetaStarsSunsetFadeEndTick",
+                "celestial",
+                15000,
+                12001,
+                19000,
+                "World time when RiftFlux beta stars finish fading in during sunset. Must be after BetaStarsSunsetFadeStartTick."
+        );
+        if (betaStarsSunsetFadeEndTick <= betaStarsSunsetFadeStartTick) {
+            betaStarsSunsetFadeEndTick = betaStarsSunsetFadeStartTick + 1;
+        }
+
+        betaStarsRenderBehindSunMoon = config.getBoolean(
+                "BetaStarsRenderBehindSunMoon",
+                "celestial",
+                true,
+                "If true, renders RiftFlux beta stars behind the vanilla/custom sun and moon where the sky pipeline allows it. If false, fallback star rendering can draw after sun/moon for compatibility."
+        );
 
         betaStarsDisableBetterSkiesStars = config.getBoolean(
                 "BetaStarsDisableBetterSkiesStars",
@@ -1519,6 +1768,144 @@ public class ModConfig {
                 "LevelUp",
                 true,
                 "Master switch for integrated LevelUp! content (skills, classes, HUD, items, and event handlers)."
+        );
+        levelUpAllowHud = config.getBoolean(
+                "AllowHud",
+                "LevelUp",
+                true,
+                "If anything from the LevelUp HUD should be rendered on screen at all."
+        );
+        levelUpRenderHudTopLeft = config.getBoolean(
+                "RenderHudOnTopLeft",
+                "LevelUp",
+                false,
+                "Render the LevelUp Class HUD in the top-left corner."
+        );
+        levelUpRenderHudExpBar = config.getBoolean(
+                "RenderHudOnExpBar",
+                "LevelUp",
+                true,
+                "Render the LevelUp HUD above the vanilla experience bar."
+        );
+        levelUpChangeFovWithSpeed = config.getBoolean(
+                "ChangeFovWithSpeed",
+                "LevelUp",
+                true,
+                "If true, LevelUp athletics and sneak speed changes can affect FOV."
+        );
+        levelUpRegisterTalismanOfWonder = config.getBoolean(
+                "RegisterTalismanOfWonder",
+                "LevelUp",
+                false,
+                "If false, the Talisman of Wonder is not registered and none of its recipes are added."
+        );
+        levelUpEnableUnlearningBook = config.getBoolean(
+                "EnableUnlearningBook",
+                "LevelUp",
+                true,
+                "Enable the Book of Unlearning item and its recipe."
+        );
+        levelUpEnableLegacyRecipes = config.getBoolean(
+                "EnableLegacyRecipes",
+                "LevelUp",
+                false,
+                "Enable LevelUp's legacy pumpkin seed and flint-to-gravel recipes."
+        );
+        levelUpUnlearningBookResetClass = config.getBoolean(
+                "UnlearningBookResetClass",
+                "LevelUp",
+                false,
+                "If true, the Book of Unlearning also removes the player's class."
+        );
+        levelUpFarmingBlacklist = config.getStringList(
+                "FarmingBlacklist",
+                "LevelUp",
+                new String[]{""},
+                "Block registry names ignored by LevelUp farming growth effects."
+        );
+        levelUpMaxPointsPerSkill = config.getInt(
+                "MaxPointsPerSkill",
+                "LevelUp",
+                50,
+                1,
+                Integer.MAX_VALUE,
+                "Maximum points that can be invested into a single LevelUp skill."
+        );
+        levelUpBonusPointsForClasses = config.getInt(
+                "BonusPointsForClasses",
+                "LevelUp",
+                20,
+                0,
+                Integer.MAX_VALUE,
+                "Skill points granted automatically when choosing a class."
+        );
+        levelUpXpGainPerLevel = config.get(
+                "LevelUp",
+                "XpGainPerLevel",
+                2.0,
+                "Base LevelUp XP gain per level."
+        ).getDouble(3.0);
+        levelUpSkillPointsLostOnDeathPercent = config.getInt(
+                "SkillPointsLostOnDeathPercent",
+                "LevelUp",
+                0,
+                0,
+                100,
+                "Percent of unspent LevelUp skill points lost on death."
+        );
+        levelUpUseOldSpeedDirtAndGravelDigging = config.getBoolean(
+                "UseOldSpeedDirtAndGravelDigging",
+                "LevelUp",
+                false,
+                "Use the original LevelUp digging speed behavior for dirt and gravel."
+        );
+        levelUpUseOldSpeedRedstoneBreaking = config.getBoolean(
+                "UseOldSpeedRedstoneBreaking",
+                "LevelUp",
+                false,
+                "Use the original LevelUp redstone ore breaking speed behavior."
+        );
+        levelUpResetPlayerClassOnDeath = config.getBoolean(
+                "ResetPlayerClassOnDeath",
+                "LevelUp",
+                false,
+                "If true, the player's LevelUp class is removed on death."
+        );
+        levelUpPreventDuplicatedOresPlacing = config.getBoolean(
+                "PreventDuplicatedOresPlacing",
+                "LevelUp",
+                true,
+                "Prevent duplicated ores created by LevelUp skills from being placed for infinite duplication."
+        );
+        levelUpAddBonusXpOnCraft = config.getBoolean(
+                "AddBonusXpOnCraft",
+                "LevelUp",
+                true,
+                "Enable class-based bonus XP on crafting."
+        );
+        levelUpAddBonusXpOnMining = config.getBoolean(
+                "AddBonusXpOnMining",
+                "LevelUp",
+                true,
+                "Enable class-based bonus XP on mining."
+        );
+        levelUpAddXpOnCraftingSomeItems = config.getBoolean(
+                "AddXpOnCraftingSomeItems",
+                "LevelUp",
+                true,
+                "Enable general LevelUp XP gains for crafting certain items."
+        );
+        levelUpAddXpOnMiningSomeOre = config.getBoolean(
+                "AddXpOnMiningSomeOre",
+                "LevelUp",
+                true,
+                "Enable general LevelUp XP gains for mining coal, lapis, redstone, iron, gold, emerald, diamond, and nether quartz ore, plus modded ore blocks registered in the Ore Dictionary under names starting with ore."
+        );
+        levelUpAddBonusXpOnFighting = config.getBoolean(
+                "AddBonusXpOnFighting",
+                "LevelUp",
+                true,
+                "Enable class-based bonus XP on fighting."
         );
 
         levelUpHudPulseSpeedHz = config.getFloat(
@@ -3589,11 +3976,11 @@ public class ModConfig {
         satchelsPouchUpgradeWeight = config.getInt(
                 "SatchelsPouchUpgradeWeight", "satchels_worldgen", 7, 0, Integer.MAX_VALUE,
                 "The weight of the pouch upgrade in the dungeon loot table.\n" +
-                "Increase this to make them more common, or decrease to make them rarer.\n" +
-                "For reference, saddles have a weight of 10 while golden apples have a weight of 1.\n" +
-                "Based on testing, a weight of 10 with no other mods present roughly corresponds to an average of 1 item per dungeon, and it scales linearly from there.\n" +
-                "You might want to bump this up if you have many other mods adding loot, or if this is a multiplayer server.\n" +
-                "Ignored if SatchelsEnablePouchUpgradeLoot is false."
+                        "Increase this to make them more common, or decrease to make them rarer.\n" +
+                        "For reference, saddles have a weight of 10 while golden apples have a weight of 1.\n" +
+                        "Based on testing, a weight of 10 with no other mods present roughly corresponds to an average of 1 item per dungeon, and it scales linearly from there.\n" +
+                        "You might want to bump this up if you have many other mods adding loot, or if this is a multiplayer server.\n" +
+                        "Ignored if SatchelsEnablePouchUpgradeLoot is false."
         );
 
         satchelsEnablePouchUpgrades = config.getBoolean(
@@ -3703,7 +4090,7 @@ public class ModConfig {
         }
 
         disableFalseCrashImprover = config.get("general", "DisableFalseCrashImprover", disableFalseCrashImproverDefault,
-                "If true, prevents FalsePatternLib from appending the full latest FML log to crash reports.")
+                        "If true, prevents FalsePatternLib from appending the full latest FML log to crash reports.")
                 .getBoolean(disableFalseCrashImproverDefault);
 
         stackOverflowMaxDepth = config.get("general", "StackOverflowMaxDepth", 512,
@@ -3726,7 +4113,7 @@ public class ModConfig {
                 .getInt(64);
 
         woolRequireShears = config.get("general", "woolRequireShears", true,
-                "If true, wool blocks only drop when harvested with shears.")
+                        "If true, wool blocks only drop when harvested with shears.")
                 .getBoolean(true);
 
         shearsDamageOnAnyBlock = config.get("general", "shearsDamageOnAnyBlock", true,
@@ -4612,7 +4999,7 @@ public class ModConfig {
         return out.toArray(new String[out.size()]);
     }
 
-        private static String[] applyCustomPaintingMigrations(String[] entries, boolean addMissing) {
+    private static String[] applyCustomPaintingMigrations(String[] entries, boolean addMissing) {
         String[] out = entries;
         boolean previousAllow = allowCustomPaintingInsert;
         allowCustomPaintingInsert = addMissing;
@@ -4918,14 +5305,19 @@ public class ModConfig {
         return parseRgbColor(color, fallback);
     }
 
-    private static int parseRgbColor(String color, int fallback) {
+    public static int parseRgbColor(String color, int fallback) {
+        Integer parsed = parseRgbColorOrNull(color);
+        return parsed == null ? fallback : parsed;
+    }
+
+    public static Integer parseRgbColorOrNull(String color) {
         if (color == null) {
-            return fallback;
+            return null;
         }
 
         String value = color.trim();
         if (value.isEmpty()) {
-            return fallback;
+            return null;
         }
 
         String hex = value;
@@ -4939,7 +5331,7 @@ public class ModConfig {
             try {
                 return Integer.parseInt(hex, 16);
             } catch (NumberFormatException ignored) {
-                return fallback;
+                return null;
             }
         }
 
@@ -4957,7 +5349,330 @@ public class ModConfig {
         if ("MAGENTA".equals(key)) return 0xFF00FF;
         if ("GRAY".equals(key)) return 0x808080;
         if ("LIGHT_GRAY".equals(key)) return 0xC0C0C0;
-        return fallback;
+        return null;
+    }
+
+    public static String getNamedRgbColorDisplayName(String color) {
+        if (color == null) {
+            return null;
+        }
+        String key = color.trim().toUpperCase(Locale.ROOT);
+        if ("RED".equals(key)) return "red";
+        if ("GREEN".equals(key)) return "green";
+        if ("LIME".equals(key)) return "lime";
+        if ("BLUE".equals(key)) return "blue";
+        if ("YELLOW".equals(key)) return "yellow";
+        if ("ORANGE".equals(key)) return "orange";
+        if ("BLACK".equals(key)) return "black";
+        if ("PURPLE".equals(key)) return "purple";
+        if ("WHITE".equals(key)) return "white";
+        if ("GOLD".equals(key)) return "gold";
+        if ("CYAN".equals(key)) return "cyan";
+        if ("MAGENTA".equals(key)) return "magenta";
+        if ("GRAY".equals(key)) return "gray";
+        if ("LIGHT_GRAY".equals(key)) return "light gray";
+        return null;
+    }
+
+    public static String describeRgbColorInput(String colorText, int color) {
+        String named = getNamedRgbColorDisplayName(colorText);
+        return named == null ? "#" + formatRgbColor(color) : named;
+    }
+
+    public static String formatRgbColor(int color) {
+        String hex = Integer.toHexString(color & 0xFFFFFF).toUpperCase(Locale.ROOT);
+        StringBuilder padded = new StringBuilder();
+        for (int i = hex.length(); i < 6; i++) {
+            padded.append('0');
+        }
+        padded.append(hex);
+        return padded.toString();
+    }
+
+    public static boolean isChatBubblesConfigKey(String setting) {
+        return normalizeChatBubblesConfigKey(setting) != null;
+    }
+
+    public static String normalizeChatBubblesConfigKey(String setting) {
+        if (setting == null) {
+            return null;
+        }
+        String key = setting.trim().toLowerCase(Locale.ROOT)
+                .replace("_", "")
+                .replace("-", "")
+                .replace(" ", "");
+        if (key.isEmpty()) return null;
+        if ("enabled".equals(key) || "enable".equals(key) || "module".equals(key)) return "enabled";
+        if ("showown".equals(key) || "own".equals(key) || "ownmessages".equals(key) || "showownmessages".equals(key)) return "showown";
+        if ("background".equals(key) || "showbackground".equals(key) || "bubblebackground".equals(key)) return "background";
+        if ("color".equals(key) || "colour".equals(key) || "owncolor".equals(key) || "owncolour".equals(key) || "bubblecolor".equals(key) || "bubblecolour".equals(key)) return "color";
+        if ("text".equals(key) || "textcolor".equals(key) || "textcolour".equals(key) || "owntextcolor".equals(key) || "owntextcolour".equals(key) || "chattextcolor".equals(key) || "chattextcolour".equals(key) || "bubbletextcolor".equals(key) || "bubbletextcolour".equals(key) || "whitetext".equals(key) || "textwhite".equals(key) || "textcolourwhite".equals(key) || "textcolorwhite".equals(key)) return "textcolor";
+        if ("randomtextcolor".equals(key) || "randomtextcolour".equals(key) || "randomizetextcolor".equals(key) || "randomisetextcolour".equals(key) || "uuidtextcolor".equals(key) || "uuidtextcolour".equals(key)) return "randomtextcolor";
+        if ("gap".equals(key) || "messagegap".equals(key) || "linegap".equals(key)) return "gap";
+        if ("blackbar".equals(key) || "blackbackground".equals(key) || "blacktextbackground".equals(key) || "textbackground".equals(key)) return "blackbar";
+        if ("blackbaropacity".equals(key) || "blackbackgroundopacity".equals(key) || "blacktextbackgroundopacity".equals(key) || "baropacity".equals(key) || "textbackgroundopacity".equals(key)) return "blackbaropacity";
+        if ("size".equals(key) || "textsize".equals(key) || "scale".equals(key) || "textscale".equals(key) || "bubblesize".equals(key)) return "size";
+        if ("lifetime".equals(key) || "messagelifetime".equals(key) || "duration".equals(key)) return "lifetime";
+        if ("linelength".equals(key) || "maxlength".equals(key) || "maxlinelength".equals(key) || "wrap".equals(key) || "wraplength".equals(key)) return "linelength";
+        return null;
+    }
+
+    public static String validateChatBubblesConfigValue(String setting, String rawValue) {
+        return applyChatBubblesConfigValue(setting, rawValue, false, false);
+    }
+
+    public static String applyChatBubblesConfigValue(String setting, String rawValue, boolean save) {
+        return applyChatBubblesConfigValue(setting, rawValue, save, true);
+    }
+
+    private static String applyChatBubblesConfigValue(String setting, String rawValue, boolean save, boolean updateMemory) {
+        String key = normalizeChatBubblesConfigKey(setting);
+        if (key == null) {
+            throw new IllegalArgumentException("Unknown chat bubbles config: " + setting);
+        }
+
+        if ("enabled".equals(key)) {
+            boolean value = parseChatBubblesBoolean(rawValue);
+            if (updateMemory) {
+                enableChatBubblesModule = value;
+                if (save) saveChatBubblesBoolean("EnableChatBubblesModule", true, value, "If true, renders chat bubbles above players when their chat messages can be parsed.");
+            }
+            return "enabled = " + enabledDisabled(value);
+        }
+        if ("showown".equals(key)) {
+            boolean value = parseChatBubblesBoolean(rawValue);
+            if (updateMemory) {
+                chatBubblesShowOwnMessages = value;
+                if (save) saveChatBubblesBoolean("ChatBubblesShowOwnMessages", true, value, "If true, your own parsed chat messages can render above your own head in third-person, including in singleplayer.");
+            }
+            return "show own messages = " + enabledDisabled(value);
+        }
+        if ("background".equals(key)) {
+            boolean value = parseChatBubblesBoolean(rawValue);
+            if (updateMemory) {
+                chatBubblesShowBackground = value;
+                if (save) saveChatBubblesBoolean("ChatBubblesShowBackground", true, value, "If true, chat bubbles render their speech-bubble background and tail behind the text.");
+            }
+            return "bubble background = " + enabledDisabled(value);
+        }
+        if ("color".equals(key)) {
+            String value = rawValue == null ? "" : rawValue.trim();
+            if (isAutoChatBubbleColorValue(value)) {
+                if (updateMemory) {
+                    chatBubblesUseCustomOwnBubbleColor = false;
+                    chatBubblesOwnBubbleColor = 0xFFD700;
+                    if (save) saveChatBubblesString("ChatBubblesOwnBubbleColor", "", "AUTO", "Optional custom color for your own player's chat bubble. Leave blank or set to AUTO to use local gold for yourself and UUID-based colors for others. Accepts #RRGGBB, 0xRRGGBB, or named colors; custom values are advertised to the server so other RiftFlux clients can see them.");
+                }
+                return "own color = automatic";
+            }
+            Integer color = parseRgbColorOrNull(value);
+            if (color == null) {
+                throw new IllegalArgumentException("Unknown chat bubble color: " + value);
+            }
+            if (updateMemory) {
+                chatBubblesUseCustomOwnBubbleColor = true;
+                chatBubblesOwnBubbleColor = color.intValue() & 0xFFFFFF;
+                if (save) saveChatBubblesString("ChatBubblesOwnBubbleColor", "", value, "Optional custom color for your own player's chat bubble. Leave blank or set to AUTO to use local gold for yourself and UUID-based colors for others. Accepts #RRGGBB, 0xRRGGBB, or named colors; custom values are advertised to the server so other RiftFlux clients can see them.");
+            }
+            return "own color = " + describeRgbColorInput(value, color.intValue());
+        }
+        if ("textcolor".equals(key)) {
+            String value = rawValue == null ? "" : rawValue.trim();
+            if (isAutoChatBubbleColorValue(value)) {
+                if (updateMemory) {
+                    chatBubblesUseCustomOwnTextColor = false;
+                    chatBubblesOwnTextColor = 0xFFFFFF;
+                    if (save) saveChatBubblesString("ChatBubblesOwnTextColor", "AUTO", "AUTO", "Optional custom color for your own player's chat bubble text. Leave blank or set to AUTO for the default white text, or UUID-random text if ChatBubblesRandomizeTextColorByUuid is enabled. Accepts #RRGGBB, 0xRRGGBB, or named colors; custom values are advertised to the server so other RiftFlux clients can see them.");
+                }
+                return "own text color = automatic";
+            }
+            Integer color = parseRgbColorOrNull(value);
+            if (color == null) {
+                throw new IllegalArgumentException("Unknown chat bubble text color: " + value);
+            }
+            if (updateMemory) {
+                chatBubblesUseCustomOwnTextColor = true;
+                chatBubblesOwnTextColor = color.intValue() & 0xFFFFFF;
+                if (save) saveChatBubblesString("ChatBubblesOwnTextColor", "AUTO", value, "Optional custom color for your own player's chat bubble text. Leave blank or set to AUTO for the default white text, or UUID-random text if ChatBubblesRandomizeTextColorByUuid is enabled. Accepts #RRGGBB, 0xRRGGBB, or named colors; custom values are advertised to the server so other RiftFlux clients can see them.");
+            }
+            return "own text color = " + describeRgbColorInput(value, color.intValue());
+        }
+        if ("randomtextcolor".equals(key)) {
+            boolean value = parseChatBubblesBoolean(rawValue);
+            if (updateMemory) {
+                chatBubblesRandomizeTextColorByUuid = value;
+                if (save) saveChatBubblesBoolean("ChatBubblesRandomizeTextColorByUuid", false, value, "If true, chat bubble text uses a stable UUID-based random color for players who have not set their own synced text color.");
+            }
+            return "random UUID text color = " + enabledDisabled(value);
+        }
+        if ("gap".equals(key)) {
+            int value = parseChatBubblesInt(rawValue, CHAT_BUBBLES_MESSAGE_GAP_MIN, CHAT_BUBBLES_MESSAGE_GAP_MAX, "message gap");
+            if (updateMemory) {
+                chatBubblesMessageGap = value;
+                if (save) saveChatBubblesInt("ChatBubblesMessageGap", CHAT_BUBBLES_MESSAGE_GAP_DEFAULT, value, CHAT_BUBBLES_MESSAGE_GAP_COMMENT);
+            }
+            return "message gap = " + value;
+        }
+        if ("blackbar".equals(key)) {
+            boolean value = parseChatBubblesBoolean(rawValue);
+            if (updateMemory) {
+                chatBubblesBlackTextBackground = value;
+                if (save) saveChatBubblesBoolean("ChatBubblesBlackTextBackground", false, value, "If true, draws a solid black bar behind each chat bubble text line.");
+            }
+            return "black text bar = " + enabledDisabled(value);
+        }
+        if ("blackbaropacity".equals(key)) {
+            float value = parseChatBubblesFloat(rawValue, CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MIN, CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MAX, "black text bar opacity");
+            if (updateMemory) {
+                chatBubblesBlackTextBackgroundOpacity = value;
+                if (save) saveChatBubblesFloat("ChatBubblesBlackTextBackgroundOpacity", CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_DEFAULT, value, CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_COMMENT);
+            }
+            return "black text bar opacity = " + value;
+        }
+        if ("size".equals(key)) {
+            float value = parseChatBubblesFloat(rawValue, CHAT_BUBBLES_TEXT_SCALE_MIN, CHAT_BUBBLES_TEXT_SCALE_MAX, "text size");
+            if (updateMemory) {
+                chatBubblesTextScale = value;
+                if (save) saveChatBubblesFloat("ChatBubblesTextScale", CHAT_BUBBLES_TEXT_SCALE_DEFAULT, value, CHAT_BUBBLES_TEXT_SCALE_COMMENT);
+            }
+            return "text size = " + value;
+        }
+        if ("lifetime".equals(key)) {
+            int value = parseChatBubblesInt(rawValue, 1, 120, "message lifetime");
+            if (updateMemory) {
+                chatBubblesMessageLifetimeSeconds = value;
+                if (save) saveChatBubblesInt("ChatBubblesMessageLifetimeSeconds", 12, value, "How long chat bubbles remain visible, in seconds.");
+            }
+            return "message lifetime = " + value + " seconds";
+        }
+        if ("linelength".equals(key)) {
+            int value = parseChatBubblesInt(rawValue, 8, 120, "max line length");
+            if (updateMemory) {
+                chatBubblesMaxLineLength = value;
+                if (save) saveChatBubblesInt("ChatBubblesMaxLineLength", 30, value, "Maximum approximate characters per rendered chat bubble line before wrapping.");
+            }
+            return "max line length = " + value;
+        }
+
+        throw new IllegalArgumentException("Unknown chat bubbles config: " + setting);
+    }
+
+    public static float clampChatBubblesTextScale(float scale) {
+        if (Float.isNaN(scale) || Float.isInfinite(scale)) {
+            return CHAT_BUBBLES_TEXT_SCALE_DEFAULT;
+        }
+        if (scale < CHAT_BUBBLES_TEXT_SCALE_MIN) {
+            return CHAT_BUBBLES_TEXT_SCALE_MIN;
+        }
+        if (scale > CHAT_BUBBLES_TEXT_SCALE_MAX) {
+            return CHAT_BUBBLES_TEXT_SCALE_MAX;
+        }
+        return scale;
+    }
+
+    public static float clampChatBubblesBlackTextBackgroundOpacity(float opacity) {
+        if (Float.isNaN(opacity) || Float.isInfinite(opacity)) {
+            return CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_DEFAULT;
+        }
+        if (opacity < CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MIN) {
+            return CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MIN;
+        }
+        if (opacity > CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MAX) {
+            return CHAT_BUBBLES_BLACK_TEXT_BACKGROUND_OPACITY_MAX;
+        }
+        return opacity;
+    }
+
+    public static void saveChatBubblesTextScale(float scale) {
+        applyChatBubblesConfigValue("size", Float.toString(clampChatBubblesTextScale(scale)), true);
+    }
+
+    private static boolean isAutoChatBubbleColorValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return true;
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        return "auto".equals(normalized) || "default".equals(normalized) || "clear".equals(normalized) || "random".equals(normalized);
+    }
+
+    private static boolean parseChatBubblesBoolean(String rawValue) {
+        if (rawValue == null) {
+            throw new IllegalArgumentException("Expected true or false.");
+        }
+        String value = rawValue.trim().toLowerCase(Locale.ROOT);
+        if ("true".equals(value) || "on".equals(value) || "yes".equals(value) || "1".equals(value) || "enabled".equals(value) || "enable".equals(value)) {
+            return true;
+        }
+        if ("false".equals(value) || "off".equals(value) || "no".equals(value) || "0".equals(value) || "disabled".equals(value) || "disable".equals(value)) {
+            return false;
+        }
+        throw new IllegalArgumentException("Expected true or false, got: " + rawValue);
+    }
+
+    private static int parseChatBubblesInt(String rawValue, int min, int max, String label) {
+        if (rawValue == null) {
+            throw new IllegalArgumentException(label + " must be from " + min + " to " + max + ".");
+        }
+        try {
+            int value = Integer.parseInt(rawValue.trim());
+            if (value < min || value > max) {
+                throw new IllegalArgumentException(label + " must be from " + min + " to " + max + ".");
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(label + " must be a whole number from " + min + " to " + max + ".");
+        }
+    }
+
+    private static float parseChatBubblesFloat(String rawValue, float min, float max, String label) {
+        if (rawValue == null) {
+            throw new IllegalArgumentException(label + " must be from " + min + " to " + max + ".");
+        }
+        try {
+            float value = Float.parseFloat(rawValue.trim());
+            if (Float.isNaN(value) || Float.isInfinite(value) || value < min || value > max) {
+                throw new IllegalArgumentException(label + " must be from " + min + " to " + max + ".");
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(label + " must be a number from " + min + " to " + max + ".");
+        }
+    }
+
+    private static String enabledDisabled(boolean value) {
+        return value ? "enabled" : "disabled";
+    }
+
+    private static void saveChatBubblesBoolean(String key, boolean defaultValue, boolean value, String comment) {
+        if (config == null) {
+            return;
+        }
+        config.get("chatbubbles", key, defaultValue, comment).set(Boolean.toString(value));
+        config.save();
+    }
+
+    private static void saveChatBubblesInt(String key, int defaultValue, int value, String comment) {
+        if (config == null) {
+            return;
+        }
+        config.get("chatbubbles", key, defaultValue, comment).set(Integer.toString(value));
+        config.save();
+    }
+
+    private static void saveChatBubblesFloat(String key, float defaultValue, float value, String comment) {
+        if (config == null) {
+            return;
+        }
+        config.get("chatbubbles", key, defaultValue, comment).set(Float.toString(value));
+        config.save();
+    }
+
+    private static void saveChatBubblesString(String key, String defaultValue, String value, String comment) {
+        if (config == null) {
+            return;
+        }
+        config.get("chatbubbles", key, defaultValue, comment).set(value);
+        config.save();
     }
 
     // parse the string of IDs into a set

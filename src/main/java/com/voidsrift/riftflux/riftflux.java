@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.combat.StickTooltipHandler;
+import com.voidsrift.riftflux.chatbubbles.ChatBubbleColorManager;
+import com.voidsrift.riftflux.command.CommandRiftFlux;
 import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
 import com.voidsrift.riftflux.combat.torohealth.ToroHealthContent;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
@@ -110,6 +112,7 @@ public class riftflux {
             MinecraftForge.EVENT_BUS.register(fenceOverrideEvents);
             FMLCommonHandler.instance().bus().register(fenceOverrideEvents);
         }
+        ChatBubbleColorManager.bootstrapServer();
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.PlayerHurtSoundEventHandler());
         if (Loader.isModLoaded("Thaumcraft")) {
@@ -172,6 +175,10 @@ public class riftflux {
         if (ModConfig.dssEnabled) {
             Springmain.serverLoad(event);
         }
+        event.registerServerCommand(new CommandRiftFlux());
+        event.registerServerCommand(CommandRiftFlux.chatBubbleCommand());
+        event.registerServerCommand(CommandRiftFlux.chatBubbleTextCommand());
+        event.registerServerCommand(CommandRiftFlux.chatBubbleSizeCommand());
         BlessingContent.serverStarting(event);
     }
 

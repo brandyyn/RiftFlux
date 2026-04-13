@@ -14,6 +14,8 @@ import java.util.Set;
 
 public final class BetaStarsRenderHelper {
     private static final int DEFAULT_STAR_COUNT = 1500;
+    private static final float SUNSET_FADE_IN_MAX_BRIGHTNESS = 0.45F;
+    private static final float SUNSET_RED_TINT_THRESHOLD = 0.45F;
     private static boolean renderedThisSkyPass;
     private static boolean betterSkiesReflectionInitialized;
     private static Field betterSkiesLayerTextureField;
@@ -37,14 +39,26 @@ public final class BetaStarsRenderHelper {
     }
 
     public static boolean shouldRenderBetaStars(Minecraft mc, float partialTicks) {
-        if (!ModConfig.betaStarsEnabled || mc == null || mc.theWorld == null) {
+        if (!ModConfig.betaStarsEnabled || mc == null || mc.theWorld == null || mc.theWorld.provider == null) {
             return false;
         }
-        return !SunriseSkyTintHelper.isSunriseOrSunsetActive(mc.theWorld, partialTicks);
+        return !mc.theWorld.provider.hasNoSky;
     }
 
-    public static void renderBetaStars(int starCount) {
-        if (starCount <= 0) {
+    public static float computeStarBrightness(Minecraft mc, float partialTicks) {
+        if (!shouldRenderBetaStars(mc, partialTicks)) {
+            return 0.0F;
+        }
+
+        float rainFade = 1.0F - mc.theWorld.getRainStrength(partialTicks);
+        float baseBrightness = clamp01(mc.theWorld.getStarBrightness(partialTicks) * rainFade);
+        float sunsetFadeIn = computeSunsetFadeInBrightness(mc, partialTicks) * rainFade;
+        float brightness = Math.max(baseBrightness, sunsetFadeIn);
+        return clamp01(brightness * computeSunsetVisibilityGate(mc, partialTicks));
+    }
+
+    public static void renderBetaStars(int starCount, float baseBrightness, float partialTicks) {
+        if (starCount <= 0 || baseBrightness <= 0.0F) {
             return;
         }
 
@@ -52,6 +66,7 @@ public final class BetaStarsRenderHelper {
         Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
         double sizeMultiplier = Math.max(0.1D, (double) ModConfig.betaStarsSizeMultiplier);
+        float time = resolveRenderTime(partialTicks);
 
         for (int i = 0; i < starCount; ++i) {
             double d0 = (double) (random.nextFloat() * 2.0F - 1.0F);
@@ -77,6 +92,11 @@ public final class BetaStarsRenderHelper {
                 double d14 = random.nextDouble() * Math.PI * 2.0D;
                 double d15 = Math.sin(d14);
                 double d16 = Math.cos(d14);
+                float starAlpha = clamp01(baseBrightness * resolveBlinkFactor(random, time));
+                if (starAlpha <= 0.003F) {
+                    continue;
+                }
+                tessellator.setColorRGBA_F(1.0F, 1.0F, 1.0F, starAlpha);
 
                 for (int j = 0; j < 4; ++j) {
                     double d17 = 0.0D;
@@ -216,5 +236,100 @@ public final class BetaStarsRenderHelper {
             return ((ResourceLocation) resourceObj).toString();
         }
         return resourceObj.toString();
+    }
+
+    private static float computeSunsetFadeInBrightness(Minecraft mc, float partialTicks) {
+        if (mc == null || mc.theWorld == null || mc.theWorld.provider == null) {
+            return 0.0F;
+        }
+
+        float timeOfDay = getTimeOfDay(mc, partialTicks);
+        int fadeStart = ModConfig.betaStarsSunsetFadeStartTick;
+        int fadeEnd = Math.max(fadeStart + 1, ModConfig.betaStarsSunsetFadeEndTick);
+        if (timeOfDay < (float) fadeStart || timeOfDay >= (float) fadeEnd) {
+            return 0.0F;
+        }
+
+        float[] sunrise = mc.theWorld.provider.calcSunriseSunsetColors(
+                mc.theWorld.getCelestialAngle(partialTicks),
+                partialTicks
+        );
+        if (sunrise == null || sunrise.length < 4) {
+            return 0.0F;
+        }
+
+        float redTintFade = clamp01((clamp01(sunrise[3]) - SUNSET_RED_TINT_THRESHOLD) / (1.0F - SUNSET_RED_TINT_THRESHOLD));
+        float horizonFade = smoothstep(clamp01((timeOfDay - (float) fadeStart) / (float) (fadeEnd - fadeStart)));
+        float fade = redTintFade * horizonFade;
+        return fade * fade * SUNSET_FADE_IN_MAX_BRIGHTNESS;
+    }
+
+    private static float computeSunsetVisibilityGate(Minecraft mc, float partialTicks) {
+        float timeOfDay = getTimeOfDay(mc, partialTicks);
+        int fadeStart = ModConfig.betaStarsSunsetFadeStartTick;
+        int fadeEnd = Math.max(fadeStart + 1, ModConfig.betaStarsSunsetFadeEndTick);
+        if (timeOfDay >= 12000.0F && timeOfDay < (float) fadeStart) {
+            return 0.0F;
+        }
+        if (timeOfDay >= (float) fadeStart && timeOfDay < (float) fadeEnd) {
+            return smoothstep(clamp01((timeOfDay - (float) fadeStart) / (float) (fadeEnd - fadeStart)));
+        }
+        return 1.0F;
+    }
+
+    private static float getTimeOfDay(Minecraft mc, float partialTicks) {
+        if (mc == null || mc.theWorld == null) {
+            return 0.0F;
+        }
+        float timeOfDay = (float) (mc.theWorld.getWorldTime() % 24000L) + partialTicks;
+        if (timeOfDay < 0.0F) {
+            timeOfDay += 24000.0F;
+        }
+        if (timeOfDay >= 24000.0F) {
+            timeOfDay -= 24000.0F;
+        }
+        return timeOfDay;
+    }
+
+    private static float resolveRenderTime(float partialTicks) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null) {
+            return partialTicks;
+        }
+        return (float) mc.theWorld.getTotalWorldTime() + partialTicks;
+    }
+
+    private static float resolveBlinkFactor(Random random, float time) {
+        if (!ModConfig.betaStarsRandomBlink) {
+            return 1.0F;
+        }
+
+        float phase = random.nextFloat() * ((float) Math.PI * 2.0F);
+        float speedMultiplier = Math.max(0.05F, ModConfig.betaStarsTwinkleSpeedMultiplier);
+        float speed = (0.055F + random.nextFloat() * 0.115F) * speedMultiplier;
+        float floor = 0.38F + random.nextFloat() * 0.28F;
+        float slowWave = 0.5F + 0.5F * (float) Math.sin(time * speed + phase);
+        float shimmerWave = 0.5F + 0.5F * (float) Math.sin(time * speed * (2.1F + random.nextFloat() * 1.7F) + phase * 1.73F);
+        float shimmer = slowWave * shimmerWave;
+        if (random.nextFloat() < 0.08F) {
+            float accent = 0.5F + 0.5F * (float) Math.sin(time * speed * 2.4F + phase * 2.9F);
+            shimmer = Math.max(shimmer, accent * accent);
+        }
+        return clamp01(floor + (1.0F - floor) * shimmer);
+    }
+
+    private static float smoothstep(float value) {
+        float t = clamp01(value);
+        return t * t * (3.0F - 2.0F * t);
+    }
+
+    private static float clamp01(float value) {
+        if (value < 0.0F) {
+            return 0.0F;
+        }
+        if (value > 1.0F) {
+            return 1.0F;
+        }
+        return value;
     }
 }

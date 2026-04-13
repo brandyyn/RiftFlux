@@ -8,6 +8,7 @@ import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
 import com.voidsrift.riftflux.fence.FenceOverrideClientState;
 import com.voidsrift.riftflux.client.chatcopy.ChatSelectionManager;
+import com.voidsrift.riftflux.client.chatbubbles.ChatBubblesClient;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeHandler;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
@@ -126,6 +127,7 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enableChatSelectionCopy) {
             ChatSelectionManager.bootstrap();
         }
+        ChatBubblesClient.bootstrap();
         if (ModConfig.enableWorldTooltips) {
             WorldTooltipClient.bootstrap();
         }

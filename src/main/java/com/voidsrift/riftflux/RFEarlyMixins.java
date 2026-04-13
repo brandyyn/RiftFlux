@@ -86,6 +86,18 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinTooltip");
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            if (hasClass("Reika.DragonAPI.Instantiable.Event.Client.RenderBlockAtPosEvent")
+                    && ModConfig.optimizeDragonAPIBlockRenderFastPaths) {
+                mixins.add("early.dragonapi.MixinRenderBlockAtPosEvent_FastPath");
+            }
+            if (hasClass("Reika.DragonAPI.Instantiable.Event.Client.EntityRenderingLoopEvent")
+                    && ModConfig.optimizeDragonAPIEntityRenderLoopFastPaths) {
+                mixins.add("early.dragonapi.MixinEntityRenderingLoopEvent_FastPath");
+            }
+            if (hasClass("Reika.DragonAPI.Extras.ThrottleableEffectRenderer")
+                    && ModConfig.optimizeDragonAPIParticleRenderFastPaths) {
+                mixins.add("early.dragonapi.MixinThrottleableEffectRenderer_VanillaParticleLoop");
+            }
             if (hasClass("Reika.ChromatiCraft.ChromaClientEventController")
                     && ModConfig.optimizeChromatiCraftRenderEventFastPaths) {
                 mixins.add("early.chromaticraft.MixinChromaClientEventController_OptimizeClientRenderHooks");
@@ -278,6 +290,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.MixinGuiGameOver_AllowChat");
                 mixins.add("early.vortex.MixinGuiRuneGameOver_AllowChat");
             }
+            if (ModConfig.allowChatOnPauseScreen) {
+                mixins.add("early.MixinGuiScreen_AllowPauseMenuChat");
+            }
             if (ModConfig.enableChatSelectionCopy) {
                 mixins.add("early.MixinGuiChat_ChatSelection");
             }
@@ -324,6 +339,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.dualHotbarEnable) {
             mixins.add("early.dualhotbar.MixinForgeHooks_PickBlock");
             mixins.add("early.dualhotbar.MixinNetHandlerPlayServer_HeldItemChange");
+        }
+        if (ModConfig.enableBetaLeavesLook) {
+            mixins.add("early.MixinBlock_LeafLightOpacity");
         }
         mixins.add("early.baubles.MixinContainerPlayerExpanded_BackpackShiftClick");
 

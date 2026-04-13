@@ -121,7 +121,7 @@ extends Gui {
             int baseHearts = MathHelper.ceiling_float_int((float)(healthMax / 4.0f));
             int totalHearts = baseHearts + MathHelper.ceiling_float_int((float)absorb / 4.0f);
             int healthRows = MathHelper.ceiling_float_int((float)((float)totalHearts / 10.0f));
-            int rowHeight = Math.max(10 - (healthRows - 2), 3);
+            int rowHeight = 10;
             this.rand.setSeed(this.mc.ingameGUI.getUpdateCounter() * 312871);
             ScaledResolution res = new ScaledResolution(this.mc, this.mc.displayWidth, this.mc.displayHeight);
             int width = res.getScaledWidth();
@@ -131,9 +131,6 @@ extends Gui {
             int left = width / 2 - 91;
             int top = height - left_height;
             left_height += healthRows * rowHeight;
-            if (rowHeight != 10) {
-                left_height += 10 - rowHeight;
-            }
             int regen = -1;
             if (this.mc.thePlayer.isPotionActive(Potion.regeneration)) {
                 regen = this.mc.ingameGUI.getUpdateCounter() % 25;

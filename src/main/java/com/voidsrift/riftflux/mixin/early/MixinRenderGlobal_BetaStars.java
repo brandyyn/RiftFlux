@@ -25,7 +25,7 @@ public abstract class MixinRenderGlobal_BetaStars {
         BetaStarsRenderHelper.markRenderedThisSkyPass();
         int starCount = BetaStarsRenderHelper.resolvePreferredStarCount();
         if (starCount > 0) {
-            BetaStarsRenderHelper.renderBetaStars(starCount);
+            BetaStarsRenderHelper.renderBetaStars(starCount, 1.0F, 0.0F);
         }
         ci.cancel();
     }

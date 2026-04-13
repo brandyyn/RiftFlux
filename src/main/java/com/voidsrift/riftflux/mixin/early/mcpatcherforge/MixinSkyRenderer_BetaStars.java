@@ -20,7 +20,7 @@ public abstract class MixinSkyRenderer_BetaStars {
             require = 0
     )
     private static void riftflux$renderBetaStarsWithCustomSky(CallbackInfo ci) {
-        if (!ModConfig.betaStarsEnabled) {
+        if (!ModConfig.betaStarsEnabled || ModConfig.betaStarsRenderBehindSunMoon) {
             return;
         }
         riftflux$renderBetaStars(0.0F);
@@ -44,7 +44,7 @@ public abstract class MixinSkyRenderer_BetaStars {
             return;
         }
 
-        float starBrightness = mc.theWorld.getStarBrightness(partialTicks) * (1.0F - mc.theWorld.getRainStrength(partialTicks));
+        float starBrightness = BetaStarsRenderHelper.computeStarBrightness(mc, partialTicks);
         if (starBrightness <= 0.0F) {
             return;
         }
@@ -53,8 +53,8 @@ public abstract class MixinSkyRenderer_BetaStars {
         if (GL11.glIsEnabled(GL11.GL_TEXTURE_2D)) {
             GL11.glDisable(GL11.GL_TEXTURE_2D);
         }
-        GL11.glColor4f(starBrightness, starBrightness, starBrightness, starBrightness);
-        BetaStarsRenderHelper.renderBetaStars(starCount);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        BetaStarsRenderHelper.renderBetaStars(starCount, starBrightness, partialTicks);
         BetaStarsRenderHelper.markRenderedThisSkyPass();
         GL11.glPopAttrib();
     }

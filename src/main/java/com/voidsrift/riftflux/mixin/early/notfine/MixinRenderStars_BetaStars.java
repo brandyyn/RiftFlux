@@ -25,8 +25,9 @@ public abstract class MixinRenderStars_BetaStars {
 
         BetaStarsRenderHelper.markRenderedThisSkyPass();
         int starCount = BetaStarsRenderHelper.resolvePreferredStarCount();
-        if (starCount > 0) {
-            BetaStarsRenderHelper.renderBetaStars(starCount);
+        float starBrightness = BetaStarsRenderHelper.computeStarBrightness(Minecraft.getMinecraft(), 0.0F);
+        if (starCount > 0 && starBrightness > 0.0F) {
+            BetaStarsRenderHelper.renderBetaStars(starCount, starBrightness, 0.0F);
         }
         ci.cancel();
     }
