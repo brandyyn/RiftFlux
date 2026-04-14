@@ -50,6 +50,16 @@ public final class IsometricPhotoModeHandler {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (this.mc.theWorld == null || this.mc.thePlayer == null) {
+            if (event.phase == TickEvent.Phase.END) {
+                PhotoModeExternalKeySuppressions.tick();
+            }
+            this.resetHorizontalRotationHold();
+            this.resetVerticalRotationHold();
+            this.jumpCenterHeld = false;
+            return;
+        }
+
         IsometricPhotoModeController controller = IsometricPhotoModeController.instance();
         if (this.mc.currentScreen == null) {
             this.suppressPlayerVerticalKeyBindings(controller);

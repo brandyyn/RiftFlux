@@ -1189,7 +1189,7 @@ public final class IsometricPhotoModeController {
         }
 
         if (this.mc.renderViewEntity == this.cameraEntity || this.mc.renderViewEntity == null) {
-            this.mc.renderViewEntity = this.mc.thePlayer != null ? this.mc.thePlayer : this.previousRenderViewEntity;
+            this.mc.renderViewEntity = this.mc.thePlayer;
         }
     }
 

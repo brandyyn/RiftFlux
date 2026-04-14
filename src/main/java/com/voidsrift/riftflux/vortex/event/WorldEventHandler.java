@@ -7,6 +7,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import com.google.common.collect.ImmutableSetMultimap;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.ForgeChunkManager;
@@ -55,17 +56,8 @@ public class WorldEventHandler {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-        if (!isEnabled()) {
-            return;
-        }
-        if (!event.world.isRemote && event.world instanceof WorldServer) {
-            MinecraftServer server = MinecraftServer.getServer();
-            // Startup pass: if no players are online, unload preloaded dimensions immediately.
-            if (server != null && server.getConfigurationManager() != null
-                    && server.getConfigurationManager().playerEntityList.isEmpty()) {
-                tryQueueUnload((WorldServer) event.world);
-            }
-        }
+        // Do not unload from WorldEvent.Load. Dimensions can load before the joining player is attached,
+        // which can unload the world under that player in dimensions like Twilight Forest.
     }
 
     @SubscribeEvent
@@ -122,7 +114,11 @@ public class WorldEventHandler {
         if (!isEnabled()) {
             return;
         }
-        unloadIdleLoadedDimensions();
+        int activeDimension = Integer.MIN_VALUE;
+        if (event.player != null && event.player.worldObj != null && event.player.worldObj.provider != null) {
+            activeDimension = event.player.worldObj.provider.dimensionId;
+        }
+        unloadIdleLoadedDimensions(activeDimension);
     }
 
     @SubscribeEvent
@@ -135,13 +131,16 @@ public class WorldEventHandler {
         }
     }
 
-    private void unloadIdleLoadedDimensions() {
+    private void unloadIdleLoadedDimensions(int activeDimension) {
         Integer[] ids = DimensionManager.getIDs();
         if (ids == null) {
             return;
         }
 
         for (int dim : ids) {
+            if (dim == activeDimension) {
+                continue;
+            }
             WorldServer world = DimensionManager.getWorld(dim);
             if (world != null) {
                 tryQueueUnload(world);
@@ -194,6 +193,32 @@ public class WorldEventHandler {
             return false;
         }
 
-        return true;
+        return !hasOnlinePlayerInDimension(world);
+    }
+
+    private boolean hasOnlinePlayerInDimension(WorldServer world) {
+        MinecraftServer server = MinecraftServer.getServer();
+        if (server == null || server.getConfigurationManager() == null || world.provider == null) {
+            return false;
+        }
+
+        int dimension = world.provider.dimensionId;
+        for (Object object : server.getConfigurationManager().playerEntityList) {
+            if (!(object instanceof EntityPlayerMP)) {
+                continue;
+            }
+
+            EntityPlayerMP player = (EntityPlayerMP) object;
+            if (player.dimension == dimension) {
+                return true;
+            }
+
+            if (player.worldObj != null && player.worldObj.provider != null
+                    && player.worldObj.provider.dimensionId == dimension) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
