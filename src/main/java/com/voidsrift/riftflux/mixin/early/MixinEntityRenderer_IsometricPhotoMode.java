@@ -201,6 +201,40 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
         }
     }
 
+    @Redirect(
+            method = "setupFog(IF)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/opengl/GL11;glEnable(I)V",
+                    remap = false
+            ),
+            require = 0
+    )
+    private void riftflux$preventFogEnableInSetupFog(int capability) {
+        if (IsometricPhotoModeController.instance().isActive() && capability == GL11.GL_FOG) {
+            return;
+        }
+
+        GL11.glEnable(capability);
+    }
+
+    @Redirect(
+            method = "renderWorld(FJ)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/opengl/GL11;glEnable(I)V",
+                    remap = false
+            ),
+            require = 0
+    )
+    private void riftflux$preventFogEnableInRenderWorld(int capability) {
+        if (IsometricPhotoModeController.instance().isActive() && capability == GL11.GL_FOG) {
+            return;
+        }
+
+        GL11.glEnable(capability);
+    }
+
     @Inject(method = "renderHand(FI)V", at = @At("HEAD"), cancellable = true)
     private void riftflux$hideHandInPhotoMode(float partialTicks, int pass, CallbackInfo ci) {
         if (IsometricPhotoModeController.instance().isActive()) {

@@ -79,16 +79,14 @@ public final class AngelicaPhotoModeCompat {
 
     public static void enforceNoFog() {
         ensureInitialized();
-        if (!glStateAvailable) {
-            return;
-        }
-
         try {
-            disableFogMethod.invoke(null);
+            if (glStateAvailable) {
+                disableFogMethod.invoke(null);
 
-            Object fogMode = getFogModeMethod.invoke(null);
-            if (fogMode != null) {
-                setEnabledMethod.invoke(fogMode, Boolean.FALSE);
+                Object fogMode = getFogModeMethod.invoke(null);
+                if (fogMode != null) {
+                    setEnabledMethod.invoke(fogMode, Boolean.FALSE);
+                }
             }
 
             GL11.glDisable(GL11.GL_FOG);
