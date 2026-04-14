@@ -15,9 +15,11 @@ import java.util.Random;
 
 public class BiomeGenWheatfield extends BiomeGenBase {
     private static final int PASTURE_GRASS_COLOR = 13166666;
-    private static final Height WHEATFIELD_HEIGHT = new Height(0.08F, 0.02F);
+    private static final Height WHEATFIELD_HEIGHT = new Height(0.0035F, 0.0008F);
     private static final int TREE_BARLEY_RADIUS = 2;
     private static final int TREE_GROUND_SEARCH_DEPTH = 3;
+    private static final int EDGE_SAMPLE_RADIUS = 3;
+    private static final float EDGE_BLEND_START = 0.42F;
 
     private final WorldGenerator barleyGen;
     private final BlockWheatfieldBarley barleyBlock;
@@ -33,7 +35,7 @@ public class BiomeGenWheatfield extends BiomeGenBase {
 
         theBiomeDecorator.treesPerChunk = 0;
         theBiomeDecorator.flowersPerChunk = -999;
-        theBiomeDecorator.grassPerChunk = Math.max(0, ModConfig.wheatfieldBarleyPerChunk);
+        theBiomeDecorator.grassPerChunk = 0;
         theBiomeDecorator.reedsPerChunk = 0;
         theBiomeDecorator.deadBushPerChunk = 0;
         theBiomeDecorator.mushroomsPerChunk = 0;
@@ -50,6 +52,7 @@ public class BiomeGenWheatfield extends BiomeGenBase {
     @Override
     public void decorate(World world, Random random, int chunkX, int chunkZ) {
         super.decorate(world, random, chunkX, chunkZ);
+        seedNaturalBarley(world, random, chunkX, chunkZ);
         seedBarleyAtTreeBases(world, chunkX, chunkZ);
     }
 
@@ -80,6 +83,71 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                 }
             }
         }
+    }
+
+    private void seedNaturalBarley(World world, Random random, int chunkX, int chunkZ) {
+        int configured = Math.max(0, ModConfig.wheatfieldBarleyPerChunk);
+        if (configured <= 0) {
+            return;
+        }
+
+        int attempts = configured * 5;
+        for (int i = 0; i < attempts; i++) {
+            int x = chunkX + random.nextInt(16);
+            int z = chunkZ + random.nextInt(16);
+            if (world.getBiomeGenForCoords(x, z) != this) {
+                continue;
+            }
+
+            float edgeFactor = computeBiomeCoreFactor(world, x, z);
+            if (edgeFactor <= 0.0F || random.nextFloat() > edgeFactor) {
+                continue;
+            }
+
+            int y = findSurfaceSoilY(world, x, z);
+            if (y < 0) {
+                continue;
+            }
+
+            tryPlaceBarley(world, x, y + 1, z);
+        }
+    }
+
+    private int findSurfaceSoilY(World world, int x, int z) {
+        int topY = Math.min(world.getHeightValue(x, z), world.getActualHeight() - 2);
+        for (int y = topY; y >= Math.max(1, topY - 8); y--) {
+            Block ground = world.getBlock(x, y, z);
+            if ((ground == Blocks.grass || ground == Blocks.dirt) && world.isAirBlock(x, y + 1, z)) {
+                return y;
+            }
+        }
+        return -1;
+    }
+
+    private float computeBiomeCoreFactor(World world, int x, int z) {
+        int total = 0;
+        int wheatfieldCount = 0;
+
+        for (int dx = -EDGE_SAMPLE_RADIUS; dx <= EDGE_SAMPLE_RADIUS; dx++) {
+            for (int dz = -EDGE_SAMPLE_RADIUS; dz <= EDGE_SAMPLE_RADIUS; dz++) {
+                total++;
+                if (world.getBiomeGenForCoords(x + dx, z + dz) == this) {
+                    wheatfieldCount++;
+                }
+            }
+        }
+
+        if (total <= 0) {
+            return 0.0F;
+        }
+
+        float ratio = (float) wheatfieldCount / (float) total;
+        if (ratio <= EDGE_BLEND_START) {
+            return 0.0F;
+        }
+
+        float normalized = (ratio - EDGE_BLEND_START) / (1.0F - EDGE_BLEND_START);
+        return normalized * normalized;
     }
 
     private int findTreeBaseY(World world, int x, int z) {

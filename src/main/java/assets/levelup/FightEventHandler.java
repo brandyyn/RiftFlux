@@ -31,6 +31,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 
+import java.util.Locale;
+
 public final class FightEventHandler {
     public static final FightEventHandler INSTANCE = new FightEventHandler();
 
@@ -44,13 +46,27 @@ public final class FightEventHandler {
         float i = event.ammount;
         if (damagesource.getEntity() instanceof EntityPlayer) {
             EntityPlayer entityplayer = (EntityPlayer)damagesource.getEntity();
+            boolean rangedSneakAttackBonusEnabled = ModConfig.levelUpEnableRangedSneakAttackBonusDamage;
+            boolean meleeSneakAttackBonusEnabled = ModConfig.levelUpEnableMeleeSneakAttackBonusDamage;
+            float rangedSneakAttackDamageMultiplier = Math.max(0.0f, ModConfig.levelUpRangedSneakAttackDamageMultiplier);
+            float meleeSneakAttackDamageMultiplier = Math.max(0.0f, ModConfig.levelUpMeleeSneakAttackDamageMultiplier);
             if (damagesource instanceof EntityDamageSourceIndirect) {
                 if (!damagesource.damageType.equals("arrow")) {
                     i *= 1.0f + (float)BowEventHandler.getArcherSkill(entityplayer) / 100.0f;
                 }
-                if (FightEventHandler.getDistance(event.entityLiving, (EntityLivingBase)entityplayer) < 256.0f && entityplayer.isSneaking() && !FightEventHandler.canSeePlayer(event.entityLiving) && !FightEventHandler.entityIsFacing(event.entityLiving, (EntityLivingBase)entityplayer)) {
-                    i *= 1.5f;
-                    entityplayer.addChatComponentMessage((IChatComponent)new ChatComponentTranslation("sneak.attack", new Object[]{1.5}));
+                if (rangedSneakAttackBonusEnabled
+                        && rangedSneakAttackDamageMultiplier > 0.0f
+                        && FightEventHandler.getDistance(event.entityLiving, (EntityLivingBase)entityplayer) < 256.0f
+                        && entityplayer.isSneaking()
+                        && !FightEventHandler.canSeePlayer(event.entityLiving)
+                        && !FightEventHandler.entityIsFacing(event.entityLiving, (EntityLivingBase)entityplayer)) {
+                    i *= rangedSneakAttackDamageMultiplier;
+                    entityplayer.addChatComponentMessage(
+                            (IChatComponent) new ChatComponentTranslation(
+                                    "sneak.attack",
+                                    new Object[]{FightEventHandler.formatMultiplier(rangedSneakAttackDamageMultiplier)}
+                            )
+                    );
                 }
             } else {
                 if (entityplayer.getCurrentEquippedItem() != null) {
@@ -60,12 +76,18 @@ public final class FightEventHandler {
                     }
                     i *= 1.0f + (float)(j / 5) / 20.0f;
                 }
-                if (ModConfig.levelUpEnableSneakAttackDoubleDamage
+                if (meleeSneakAttackBonusEnabled
+                        && meleeSneakAttackDamageMultiplier > 0.0f
                         && entityplayer.isSneaking()
                         && !FightEventHandler.canSeePlayer(event.entityLiving)
                         && !FightEventHandler.entityIsFacing(event.entityLiving, (EntityLivingBase)entityplayer)) {
-                    i *= 2.0f;
-                    entityplayer.addChatComponentMessage((IChatComponent)new ChatComponentTranslation("sneak.attack", new Object[]{2}));
+                    i *= meleeSneakAttackDamageMultiplier;
+                    entityplayer.addChatComponentMessage(
+                            (IChatComponent) new ChatComponentTranslation(
+                                    "sneak.attack",
+                                    new Object[]{FightEventHandler.formatMultiplier(meleeSneakAttackDamageMultiplier)}
+                            )
+                    );
                 }
             }
         }
@@ -150,5 +172,17 @@ public final class FightEventHandler {
             f4 = 360.0f + f4;
         }
         return FightEventHandler.compareAngles(f2, f4, 22.5f);
+    }
+
+    private static String formatMultiplier(float value) {
+        String formatted = String.format(Locale.ROOT, "%.2f", Math.max(0.0f, value));
+        int end = formatted.length();
+        while (end > 0 && formatted.charAt(end - 1) == '0') {
+            end--;
+        }
+        if (end > 0 && formatted.charAt(end - 1) == '.') {
+            end--;
+        }
+        return end > 0 ? formatted.substring(0, end) : "0";
     }
 }

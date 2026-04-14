@@ -184,7 +184,10 @@ public class ModConfig {
     public static boolean levelUpAddXpOnMiningSomeOre;
     public static boolean levelUpAddBonusXpOnFighting;
     public static float levelUpHudPulseSpeedHz;
-    public static boolean levelUpEnableSneakAttackDoubleDamage;
+    public static boolean levelUpEnableMeleeSneakAttackBonusDamage;
+    public static boolean levelUpEnableRangedSneakAttackBonusDamage;
+    public static float levelUpMeleeSneakAttackDamageMultiplier;
+    public static float levelUpRangedSneakAttackDamageMultiplier;
 
     // Blessings
     public static boolean blessingsEnabled;
@@ -231,6 +234,9 @@ public class ModConfig {
     public static int eyeOfCthulhuDemonEyeWaveCount;
     public static int eyeOfCthulhuDemonEyeWaveIntervalSeconds;
     public static int eyeOfCthulhuDemonEyeCap;
+    public static int eyeOfCthulhuDespawnNoPlayerDelaySeconds;
+    public static int eyeOfCthulhuDespawnNoPlayerChunkRadius;
+    public static int eyeOfCthulhuDespawnNoPlayerRadius;
     public static int iceRodDurability;
     public static float iceRodBlockLifetimeSeconds;
     public static float iceRodSpawnDistance;
@@ -1129,16 +1135,10 @@ public class ModConfig {
                 chatBubblesUseCustomOwnBubbleColor ? chatBubblesOwnBubbleColorValue : null,
                 0xFFD700
         );
-        String chatBubblesOwnTextColorDefault = "AUTO";
-        if (!config.hasKey("chatbubbles", "ChatBubblesOwnTextColor")
-                && config.hasKey("chatbubbles", "ChatBubblesWhiteText")
-                && !config.get("chatbubbles", "ChatBubblesWhiteText", true).getBoolean(true)) {
-            chatBubblesOwnTextColorDefault = "black";
-        }
         String chatBubblesOwnTextColorRaw = config.getString(
                 "ChatBubblesOwnTextColor",
                 "chatbubbles",
-                chatBubblesOwnTextColorDefault,
+                "AUTO",
                 "Optional custom color for your own player's chat bubble text. Leave blank or set to AUTO for the default white text, or UUID-random text if ChatBubblesRandomizeTextColorByUuid is enabled. Accepts #RRGGBB, 0xRRGGBB, or named colors; custom values are advertised to the server so other RiftFlux clients can see them."
         );
         String chatBubblesOwnTextColorValue =
@@ -1156,12 +1156,10 @@ public class ModConfig {
                 false,
                 "If true, chat bubble text uses a stable UUID-based random color for players who have not set their own synced text color."
         );
-        boolean legacyRemoveMessageGap = config.hasKey("chatbubbles", "ChatBubblesRemoveMessageGap")
-                && config.get("chatbubbles", "ChatBubblesRemoveMessageGap", false).getBoolean(false);
         chatBubblesMessageGap = config.getInt(
                 "ChatBubblesMessageGap",
                 "chatbubbles",
-                legacyRemoveMessageGap ? 0 : CHAT_BUBBLES_MESSAGE_GAP_DEFAULT,
+                CHAT_BUBBLES_MESSAGE_GAP_DEFAULT,
                 CHAT_BUBBLES_MESSAGE_GAP_MIN,
                 CHAT_BUBBLES_MESSAGE_GAP_MAX,
                 CHAT_BUBBLES_MESSAGE_GAP_COMMENT
@@ -1295,28 +1293,14 @@ public class ModConfig {
                 "Vertical anchor offset for world item tooltips in blocks. Negative values move the tooltip down; positive values move it up."
         );
 
-        float worldTooltipsTextScaleDefault = 1.0F;
-        if (!config.hasKey("client", "WorldTooltipsTextScale") && config.hasKey("client", "WorldTooltipsTextSize")) {
-            int legacyTextSize = config.getInt(
-                    "WorldTooltipsTextSize",
-                    "client",
-                    8,
-                    2,
-                    32,
-                    "Legacy key for WorldTooltipsTextScale."
-            );
-            worldTooltipsTextScaleDefault = Math.max(0.25F, Math.min(4.0F, legacyTextSize / 8.0F));
-        }
-
         worldTooltipsTextScale = config.getFloat(
                 "WorldTooltipsTextScale",
                 "client",
-                worldTooltipsTextScaleDefault,
+                1.0F,
                 0.25F,
                 4.0F,
                 "Scale multiplier for world tooltip text and its background. 1.0 is the default size."
         );
-        removeConfigProperty("client", "WorldTooltipsTextSize");
 
         worldTooltipsHoverRadiusHorizontal = config.get(
                 "client",
@@ -1346,9 +1330,6 @@ public class ModConfig {
         );
         worldTooltipsBackgroundColor = parseRgbColor(worldTooltipsBackgroundColorRaw, 0x100010);
         worldTooltipsOutlineColor = parseRgbColor(worldTooltipsOutlineColorRaw, 0x5000FF);
-
-        migrateClientConfigKeys();
-        migrateCelestialConfigCategory();
 
         enableCelestialEventTextures = config.getBoolean(
                 "EnableCelestialEventTextures",
@@ -1534,8 +1515,6 @@ public class ModConfig {
                 true,
                 "If true, suppresses MCPatcherForge/BetterSkies star layers while beta stars are enabled so RiftFlux beta stars replace them."
         );
-
-        migrateZeldaConfigKeys();
 
         zeldaHeartsEnabled = config.getBoolean(
                 "EnableHeartsModule",
@@ -1961,11 +1940,33 @@ public class ModConfig {
                 "Pulse speed in cycles per second for LevelUp class selection prompt. Set to 0 for a constant full-bright color."
         );
 
-        levelUpEnableSneakAttackDoubleDamage = config.getBoolean(
-                "EnableSneakAttackDoubleDamage",
+        levelUpEnableMeleeSneakAttackBonusDamage = config.getBoolean(
+                "EnableMeleeSneakAttackBonusDamage",
                 "LevelUp",
                 false,
-                "If true, LevelUp!'s melee sneak attack from behind still deals 2x damage."
+                "If true, melee sneak attacks from behind apply the configured multiplier."
+        );
+        levelUpEnableRangedSneakAttackBonusDamage = config.getBoolean(
+                "EnableRangedSneakAttackBonusDamage",
+                "LevelUp",
+                false,
+                "If true, ranged sneak attacks from behind apply the configured multiplier."
+        );
+        levelUpMeleeSneakAttackDamageMultiplier = config.getFloat(
+                "MeleeSneakAttackDamageMultiplier",
+                "LevelUp",
+                1.5F,
+                0.0F,
+                20.0F,
+                "Damage multiplier for melee sneak attacks from behind."
+        );
+        levelUpRangedSneakAttackDamageMultiplier = config.getFloat(
+                "RangedSneakAttackDamageMultiplier",
+                "LevelUp",
+                1.5F,
+                0.0F,
+                20.0F,
+                "Damage multiplier for ranged sneak attacks from behind."
         );
 
         blessingsEnabled = config.getBoolean(
@@ -2254,7 +2255,7 @@ public class ModConfig {
                         "riftflux:glider_red*1|1.0",
                         "riftflux:whoopie_cushion*1|1.0",
                         "riftflux:ice_rod*1|1.0",
-                        "levelup:respecBook*1|1.0"
+                        "riftflux:respecBook@1*1|1.0"
                 },
                 "Drops for Eye of Cthulhu.\n" +
                         "Format: modid:item[@meta][*count]|chance (chance can be 0-1 or percent)."
@@ -2292,6 +2293,33 @@ public class ModConfig {
                 0,
                 512,
                 "Maximum number of Eye of Cthulhu-summoned Demon Eyes alive at once. Set to 0 to disable wave summoning."
+        );
+
+        eyeOfCthulhuDespawnNoPlayerDelaySeconds = config.getInt(
+                "EyeOfCthulhuDespawnNoPlayerDelaySeconds",
+                "terraria",
+                6,
+                0,
+                120,
+                "Delay in seconds before Eye of Cthulhu despawns after no alive player remains in range. Set to 0 for instant despawn."
+        );
+
+        eyeOfCthulhuDespawnNoPlayerChunkRadius = config.getInt(
+                "EyeOfCthulhuDespawnNoPlayerChunkRadius",
+                "terraria",
+                8,
+                1,
+                64,
+                "Eye of Cthulhu despawns if no alive player is within this many chunks. 10 chunks = 160 blocks."
+        );
+
+        eyeOfCthulhuDespawnNoPlayerRadius = config.getInt(
+                "EyeOfCthulhuDespawnNoPlayerRadius",
+                "terraria",
+                160,
+                16,
+                512,
+                "Deprecated fallback block radius for Eye of Cthulhu despawn distance when chunk radius is not set."
         );
 
         iceRodBlockLifetimeSeconds = config.getFloat(
@@ -4170,15 +4198,9 @@ public class ModConfig {
         enableStackOverflowGuard = config.get("general", "EnableStackOverflowGuard", true,
                 "Avoids StackOverflowError in crash reporting and deep world lookups.").getBoolean(true);
 
-        boolean disableFalseCrashImproverDefault = true;
-        if (config.hasKey("general", "DisableFalsePatternLibCrashLogAppend")) {
-            disableFalseCrashImproverDefault = config.get("general", "DisableFalsePatternLibCrashLogAppend", true,
-                    "Legacy key for DisableFalseCrashImprover.").getBoolean(true);
-        }
-
-        disableFalseCrashImprover = config.get("general", "DisableFalseCrashImprover", disableFalseCrashImproverDefault,
+        disableFalseCrashImprover = config.get("general", "DisableFalseCrashImprover", true,
                         "If true, prevents FalsePatternLib from appending the full latest FML log to crash reports.")
-                .getBoolean(disableFalseCrashImproverDefault);
+                .getBoolean(true);
 
         stackOverflowMaxDepth = config.get("general", "StackOverflowMaxDepth", 512,
                 "Max recursion depth for World.getBlock before returning air.").getInt(512);
@@ -4880,64 +4902,6 @@ public class ModConfig {
 
     public static boolean isValidEntityDatawatcherId(int id) {
         return id >= ENTITY_DATAWATCHER_MIN_ID && id <= DATAWATCHER_MAX_ID;
-    }
-
-    private static void migrateCelestialConfigCategory() {
-        moveConfigPropertyIfMissing("client", "celestial", "EnableCelestialEventTextures");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialSunEventChance");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialSunEventTextures");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialSunEventTexture");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialMoonEventChance");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialMoonEventTextures");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialMoonEventTexture");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialFullSunriseSunsetTint");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialFogMatchesSky");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialBetaStyleFogBiomeTint");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialBlackNightFog");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialVoidFogStartHeight");
-        moveConfigPropertyIfMissing("client", "celestial", "CelestialVoidParticleStartHeight");
-        moveConfigPropertyIfMissing("client", "celestial", "EnableBetaStars");
-        moveConfigPropertyIfMissing("client", "celestial", "BetaStarsCount");
-        moveConfigPropertyIfMissing("client", "celestial", "BetaStarsSizeMultiplier");
-        moveConfigPropertyIfMissing("client", "celestial", "BetaStarsDisableBetterSkiesStars");
-        renameConfigPropertyIfMissing("celestial", "BetaStarsDisableBetterSkiesLayers", "BetaStarsDisableBetterSkiesStars");
-    }
-
-    private static void migrateClientConfigKeys() {
-        renameConfigPropertyIfMissing("client", "enableItemRenderLimiter", "EnableDroppedItemRenderTweaks");
-    }
-
-    private static void migrateZeldaConfigKeys() {
-        renameConfigPropertyIfMissing("zelda", "HeartContainerFirstKillPerConfiguredEntity", "HeartContainerFirstKillOnly");
-    }
-
-    private static void moveConfigPropertyIfMissing(String oldCategory, String newCategory, String key) {
-        if (!config.hasKey(oldCategory, key) || config.hasKey(newCategory, key)) {
-            return;
-        }
-        config.moveProperty(oldCategory, key, newCategory);
-    }
-
-    private static void renameConfigPropertyIfMissing(String category, String oldKey, String newKey) {
-        if (!config.hasKey(category, oldKey) || config.hasKey(category, newKey)) {
-            return;
-        }
-        if (config.getCategory(category) == null) {
-            return;
-        }
-        net.minecraftforge.common.config.Property property = config.getCategory(category).remove(oldKey);
-        if (property == null) {
-            return;
-        }
-        property.setName(newKey);
-        config.getCategory(category).put(newKey, property);
-    }
-
-    private static void removeConfigProperty(String category, String key) {
-        if (!config.hasKey(category, key) || config.getCategory(category) == null) {
-            return;
-        }
-        config.getCategory(category).remove(key);
     }
 
     private static String[] sanitizeAppaPassengerFilter(String[] values) {
@@ -5812,9 +5776,6 @@ public class ModConfig {
 
     private static int[] getLegendGearPotionIdList(String key, String legacyKey, int defaultId, String comment) {
         String[] defaults = new String[]{String.valueOf(defaultId)};
-        if (!config.hasKey("legendgear", key) && config.hasKey("legendgear", legacyKey)) {
-            defaults = new String[]{String.valueOf(config.getInt(legacyKey, "legendgear", defaultId, 0, 255, comment))};
-        }
         return parsePotionIdList(config.getStringList(key, "legendgear", defaults, comment));
     }
 

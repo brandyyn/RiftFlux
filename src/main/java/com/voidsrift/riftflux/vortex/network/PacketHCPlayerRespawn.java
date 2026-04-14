@@ -57,7 +57,7 @@ public class PacketHCPlayerRespawn implements IMessage, IMessageHandler<PacketHC
          RespawnDelayHelper.clearDeathTimer(reviver);
          RespawnDelayHelper.sync(reviver);
          RespawnDelayHelper.markPendingSync(reviver, 10);
-         RespawnDelayHelper.markPendingRespawnStabilize(reviver, 2);
+         RespawnDelayHelper.markPendingRespawnStabilize(reviver, 10);
          if (message.doToggle) {
             WorldHelper.setPlayerHCRevive(player, false);
             return new PacketWorldDataSync(WorldHelper.getGlobalCustomData(world).getData(), message.disableGui);

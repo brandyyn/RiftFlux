@@ -1,18 +1,21 @@
 package com.voidsrift.riftflux.terramine;
 
 import com.voidsrift.riftflux.ModConfig;
-import com.voidsrift.riftflux.legendgear.LegendGearContent;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.nmccoy.legendgear.PlayerStarstatsExtension;
 
 import java.util.List;
+import java.util.Locale;
 
 public class ItemWhoopieCushion extends Item {
     public ItemWhoopieCushion() {
@@ -51,7 +54,6 @@ public class ItemWhoopieCushion extends Item {
         return player != null
                 && !player.capabilities.isCreativeMode
                 && ModConfig.enableLegendGearModule
-                && LegendGearContent.isEnabled()
                 && getConfiguredLegendGearManaCost() > 0.0F;
     }
 
@@ -65,7 +67,7 @@ public class ItemWhoopieCushion extends Item {
         }
         PlayerStarstatsExtension stats = PlayerStarstatsExtension.get(player);
         if (stats == null) {
-            return true;
+            return false;
         }
         return PlayerStarstatsExtension.availableMana(player) + 1.0e-4f >= manaCost;
     }
@@ -137,5 +139,26 @@ public class ItemWhoopieCushion extends Item {
             entity.addVelocity(nx * horizontal, vertical, nz * horizontal);
             entity.velocityChanged = true;
         }
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advanced) {
+        float manaCost = getConfiguredLegendGearManaCost();
+        if (manaCost > 0.0F && ModConfig.enableLegendGearModule) {
+            list.add(EnumChatFormatting.GRAY + "Mana Cost: " + formatManaValue(manaCost));
+        }
+    }
+
+    private static String formatManaValue(float value) {
+        String formatted = String.format(Locale.ROOT, "%.2f", Math.max(0.0F, value));
+        int end = formatted.length();
+        while (end > 0 && formatted.charAt(end - 1) == '0') {
+            end--;
+        }
+        if (end > 0 && formatted.charAt(end - 1) == '.') {
+            end--;
+        }
+        return end > 0 ? formatted.substring(0, end) : "0";
     }
 }

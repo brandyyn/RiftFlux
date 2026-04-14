@@ -122,7 +122,7 @@ public class BasicTransformer implements IClassTransformer {
                 "print",
                 "()V");
         mn.instructions.insert(min,new InsnNode(Opcodes.RETURN));
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        ClassWriter writer = new SafeClassWriter(ClassWriter.COMPUTE_FRAMES);
         classNode.accept(writer);
         return writer.toByteArray();
     }
@@ -202,9 +202,28 @@ public class BasicTransformer implements IClassTransformer {
     }
 
     private static byte[] writeClass(ClassNode classNode) {
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+        ClassWriter writer = new SafeClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
         classNode.accept(writer);
         return writer.toByteArray();
+    }
+
+    /**
+     * DragonAPI classes can reference optional mod APIs (for example Mystcraft). When those APIs are absent,
+     * ASM frame recomputation can throw while resolving common supertypes. Fall back to Object in that case.
+     */
+    private static final class SafeClassWriter extends ClassWriter {
+        private SafeClassWriter(int flags) {
+            super(flags);
+        }
+
+        @Override
+        protected String getCommonSuperClass(String type1, String type2) {
+            try {
+                return super.getCommonSuperClass(type1, type2);
+            } catch (Throwable ignored) {
+                return "java/lang/Object";
+            }
+        }
     }
 
     private static boolean replaceVoidMethodBody(ClassNode classNode, String methodName, String desc) {

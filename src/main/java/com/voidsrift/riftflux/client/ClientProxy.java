@@ -159,6 +159,7 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enableFenceTextureModule) {
             MinecraftForge.EVENT_BUS.register(new FenceOverrideClientEvents());
         }
+        MinecraftForge.EVENT_BUS.register(new LegendGearManaTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodDurabilityTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodPlacementPreviewRenderer());
         FMLCommonHandler.instance().bus().register(new EyeOfCthulhuMusicHandler());

@@ -84,4 +84,4 @@ config.levelup.option1=Render HUD on Top Left : %b
 config.levelup.option2=Render HUD on Exp Bar : %b
 config.levelup.option3=FOV is based on speed : %b
 
-sneak.attack=Sneak attack for %d x damage!
+sneak.attack=Sneak attack for %s x damage!

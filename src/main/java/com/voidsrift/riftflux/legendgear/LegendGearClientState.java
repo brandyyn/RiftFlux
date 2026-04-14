@@ -78,6 +78,9 @@ public final class LegendGearClientState {
             return false;
         }
         Item item = stack.getItem();
+        if (isWhoopieCushion(stack)) {
+            return ModConfig.enableLegendGearModule && Math.max(0.0F, ModConfig.whoopieCushionLegendGearManaCost) > 0.0F;
+        }
         if (isIceRod(stack)) {
             return ModConfig.iceRodUseLegendGearMana;
         }
@@ -89,5 +92,9 @@ public final class LegendGearClientState {
 
     private static boolean isIceRod(ItemStack stack) {
         return stack != null && stack.getItem() == TerrariaContent.iceRod;
+    }
+
+    private static boolean isWhoopieCushion(ItemStack stack) {
+        return stack != null && stack.getItem() == TerrariaContent.whoopieCushion;
     }
 }

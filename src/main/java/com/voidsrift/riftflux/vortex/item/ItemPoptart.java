@@ -1,12 +1,18 @@
 package com.voidsrift.riftflux.vortex.item;
 
 import com.voidsrift.riftflux.ModConfig;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.nmccoy.legendgear.PlayerStarstatsExtension;
+
+import java.util.List;
+import java.util.Locale;
 
 public class ItemPoptart extends ItemFood {
     public ItemPoptart(int foodValue, float saturation) {
@@ -34,5 +40,26 @@ public class ItemPoptart extends ItemFood {
         }
 
         stats.setMana(Math.max(0.0F, stats.getMana() - restore));
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advanced) {
+        float restore = Math.max(0.0F, ModConfig.poptartLegendGearManaRestore);
+        if (restore > 0.0F && ModConfig.enableLegendGearModule) {
+            list.add(EnumChatFormatting.GRAY + "Mana Restore: " + formatManaValue(restore));
+        }
+    }
+
+    private static String formatManaValue(float value) {
+        String formatted = String.format(Locale.ROOT, "%.2f", Math.max(0.0F, value));
+        int end = formatted.length();
+        while (end > 0 && formatted.charAt(end - 1) == '0') {
+            end--;
+        }
+        if (end > 0 && formatted.charAt(end - 1) == '.') {
+            end--;
+        }
+        return end > 0 ? formatted.substring(0, end) : "0";
     }
 }

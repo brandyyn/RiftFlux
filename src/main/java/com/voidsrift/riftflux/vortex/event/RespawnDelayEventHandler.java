@@ -37,7 +37,7 @@ public class RespawnDelayEventHandler {
         RespawnDelayHelper.clearDeathTimer(event.player);
         RespawnDelayHelper.sync(event.player);
         RespawnDelayHelper.markPendingSync(event.player, 10);
-        RespawnDelayHelper.markPendingRespawnStabilize(event.player, 2);
+        RespawnDelayHelper.markPendingRespawnStabilize(event.player, 10);
     }
 
     @SubscribeEvent

@@ -17,7 +17,7 @@ public final class RespawnDelayHelper {
     private static final String NBT_PENDING_RESPAWN_STABILIZE = "RiftFluxRespawnPendingStabilize";
     private static final String NBT_PENDING_RESPAWN_STABILIZE_DELAY = "RiftFluxRespawnPendingStabilizeDelay";
     private static final String NBT_PENDING_RESPAWN_STABILIZE_TICKS = "RiftFluxRespawnPendingStabilizeTicks";
-    private static final int RESPAWN_STABILIZE_TICKS = 8;
+    private static final int RESPAWN_STABILIZE_TICKS = 40;
 
     private RespawnDelayHelper() {
     }
@@ -194,8 +194,8 @@ public final class RespawnDelayHelper {
 
         int chunkX = MathHelper.floor_double(player.posX) >> 4;
         int chunkZ = MathHelper.floor_double(player.posZ) >> 4;
-        for (int offsetX = -1; offsetX <= 1; ++offsetX) {
-            for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
+        for (int offsetX = -2; offsetX <= 2; ++offsetX) {
+            for (int offsetZ = -2; offsetZ <= 2; ++offsetZ) {
                 world.theChunkProviderServer.loadChunk(chunkX + offsetX, chunkZ + offsetZ);
             }
         }

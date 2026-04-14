@@ -15,10 +15,12 @@ import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntitySmallFireball;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 
@@ -72,6 +74,7 @@ public class EntityEyeOfCthulhu extends EntityFlying implements IBossDisplayData
     private double attackAimZ;
     private int fireballShotsRemaining;
     private int fireballShotCooldown;
+    private int noPlayerDespawnTicks;
 
     public EntityEyeOfCthulhu(World world) {
         super(world);
@@ -86,7 +89,7 @@ public class EntityEyeOfCthulhu extends EntityFlying implements IBossDisplayData
         };
         this.setHealth(this.getMaxHealth());
         this.setSize(7.0F, 7.0F);
-        this.noClip = true;
+        this.noClip = false;
         this.isImmuneToFire = true;
         this.targetY = 100.0D;
         this.ignoreFrustumCheck = true;
@@ -191,6 +194,24 @@ public class EntityEyeOfCthulhu extends EntityFlying implements IBossDisplayData
             float z = (this.rand.nextFloat() - 0.5F) * 8.0F;
             this.worldObj.spawnParticle("largeexplode", this.posX + x, this.posY + 2.0D + y, this.posZ + z, 0.0D, 0.0D, 0.0D);
             return;
+        }
+
+        if (!this.worldObj.isRemote) {
+            if (this.shouldDespawnImmediatelyForWorldState()) {
+                this.setDead();
+                return;
+            }
+
+            if (this.shouldDespawnForNoPlayers()) {
+                int despawnDelayTicks = this.getNoPlayerDespawnDelayTicks();
+                if (despawnDelayTicks <= 0 || ++this.noPlayerDespawnTicks >= despawnDelayTicks) {
+                    this.broadcastNoPlayerDespawnMessage();
+                    this.setDead();
+                    return;
+                }
+            } else {
+                this.noPlayerDespawnTicks = 0;
+            }
         }
 
         this.updateDragonEnderCrystal();
@@ -852,8 +873,29 @@ public class EntityEyeOfCthulhu extends EntityFlying implements IBossDisplayData
 
     @Override
     public boolean attackEntityFromPart(EntityDragonPart part, DamageSource source, float amount) {
+        if (source == null || this.isEntityInvulnerable()) {
+            return false;
+        }
+
+        boolean rangedOrMagic = this.isRangedOrMagicDamage(source);
+        if (amount <= 0.0F) {
+            if (!rangedOrMagic) {
+                return false;
+            }
+            amount = 0.01F;
+        }
+
         if (part != this.dragonPartHead) {
-            amount = amount / 4.0F + 1.0F;
+            // Keep non-head hits relevant for projectiles/spells so modded ranged attacks
+            // (AM2, wand/focus projectiles, arrows) do not randomly "bounce off" body parts.
+            if (!rangedOrMagic) {
+                amount = amount * 0.55F + 1.0F;
+            }
+        }
+
+        if (rangedOrMagic) {
+            // Reduce missed-hit feel for rapid projectile collisions.
+            this.hurtResistantTime = 0;
         }
 
         float yawRad = this.rotationYaw * (float) Math.PI / 180.0F;
@@ -864,28 +906,66 @@ public class EntityEyeOfCthulhu extends EntityFlying implements IBossDisplayData
         this.targetZ = this.posZ - yawCos * 5.0D + (this.rand.nextFloat() - 0.5F) * 2.0D;
 
         Entity attacker = source.getEntity();
-        if (attacker instanceof EntityPlayer) {
+        if (attacker instanceof EntityLivingBase) {
             this.target = attacker;
             if (this.rand.nextFloat() < 0.35F) {
-                this.beginDodge((EntityPlayer) attacker);
+                this.beginDodge((EntityLivingBase) attacker);
             } else {
-                this.beginTelegraph((EntityPlayer) attacker);
+                this.beginTelegraph((EntityLivingBase) attacker);
             }
         }
 
-        if (source.getEntity() instanceof EntityPlayer || source.isExplosion()) {
-            this.func_82195_e(source, amount);
-        }
-
-        return true;
+        return this.func_82195_e(source, amount);
     }
 
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
-        return false;
+        if (source == null || this.isEntityInvulnerable()) {
+            return false;
+        }
+
+        if (this.isRangedOrMagicDamage(source)) {
+            this.hurtResistantTime = 0;
+        }
+
+        Entity directSource = source.getSourceOfDamage();
+        Entity attacker = source.getEntity();
+        if (directSource == this || attacker == this) {
+            return false;
+        }
+
+        return this.attackEntityFromPart(this.dragonPartHead, source, amount);
     }
 
     protected boolean func_82195_e(DamageSource source, float amount) {
+        if (this.isRangedOrMagicDamage(source)) {
+            int previousMaxHurtResistantTime = this.maxHurtResistantTime;
+            float previousLastDamage = this.lastDamage;
+            this.hurtResistantTime = 0;
+            this.maxHurtResistantTime = 0;
+            this.lastDamage = -Float.MAX_VALUE;
+            boolean hit = super.attackEntityFrom(source, amount);
+            this.maxHurtResistantTime = previousMaxHurtResistantTime;
+            if (!hit) {
+                this.lastDamage = previousLastDamage;
+                // Fallback path for modded projectiles that fail vanilla hurt checks:
+                // still apply the damage so impacts don't "bounce off" with no effect.
+                float clampedAmount = Math.max(0.01F, amount);
+                float newHealth = this.getHealth() - clampedAmount;
+                this.lastDamage = clampedAmount;
+                this.hurtResistantTime = 0;
+                this.hurtTime = this.maxHurtTime = 10;
+                this.attackedAtYaw = 0.0F;
+                if (newHealth <= 0.0F) {
+                    this.setHealth(0.0F);
+                    this.onDeath(source);
+                } else {
+                    this.setHealth(newHealth);
+                }
+                hit = true;
+            }
+            return hit;
+        }
         return super.attackEntityFrom(source, amount);
     }
 
@@ -937,12 +1017,24 @@ public class EntityEyeOfCthulhu extends EntityFlying implements IBossDisplayData
 
     @Override
     public Entity[] getParts() {
-        return this.dragonPartArray;
+        // Keep Eye internals using dragon parts, but avoid exposing multipart hit targets
+        // to external target-selection code paths that expect a single living entity.
+        return new Entity[0];
     }
 
     @Override
     public boolean canBeCollidedWith() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean canAttackWithItem() {
+        return true;
+    }
+
+    @Override
+    public boolean canBePushed() {
+        return true;
     }
 
     @Override
@@ -965,6 +1057,83 @@ public class EntityEyeOfCthulhu extends EntityFlying implements IBossDisplayData
             int split = EntityXPOrb.getXPSplit(xp);
             xp -= split;
             this.worldObj.spawnEntityInWorld(new EntityXPOrb(this.worldObj, this.posX, this.posY, this.posZ, split));
+        }
+    }
+
+    private boolean shouldDespawnImmediatelyForWorldState() {
+        return this.worldObj == null || this.worldObj.difficultySetting == EnumDifficulty.PEACEFUL;
+    }
+
+    private boolean shouldDespawnForNoPlayers() {
+        if (this.worldObj == null) {
+            return true;
+        }
+        int chunkRadius = ModConfig.eyeOfCthulhuDespawnNoPlayerChunkRadius;
+        double radius;
+        if (chunkRadius > 0) {
+            radius = Math.max(16.0D, chunkRadius * 16.0D);
+        } else {
+            radius = Math.max(16.0D, (double) ModConfig.eyeOfCthulhuDespawnNoPlayerRadius);
+        }
+        return this.findNearestAlivePlayer(radius) == null;
+    }
+
+    private EntityPlayer findNearestAlivePlayer(double radius) {
+        if (this.worldObj == null || this.worldObj.playerEntities == null || radius <= 0.0D) {
+            return null;
+        }
+
+        double bestDistanceSq = radius * radius;
+        EntityPlayer best = null;
+        for (Object playerObj : this.worldObj.playerEntities) {
+            if (!(playerObj instanceof EntityPlayer)) {
+                continue;
+            }
+
+            EntityPlayer player = (EntityPlayer) playerObj;
+            if (player.isDead || player.getHealth() <= 0.0F) {
+                continue;
+            }
+
+            double distanceSq = this.getDistanceSqToEntity(player);
+            if (distanceSq <= bestDistanceSq) {
+                bestDistanceSq = distanceSq;
+                best = player;
+            }
+        }
+        return best;
+    }
+
+    private int getNoPlayerDespawnDelayTicks() {
+        return Math.max(0, ModConfig.eyeOfCthulhuDespawnNoPlayerDelaySeconds) * 20;
+    }
+
+    private boolean isRangedOrMagicDamage(DamageSource source) {
+        if (source == null) {
+            return false;
+        }
+        if (source.isProjectile() || source.isMagicDamage()) {
+            return true;
+        }
+        Entity direct = source.getSourceOfDamage();
+        Entity attacker = source.getEntity();
+        return direct != null && direct != attacker;
+    }
+
+    private void broadcastNoPlayerDespawnMessage() {
+        if (this.worldObj == null || this.worldObj.playerEntities == null) {
+            return;
+        }
+
+        for (Object playerObj : this.worldObj.playerEntities) {
+            if (!(playerObj instanceof EntityPlayer)) {
+                continue;
+            }
+            EntityPlayer player = (EntityPlayer) playerObj;
+            if (player == null || player.isDead) {
+                continue;
+            }
+            player.addChatMessage(new ChatComponentText("The Eye has wondered off"));
         }
     }
 

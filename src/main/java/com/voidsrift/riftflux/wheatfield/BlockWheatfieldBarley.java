@@ -8,6 +8,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -78,7 +79,7 @@ public class BlockWheatfieldBarley extends BlockBush implements IShearable {
         if (ModConfig.wheatfieldBarleyOnlyDropsWhenSheared) {
             return;
         }
-        if (held != null) {
+        if (EnchantmentHelper.getSilkTouchModifier(player)) {
             return;
         }
 

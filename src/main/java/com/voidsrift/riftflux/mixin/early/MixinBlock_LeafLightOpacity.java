@@ -12,13 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Block.class)
 public abstract class MixinBlock_LeafLightOpacity {
 
-    @Inject(method = "getUseNeighborBrightness()Z", at = @At("HEAD"), cancellable = true, remap = false)
-    private void riftflux$useNeighborBrightnessForLeaves(CallbackInfoReturnable<Boolean> cir) {
-        if (riftflux$isLeafBlock()) {
-            cir.setReturnValue(Boolean.TRUE);
-        }
-    }
-
     @Inject(method = "getAmbientOcclusionLightValue()F", at = @At("HEAD"), cancellable = true)
     private void riftflux$disableLeafAmbientOcclusion(CallbackInfoReturnable<Float> cir) {
         if (riftflux$isLeafBlock()) {

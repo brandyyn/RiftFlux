@@ -15,7 +15,10 @@ public final class WheatfieldTerrainHandler {
         }
 
         GenLayer smoothed = event.newBiomeGens[0];
-        smoothed = new GenLayerWheatfieldRound(6100L, smoothed, WheatfieldTerrainUtil.getWheatfieldBiomeId());
+        int wheatfieldBiomeId = WheatfieldTerrainUtil.getWheatfieldBiomeId();
+        for (long seed = 6100L; seed <= 6106L; seed++) {
+            smoothed = new GenLayerWheatfieldRound(seed, smoothed, wheatfieldBiomeId);
+        }
         smoothed.initWorldGenSeed(event.seed);
 
         GenLayerVoronoiZoom voronoi = new GenLayerVoronoiZoom(10L, smoothed);
