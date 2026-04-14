@@ -24,6 +24,7 @@
 package net.nmccoy.legendgear.block;
 
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import com.voidsrift.riftflux.ModConfig;
 import java.util.List;
 import java.io.IOException;
 import net.minecraft.block.Block;
@@ -63,7 +64,7 @@ extends BlockContainer {
         this.setHarvestLevel("pickaxe", 3);
         this.setHardness(50.0f);
         this.setResistance(2000.0f);
-        this.setLightLevel(1.0f);
+        this.setLightLevel((float)Math.max(0, Math.min(15, ModConfig.legendGearStarInJarLightLevel)) / 15.0f);
         this.setStepSound(soundTypePiston);
         this.setBlockName("starwellCore");
         this.setCreativeTab(LegendGear2.legendgearTab);
@@ -81,7 +82,7 @@ extends BlockContainer {
         if (world.getBlockMetadata(x, y, z) == 0) {
             return 0;
         }
-        return 8;
+        return Math.max(0, Math.min(15, ModConfig.legendGearStarInJarLightLevel));
     }
 
     public IIcon getIcon(int side, int meta) {

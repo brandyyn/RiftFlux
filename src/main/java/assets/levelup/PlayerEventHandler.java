@@ -218,18 +218,31 @@ public final class PlayerEventHandler {
                     LevelUp.incrementOreCounter(event.harvester, blockToCounter.get(event.block));
                 }
                 if (random.nextDouble() <= (double)skill / 200.0) {
-                    int qutity;
-                    Item ID;
-                    boolean foundBlock = false;
+                    ItemStack bonusDrop = null;
                     for (ItemStack stack : event.drops) {
-                        if (stack == null || event.block != Block.getBlockFromItem((Item)stack.getItem())) continue;
-                        this.writeNoPlacing(stack);
-                        ++stack.stackSize;
-                        foundBlock = true;
+                        if (stack == null || stack.getItem() == null || stack.stackSize <= 0) {
+                            continue;
+                        }
+                        bonusDrop = stack.copy();
+                        bonusDrop.stackSize = 1;
                         break;
                     }
-                    if (!foundBlock && (ID = event.block.getItemDropped(event.blockMetadata, random, 0)) != null && (qutity = event.block.quantityDropped(event.blockMetadata, 0, random)) > 0) {
-                        event.drops.add(new ItemStack(ID, qutity, event.block.damageDropped(event.blockMetadata)));
+
+                    if (bonusDrop == null) {
+                        Item ID = event.block.getItemDropped(event.blockMetadata, random, 0);
+                        if (ID != null) {
+                            int qutity = event.block.quantityDropped(event.blockMetadata, 0, random);
+                            if (qutity > 0) {
+                                bonusDrop = new ItemStack(ID, Math.min(1, qutity), event.block.damageDropped(event.blockMetadata));
+                            }
+                        }
+                    }
+
+                    if (bonusDrop != null) {
+                        if (event.block == Block.getBlockFromItem((Item)bonusDrop.getItem())) {
+                            this.writeNoPlacing(bonusDrop);
+                        }
+                        event.drops.add(bonusDrop);
                     }
                 }
             } else if (event.block instanceof BlockLog) {
@@ -403,4 +416,3 @@ public final class PlayerEventHandler {
         ores = Sets.newIdentityHashSet();
     }
 }
-

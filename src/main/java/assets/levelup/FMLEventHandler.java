@@ -39,6 +39,7 @@ import assets.levelup.LevelUp;
 import assets.levelup.PlayerEventHandler;
 import assets.levelup.PlayerExtendedProperties;
 import assets.levelup.SkillPacketHandler;
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -91,8 +92,10 @@ public final class FMLEventHandler {
             if (!player.worldObj.isRemote && player.openContainer instanceof ContainerFurnace && (furnace = ((ContainerFurnace)player.openContainer).tileFurnace) != null && furnace.isBurning() && furnace.canSmelt() && (stack = furnace.getStackInSlot(0)) != null && (bonus = stack.getItem().getItemUseAction(stack) == EnumAction.eat ? FMLEventHandler.getSkill(player, 7) : FMLEventHandler.getSkill(player, 4)) > 10 && (time = player.getRNG().nextInt(bonus / 10)) != 0 && furnace.furnaceCookTime + time < 200) {
                 furnace.furnaceCookTime += time;
             }
-            if (PlayerExtendedProperties.getPlayerClass(player) != 0 && (diff = PlayerEventHandler.xpPerLevel * (double)(player.experienceLevel - 4) + (double)ClassBonus.getBonusPoints() - (double)PlayerExtendedProperties.from(player).getSkillPoints()) >= 1.0) {
-                PlayerExtendedProperties.from(player).addToSkill("XP", (int)Math.floor(diff));
+            PlayerExtendedProperties properties = PlayerExtendedProperties.from(player);
+            boolean hasClass = PlayerExtendedProperties.getPlayerClass(player) != 0;
+            if ((hasClass || ModConfig.levelUpEarnSkillPointsBeforeClassChoice) && (diff = PlayerEventHandler.xpPerLevel * (double)(player.experienceLevel - 4) + (double)(hasClass ? ClassBonus.getBonusPoints() : 0) - (double)properties.getSkillPoints()) >= 1.0) {
+                properties.addToSkill("XP", (int)Math.floor(diff));
             }
             if (!player.worldObj.isRemote && player.getCurrentEquippedItem() != null && player.getCurrentEquippedItem().getItem() instanceof ItemHoe && (skill = FMLEventHandler.getSkill(player, 9)) != 0 && player.getRNG().nextFloat() <= (float)skill / 2500.0f) {
                 this.growCropsAround(player.worldObj, skill / 4, player);
@@ -210,4 +213,3 @@ public final class FMLEventHandler {
         }
     }
 }
-

@@ -790,6 +790,41 @@ public class PlayerEventHandler {
     }
 
     @SubscribeEvent
+    public void onPlayerLoginSparkle(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event == null || event.player == null || !ModConfig.legendGearLoginSparkleEffectEnabled) {
+            return;
+        }
+        this.spawnPlayerSparkles(event.player, 28, 1.1f);
+    }
+
+    @SubscribeEvent
+    public void onPlayerChangedDimensionSparkle(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event == null || event.player == null || !ModConfig.legendGearDimensionChangeSparkleEffectEnabled) {
+            return;
+        }
+        this.spawnPlayerSparkles(event.player, 36, 1.25f);
+    }
+
+    private void spawnPlayerSparkles(EntityPlayer player, int count, float scale) {
+        World world = player.worldObj;
+        if (world == null || !world.isRemote || count <= 0) {
+            return;
+        }
+
+        for (int i = 0; i < count; i++) {
+            double angle = world.rand.nextDouble() * Math.PI * 2.0;
+            double radius = 0.2 + world.rand.nextDouble() * 0.75;
+            double x = player.posX + Math.cos(angle) * radius;
+            double y = player.posY + 0.1 + world.rand.nextDouble() * 1.8;
+            double z = player.posZ + Math.sin(angle) * radius;
+            double vx = (world.rand.nextDouble() - 0.5) * 0.03;
+            double vy = 0.02 + world.rand.nextDouble() * 0.04;
+            double vz = (world.rand.nextDouble() - 0.5) * 0.03;
+            LegendGear2.proxy.addSparkleParticle(world, x, y, z, vx, vy, vz, scale);
+        }
+    }
+
+    @SubscribeEvent
     public void handleGlide(LivingEvent.LivingUpdateEvent lue) {
         if (lue.entityLiving instanceof EntityPlayer) {
             Vec3 realVelocity;

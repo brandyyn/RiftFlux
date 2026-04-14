@@ -217,7 +217,8 @@ public final class LevelUp {
                 config.get("LevelUp", "AddBonusXpOnMining", ModConfig.levelUpAddBonusXpOnMining, limitedBonus),
                 config.get("LevelUp", "AddXpOnCraftingSomeItems", ModConfig.levelUpAddXpOnCraftingSomeItems, "This is a global bonus, limited to a few craftable items"),
                 config.get("LevelUp", "AddXpOnMiningSomeOre", ModConfig.levelUpAddXpOnMiningSomeOre, "This is a global bonus, limited to a few ores"),
-                config.get("LevelUp", "AddBonusXpOnFighting", ModConfig.levelUpAddBonusXpOnFighting, limitedBonus)
+                config.get("LevelUp", "AddBonusXpOnFighting", ModConfig.levelUpAddBonusXpOnFighting, limitedBonus),
+                config.get("LevelUp", "EarnSkillPointsBeforeClassChoice", ModConfig.levelUpEarnSkillPointsBeforeClassChoice, "If true, skill points from XP continue accumulating before choosing a class.")
         };
     }
 
@@ -250,6 +251,7 @@ public final class LevelUp {
         ModConfig.levelUpAddXpOnCraftingSomeItems = this.serverProperties[10].getBoolean();
         ModConfig.levelUpAddXpOnMiningSomeOre = oreMiningXP;
         ModConfig.levelUpAddBonusXpOnFighting = bonusFightingXP;
+        ModConfig.levelUpEarnSkillPointsBeforeClassChoice = this.serverProperties[13].getBoolean();
         if (this.serverProperties[10].getBoolean()) {
             List<Item> ingrTier1 = Arrays.asList(Items.stick, Items.leather, Item.getItemFromBlock((Block)Blocks.stone));
             List<Item> ingrTier2 = Arrays.asList(Items.iron_ingot, Items.gold_ingot, Items.paper, Items.slime_ball);

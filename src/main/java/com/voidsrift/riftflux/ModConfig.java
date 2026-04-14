@@ -167,6 +167,7 @@ public class ModConfig {
     public static boolean levelUpEnableLegacyRecipes;
     public static boolean levelUpEnableItemRecipes;
     public static int levelUpUnlearningBookDungeonLootWeight;
+    public static boolean levelUpEarnSkillPointsBeforeClassChoice;
     public static boolean levelUpUnlearningBookResetClass;
     public static String[] levelUpFarmingBlacklist;
     public static int levelUpMaxPointsPerSkill;
@@ -241,6 +242,7 @@ public class ModConfig {
     public static boolean whoopieCushionKnockbackEnabled;
     public static float whoopieCushionKnockbackRadius;
     public static float whoopieCushionKnockbackStrength;
+    public static float whoopieCushionLegendGearManaCost;
     public static int terraMushroomSpawnAttempts;
     public static int daybloomSpawnAttempts;
     public static int blinkrootSpawnAttempts;
@@ -475,12 +477,16 @@ public class ModConfig {
     public static boolean legendGearDashRingUseOriginalBehavior;
     public static boolean legendGearSprinkleStardustRequireSneak;
     public static boolean legendGearSpottingScopeConsumesMana;
+    public static boolean legendGearLoginSparkleEffectEnabled;
+    public static boolean legendGearDimensionChangeSparkleEffectEnabled;
     public static int legendGearTwinkleStaffDurability;
     public static int legendGearFireStaffDurability;
     public static int legendGearZapStaffDurability;
     public static int legendGearIceStaffDurability;
     public static int legendGearStarPieceInfuseLevels;
     public static boolean legendGearPlaceableStarPieces;
+    public static int legendGearStarInJarLightLevel;
+    public static int legendGearPlacedStarPiecesLightLevel;
     public static float legendGearEmberStaffFireSeconds;
     public static int legendGearManaRegenPotionId;
     public static int legendGearGroundedPotionId;
@@ -1843,6 +1849,12 @@ public class ModConfig {
                 1000,
                 "Dungeon chest weight for the Book of Unlearning. Set to 0 to disable dungeon loot."
         );
+        levelUpEarnSkillPointsBeforeClassChoice = config.getBoolean(
+                "EarnSkillPointsBeforeClassChoice",
+                "LevelUp",
+                true,
+                "If true, skill points from XP continue accumulating before choosing a class."
+        );
         levelUpUnlearningBookResetClass = config.getBoolean(
                 "UnlearningBookResetClass",
                 "LevelUp",
@@ -2372,77 +2384,85 @@ public class ModConfig {
                 10.0F,
                 "Knockback strength multiplier for Whoopie Cushion mob launch."
         );
+        whoopieCushionLegendGearManaCost = config.getFloat(
+                "WhoopieCushionLegendGearManaCost",
+                "terraria",
+                0.25F,
+                0.0F,
+                20.0F,
+                "LegendGear mana consumed per Whoopie Cushion use when LegendGear is enabled. 2.0 = one full mana icon."
+        );
 
         terraMushroomSpawnAttempts = config.getInt(
                 "TerraMushroomSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Terra Mushroom (surface). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Terra Mushroom generation (surface). 1 = always, 0 = disabled."
         );
 
         daybloomSpawnAttempts = config.getInt(
                 "DaybloomSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Daybloom (surface). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Daybloom generation (surface). 1 = always, 0 = disabled."
         );
 
         blinkrootSpawnAttempts = config.getInt(
                 "BlinkrootSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Blinkroot (underground). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Blinkroot generation (underground). 1 = always, 0 = disabled."
         );
 
         waterleafSpawnAttempts = config.getInt(
                 "WaterleafSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Waterleaf (underground). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Waterleaf generation (underground). 1 = always, 0 = disabled."
         );
 
         deathweedSpawnAttempts = config.getInt(
                 "DeathweedSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Deathweed (underground). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Deathweed generation (underground). 1 = always, 0 = disabled."
         );
 
         fireblossomSpawnAttempts = config.getInt(
                 "FireblossomSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Fireblossom (underground). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Fireblossom generation (underground). 1 = always, 0 = disabled."
         );
 
         jungleSporeSpawnAttempts = config.getInt(
                 "JungleSporeSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Jungle Spore (underground jungle). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Jungle Spore generation (underground jungle). 1 = always, 0 = disabled."
         );
 
         moonglowSpawnAttempts = config.getInt(
                 "MoonglowSpawnAttempts",
                 "terraria",
-                1,
+                33,
                 0,
-                64,
-                "Generation attempts per chunk for Moonglow (underground jungle). 0 disables spawning."
+                10000,
+                "1 in N chance per chunk to attempt Moonglow generation (underground jungle). 1 = always, 0 = disabled."
         );
 
         terraMushroomRequireShears = config.getBoolean(
@@ -2685,6 +2705,18 @@ public class ModConfig {
                 false,
                 "If false, the spotting scope ping does not consume mana and can be used at zero mana."
         );
+        legendGearLoginSparkleEffectEnabled = config.getBoolean(
+                "loginSparkleEffectEnabled",
+                "legendgear",
+                true,
+                "If true, LegendGear sparkle burst plays when the local player logs in."
+        );
+        legendGearDimensionChangeSparkleEffectEnabled = config.getBoolean(
+                "dimensionChangeSparkleEffectEnabled",
+                "legendgear",
+                true,
+                "If true, LegendGear sparkle burst plays when the local player changes dimension."
+        );
         legendGearTwinkleStaffDurability = config.getInt(
                 "twinkleStaffDurability",
                 "legendgear",
@@ -2730,6 +2762,22 @@ public class ModConfig {
                 "legendgear",
                 true,
                 "If true, Star Piece and Infused Star Piece can be placed as decorative star blocks."
+        );
+        legendGearStarInJarLightLevel = config.getInt(
+                "starInJarLightLevel",
+                "legendgear",
+                8,
+                0,
+                15,
+                "Light level of the Star in a Jar block while active."
+        );
+        legendGearPlacedStarPiecesLightLevel = config.getInt(
+                "placedStarPiecesLightLevel",
+                "legendgear",
+                8,
+                0,
+                15,
+                "Light level for placed Star Piece and Infused Star Piece blocks."
         );
 
         legendGearEmberStaffFireSeconds = config.getFloat(
@@ -3346,7 +3394,7 @@ public class ModConfig {
                 20,
                 0,
                 100,
-                "Percent chance for barley to drop when broken by hand without shears."
+                "Percent chance for barley to drop when broken, unless harvested with shears or silk touch."
         );
 
         wheatfieldBarleyOnlyDropsWhenSheared = config.getBoolean(
@@ -4746,10 +4794,10 @@ public class ModConfig {
         poptartLegendGearManaRestore = config.getFloat(
                 "poptartLegendGearManaRestore",
                 "vortex",
-                6.0F,
+                4.0F,
                 0.0F,
                 20.0F,
-                "LegendGear mana restored by the Poptart. 2.0 = one full mana icon."
+                "LegendGear mana restored by the Poptart. 2.0 = one full mana icon (default 4.0 = two full icons)."
         );
 
         poptartDungeonLootWeight = config.getInt(

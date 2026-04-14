@@ -1,5 +1,6 @@
 package net.nmccoy.legendgear.block;
 
+import com.voidsrift.riftflux.ModConfig;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -18,7 +19,7 @@ public class InfusedStarPieceBlock extends BlockContainer {
         super(Material.glass);
         this.setBlockName("infusedStarPieceBlock");
         this.setBlockTextureName("legendgear:starPieceAnim");
-        this.setLightLevel(1.0F);
+        this.setLightLevel((float)Math.max(0, Math.min(15, ModConfig.legendGearPlacedStarPiecesLightLevel)) / 15.0f);
         this.setHardness(0.2F);
         this.setStepSound(Block.soundTypeGlass);
         this.setBlockBounds(0.2F, 0.0F, 0.2F, 0.8F, 0.7F, 0.8F);
