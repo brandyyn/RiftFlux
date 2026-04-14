@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.client.chatbubbles;
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.chatbubbles.ChatBubbleColorManager;
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -34,14 +35,20 @@ public final class ChatBubbleRenderer {
         if (mc == null || mc.thePlayer == null || player == null || messages == null || messages.isEmpty()) {
             return;
         }
-        if (player == mc.thePlayer && (!ModConfig.chatBubblesShowOwnMessages || mc.gameSettings.thirdPersonView == 0)) {
+
+        boolean photoModeActive = IsometricPhotoModeController.instance().isActive();
+        if (player == mc.thePlayer
+                && (!ModConfig.chatBubblesShowOwnMessages || (mc.gameSettings.thirdPersonView == 0 && !photoModeActive))) {
             return;
         }
 
-        double distanceSq = player.getDistanceSqToEntity((Entity) mc.thePlayer);
-        float maxDistance = player.isSneaking() ? 32.0F : 64.0F;
-        if (distanceSq > maxDistance * maxDistance) {
-            return;
+        Entity distanceReference = mc.renderViewEntity != null ? mc.renderViewEntity : mc.thePlayer;
+        if (!photoModeActive) {
+            double distanceSq = player.getDistanceSqToEntity(distanceReference);
+            float maxDistance = player.isSneaking() ? 32.0F : 64.0F;
+            if (distanceSq > maxDistance * maxDistance) {
+                return;
+            }
         }
 
         String playerName = ChatBubblesClient.scrubCodes(player.getCommandSenderName());
@@ -61,13 +68,14 @@ public final class ChatBubbleRenderer {
         for (ChatBubbleMessage message : messages) {
             String[] messageLines = message.getMessageLines();
             float remainingTime = messageLifetimeTicks - (currentTime - message.getUpdateCounterCreated());
-            renderMessage(x, y, z, lines, messageLines, remainingTime, red, green, blue, textColor);
+            renderMessage(x, y, z, lines, messageLines, remainingTime, red, green, blue, textColor, photoModeActive);
             lines += messageLines.length + messageGap;
         }
     }
 
     private static void renderMessage(double x, double y, double z, int lines, String[] messageLines,
-                                      float remainingTime, float red, float green, float blue, int textRgb) {
+                                      float remainingTime, float red, float green, float blue, int textRgb,
+                                      boolean photoModeActive) {
         Minecraft mc = Minecraft.getMinecraft();
         FontRenderer fontRenderer = mc.fontRenderer;
         RenderManager renderManager = RenderManager.instance;
@@ -94,6 +102,9 @@ public final class ChatBubbleRenderer {
         GL11.glTranslatef((float) x, (float) y + 2.3F, (float) z);
         GL11.glNormal3f(0.0F, 1.0F, 0.0F);
         GL11.glRotatef(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+        if (photoModeActive) {
+            GL11.glRotatef(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+        }
         float scale = 0.02666667F * ModConfig.clampChatBubblesTextScale(ModConfig.chatBubblesTextScale);
         GL11.glScalef(-scale, -scale, scale);
         GL11.glDisable(GL11.GL_LIGHTING);
