@@ -181,17 +181,29 @@ extends LGItem {
             par3World.spawnEntityInWorld((Entity)new EntityFallingStar(par2EntityPlayer));
             return true;
         }
-        if (par1ItemStack.getItemDamage() == 2) {
+        int meta = par1ItemStack.getItemDamage();
+        if ((meta == 1 || meta == 4) && ModConfig.legendGearPlaceableStarPieces) {
+            if (par2EntityPlayer.capabilities.allowEdit) {
+                Block placeBlock = meta == 4 ? LegendGear2.infusedStarPieceBlock : LegendGear2.starPieceBlock;
+                ItemBlock ib = (ItemBlock)ItemBlock.getItemFromBlock((Block)placeBlock);
+                if (ib != null) {
+                    boolean canPlace = this.canPlaceKludge(par3World, par4, par5, par6, par7, par2EntityPlayer, par1ItemStack, placeBlock);
+                    if (canPlace) {
+                        return ib.onItemUse(par1ItemStack, par2EntityPlayer, par3World, par4, par5, par6, par7, par8, par9, par10);
+                    }
+                }
+            }
+        } else if (meta == 2) {
             if (par2EntityPlayer.capabilities.allowEdit) {
                 ItemBlock ib = (ItemBlock)ItemBlock.getItemFromBlock((Block)LegendGear2.starstoneBlock);
-                boolean canPlace = this.canPlaceKludge(par3World, par4, par5, par6, par7, par2EntityPlayer, par1ItemStack);
+                boolean canPlace = this.canPlaceKludge(par3World, par4, par5, par6, par7, par2EntityPlayer, par1ItemStack, (Block)LegendGear2.starstoneBlock);
                 if (canPlace) {
                     return ib.onItemUse(par1ItemStack, par2EntityPlayer, par3World, par4, par5, par6, par7, par8, par9, par10);
                 }
             }
-        } else if (par1ItemStack.getItemDamage() == 5) {
+        } else if (meta == 5) {
             ItemBlock ib = (ItemBlock)ItemBlock.getItemFromBlock((Block)LegendGear2.infusedStarstoneBlock);
-            boolean canPlace = this.canPlaceKludge(par3World, par4, par5, par6, par7, par2EntityPlayer, par1ItemStack);
+            boolean canPlace = this.canPlaceKludge(par3World, par4, par5, par6, par7, par2EntityPlayer, par1ItemStack, (Block)LegendGear2.infusedStarstoneBlock);
             if (canPlace) {
                 return ib.onItemUse(par1ItemStack, par2EntityPlayer, par3World, par4, par5, par6, par7, par8, par9, par10);
             }
@@ -260,6 +272,10 @@ extends LGItem {
     }
 
     public boolean canPlaceKludge(World world, int x, int y, int z, int side, EntityPlayer player, ItemStack stack) {
+        return this.canPlaceKludge(world, x, y, z, side, player, stack, (Block)LegendGear2.starstoneBlock);
+    }
+
+    public boolean canPlaceKludge(World world, int x, int y, int z, int side, EntityPlayer player, ItemStack stack, Block placeBlock) {
         Block block = world.getBlock(x, y, z);
         if (block == Blocks.snow_layer) {
             side = 1;
@@ -283,6 +299,6 @@ extends LGItem {
                 ++x;
             }
         }
-        return world.canPlaceEntityOnSide((Block)LegendGear2.starstoneBlock, x, y, z, false, side, (Entity)null, stack);
+        return world.canPlaceEntityOnSide(placeBlock, x, y, z, false, side, (Entity)null, stack);
     }
 }

@@ -28,6 +28,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.nmccoy.legendgear.CommonProxy;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.block.TileEntityRitual;
+import net.nmccoy.legendgear.block.TileEntityPlacedStar;
 import net.nmccoy.legendgear.block.TileEntityStarstone;
 import net.nmccoy.legendgear.block.TileEntityStarwell;
 import net.nmccoy.legendgear.entity.EntityFallingStar;
@@ -48,6 +49,7 @@ import net.nmccoy.legendgear.render.RenderPrismaticXP;
 import net.nmccoy.legendgear.render.RenderSpellDecoration;
 import net.nmccoy.legendgear.render.RenderSpellReticle;
 import net.nmccoy.legendgear.render.RenderThrownOrb;
+import net.nmccoy.legendgear.render.TileEntityPlacedStarRender;
 import net.nmccoy.legendgear.render.TileEntityRitualRender;
 import net.nmccoy.legendgear.render.TileEntityStarstoneRender;
 import net.nmccoy.legendgear.render.TileEntityStarwellRender;
@@ -70,6 +72,7 @@ extends CommonProxy {
         }
         RenderingRegistry.registerEntityRenderingHandler(EntityMagicBoomerang.class, (Render)new RenderBoomerang());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityStarstone.class, (TileEntitySpecialRenderer)new TileEntityStarstoneRender());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPlacedStar.class, (TileEntitySpecialRenderer)new TileEntityPlacedStarRender());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityStarwell.class, (TileEntitySpecialRenderer)new TileEntityStarwellRender());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityRitual.class, (TileEntitySpecialRenderer)new TileEntityRitualRender());
     }
@@ -97,4 +100,3 @@ extends CommonProxy {
         }
     }
 }
-

@@ -37,6 +37,9 @@ public final class ChatBubbleRenderer {
         }
 
         boolean photoModeActive = IsometricPhotoModeController.instance().isActive();
+        if (photoModeActive && !ModConfig.chatBubblesRenderInPhotoMode) {
+            return;
+        }
         if (player == mc.thePlayer
                 && (!ModConfig.chatBubblesShowOwnMessages || (mc.gameSettings.thirdPersonView == 0 && !photoModeActive))) {
             return;

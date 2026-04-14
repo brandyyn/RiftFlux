@@ -165,6 +165,8 @@ public class ModConfig {
     public static boolean levelUpRegisterTalismanOfWonder;
     public static boolean levelUpEnableUnlearningBook;
     public static boolean levelUpEnableLegacyRecipes;
+    public static boolean levelUpEnableItemRecipes;
+    public static int levelUpUnlearningBookDungeonLootWeight;
     public static boolean levelUpUnlearningBookResetClass;
     public static String[] levelUpFarmingBlacklist;
     public static int levelUpMaxPointsPerSkill;
@@ -478,6 +480,7 @@ public class ModConfig {
     public static int legendGearZapStaffDurability;
     public static int legendGearIceStaffDurability;
     public static int legendGearStarPieceInfuseLevels;
+    public static boolean legendGearPlaceableStarPieces;
     public static float legendGearEmberStaffFireSeconds;
     public static int legendGearManaRegenPotionId;
     public static int legendGearGroundedPotionId;
@@ -631,6 +634,7 @@ public class ModConfig {
     public static boolean enableChatBubblesModule;
     public static boolean chatBubblesShowOwnMessages;
     public static boolean chatBubblesShowBackground;
+    public static boolean chatBubblesRenderInPhotoMode;
     public static boolean chatBubblesUseCustomOwnBubbleColor;
     public static int chatBubblesOwnBubbleColor;
     public static boolean chatBubblesUseCustomOwnTextColor;
@@ -1097,6 +1101,12 @@ public class ModConfig {
                 "chatbubbles",
                 false,
                 "If true, chat bubbles render their speech-bubble background and tail behind the text."
+        );
+        chatBubblesRenderInPhotoMode = config.getBoolean(
+                "ChatBubblesRenderInPhotoMode",
+                "chatbubbles",
+                true,
+                "If true, chat bubbles are rendered while isometric photo mode is active."
         );
         String chatBubblesOwnBubbleColorRaw = config.getString(
                 "ChatBubblesOwnBubbleColor",
@@ -1819,6 +1829,20 @@ public class ModConfig {
                 false,
                 "Enable LevelUp's legacy pumpkin seed and flint-to-gravel recipes."
         );
+        levelUpEnableItemRecipes = config.getBoolean(
+                "EnableItemRecipes",
+                "LevelUp",
+                true,
+                "If false, LevelUp item recipes are disabled (Talisman of Wonder and Book of Unlearning)."
+        );
+        levelUpUnlearningBookDungeonLootWeight = config.getInt(
+                "UnlearningBookDungeonLootWeight",
+                "LevelUp",
+                1,
+                0,
+                1000,
+                "Dungeon chest weight for the Book of Unlearning. Set to 0 to disable dungeon loot."
+        );
         levelUpUnlearningBookResetClass = config.getBoolean(
                 "UnlearningBookResetClass",
                 "LevelUp",
@@ -2217,7 +2241,8 @@ public class ModConfig {
                 new String[]{
                         "riftflux:glider_red*1|1.0",
                         "riftflux:whoopie_cushion*1|1.0",
-                        "riftflux:ice_rod*1|1.0"
+                        "riftflux:ice_rod*1|1.0",
+                        "levelup:respecBook*1|1.0"
                 },
                 "Drops for Eye of Cthulhu.\n" +
                         "Format: modid:item[@meta][*count]|chance (chance can be 0-1 or percent)."
@@ -2699,6 +2724,12 @@ public class ModConfig {
                 0,
                 1000,
                 "XP levels required to infuse a Star Piece into an Infused Star Piece."
+        );
+        legendGearPlaceableStarPieces = config.getBoolean(
+                "placeableStarPieces",
+                "legendgear",
+                true,
+                "If true, Star Piece and Infused Star Piece can be placed as decorative star blocks."
         );
 
         legendGearEmberStaffFireSeconds = config.getFloat(
@@ -4724,7 +4755,7 @@ public class ModConfig {
         poptartDungeonLootWeight = config.getInt(
                 "poptartDungeonLootWeight",
                 "vortex",
-                8,
+                4,
                 0,
                 1000,
                 "Dungeon chest weight for the Poptart. Set to 0 to disable dungeon loot."
@@ -5413,6 +5444,7 @@ public class ModConfig {
         if ("enabled".equals(key) || "enable".equals(key) || "module".equals(key)) return "enabled";
         if ("showown".equals(key) || "own".equals(key) || "ownmessages".equals(key) || "showownmessages".equals(key)) return "showown";
         if ("background".equals(key) || "showbackground".equals(key) || "bubblebackground".equals(key)) return "background";
+        if ("photomode".equals(key) || "renderinphotomode".equals(key) || "photomoderender".equals(key) || "showinphotomode".equals(key) || "photobubbles".equals(key)) return "photomode";
         if ("color".equals(key) || "colour".equals(key) || "owncolor".equals(key) || "owncolour".equals(key) || "bubblecolor".equals(key) || "bubblecolour".equals(key)) return "color";
         if ("text".equals(key) || "textcolor".equals(key) || "textcolour".equals(key) || "owntextcolor".equals(key) || "owntextcolour".equals(key) || "chattextcolor".equals(key) || "chattextcolour".equals(key) || "bubbletextcolor".equals(key) || "bubbletextcolour".equals(key) || "whitetext".equals(key) || "textwhite".equals(key) || "textcolourwhite".equals(key) || "textcolorwhite".equals(key)) return "textcolor";
         if ("randomtextcolor".equals(key) || "randomtextcolour".equals(key) || "randomizetextcolor".equals(key) || "randomisetextcolour".equals(key) || "uuidtextcolor".equals(key) || "uuidtextcolour".equals(key)) return "randomtextcolor";
@@ -5462,6 +5494,14 @@ public class ModConfig {
                 if (save) saveChatBubblesBoolean("ChatBubblesShowBackground", true, value, "If true, chat bubbles render their speech-bubble background and tail behind the text.");
             }
             return "bubble background = " + enabledDisabled(value);
+        }
+        if ("photomode".equals(key)) {
+            boolean value = parseChatBubblesBoolean(rawValue);
+            if (updateMemory) {
+                chatBubblesRenderInPhotoMode = value;
+                if (save) saveChatBubblesBoolean("ChatBubblesRenderInPhotoMode", true, value, "If true, chat bubbles are rendered while isometric photo mode is active.");
+            }
+            return "photo mode bubbles = " + enabledDisabled(value);
         }
         if ("color".equals(key)) {
             String value = rawValue == null ? "" : rawValue.trim();

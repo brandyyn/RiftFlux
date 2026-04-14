@@ -29,7 +29,9 @@ public class CommandRiftFlux extends CommandBase {
             "cbt",
             "chatbubblesize",
             "chatbubbles",
-            "chatbubbleconfig"
+            "chatbubbleconfig",
+            "chatbubblephoto",
+            "cbp"
     };
     private static final String[] CHAT_BUBBLE_DIRECT_COMPLETIONS = new String[]{
             "gold",
@@ -53,6 +55,7 @@ public class CommandRiftFlux extends CommandBase {
             "enabled",
             "showown",
             "background",
+            "photomode",
             "gap",
             "blackbar",
             "blackbaropacity",
@@ -112,6 +115,7 @@ public class CommandRiftFlux extends CommandBase {
             "enabled",
             "showown",
             "background",
+            "photomode",
             "color",
             "textcolor",
             "randomtextcolor",
@@ -170,7 +174,7 @@ public class CommandRiftFlux extends CommandBase {
         if (mode == Mode.CHAT_BUBBLE_SIZE) {
             return "/chatbubblesize <" + ModConfig.CHAT_BUBBLES_TEXT_SCALE_MIN + "-" + ModConfig.CHAT_BUBBLES_TEXT_SCALE_MAX + ">";
         }
-        return "/riftflux <chatbubble|chatbubblestext|chatbubblesize|chatbubbles> ...";
+        return "/riftflux <chatbubble|chatbubblestext|chatbubblesize|chatbubbles|chatbubblephoto> ...";
     }
 
     @Override
@@ -216,6 +220,9 @@ public class CommandRiftFlux extends CommandBase {
         if (isChatBubbleConfigSubCommand(subCommand)) {
             return completeChatBubbleConfig(args, 1);
         }
+        if (isChatBubblePhotoSubCommand(subCommand)) {
+            return completeChatBubblePhoto(args, 1);
+        }
         return null;
     }
 
@@ -226,7 +233,7 @@ public class CommandRiftFlux extends CommandBase {
 
     private static void processRootCommand(ICommandSender sender, String[] args) {
         if (args == null || args.length < 1) {
-            throw new WrongUsageException("/riftflux <chatbubble|chatbubblestext|chatbubblesize|chatbubbles> ...");
+            throw new WrongUsageException("/riftflux <chatbubble|chatbubblestext|chatbubblesize|chatbubbles|chatbubblephoto> ...");
         }
 
         String subCommand = args[0];
@@ -239,8 +246,10 @@ public class CommandRiftFlux extends CommandBase {
             processChatBubbleSizeCommand(sender, remaining, "/riftflux chatbubblesize <" + ModConfig.CHAT_BUBBLES_TEXT_SCALE_MIN + "-" + ModConfig.CHAT_BUBBLES_TEXT_SCALE_MAX + ">");
         } else if (isChatBubbleConfigSubCommand(subCommand)) {
             processChatBubbleConfigCommand(sender, remaining, "/riftflux chatbubbles <setting> <value>");
+        } else if (isChatBubblePhotoSubCommand(subCommand)) {
+            processChatBubblePhotoCommand(sender, remaining, "/riftflux chatbubblephoto <true|false>");
         } else {
-            throw new WrongUsageException("/riftflux <chatbubble|chatbubblestext|chatbubblesize|chatbubbles> ...");
+            throw new WrongUsageException("/riftflux <chatbubble|chatbubblestext|chatbubblesize|chatbubbles|chatbubblephoto> ...");
         }
     }
 
@@ -320,7 +329,7 @@ public class CommandRiftFlux extends CommandBase {
         String normalized = ModConfig.normalizeChatBubblesConfigKey(setting);
         if (normalized == null) {
             sender.addChatMessage(new ChatComponentText("Unknown chat bubble config: " + setting));
-            sender.addChatMessage(new ChatComponentText("Use: enabled, showown, background, color, textcolor, randomtextcolor, size, gap, blackbar, blackbaropacity, lifetime, or linelength."));
+            sender.addChatMessage(new ChatComponentText("Use: enabled, showown, background, photomode, color, textcolor, randomtextcolor, size, gap, blackbar, blackbaropacity, lifetime, or linelength."));
             return;
         }
         if ("color".equals(normalized)) {
@@ -330,6 +339,13 @@ public class CommandRiftFlux extends CommandBase {
         } else {
             processClientConfigCommand(sender, normalized, args[1]);
         }
+    }
+
+    private static void processChatBubblePhotoCommand(ICommandSender sender, String[] args, String usage) {
+        if (args == null || args.length != 1 || args[0] == null || args[0].trim().isEmpty()) {
+            throw new WrongUsageException(usage);
+        }
+        processClientConfigCommand(sender, "photomode", args[0]);
     }
 
     private static void processChatBubbleColorValue(ICommandSender sender, String rawValue) {
@@ -476,6 +492,14 @@ public class CommandRiftFlux extends CommandBase {
         return null;
     }
 
+    private static List completeChatBubblePhoto(String[] args, int offset) {
+        int remaining = args.length - offset;
+        if (remaining == 1) {
+            return getListOfStringsMatchingLastWord(args, BOOLEAN_COMPLETIONS);
+        }
+        return null;
+    }
+
     private static List completeConfigValue(String[] args, String setting) {
         String key = ModConfig.normalizeChatBubblesConfigKey(setting);
         if (key == null) {
@@ -521,6 +545,11 @@ public class CommandRiftFlux extends CommandBase {
                 || "chatbubbleconfig".equalsIgnoreCase(value)
                 || "chatbubblesconfig".equalsIgnoreCase(value)
                 || "config".equalsIgnoreCase(value);
+    }
+
+    private static boolean isChatBubblePhotoSubCommand(String value) {
+        return "chatbubblephoto".equalsIgnoreCase(value)
+                || "cbp".equalsIgnoreCase(value);
     }
 
     private static boolean isColorConfigKey(String value) {

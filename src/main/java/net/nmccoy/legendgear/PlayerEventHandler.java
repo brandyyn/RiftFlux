@@ -198,6 +198,9 @@ public class PlayerEventHandler {
             } else if (meta == 1) {
                 this.addUseLine(event, "Use: Hold right-click to infuse into Charged Star Piece.");
                 this.addUseLine(event, StarDust.getInfuseCostTooltipLine());
+                if (ModConfig.legendGearPlaceableStarPieces) {
+                    this.addUseLine(event, "Place: Right-click a block face to place a decorative Star Piece block.");
+                }
             } else if (meta == 2) {
                 this.addUseLine(event, "Use: Right-click a block face to place a Starstone block.");
             } else if (meta == 3) {
@@ -210,6 +213,9 @@ public class PlayerEventHandler {
                 this.addUseLine(event, "Cost: Consumes 1 charged stardust.");
             } else if (meta == 4) {
                 this.addUseLine(event, "Use: Charged Star Piece for advanced crafting.");
+                if (ModConfig.legendGearPlaceableStarPieces) {
+                    this.addUseLine(event, "Place: Right-click a block face to place a decorative Infused Star Piece block.");
+                }
             } else if (meta == 5) {
                 this.addUseLine(event, "Use: Right-click a block face to place an Infused Starstone block.");
             }

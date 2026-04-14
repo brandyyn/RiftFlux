@@ -112,6 +112,7 @@ public final class LevelUp {
         boolean talismanEnabled = ModConfig.levelUpRegisterTalismanOfWonder;
         boolean bookEnabled = ModConfig.levelUpEnableUnlearningBook;
         boolean legacyRecipes = ModConfig.levelUpEnableLegacyRecipes;
+        boolean itemRecipesEnabled = ModConfig.levelUpEnableItemRecipes;
         this.useServerProperties();
         List<String> blackList = Arrays.asList(ModConfig.levelUpFarmingBlacklist);
         FMLEventHandler.INSTANCE.addCropsToBlackList(blackList);
@@ -140,25 +141,27 @@ public final class LevelUp {
             towItems.put(Items.diamond, 40);
             xpTalisman = new Item().setUnlocalizedName("xpTalisman").setTextureName("levelup:XPTalisman").setCreativeTab(CreativeTabs.tabTools);
             GameRegistry.registerItem((Item)xpTalisman, (String)"xpTalisman");
-            GameRegistry.addRecipe((IRecipe)new ShapedOreRecipe(xpTalisman, new Object[]{"GG ", " R ", " GG", Character.valueOf('G'), "ingotGold", Character.valueOf('R'), "dustRedstone"}));
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.coal});
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "oreGold"}));
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "oreIron"}));
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "gemDiamond"}));
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "logWood"}));
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.brick});
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.book});
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "gemLapis"}));
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "dustRedstone"}));
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.bread});
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.melon});
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_porkchop});
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_beef});
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_chicken});
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_fished});
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "ingotIron"}));
-            GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "ingotGold"}));
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Blocks.pumpkin});
+            if (itemRecipesEnabled) {
+                GameRegistry.addRecipe((IRecipe)new ShapedOreRecipe(xpTalisman, new Object[]{"GG ", " R ", " GG", Character.valueOf('G'), "ingotGold", Character.valueOf('R'), "dustRedstone"}));
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.coal});
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "oreGold"}));
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "oreIron"}));
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "gemDiamond"}));
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "logWood"}));
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.brick});
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.book});
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "gemLapis"}));
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "dustRedstone"}));
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.bread});
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.melon});
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_porkchop});
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_beef});
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_chicken});
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Items.cooked_fished});
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "ingotIron"}));
+                GameRegistry.addRecipe((IRecipe)new ShapelessOreRecipe(xpTalisman, new Object[]{xpTalisman, "ingotGold"}));
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(xpTalisman), (Object[])new Object[]{xpTalisman, Blocks.pumpkin});
+            }
         } else {
             xpTalisman = null;
             towItems = null;
@@ -166,11 +169,13 @@ public final class LevelUp {
         if (bookEnabled) {
             respecBook = new ItemRespecBook().setUnlocalizedName("respecBook").setTextureName("levelup:RespecBook").setCreativeTab(CreativeTabs.tabTools);
             GameRegistry.registerItem((Item)respecBook, (String)"respecBook");
-            ItemStack output = new ItemStack(respecBook);
-            if (ModConfig.levelUpUnlearningBookResetClass) {
-                output.setItemDamage(1);
+            if (itemRecipesEnabled) {
+                ItemStack output = new ItemStack(respecBook);
+                if (ModConfig.levelUpUnlearningBookResetClass) {
+                    output.setItemDamage(1);
+                }
+                GameRegistry.addRecipe((ItemStack)output, (Object[])new Object[]{"OEO", "DBD", "ODO", Character.valueOf('O'), Blocks.obsidian, Character.valueOf('D'), new ItemStack(Items.dye), Character.valueOf('E'), Items.ender_pearl, Character.valueOf('B'), Items.book});
             }
-            GameRegistry.addRecipe((ItemStack)output, (Object[])new Object[]{"OEO", "DBD", "ODO", Character.valueOf('O'), Blocks.obsidian, Character.valueOf('D'), new ItemStack(Items.dye), Character.valueOf('E'), Items.ender_pearl, Character.valueOf('B'), Items.book});
         }
         if (legacyRecipes) {
             GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(Items.pumpkin_seeds, 4), (Object[])new Object[]{Blocks.pumpkin});
