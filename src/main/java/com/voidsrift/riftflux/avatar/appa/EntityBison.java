@@ -519,6 +519,9 @@ public class EntityBison extends EntityFamiliar {
         if (entity == null) {
             return false;
         }
+        if (entity instanceof com.voidsrift.riftflux.palaria.entity.EntityNimatin) {
+            return false;
+        }
         String[] filter = ModConfig.appaMobPassengerEntityFilter;
         boolean whitelist = ModConfig.appaMobPassengerWhitelistMode;
         if (filter == null || filter.length == 0) {

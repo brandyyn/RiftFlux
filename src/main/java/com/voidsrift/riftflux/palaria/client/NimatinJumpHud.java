@@ -23,6 +23,10 @@ public final class NimatinJumpHud extends Gui {
     private boolean jumpHeld;
     private int jumpPowerCounter = -1;
     private float jumpPower;
+    private boolean mountedJumpActive;
+    private boolean doubleJumpSent;
+    private int noChargeTicks;
+    private int mountedJumpTicks;
 
     private NimatinJumpHud() {
     }
@@ -48,24 +52,56 @@ public final class NimatinJumpHud extends Gui {
             return;
         }
 
+        EntityNimatin nimatin = (EntityNimatin) mc.thePlayer.ridingEntity;
         boolean currentlyHeld = mc.gameSettings.keyBindJump.getIsKeyPressed();
-        if (jumpPowerCounter < 0) {
-            ++jumpPowerCounter;
-            if (jumpPowerCounter == 0) {
+        boolean grounded = isGrounded(nimatin);
+        if (noChargeTicks > 0) {
+            --noChargeTicks;
+        }
+        if (mountedJumpActive) {
+            ++mountedJumpTicks;
+            if ((mountedJumpTicks > 8 && (grounded || isSettled(nimatin))) || mountedJumpTicks > 120) {
+                mountedJumpActive = false;
+                doubleJumpSent = false;
+                mountedJumpTicks = 0;
+                noChargeTicks = 0;
+            }
+        }
+
+        if (!jumpHeld && currentlyHeld) {
+            if (mountedJumpActive) {
+                jumpPowerCounter = -1;
+                jumpPower = 0.0F;
+                if (noChargeTicks <= 0 && !doubleJumpSent && RFNetwork.CH != null) {
+                    RFNetwork.CH.sendToServer(MsgNimatinJump.doubleJump(nimatin.getEntityId()));
+                    doubleJumpSent = true;
+                }
+            } else {
+                jumpPowerCounter = 0;
                 jumpPower = 0.0F;
             }
         }
 
         if (jumpHeld && !currentlyHeld) {
-            if (jumpPower > 0.0F && RFNetwork.CH != null) {
-                RFNetwork.CH.sendToServer(new MsgNimatinJump((int) (jumpPower * 100.0F)));
+            if (!mountedJumpActive && jumpPower > 0.0F && RFNetwork.CH != null) {
+                RFNetwork.CH.sendToServer(new MsgNimatinJump(nimatin.getEntityId(), (int) (jumpPower * 100.0F)));
+                mountedJumpActive = true;
+                doubleJumpSent = false;
+                mountedJumpTicks = 0;
+                noChargeTicks = 8;
             }
             jumpPowerCounter = -10;
             jumpPower = 0.0F;
-        } else if (!jumpHeld && currentlyHeld) {
-            jumpPowerCounter = 0;
+        } else if (mountedJumpActive) {
+            jumpPowerCounter = -1;
             jumpPower = 0.0F;
         } else if (currentlyHeld) {
+            if (jumpPowerCounter < 0) {
+                ++jumpPowerCounter;
+                if (jumpPowerCounter == 0) {
+                    jumpPower = 0.0F;
+                }
+            }
             ++jumpPowerCounter;
             if (jumpPowerCounter < 10) {
                 jumpPower = (float) jumpPowerCounter * 0.1F;
@@ -111,12 +147,29 @@ public final class NimatinJumpHud extends Gui {
     }
 
     private static boolean isDrivingNimatin(EntityPlayer player) {
-        return player != null && player.ridingEntity instanceof EntityNimatin && player.ridingEntity.riddenByEntity == player;
+        return player != null && player.ridingEntity instanceof EntityNimatin;
+    }
+
+    private static boolean isGrounded(EntityNimatin nimatin) {
+        return nimatin != null
+                && nimatin.onGround
+                && Math.abs(nimatin.motionY) < 0.12D
+                && nimatin.fallDistance <= 0.0F;
+    }
+
+    private static boolean isSettled(EntityNimatin nimatin) {
+        return nimatin != null
+                && Math.abs(nimatin.motionY) < 0.08D
+                && Math.abs(nimatin.posY - nimatin.prevPosY) < 0.03D;
     }
 
     private void resetCharge() {
         jumpHeld = false;
         jumpPowerCounter = -1;
         jumpPower = 0.0F;
+        mountedJumpActive = false;
+        doubleJumpSent = false;
+        noChargeTicks = 0;
+        mountedJumpTicks = 0;
     }
 }

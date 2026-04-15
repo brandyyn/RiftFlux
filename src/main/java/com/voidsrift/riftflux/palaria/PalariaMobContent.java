@@ -29,6 +29,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
+import net.minecraftforge.common.MinecraftForge;
 
 public final class PalariaMobContent {
     public static Item raptorClaw;
@@ -118,6 +119,9 @@ public final class PalariaMobContent {
         }
         if (ModConfig.enablePalariaMagmaRaptorChicken && ModConfig.palariaMagmaRaptorChickenSpawnWeight > 0) {
             EntityRegistry.addSpawn(EntityMagmaRaptorChicken.class, ModConfig.palariaMagmaRaptorChickenSpawnWeight, 2, 5, EnumCreatureType.monster, PalariaBiomeHelper.netherBiomes());
+        }
+        if (ModConfig.enablePalariaNimatin) {
+            MinecraftForge.EVENT_BUS.register(new NimatinSeatEvents());
         }
     }
 

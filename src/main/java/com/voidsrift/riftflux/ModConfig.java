@@ -329,6 +329,9 @@ public class ModConfig {
     public static float palariaNimatinTamedDamage;
     public static float palariaNimatinRidingSpeed;
     public static float palariaNimatinMaxJumpHeight;
+    public static boolean palariaNimatinDoubleJumpEnabled;
+    public static float palariaNimatinDoubleJumpHeight;
+    public static int palariaNimatinTalkInterval;
     public static float palariaNimatinKillHealAmount;
     public static float palariaNimatinOwnerKillHealMultiplier;
     public static String[] palariaNimatinTameItems;
@@ -536,7 +539,8 @@ public class ModConfig {
     };
 
     private static final String[] DEFAULT_PALARIA_NIMATIN_PASSENGER_BLACKLIST = new String[]{
-            "EntityNimatin"
+            "EntityNimatin",
+            "EntityBison"
     };
 
     // Axolotl module
@@ -2255,11 +2259,12 @@ public class ModConfig {
                 "AppaMobPassengerEntityFilter",
                 "avatar",
                 new String[]{
-                        "EntityBison"
+                        "EntityBison",
+                        "EntityNimatin"
                 },
                 "Entity IDs/class names used to filter which mobs can ride Appa.\n" +
                         "Matches entity ID, class simple name, or full class name.\n" +
-                        "Default blocks Appa from mounting itself."
+                        "Default blocks Appa from mounting itself and Nimatins from riding Appa."
         );
         appaMobPassengerEntityFilter = sanitizeAppaPassengerFilter(appaMobPassengerEntityFilter);
         config.getCategory("avatar")
@@ -3909,6 +3914,28 @@ public class ModConfig {
                 100.0F,
                 "Maximum jump height in blocks for a fully charged ridden Nimatin jump."
         );
+        palariaNimatinDoubleJumpEnabled = config.getBoolean(
+                "NimatinDoubleJumpEnabled",
+                PALARIA_CATEGORY,
+                true,
+                "If true, a ridden Nimatin can perform one configurable mid-air double jump per airborne sequence with a quick jump-key tap."
+        );
+        palariaNimatinDoubleJumpHeight = config.getFloat(
+                "NimatinDoubleJumpHeight",
+                PALARIA_CATEGORY,
+                6.0F,
+                0.5F,
+                100.0F,
+                "Jump height in blocks for Nimatin's mid-air double jump."
+        );
+        palariaNimatinTalkInterval = config.getInt(
+                "NimatinTalkInterval",
+                PALARIA_CATEGORY,
+                123,
+                1,
+                10000,
+                "Ticks between Nimatin ambient purr attempts while tamed. Higher values make purring less frequent."
+        );
         palariaNimatinKillHealAmount = config.getFloat(
                 "NimatinKillHealAmount",
                 PALARIA_CATEGORY,
@@ -5263,9 +5290,10 @@ public class ModConfig {
 
     private static String[] sanitizeAppaPassengerFilter(String[] values) {
         if (values == null || values.length == 0) {
-            return values;
+            return new String[]{"EntityBison", "EntityNimatin"};
         }
         final String appaEntityClass = "EntityBison";
+        final String nimatinEntityClass = "EntityNimatin";
         LinkedHashSet<String> unique = new LinkedHashSet<String>();
         HashSet<String> lowered = new HashSet<String>();
         for (String raw : values) {
@@ -5278,14 +5306,19 @@ public class ModConfig {
             }
             if ("EntityBison".equalsIgnoreCase(entry)) {
                 entry = appaEntityClass;
+            } else if ("EntityNimatin".equalsIgnoreCase(entry)) {
+                entry = nimatinEntityClass;
             }
             String key = entry.toLowerCase();
             if (lowered.add(key)) {
                 unique.add(entry);
             }
         }
-        if (unique.isEmpty()) {
+        if (unique.isEmpty() || lowered.add(appaEntityClass.toLowerCase())) {
             unique.add(appaEntityClass);
+        }
+        if (lowered.add(nimatinEntityClass.toLowerCase())) {
+            unique.add(nimatinEntityClass);
         }
         return unique.toArray(new String[unique.size()]);
     }
@@ -5295,6 +5328,7 @@ public class ModConfig {
             return DEFAULT_PALARIA_NIMATIN_PASSENGER_BLACKLIST.clone();
         }
         final String nimatinEntityClass = "EntityNimatin";
+        final String appaEntityClass = "EntityBison";
         LinkedHashSet<String> unique = new LinkedHashSet<String>();
         HashSet<String> lowered = new HashSet<String>();
         for (String raw : values) {
@@ -5307,14 +5341,19 @@ public class ModConfig {
             }
             if ("EntityNimatin".equalsIgnoreCase(entry)) {
                 entry = nimatinEntityClass;
+            } else if ("EntityBison".equalsIgnoreCase(entry)) {
+                entry = appaEntityClass;
             }
             String key = entry.toLowerCase();
             if (lowered.add(key)) {
                 unique.add(entry);
             }
         }
-        if (unique.isEmpty()) {
+        if (unique.isEmpty() || lowered.add(nimatinEntityClass.toLowerCase())) {
             unique.add(nimatinEntityClass);
+        }
+        if (lowered.add(appaEntityClass.toLowerCase())) {
+            unique.add(appaEntityClass);
         }
         return unique.toArray(new String[unique.size()]);
     }

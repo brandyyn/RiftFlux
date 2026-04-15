@@ -6,10 +6,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
+import java.util.UUID;
+
 public class EntityNimatinSeat extends Entity {
     private static final int DATA_PARENT = 20;
     private static final int DATA_INDEX = 21;
     private EntityNimatin cachedParent;
+    private UUID parentUniqueId;
 
     public EntityNimatinSeat(World world) {
         super(world);
@@ -34,6 +37,7 @@ public class EntityNimatinSeat extends Entity {
 
     public void setParent(EntityNimatin parent) {
         cachedParent = parent;
+        parentUniqueId = parent == null ? null : parent.getUniqueID();
         dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(parent == null ? -1 : parent.getEntityId()));
     }
 
@@ -50,6 +54,18 @@ public class EntityNimatinSeat extends Entity {
             cachedParent = (EntityNimatin) entity;
             return cachedParent;
         }
+        if (parentUniqueId != null && worldObj != null && worldObj.loadedEntityList != null) {
+            for (Object obj : worldObj.loadedEntityList) {
+                if (obj instanceof EntityNimatin) {
+                    EntityNimatin nimatin = (EntityNimatin) obj;
+                    if (!nimatin.isDead && parentUniqueId.equals(nimatin.getUniqueID())) {
+                        cachedParent = nimatin;
+                        dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(nimatin.getEntityId()));
+                        return cachedParent;
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -65,13 +81,15 @@ public class EntityNimatinSeat extends Entity {
     public void onUpdate() {
         EntityNimatin parent = getParent();
         if (parent == null || parent.isDead) {
+            if (ticksExisted <= 100) {
+                noClip = true;
+                return;
+            }
             if (riddenByEntity != null) {
                 riddenByEntity.mountEntity(null);
                 riddenByEntity = null;
             }
-            if (ticksExisted > 100) {
-                setDead();
-            }
+            setDead();
             return;
         }
         noClip = true;
@@ -147,6 +165,9 @@ public class EntityNimatinSeat extends Entity {
         if (tag.hasKey("Parent")) {
             dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(tag.getInteger("Parent")));
         }
+        if (tag.hasKey("ParentUUIDMost") && tag.hasKey("ParentUUIDLeast")) {
+            parentUniqueId = new UUID(tag.getLong("ParentUUIDMost"), tag.getLong("ParentUUIDLeast"));
+        }
         if (tag.hasKey("SeatIndex")) {
             dataWatcher.updateObject(DATA_INDEX, Integer.valueOf(tag.getInteger("SeatIndex")));
         }
@@ -155,12 +176,18 @@ public class EntityNimatinSeat extends Entity {
     @Override
     protected void writeEntityToNBT(NBTTagCompound tag) {
         tag.setInteger("Parent", dataWatcher.getWatchableObjectInt(DATA_PARENT));
+        EntityNimatin parent = getParent();
+        UUID uuid = parent == null ? parentUniqueId : parent.getUniqueID();
+        if (uuid != null) {
+            tag.setLong("ParentUUIDMost", uuid.getMostSignificantBits());
+            tag.setLong("ParentUUIDLeast", uuid.getLeastSignificantBits());
+        }
         tag.setInteger("SeatIndex", dataWatcher.getWatchableObjectInt(DATA_INDEX));
     }
 
     @Override
     public boolean writeToNBTOptional(NBTTagCompound tag) {
-        return false;
+        return getParent() != null && super.writeToNBTOptional(tag);
     }
 
     @Override

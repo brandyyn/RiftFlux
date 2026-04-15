@@ -36,7 +36,10 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class EntityNimatin extends EntityTameable {
     private float headRotationCourse;
@@ -52,9 +55,13 @@ public class EntityNimatin extends EntityTameable {
     private static final float PASSENGER_UP_OFFSET = RIDER_UP_OFFSET - 0.64F;
     private static final double POUNCE_FORWARD_BOOST = 1.25D;
     private static final double POUNCE_EXTRA_GRAVITY = 0.14D;
+    private static final int EJECT_NO_REMOUNT_TICKS = 100;
     private float jumpPower;
     private boolean nimatinJumping;
+    private boolean usedDoubleJump;
+    private int mountedJumpTicks;
     private final EntityNimatinSeat[] passengerSeats = new EntityNimatinSeat[PASSENGER_SEATS];
+    private final Map<Integer, Integer> seatNoRemountTicks = new HashMap<Integer, Integer>();
 
     public EntityNimatin(World world) {
         super(world);
@@ -141,18 +148,9 @@ public class EntityNimatin extends EntityTameable {
             if (forwardMovement <= 0.0F) {
                 forwardMovement *= 0.25F;
             }
-            if (jumpPower > 0.0F && !nimatinJumping && onGround) {
-                motionY = getConfiguredJumpVelocity() * (double) jumpPower;
-                nimatinJumping = true;
-                isAirBorne = true;
-                if (forwardMovement > 0.0F) {
-                    float sin = MathHelper.sin(rotationYaw * (float) Math.PI / 180.0F);
-                    float cos = MathHelper.cos(rotationYaw * (float) Math.PI / 180.0F);
-                    motionX += -POUNCE_FORWARD_BOOST * (double) sin * (double) jumpPower;
-                    motionZ += POUNCE_FORWARD_BOOST * (double) cos * (double) jumpPower;
-                }
+            if (jumpPower > 0.0F && !nimatinJumping && canStartMountedJump()) {
+                performMountedJump(getConfiguredJumpVelocity() * (double) jumpPower, forwardMovement, jumpPower);
                 jumpPower = 0.0F;
-                ForgeHooks.onLivingJump(this);
             }
             stepHeight = 1.0F;
             jumpMovementFactor = getAIMoveSpeed() * 0.1F;
@@ -160,9 +158,10 @@ public class EntityNimatin extends EntityTameable {
                 setAIMoveSpeed(ModConfig.palariaNimatinRidingSpeed);
                 super.moveEntityWithHeading(strafeMovement, forwardMovement);
             }
-            if (onGround) {
+            if (onGround && mountedJumpTicks == 0) {
                 jumpPower = 0.0F;
                 nimatinJumping = false;
+                usedDoubleJump = false;
             }
             prevLimbSwingAmount = limbSwingAmount;
             double dx = posX - prevPosX;
@@ -179,14 +178,48 @@ public class EntityNimatin extends EntityTameable {
     }
 
     public void setJumpPower(int jumpCharge) {
-        if (!(riddenByEntity instanceof EntityPlayer) || jumpCharge < 0) {
+        if (jumpCharge < 0 || !canStartMountedJump()) {
             return;
         }
+        float power;
         if (jumpCharge > 90) {
-            jumpPower = 1.0F;
+            power = 1.0F;
         } else {
-            jumpPower = 0.4F + 0.4F * (float) jumpCharge / 90.0F;
+            power = 0.4F + 0.4F * (float) jumpCharge / 90.0F;
         }
+        if (riddenByEntity instanceof EntityLivingBase) {
+            performMountedJump(getConfiguredJumpVelocity() * (double) power, ((EntityLivingBase) riddenByEntity).moveForward, power);
+            jumpPower = 0.0F;
+        } else {
+            jumpPower = power;
+        }
+    }
+
+    public void tryDoubleJump(EntityPlayer player) {
+        if (player == null
+                || !ModConfig.palariaNimatinDoubleJumpEnabled
+                || !canDoubleJumpNow()
+                || isInWater()
+                || handleLavaMovement()) {
+            return;
+        }
+        double velocity = getConfiguredDoubleJumpVelocity();
+        motionY = Math.min(velocity * 1.6D, Math.max(velocity * 1.2D, Math.max(0.0D, motionY) + velocity * 0.9D));
+        isAirBorne = true;
+        nimatinJumping = true;
+        usedDoubleJump = true;
+        mountedJumpTicks = Math.max(mountedJumpTicks, 1);
+        fallDistance = 0.0F;
+        onGround = false;
+        isCollidedVertically = false;
+        velocityChanged = true;
+        if (player.moveForward > 0.0F) {
+            float sin = MathHelper.sin(rotationYaw * (float) Math.PI / 180.0F);
+            float cos = MathHelper.cos(rotationYaw * (float) Math.PI / 180.0F);
+            motionX += -POUNCE_FORWARD_BOOST * 0.55D * (double) sin;
+            motionZ += POUNCE_FORWARD_BOOST * 0.55D * (double) cos;
+        }
+        ForgeHooks.onLivingJump(this);
     }
 
     @Override
@@ -211,7 +244,7 @@ public class EntityNimatin extends EntityTameable {
 
     @Override
     public int getTalkInterval() {
-        return isTamed() ? 100 : super.getTalkInterval();
+        return isTamed() ? Math.max(1, ModConfig.palariaNimatinTalkInterval) : super.getTalkInterval();
     }
 
     @Override
@@ -222,10 +255,19 @@ public class EntityNimatin extends EntityTameable {
         if (isBegging()) {
             numTicksToChaseTarget = 10;
         }
+        if (mountedJumpTicks > 0) {
+            ++mountedJumpTicks;
+            if ((onGround && mountedJumpTicks > 5) || isMountedJumpSettled() || mountedJumpTicks > 100) {
+                mountedJumpTicks = 0;
+                nimatinJumping = false;
+                usedDoubleJump = false;
+            }
+        }
         if (nimatinJumping && !onGround) {
             motionY -= POUNCE_EXTRA_GRAVITY;
-        } else if (onGround) {
+        } else if (onGround && mountedJumpTicks == 0) {
             nimatinJumping = false;
+            usedDoubleJump = false;
         }
         if (isWet()) {
             isShaking = true;
@@ -255,10 +297,13 @@ public class EntityNimatin extends EntityTameable {
 
     @Override
     public void onUpdate() {
+        repairDirectRiderLink();
         super.onUpdate();
-        syncSeatPassengers();
+        repairDirectRiderLink();
+        syncIdleClientSeatPassengers();
         if (!worldObj.isRemote && isTamed()) {
             ensureSeats();
+            tickSeatNoRemounts();
             if (isSitting()) {
                 ejectMobPassengers();
                 return;
@@ -268,6 +313,7 @@ public class EntityNimatin extends EntityTameable {
             } else {
                 ejectMobPassengers();
             }
+            syncSeatPassengers();
         }
         if (!worldObj.isRemote && isShaking && !isWetShaking && !hasPath() && onGround) {
             isWetShaking = true;
@@ -393,7 +439,7 @@ public class EntityNimatin extends EntityTameable {
         if (passenger == null) {
             return;
         }
-        float yawRad = (float) Math.toRadians(rotationYaw);
+        float yawRad = (float) Math.toRadians(getSeatYaw());
         float sin = MathHelper.sin(yawRad);
         float cos = MathHelper.cos(yawRad);
         double x = posX;
@@ -413,6 +459,9 @@ public class EntityNimatin extends EntityTameable {
             EntityLivingBase living = (EntityLivingBase) passenger;
             living.moveStrafing = 0.0F;
             living.moveForward = 0.0F;
+            living.motionX = motionX;
+            living.motionY = motionY;
+            living.motionZ = motionZ;
         }
     }
 
@@ -421,7 +470,7 @@ public class EntityNimatin extends EntityTameable {
         if (entity == this.riddenByEntity
                 || isSeatPassenger(entity)
                 || isSeatEntity(entity)
-                || hasMobSeatPassenger()) {
+                || hasSeatPassenger()) {
             return;
         }
         super.applyEntityCollision(entity);
@@ -429,7 +478,7 @@ public class EntityNimatin extends EntityTameable {
 
     @Override
     public void addVelocity(double x, double y, double z) {
-        if (hasMobSeatPassenger()) {
+        if (hasSeatPassenger()) {
             return;
         }
         super.addVelocity(x, y, z);
@@ -486,10 +535,17 @@ public class EntityNimatin extends EntityTameable {
                 seat = null;
             }
             if (seat == null) {
-                seat = new EntityNimatinSeat(worldObj, this, i);
-                seat.setPosition(posX, posY, posZ);
-                if (worldObj.spawnEntityInWorld(seat)) {
+                seat = findExistingSeat(i);
+                if (seat != null) {
+                    seat.setParent(this);
+                    seat.setSeatIndex(i);
                     passengerSeats[i] = seat;
+                } else {
+                    seat = new EntityNimatinSeat(worldObj, this, i);
+                    seat.setPosition(posX, posY, posZ);
+                    if (worldObj.spawnEntityInWorld(seat)) {
+                        passengerSeats[i] = seat;
+                    }
                 }
             } else {
                 seat.setParent(this);
@@ -502,6 +558,22 @@ public class EntityNimatin extends EntityTameable {
                 }
             }
         }
+    }
+
+    private EntityNimatinSeat findExistingSeat(int seatIndex) {
+        if (worldObj == null || worldObj.loadedEntityList == null) {
+            return null;
+        }
+        for (Object obj : worldObj.loadedEntityList) {
+            if (!(obj instanceof EntityNimatinSeat)) {
+                continue;
+            }
+            EntityNimatinSeat seat = (EntityNimatinSeat) obj;
+            if (!seat.isDead && seat.worldObj == worldObj && seat.getSeatIndex() == seatIndex && seat.getParent() == this) {
+                return seat;
+            }
+        }
+        return null;
     }
 
     private void clearSeats() {
@@ -521,6 +593,89 @@ public class EntityNimatin extends EntityTameable {
             }
             updatePassenger(seat.riddenByEntity);
         }
+    }
+
+    private void syncIdleClientSeatPassengers() {
+        if (worldObj == null || !worldObj.isRemote || riddenByEntity != null || !isIdleSeatRotationChanging()) {
+            return;
+        }
+        for (Object obj : worldObj.loadedEntityList) {
+            if (!(obj instanceof Entity)) {
+                continue;
+            }
+            Entity passenger = (Entity) obj;
+            if (isSeatPassenger(passenger)) {
+                updatePassenger(passenger);
+            }
+        }
+    }
+
+    private boolean isIdleSeatRotationChanging() {
+        double motionSq = motionX * motionX + motionZ * motionZ;
+        double deltaX = posX - prevPosX;
+        double deltaZ = posZ - prevPosZ;
+        double deltaSq = deltaX * deltaX + deltaZ * deltaZ;
+        if (motionSq >= 9.0E-4D || deltaSq >= 9.0E-4D) {
+            return false;
+        }
+        return Math.abs(getSeatYaw() - prevRenderYawOffset) > 0.01F
+                || Math.abs(rotationYaw - prevRotationYaw) > 0.01F;
+    }
+
+    private float getSeatYaw() {
+        return riddenByEntity instanceof EntityLivingBase ? rotationYaw : renderYawOffset;
+    }
+
+    private void repairDirectRiderLink() {
+        if (riddenByEntity instanceof EntityPlayer && riddenByEntity.ridingEntity == this) {
+            return;
+        }
+        if (worldObj == null || worldObj.playerEntities == null) {
+            return;
+        }
+        for (Object obj : worldObj.playerEntities) {
+            if (!(obj instanceof EntityPlayer)) {
+                continue;
+            }
+            EntityPlayer player = (EntityPlayer) obj;
+            if (player.ridingEntity == this) {
+                forceDirectRider(player);
+                return;
+            }
+        }
+    }
+
+    public boolean forceDirectRider(EntityPlayer player) {
+        if (player == null || player.isDead || player.worldObj != worldObj) {
+            return false;
+        }
+        if (riddenByEntity != null && (riddenByEntity.isDead || riddenByEntity.worldObj != worldObj || isSamePlayer(riddenByEntity, player))) {
+            riddenByEntity = null;
+        }
+        if (riddenByEntity != null && riddenByEntity != player) {
+            return false;
+        }
+        if (player.ridingEntity == this) {
+            riddenByEntity = player;
+            return true;
+        }
+        if (player.ridingEntity != null && (player.ridingEntity.isDead || player.ridingEntity.worldObj != worldObj || player.ridingEntity.getDistanceSqToEntity(this) <= 4.0D)) {
+            player.ridingEntity = null;
+        }
+        if (player.ridingEntity != null || player.getDistanceSqToEntity(this) > 64.0D) {
+            return false;
+        }
+        player.mountEntity(this);
+        player.ridingEntity = this;
+        riddenByEntity = player;
+        player.fallDistance = 0.0F;
+        return true;
+    }
+
+    private boolean isSamePlayer(Entity entity, EntityPlayer player) {
+        return entity instanceof EntityPlayer
+                && player != null
+                && ((EntityPlayer) entity).getUniqueID().equals(player.getUniqueID());
     }
 
     private boolean isRiderProjectileOrDirectHit(DamageSource source) {
@@ -566,6 +721,9 @@ public class EntityNimatin extends EntityTameable {
             if (!isMobPassengerAllowed(candidate)) {
                 continue;
             }
+            if (isInNoRemountCooldown(candidate)) {
+                continue;
+            }
             candidate.mountEntity(seat);
             if (candidate.ridingEntity == seat) {
                 updatePassenger(candidate);
@@ -583,7 +741,10 @@ public class EntityNimatin extends EntityTameable {
     }
 
     private boolean isMobPassengerAllowed(EntityLivingBase entity) {
-        if (entity == null || entity == this || entity instanceof EntityNimatin) {
+        if (entity == null
+                || entity == this
+                || entity instanceof EntityNimatin
+                || entity instanceof com.voidsrift.riftflux.avatar.appa.EntityBison) {
             return false;
         }
         String[] filter = ModConfig.palariaNimatinMobPassengerBlacklist;
@@ -598,6 +759,90 @@ public class EntityNimatin extends EntityTameable {
             if (seat.riddenByEntity instanceof EntityLivingBase && !(seat.riddenByEntity instanceof EntityPlayer)) {
                 seat.riddenByEntity.mountEntity(null);
             }
+        }
+    }
+
+    public boolean ejectSeatPassenger(Entity passenger) {
+        if (passenger == null || !(passenger.ridingEntity instanceof EntityNimatinSeat)) {
+            return false;
+        }
+        EntityNimatinSeat seat = (EntityNimatinSeat) passenger.ridingEntity;
+        if (seat.getParent() != this) {
+            return false;
+        }
+        passenger.mountEntity(null);
+        setNoRemountCooldown(passenger, EJECT_NO_REMOUNT_TICKS);
+        if (!worldObj.isRemote) {
+            float yawRad = (float) Math.toRadians(rotationYaw);
+            double dropX = posX - MathHelper.sin(yawRad) * 1.2D;
+            double dropZ = posZ + MathHelper.cos(yawRad) * 1.2D;
+            double dropY = posY + getMountedYOffset() + passenger.getYOffset() + 0.2D;
+            passenger.setPosition(dropX, dropY, dropZ);
+            passenger.motionX = motionX;
+            passenger.motionY = 0.08D;
+            passenger.motionZ = motionZ;
+            passenger.velocityChanged = true;
+        }
+        return true;
+    }
+
+    public boolean ejectClosestSeatPassenger(EntityPlayer player) {
+        if (player == null) {
+            return false;
+        }
+        Entity closest = null;
+        double closestDist = Double.MAX_VALUE;
+        for (EntityNimatinSeat seat : passengerSeats) {
+            if (!isSeatLive(seat) || seat.riddenByEntity == null) {
+                continue;
+            }
+            Entity candidate = seat.riddenByEntity;
+            if (candidate instanceof EntityPlayer) {
+                continue;
+            }
+            double dist = candidate.getDistanceSqToEntity(player);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = candidate;
+            }
+        }
+        return closest != null && ejectSeatPassenger(closest);
+    }
+
+    private boolean isSeatLive(EntityNimatinSeat seat) {
+        return seat != null
+                && !seat.isDead
+                && seat.worldObj == worldObj
+                && worldObj.getEntityByID(seat.getEntityId()) == seat;
+    }
+
+    private void tickSeatNoRemounts() {
+        if (seatNoRemountTicks.isEmpty()) {
+            return;
+        }
+        Iterator<Map.Entry<Integer, Integer>> iterator = seatNoRemountTicks.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, Integer> entry = iterator.next();
+            int next = entry.getValue().intValue() - 1;
+            if (next <= 0) {
+                iterator.remove();
+            } else {
+                entry.setValue(Integer.valueOf(next));
+            }
+        }
+    }
+
+    private boolean isInNoRemountCooldown(Entity entity) {
+        if (entity == null) {
+            return false;
+        }
+        Integer ticks = seatNoRemountTicks.get(Integer.valueOf(entity.getEntityId()));
+        return ticks != null && ticks.intValue() > 0;
+    }
+
+    private void setNoRemountCooldown(Entity entity, int ticks) {
+        if (entity != null && ticks > 0) {
+            seatNoRemountTicks.put(Integer.valueOf(entity.getEntityId()), Integer.valueOf(ticks));
         }
     }
 
@@ -626,6 +871,18 @@ public class EntityNimatin extends EntityTameable {
                 continue;
             }
             if (seat.riddenByEntity instanceof EntityLivingBase && !(seat.riddenByEntity instanceof EntityPlayer)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasSeatPassenger() {
+        for (EntityNimatinSeat seat : passengerSeats) {
+            if (seat == null || seat.isDead || seat.worldObj != worldObj) {
+                continue;
+            }
+            if (seat.riddenByEntity != null) {
                 return true;
             }
         }
@@ -745,6 +1002,56 @@ public class EntityNimatin extends EntityTameable {
 
     private double getConfiguredJumpVelocity() {
         return solveJumpVelocityForHeight(Math.max(0.5D, ModConfig.palariaNimatinMaxJumpHeight));
+    }
+
+    private double getConfiguredDoubleJumpVelocity() {
+        return solveJumpVelocityForHeight(Math.max(0.5D, ModConfig.palariaNimatinDoubleJumpHeight));
+    }
+
+    private boolean canStartMountedJump() {
+        if (onGround
+                || (isCollidedVertically && Math.abs(motionY) < 0.12D)
+                || (fallDistance <= 0.0F && Math.abs(motionY) < 0.03D)) {
+            return true;
+        }
+        return riddenByEntity instanceof EntityPlayer
+                && mountedJumpTicks == 0
+                && fallDistance < 1.5F
+                && Math.abs(motionY) < 0.2D;
+    }
+
+    private boolean canDoubleJumpNow() {
+        if (usedDoubleJump) {
+            return false;
+        }
+        boolean recentlyMountedJumped = mountedJumpTicks > 2 && mountedJumpTicks < 100;
+        boolean naturallyAirborne = !onGround || fallDistance > 0.0F || Math.abs(motionY) > 0.08D;
+        return recentlyMountedJumped || naturallyAirborne;
+    }
+
+    private boolean isMountedJumpSettled() {
+        return mountedJumpTicks > 8
+                && Math.abs(motionY) < 0.08D
+                && Math.abs(posY - prevPosY) < 0.03D;
+    }
+
+    private void performMountedJump(double velocity, float forwardMovement, float jumpStrength) {
+        motionY = velocity;
+        nimatinJumping = true;
+        isAirBorne = true;
+        usedDoubleJump = false;
+        mountedJumpTicks = 1;
+        fallDistance = 0.0F;
+        onGround = false;
+        isCollidedVertically = false;
+        velocityChanged = true;
+        if (forwardMovement > 0.0F) {
+            float sin = MathHelper.sin(rotationYaw * (float) Math.PI / 180.0F);
+            float cos = MathHelper.cos(rotationYaw * (float) Math.PI / 180.0F);
+            motionX += -POUNCE_FORWARD_BOOST * (double) sin * (double) jumpStrength;
+            motionZ += POUNCE_FORWARD_BOOST * (double) cos * (double) jumpStrength;
+        }
+        ForgeHooks.onLivingJump(this);
     }
 
     private static double solveJumpVelocityForHeight(double targetHeight) {

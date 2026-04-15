@@ -22,13 +22,6 @@ public class RenderNimatin extends RenderLiving {
 
     @Override
     protected int shouldRenderPass(EntityLivingBase entity, int pass, float partialTicks) {
-        EntityNimatin nimatin = (EntityNimatin) entity;
-        if (pass == 0 && nimatin.getWolfShaking()) {
-            float shade = nimatin.getBrightness(partialTicks) * nimatin.getShadingWhileShaking(partialTicks);
-            bindTexture(getEntityTexture(nimatin));
-            GL11.glColor3f(shade, shade, shade);
-            return 1;
-        }
         GL11.glColor3f(1.0F, 1.0F, 1.0F);
         return -1;
     }
