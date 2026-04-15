@@ -5,12 +5,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.EnumCreatureAttribute;
+import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraft.nbt.NBTTagCompound;
 import java.util.HashMap;
@@ -271,6 +273,14 @@ public class EntityBison extends EntityFamiliar {
     }
 
     @Override
+    public boolean attackEntityFrom(DamageSource source, float amount) {
+        if (isRiderProjectileOrDirectHit(source)) {
+            return false;
+        }
+        return super.attackEntityFrom(source, amount);
+    }
+
+    @Override
     public void receivedMessage(String message) {
     }
 
@@ -321,6 +331,19 @@ public class EntityBison extends EntityFamiliar {
             player.mountEntity(seat);
         }
         return true;
+    }
+
+    private boolean isRiderProjectileOrDirectHit(DamageSource source) {
+        if (!(this.riddenByEntity instanceof EntityPlayer) || source == null) {
+            return false;
+        }
+        Entity rider = this.riddenByEntity;
+        Entity attacker = source.getEntity();
+        if (attacker == rider) {
+            return true;
+        }
+        Entity direct = source.getSourceOfDamage();
+        return direct instanceof EntityArrow && ((EntityArrow) direct).shootingEntity == rider;
     }
 
     @Override

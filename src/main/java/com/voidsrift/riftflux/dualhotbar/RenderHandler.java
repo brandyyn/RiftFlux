@@ -669,6 +669,15 @@ public class RenderHandler {
         return targetY - defaultY;
     }
 
+    public static int getHeldItemTooltipTopY(Minecraft mc, EntityPlayer player) {
+        if (mc == null || player == null) {
+            return Integer.MIN_VALUE;
+        }
+        ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        int screenHeight = res.getScaledHeight();
+        return screenHeight - 59 + getDualHotbarTooltipShiftY() + getOverlayAwareTooltipShiftY();
+    }
+
     private static boolean isLegendGearManaBarVisible(EntityPlayer player) {
         if (player == null || !ModConfig.enableLegendGearModule) {
             return false;

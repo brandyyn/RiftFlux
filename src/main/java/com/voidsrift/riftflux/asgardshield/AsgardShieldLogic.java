@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.asgardshield;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.compat.BackhandCompat;
+import com.voidsrift.riftflux.inventorypets.ItemInventoryShieldPet;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -38,11 +39,11 @@ public final class AsgardShieldLogic {
             return false;
         }
         Item item = stack.getItem();
-        return item instanceof ItemAsgardShield || item instanceof ItemAsgardGreatsword;
+        return item instanceof ItemAsgardShield || item instanceof ItemAsgardGreatsword || item instanceof ItemInventoryShieldPet;
     }
 
     public static boolean isAsgardShield(ItemStack stack) {
-        return stack != null && stack.getItem() instanceof ItemAsgardShield;
+        return stack != null && (stack.getItem() instanceof ItemAsgardShield || stack.getItem() instanceof ItemInventoryShieldPet);
     }
 
     public static boolean isAsgardGreatsword(ItemStack stack) {
@@ -138,6 +139,9 @@ public final class AsgardShieldLogic {
         if (held.getItem() instanceof ItemAsgardShield) {
             return ((ItemAsgardShield) held.getItem()).getDamageMultiplier();
         }
+        if (held.getItem() instanceof ItemInventoryShieldPet) {
+            return ((ItemInventoryShieldPet) held.getItem()).getDamageMultiplier();
+        }
         if (held.getItem() instanceof ItemAsgardGreatsword) {
             return ((ItemAsgardGreatsword) held.getItem()).getDamageMultiplier();
         }
@@ -159,6 +163,8 @@ public final class AsgardShieldLogic {
         GuardResult result;
         if (held.getItem() instanceof ItemAsgardShield) {
             result = handleShieldGuard(player, (ItemAsgardShield) held.getItem(), held, source, incoming);
+        } else if (held.getItem() instanceof ItemInventoryShieldPet) {
+            result = handleShieldPetGuard(player, (ItemInventoryShieldPet) held.getItem(), held, source, incoming);
         } else {
             result = handleGreatswordGuard(player, (ItemAsgardGreatsword) held.getItem(), held, source, incoming);
         }
@@ -372,6 +378,27 @@ public final class AsgardShieldLogic {
         }
 
         durabilityDamage *= explosionPenalty(source, allowExplosionPenalty);
+        durabilityDamage = applyVitalityAndSanguinary(shieldStack, player, source, durabilityDamage);
+
+        result.itemDamage = Math.max(0, durabilityDamage);
+        result.playGuardSound = true;
+        return result;
+    }
+
+    private static GuardResult handleShieldPetGuard(EntityPlayer player,
+                                                    ItemInventoryShieldPet shieldPet,
+                                                    ItemStack shieldStack,
+                                                    DamageSource source,
+                                                    int incomingDamage) {
+        GuardResult result = new GuardResult();
+        result.soundProfile = shieldPet.getSoundProfile();
+        result.consumeProjectile = true;
+
+        int durabilityDamage = Math.max(1, Math.round(incomingDamage * shieldPet.getDamageMultiplier()));
+        durabilityDamage = applyEnchantMitigation(shieldStack, player, source, durabilityDamage);
+        if (source.isExplosion() && shieldPet.isFluxVariant()) {
+            durabilityDamage = Math.max(0, durabilityDamage / 2);
+        }
         durabilityDamage = applyVitalityAndSanguinary(shieldStack, player, source, durabilityDamage);
 
         result.itemDamage = Math.max(0, durabilityDamage);

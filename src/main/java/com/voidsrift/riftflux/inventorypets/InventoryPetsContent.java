@@ -175,8 +175,10 @@ public final class InventoryPetsContent {
         preInited = true;
 
         for (PetDefinition definition : PETS) {
+            String texturePath = "riftflux:inventorypets/" + definition.textureName;
             Item item = definition.banana ? new ItemBananaPet()
-                    : new ItemInventoryPet(definition.registryName, definition.displayName, "riftflux:inventorypets/" + definition.textureName);
+                    : isShieldPet(definition) ? new ItemInventoryShieldPet(definition.registryName, definition.displayName, texturePath, definition.key.endsWith("_variant"))
+                    : new ItemInventoryPet(definition.registryName, definition.displayName, texturePath);
             definition.item = item;
             GameRegistry.registerItem(item, definition.registryName);
         }
@@ -309,6 +311,10 @@ public final class InventoryPetsContent {
         return key.endsWith("_variant")
                 ? key.substring(0, key.length() - "_variant".length()) + "_flux"
                 : key;
+    }
+
+    private static boolean isShieldPet(PetDefinition definition) {
+        return definition != null && ("shield".equals(definition.key) || "shield_variant".equals(definition.key));
     }
 
     private static PetDefinition banana(String key, String registryName) {

@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.asgardshield;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.inventorypets.ItemInventoryShieldPet;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -178,7 +179,7 @@ public class AsgardShieldEventHandler {
         ItemStack inUse = AsgardShieldLogic.getActiveGuardStack(player);
         boolean usingShield = AsgardShieldLogic.isBlockingWithAsgardItem(player)
                 && inUse != null
-                && inUse.getItem() instanceof ItemAsgardShield;
+                && (inUse.getItem() instanceof ItemAsgardShield || inUse.getItem() instanceof ItemInventoryShieldPet);
 
         if (ready && usingShield && player.isSneaking()) {
             if (player.worldObj.isRemote) {
@@ -226,12 +227,12 @@ public class AsgardShieldEventHandler {
             return false;
         }
         ItemStack offhand = com.voidsrift.riftflux.compat.BackhandCompat.getOffhandItem(player);
-        if (offhand != null && offhand.getItem() instanceof ItemAsgardShield) {
+        if (offhand != null && (offhand.getItem() instanceof ItemAsgardShield || offhand.getItem() instanceof ItemInventoryShieldPet)) {
             return true;
         }
         for (int i = 0; i < 9 && i < player.inventory.mainInventory.length; i++) {
             ItemStack stack = player.inventory.mainInventory[i];
-            if (stack != null && stack.getItem() instanceof ItemAsgardShield) {
+            if (stack != null && (stack.getItem() instanceof ItemAsgardShield || stack.getItem() instanceof ItemInventoryShieldPet)) {
                 return true;
             }
         }

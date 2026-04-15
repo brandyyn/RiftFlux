@@ -19,6 +19,8 @@ import com.voidsrift.riftflux.terramine.IceRodPlacementPreviewRenderer;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
 import com.voidsrift.riftflux.painting.GuiPaintingSelector;
+import com.voidsrift.riftflux.palaria.client.NimatinJumpHud;
+import com.voidsrift.riftflux.palaria.PalariaMobContent;
 import com.voidsrift.riftflux.axolotl.AxolotlContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.furniture.FurnitureContent;
@@ -153,6 +155,10 @@ public class ClientProxy extends CommonProxy {
         AxolotlContent.initClient();
         WheatfieldContent.initClient();
         WAMContent.initClient();
+        PalariaMobContent.initClient();
+        if (PalariaMobContent.isEnabled()) {
+            NimatinJumpHud.bootstrap();
+        }
         if (Loader.isModLoaded("Hats")) {
             HatsKeybinds.ensureRegistered();
         }

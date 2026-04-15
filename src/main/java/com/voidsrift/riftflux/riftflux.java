@@ -16,6 +16,7 @@ import com.voidsrift.riftflux.armoroverlay.ArmorOverlayContent;
 import com.voidsrift.riftflux.axolotl.AxolotlContent;
 import com.voidsrift.riftflux.levelup.LevelUpContent;
 import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
+import com.voidsrift.riftflux.palaria.PalariaMobContent;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
@@ -82,6 +83,7 @@ public class riftflux {
         TerrariaContent.preInit(event);
         WheatfieldContent.preInit(event);
         WAMContent.preInit(event);
+        PalariaMobContent.preInit(event);
         SpecialArmorContent.preInit(event);
         InventoryPetsContent.preInit(event);
         LegendGearContent.preInit(event);
@@ -139,6 +141,7 @@ public class riftflux {
         TerrariaContent.init(event);
         WheatfieldContent.init(event);
         WAMContent.init(event);
+        PalariaMobContent.init(event);
         SpecialArmorContent.init(event);
         InventoryPetsContent.init(event);
         LegendGearContent.init(event);

@@ -79,5 +79,8 @@ public final class RFNetwork {
         // Chat bubble text color sync (IDs 16-17)
         CH.registerMessage(MsgSetChatBubbleTextColor.Handler.class, MsgSetChatBubbleTextColor.class, 16, Side.SERVER);
         CH.registerMessage(MsgSyncChatBubbleTextColor.Handler.class, MsgSyncChatBubbleTextColor.class, 17, Side.CLIENT);
+
+        // Nimatin jump charge (ID 18)
+        CH.registerMessage(MsgNimatinJump.Handler.class, MsgNimatinJump.class, 18, Side.SERVER);
     }
 }

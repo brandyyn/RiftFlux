@@ -15,6 +15,7 @@ import makamys.mclib.config.item.BackpackConfigHelper;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarConfig;
 
 public class ModConfig {
+    private static final String PALARIA_CATEGORY = "palaria";
 
     public static Configuration config;
     public static final int DATAWATCHER_MAX_ID = 65536;
@@ -304,6 +305,45 @@ public class ModConfig {
     public static int blackWidowMaxHealth;
     public static boolean blackWidowUseBiomeWhitelist;
     public static String[] blackWidowBiomeList;
+
+    // Palaria mob ports
+    public static boolean enablePalariaModule;
+    public static boolean enablePalariaCowasaurus;
+    public static int palariaCowasaurusSpawnWeight;
+    public static float palariaCowasaurusMaxHealth;
+    public static boolean enablePalariaCreeptile;
+    public static int palariaCreeptileSpawnWeight;
+    public static float palariaCreeptileMaxHealth;
+    public static boolean enablePalariaRaptorChicken;
+    public static int palariaRaptorChickenSpawnWeight;
+    public static float palariaRaptorChickenMaxHealth;
+    public static boolean enablePalariaEnderWalker;
+    public static int palariaEnderWalkerSpawnWeight;
+    public static float palariaEnderWalkerMaxHealth;
+    public static boolean enablePalariaNimatin;
+    public static int palariaNimatinSpawnWeight;
+    public static boolean palariaNimatinTameable;
+    public static float palariaNimatinTameChance;
+    public static float palariaNimatinMaxHealth;
+    public static float palariaNimatinTamedMaxHealth;
+    public static float palariaNimatinTamedDamage;
+    public static float palariaNimatinRidingSpeed;
+    public static float palariaNimatinMaxJumpHeight;
+    public static float palariaNimatinKillHealAmount;
+    public static float palariaNimatinOwnerKillHealMultiplier;
+    public static String[] palariaNimatinTameItems;
+    public static boolean palariaNimatinAllowMobPassengers;
+    public static String[] palariaNimatinMobPassengerBlacklist;
+    public static boolean enablePalariaEnderRaptorChicken;
+    public static int palariaEnderRaptorChickenSpawnWeight;
+    public static float palariaEnderRaptorChickenMaxHealth;
+    public static boolean enablePalariaMagmaRaptorChicken;
+    public static int palariaMagmaRaptorChickenSpawnWeight;
+    public static float palariaMagmaRaptorChickenMaxHealth;
+    public static String[] palariaNimatinDropEntries;
+    public static String[] palariaCowasaurusDropEntries;
+    public static String[] palariaCreeptileDropEntries;
+
     public static boolean enableWitchHouseStructure;
     public static int witchHouseChunkChance;
     public static int witchHouseMinDistanceBlocks;
@@ -318,6 +358,9 @@ public class ModConfig {
     public static boolean specialArmorLootDoubleJumpBoots;
     public static boolean specialArmorLootSkates;
     public static boolean specialArmorLootHeavyBoots;
+
+
+
     public static boolean enableInventoryPetsModule;
     public static String[] inventoryPetsDungeonLootEntries;
     public static int inventoryPetsDungeonLootWeight;
@@ -454,6 +497,48 @@ public class ModConfig {
     private static final String INVENTORY_PET_DUNGEON_LOOT_COMMENT =
             Arrays.toString(DEFAULT_INVENTORY_PET_DUNGEON_LOOT);
 
+    private static final String[] DEFAULT_PALARIA_NIMATIN_DROPS = new String[]{
+            "riftflux:petBanana|0.30",
+            "riftflux:petCheetah|0.05",
+            "riftflux:petCheetahVariant|0.05",
+            "riftflux:petOcelot|0.05",
+            "riftflux:petOcelotVariant|0.05",
+            "legendgear:charmPendant@4|0.15",
+            "riftflux:highlandspirit|0.15",
+            "minecraft:beef*1-6|1.0",
+            "minecraft:leather*1-6|1.0",
+            "minecraft:bone*1-6|1.0"
+    };
+
+    private static final String[] DEFAULT_PALARIA_COWASAURUS_DROPS = new String[]{
+            "riftflux:petCow|0.15",
+            "riftflux:petCowVariant|0.15",
+            "riftflux:petPurpliciousCow|0.05",
+            "riftflux:petPurpliciousCowVariant|0.05",
+            "riftflux:focusband|0.05",
+            "minecraft:beef*1-6|1.0",
+            "minecraft:leather*1-6|1.0",
+            "minecraft:bone*1-6|1.0"
+    };
+
+    private static final String[] DEFAULT_PALARIA_CREEPTILE_DROPS = new String[]{
+            "riftflux:whoopie_cushion|0.05",
+            "riftflux:petCreeper|0.05",
+            "riftflux:petCreeperVariant|0.05",
+            "riftflux:creeptile_eye|0.05",
+            "legendgear:charmPendant@3|0.05",
+            "riftflux:as_shield_iron_gilded|0.05",
+            "minecraft:gunpowder*1-12|1.0"
+    };
+
+    private static final String[] DEFAULT_PALARIA_NIMATIN_TAME_ITEMS = new String[]{
+            "riftflux:creeptile_eye"
+    };
+
+    private static final String[] DEFAULT_PALARIA_NIMATIN_PASSENGER_BLACKLIST = new String[]{
+            "EntityNimatin"
+    };
+
     // Axolotl module
     public static boolean enableAxolotlModule;
     public static boolean enableAxolotlNaturalSpawning;
@@ -475,6 +560,7 @@ public class ModConfig {
     public static int legendGearMaxStarwellRetries;
     public static boolean legendGearFallingStarDamageEnabled;
     public static float legendGearFallingStarDamage;
+    public static boolean legendGearAprilFoolsBananaFallingStars;
     public static boolean legendGearMagicBoomerangInfiniteDurability;
     public static float legendGearMagicBoomerangDamage;
     public static boolean legendGearMagicBoomerangBreakPlants;
@@ -2673,6 +2759,12 @@ public class ModConfig {
                 2048.0F,
                 "Damage dealt by Falling Stars to entities hit mid-air and in the 3x3x3 impact area."
         );
+        legendGearAprilFoolsBananaFallingStars = config.getBoolean(
+                "aprilFoolsBananaFallingStars",
+                "legendgear",
+                true,
+                "If true, Falling Stars render as bananas on April 1."
+        );
 
         legendGearMagicBoomerangInfiniteDurability = config.getBoolean(
                 "magicBoomerangInfiniteDurability",
@@ -3653,6 +3745,271 @@ public class ModConfig {
                 new String[0],
                 "Biome filters for natural Black Widow spawns.\n"
                         + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
+        );
+
+        enablePalariaModule = config.getBoolean(
+                "EnablePalariaModule",
+                PALARIA_CATEGORY,
+                true,
+                "If false, disables all Palaria mob, item, egg, render, and spawn registration."
+        );
+        enablePalariaCowasaurus = config.getBoolean(
+                "EnableCowasaurus",
+                PALARIA_CATEGORY,
+                true,
+                "If true, the Palaria Cowasaurus mob and spawn egg are registered."
+        );
+        palariaCowasaurusSpawnWeight = config.getInt(
+                "CowasaurusSpawnWeight",
+                PALARIA_CATEGORY,
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Cowasaurus. Set to 0 to keep the mob and egg but disable natural spawning."
+        );
+        palariaCowasaurusMaxHealth = config.getFloat(
+                "CowasaurusMaxHealth",
+                PALARIA_CATEGORY,
+                140.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for Cowasaurus."
+        );
+        enablePalariaCreeptile = config.getBoolean(
+                "EnableCreeptile",
+                PALARIA_CATEGORY,
+                true,
+                "If true, the Palaria Creeptile mob and spawn egg are registered."
+        );
+        palariaCreeptileSpawnWeight = config.getInt(
+                "CreeptileSpawnWeight",
+                PALARIA_CATEGORY,
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Creeptiles. Set to 0 to keep the mob and egg but disable natural spawning."
+        );
+        palariaCreeptileMaxHealth = config.getFloat(
+                "CreeptileMaxHealth",
+                PALARIA_CATEGORY,
+                40.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for Creeptiles."
+        );
+        enablePalariaRaptorChicken = config.getBoolean(
+                "EnableRaptorChicken",
+                PALARIA_CATEGORY,
+                true,
+                "If true, the Palaria Raptor Chicken mob and spawn egg are registered."
+        );
+        palariaRaptorChickenSpawnWeight = config.getInt(
+                "RaptorChickenSpawnWeight",
+                PALARIA_CATEGORY,
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Raptor Chickens. Set to 0 to keep the mob and egg but disable natural spawning."
+        );
+        palariaRaptorChickenMaxHealth = config.getFloat(
+                "RaptorChickenMaxHealth",
+                PALARIA_CATEGORY,
+                50.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for Raptor Chickens."
+        );
+        enablePalariaEnderWalker = config.getBoolean(
+                "EnableEnderWalker",
+                PALARIA_CATEGORY,
+                true,
+                "If true, the Palaria Ender Walker mob and spawn egg are registered."
+        );
+        palariaEnderWalkerSpawnWeight = config.getInt(
+                "EnderWalkerSpawnWeight",
+                PALARIA_CATEGORY,
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Ender Walkers. Set to 0 to keep the mob and egg but disable natural spawning."
+        );
+        palariaEnderWalkerMaxHealth = config.getFloat(
+                "EnderWalkerMaxHealth",
+                PALARIA_CATEGORY,
+                80.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for Ender Walkers."
+        );
+        enablePalariaNimatin = config.getBoolean(
+                "EnableNimatin",
+                PALARIA_CATEGORY,
+                true,
+                "If true, the Palaria Nimatin mob and spawn egg are registered."
+        );
+        palariaNimatinSpawnWeight = config.getInt(
+                "NimatinSpawnWeight",
+                PALARIA_CATEGORY,
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Nimatins. Set to 0 to keep the mob and egg but disable natural spawning."
+        );
+        palariaNimatinTameable = config.getBoolean(
+                "NimatinTameable",
+                PALARIA_CATEGORY,
+                true,
+                "If true, Nimatins can be tamed with the configured NimatinTameItems."
+        );
+        palariaNimatinTameChance = config.getFloat(
+                "NimatinTameChance",
+                PALARIA_CATEGORY,
+                0.33F,
+                0.0F,
+                1.0F,
+                "Chance for a valid tame attempt to tame a Nimatin. 0.33 is 1 in 3."
+        );
+        palariaNimatinMaxHealth = config.getFloat(
+                "NimatinMaxHealth",
+                PALARIA_CATEGORY,
+                100.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for untamed Nimatins."
+        );
+        palariaNimatinTamedMaxHealth = config.getFloat(
+                "NimatinTamedMaxHealth",
+                PALARIA_CATEGORY,
+                200.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for tamed Nimatins."
+        );
+        palariaNimatinTamedDamage = config.getFloat(
+                "NimatinTamedDamage",
+                PALARIA_CATEGORY,
+                40.0F,
+                0.0F,
+                10000.0F,
+                "Attack damage dealt by tamed Nimatins."
+        );
+        palariaNimatinRidingSpeed = config.getFloat(
+                "NimatinRidingSpeed",
+                PALARIA_CATEGORY,
+                0.4F,
+                0.0F,
+                10.0F,
+                "Movement speed used while directly riding a Nimatin."
+        );
+        palariaNimatinMaxJumpHeight = config.getFloat(
+                "NimatinMaxJumpHeight",
+                PALARIA_CATEGORY,
+                7.0F,
+                0.5F,
+                100.0F,
+                "Maximum jump height in blocks for a fully charged ridden Nimatin jump."
+        );
+        palariaNimatinKillHealAmount = config.getFloat(
+                "NimatinKillHealAmount",
+                PALARIA_CATEGORY,
+                4.0F,
+                0.0F,
+                10000.0F,
+                "Health a Nimatin restores after killing a target. Set to 0 to disable kill healing."
+        );
+        palariaNimatinOwnerKillHealMultiplier = config.getFloat(
+                "NimatinOwnerKillHealMultiplier",
+                PALARIA_CATEGORY,
+                0.5F,
+                0.0F,
+                100.0F,
+                "Multiplier applied to NimatinKillHealAmount and healed to the owner when the Nimatin gets a kill. 0 disables owner healing; 0.5 gives half."
+        );
+        palariaNimatinTameItems = config.getStringList(
+                "NimatinTameItems",
+                PALARIA_CATEGORY,
+                DEFAULT_PALARIA_NIMATIN_TAME_ITEMS,
+                "Items that can tame Nimatins. Use registry ids, optionally with @meta, for example riftflux:creeptile_eye."
+        );
+        palariaNimatinAllowMobPassengers = config.getBoolean(
+                "NimatinAllowMobPassengers",
+                PALARIA_CATEGORY,
+                true,
+                "If true, tamed Nimatins can auto-seat nearby allowed non-player mobs in the rear passenger seat while standing still. If false, only players can use the passenger seat."
+        );
+        palariaNimatinMobPassengerBlacklist = config.getStringList(
+                "NimatinMobPassengerBlacklist",
+                PALARIA_CATEGORY,
+                DEFAULT_PALARIA_NIMATIN_PASSENGER_BLACKLIST,
+                "Entity IDs/class names used to block which mobs can ride Nimatin's passenger seat.\n" +
+                        "Matches entity ID, class simple name, or full class name.\n" +
+                        "Default blocks Nimatin from mounting itself."
+        );
+        palariaNimatinMobPassengerBlacklist = sanitizeNimatinPassengerFilter(palariaNimatinMobPassengerBlacklist);
+        config.getCategory(PALARIA_CATEGORY)
+                .get("NimatinMobPassengerBlacklist")
+                .set(palariaNimatinMobPassengerBlacklist);
+        enablePalariaEnderRaptorChicken = config.getBoolean(
+                "EnableEnderRaptorChicken",
+                PALARIA_CATEGORY,
+                true,
+                "If true, the Palaria Ender Raptor Chicken mob and spawn egg are registered."
+        );
+        palariaEnderRaptorChickenSpawnWeight = config.getInt(
+                "EnderRaptorChickenSpawnWeight",
+                PALARIA_CATEGORY,
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Ender Raptor Chickens in The End. Set to 0 to keep the mob and egg but disable natural spawning."
+        );
+        palariaEnderRaptorChickenMaxHealth = config.getFloat(
+                "EnderRaptorChickenMaxHealth",
+                PALARIA_CATEGORY,
+                100.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for Ender Raptor Chickens."
+        );
+        enablePalariaMagmaRaptorChicken = config.getBoolean(
+                "EnableMagmaRaptorChicken",
+                PALARIA_CATEGORY,
+                true,
+                "If true, the Palaria Magma Raptor Chicken mob and spawn egg are registered."
+        );
+        palariaMagmaRaptorChickenSpawnWeight = config.getInt(
+                "MagmaRaptorChickenSpawnWeight",
+                PALARIA_CATEGORY,
+                1,
+                0,
+                1000,
+                "Natural spawn weight for Magma Raptor Chickens in the Nether. Set to 0 to keep the mob and egg but disable natural spawning."
+        );
+        palariaMagmaRaptorChickenMaxHealth = config.getFloat(
+                "MagmaRaptorChickenMaxHealth",
+                PALARIA_CATEGORY,
+                80.0F,
+                1.0F,
+                10000.0F,
+                "Base max health for Magma Raptor Chickens."
+        );
+        palariaNimatinDropEntries = config.getStringList(
+                "NimatinDropEntries",
+                PALARIA_CATEGORY,
+                DEFAULT_PALARIA_NIMATIN_DROPS,
+                "Independent Nimatin drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%. Tamed Nimatins drop nothing."
+        );
+        palariaCowasaurusDropEntries = config.getStringList(
+                "CowasaurusDropEntries",
+                PALARIA_CATEGORY,
+                DEFAULT_PALARIA_COWASAURUS_DROPS,
+                "Independent Cowasaurus drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%."
+        );
+        palariaCreeptileDropEntries = config.getStringList(
+                "CreeptileDropEntries",
+                PALARIA_CATEGORY,
+                DEFAULT_PALARIA_CREEPTILE_DROPS,
+                "Independent Creeptile drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%."
         );
 
         enableWitchHouseStructure = config.getBoolean(
@@ -4929,6 +5286,35 @@ public class ModConfig {
         }
         if (unique.isEmpty()) {
             unique.add(appaEntityClass);
+        }
+        return unique.toArray(new String[unique.size()]);
+    }
+
+    private static String[] sanitizeNimatinPassengerFilter(String[] values) {
+        if (values == null || values.length == 0) {
+            return DEFAULT_PALARIA_NIMATIN_PASSENGER_BLACKLIST.clone();
+        }
+        final String nimatinEntityClass = "EntityNimatin";
+        LinkedHashSet<String> unique = new LinkedHashSet<String>();
+        HashSet<String> lowered = new HashSet<String>();
+        for (String raw : values) {
+            if (raw == null) {
+                continue;
+            }
+            String entry = raw.trim();
+            if (entry.isEmpty()) {
+                continue;
+            }
+            if ("EntityNimatin".equalsIgnoreCase(entry)) {
+                entry = nimatinEntityClass;
+            }
+            String key = entry.toLowerCase();
+            if (lowered.add(key)) {
+                unique.add(entry);
+            }
+        }
+        if (unique.isEmpty()) {
+            unique.add(nimatinEntityClass);
         }
         return unique.toArray(new String[unique.size()]);
     }

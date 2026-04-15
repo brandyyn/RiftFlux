@@ -188,36 +188,24 @@ public class PlayerEventHandler {
             return;
         }
         if (item == LegendGear2.spottingScope) {
-            this.addUseLine(event, "Use: Hold right-click to zoom.");
+            this.addUseLine(event, "Hold right-click to zoom.");
             this.addUseLine(event, "Ping: Quick-tap to place a marker on a block.");
             return;
         }
         if (item == LegendGear2.starDust) {
-            if (meta == 0) {
-                this.addUseLine(event, "Use: Crafting material; creative-right-click on a block summons a falling star.");
-            } else if (meta == 1) {
-                this.addUseLine(event, "Use: Hold right-click to infuse into Charged Star Piece.");
-                this.addUseLine(event, StarDust.getInfuseCostTooltipLine());
-                if (ModConfig.legendGearPlaceableStarPieces) {
-                    this.addUseLine(event, "Place: Right-click a block face to place a decorative Star Piece block.");
-                }
+            if (meta == 1) {
             } else if (meta == 2) {
-                this.addUseLine(event, "Use: Right-click a block face to place a Starstone block.");
+                this.addUseLine(event, "Placeable Starstone block.");
             } else if (meta == 3) {
                 if (LegendGear2.CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK) {
-                    this.addUseLine(event, "Use: Crouch-right-click to cast Sprinkle Stardust.");
+                    this.addUseLine(event, "Crouch right-click to cast Sprinkle Stardust.");
                 } else {
-                    this.addUseLine(event, "Use: Right-click to cast Sprinkle Stardust.");
+                    this.addUseLine(event, "Right-click to cast Sprinkle Stardust.");
                 }
-                this.addUseLine(event, "Effect: Invokes Ritual Blocks, charges Skylens over active Starwells, and transforms bookshelves into ritual notebooks.");
-                this.addUseLine(event, "Cost: Consumes 1 charged stardust.");
-            } else if (meta == 4) {
-                this.addUseLine(event, "Use: Charged Star Piece for advanced crafting.");
-                if (ModConfig.legendGearPlaceableStarPieces) {
-                    this.addUseLine(event, "Place: Right-click a block face to place a decorative Infused Star Piece block.");
-                }
+                this.addUseLine(event, "Invokes Ritual Blocks, charges Skylens over active Starwells, and transforms bookshelves into ritual notebooks.");
+                this.addUseLine(event, "Consumes 1 charged stardust.");
             } else if (meta == 5) {
-                this.addUseLine(event, "Use: Right-click a block face to place an Infused Starstone block.");
+                this.addUseLine(event, "Placeable Infused Starstone block.");
             }
             return;
         }

@@ -33,6 +33,10 @@ public class LegendGearManaTooltipHandler {
             this.addNumericTooltip(event.toolTip, "Mana Cost", ModConfig.whoopieCushionLegendGearManaCost);
         }
 
+        if (item == TerrariaContent.iceRod && ModConfig.iceRodUseLegendGearMana) {
+            this.addNumericTooltip(event.toolTip, "Mana Cost", ModConfig.iceRodLegendGearManaCost);
+        }
+
         if (item == ModItems.poptart) {
             this.addNumericTooltip(event.toolTip, "Mana Restore", ModConfig.poptartLegendGearManaRestore);
         }

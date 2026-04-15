@@ -11,6 +11,8 @@
  */
 package net.nmccoy.legendgear.render;
 
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.inventorypets.ModelBananaBoomerang;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
@@ -20,13 +22,17 @@ import net.nmccoy.legendgear.entity.EntityFallingStar;
 import net.nmccoy.legendgear.render.Rainbow;
 import org.lwjgl.opengl.GL11;
 
+import java.util.Calendar;
+
 public class RenderFallingStar
 extends Render {
     private static final ResourceLocation starTexture = new ResourceLocation("legendgear", "textures/star.png");
     private static final ResourceLocation beamTexture = new ResourceLocation("legendgear", "textures/beam.png");
+    private static final ResourceLocation bananaTexture = new ResourceLocation("riftflux", "textures/entity/inventorypets/nana.png");
+    private final ModelBananaBoomerang bananaModel = new ModelBananaBoomerang();
 
     public ResourceLocation getEntityTexture(Entity e) {
-        return starTexture;
+        return useAprilFoolsBanana() ? bananaTexture : starTexture;
     }
 
     public RenderFallingStar() {
@@ -34,6 +40,10 @@ extends Render {
     }
 
     public void doRender(Entity par1Entity, double par2, double par4, double par6, float par8, float par9) {
+        if (useAprilFoolsBanana()) {
+            renderBanana(par1Entity, par2, par4, par6);
+            return;
+        }
         GL11.glPushMatrix();
         GL11.glTranslatef((float)((float)par2), (float)((float)par4), (float)((float)par6));
         GL11.glEnable((int)32826);
@@ -94,6 +104,33 @@ extends Render {
         GL11.glPopMatrix();
     }
 
+    private void renderBanana(Entity entity, double x, double y, double z) {
+        EntityFallingStar star = (EntityFallingStar) entity;
+        float scale = (float)star.dwindle_timer * 0.375f / (float)EntityFallingStar.DWINDLE_TIME;
+        float phase = (float)(Minecraft.getSystemTime() % 1000L) / 1000.0f;
+        GL11.glPushMatrix();
+        GL11.glTranslatef((float)x, (float)y, (float)z);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glEnable(32826);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glScalef(-1.0F, -1.0F, 1.0F);
+        GL11.glScalef(scale, scale, scale);
+        GL11.glRotatef(phase * -360.0f, 0.0f, 0.0f, 1.0f);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.bindTexture(bananaTexture);
+        this.bananaModel.render(entity, 0.0F, 0.0F, phase, 0.0F, 0.0F, 0.0625F);
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glPopMatrix();
+    }
+
+    private static boolean useAprilFoolsBanana() {
+        if (!ModConfig.legendGearAprilFoolsBananaFallingStars) {
+            return false;
+        }
+        Calendar now = Calendar.getInstance();
+        return now.get(Calendar.MONTH) == Calendar.APRIL && now.get(Calendar.DAY_OF_MONTH) == 1;
+    }
+
     private void billboard(Tessellator par1Tessellator, float angle, float depth) {
         float var3 = 0.0f;
         float var4 = 1.0f;
@@ -116,4 +153,3 @@ extends Render {
         GL11.glPopMatrix();
     }
 }
-

@@ -137,6 +137,7 @@ import net.nmccoy.legendgear.potion.LegendGearPotions;
 import net.nmccoy.legendgear.ritual.RitualManager;
 
 public class LegendGear2 {
+    private static final int ENTITY_ID_BASE = 700;
     public static final String MODID = "legendgear";
     public static final String VERSION = "2.b.2.1";
     private static final int VANILLA_POTION_ID_SLOWNESS = 2;
@@ -669,7 +670,7 @@ public class LegendGear2 {
         Object modEntityOwner = com.voidsrift.riftflux.riftflux.instance != null
                 ? com.voidsrift.riftflux.riftflux.instance
                 : this;
-        int id = 0;
+        int id = ENTITY_ID_BASE;
         EntityRegistry.registerModEntity(EntityFallingStar.class, (String)"fallingStar", (int)id++, modEntityOwner, (int)128, (int)10, (boolean)true);
         EntityRegistry.registerModEntity(EntitySpellEffect.class, (String)"entitySpellEffect", (int)id++, modEntityOwner, (int)128, (int)1, (boolean)true);
         EntityRegistry.registerModEntity(SpellDecorator.class, (String)"spellDecorator", (int)id++, modEntityOwner, (int)128, (int)1, (boolean)true);

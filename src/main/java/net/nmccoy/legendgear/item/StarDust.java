@@ -80,14 +80,6 @@ extends LGItem {
         return "Spend " + cost + " XP " + (cost == 1 ? "level" : "levels") + " to infuse";
     }
 
-    public static String getInfuseCostTooltipLine() {
-        int cost = StarDust.getInfuseLevelCost();
-        if (cost == 0) {
-            return "Cost: Free.";
-        }
-        return "Cost: " + cost + " XP " + (cost == 1 ? "level." : "levels.");
-    }
-
     @Override
     public boolean hasEffect(ItemStack par1ItemStack, int pass) {
         return par1ItemStack.getItemDamage() > 2;
@@ -182,9 +174,9 @@ extends LGItem {
             return true;
         }
         int meta = par1ItemStack.getItemDamage();
-        if ((meta == 1 || meta == 4) && ModConfig.legendGearPlaceableStarPieces) {
+        if (meta == 1 && ModConfig.legendGearPlaceableStarPieces) {
             if (par2EntityPlayer.capabilities.allowEdit) {
-                Block placeBlock = meta == 4 ? LegendGear2.infusedStarPieceBlock : LegendGear2.starPieceBlock;
+                Block placeBlock = LegendGear2.starPieceBlock;
                 ItemBlock ib = (ItemBlock)ItemBlock.getItemFromBlock((Block)placeBlock);
                 if (ib != null) {
                     boolean canPlace = this.canPlaceKludge(par3World, par4, par5, par6, par7, par2EntityPlayer, par1ItemStack, placeBlock);

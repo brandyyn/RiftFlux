@@ -295,5 +295,83 @@
     "sounds": [
       { "name": "wam/jaxx_step", "stream": false }
     ]
+  },
+  "palaria_cowasaurus_say": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/cowasaurus/say1", "stream": false },
+      { "name": "palaria/cowasaurus/say2", "stream": false },
+      { "name": "palaria/cowasaurus/say3", "stream": false },
+      { "name": "palaria/cowasaurus/say4", "stream": false },
+      { "name": "palaria/cowasaurus/say5", "stream": false },
+      { "name": "palaria/cowasaurus/say6", "stream": false },
+      { "name": "palaria/cowasaurus/say7", "stream": false },
+      { "name": "palaria/cowasaurus/say8", "stream": false },
+      { "name": "palaria/cowasaurus/say9", "stream": false }
+    ]
+  },
+  "palaria_cowasaurus_hurt": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/cowasaurus/hurt1", "stream": false },
+      { "name": "palaria/cowasaurus/hurt2", "stream": false },
+      { "name": "palaria/cowasaurus/hurt3", "stream": false },
+      { "name": "palaria/cowasaurus/hurt4", "stream": false }
+    ]
+  },
+  "palaria_cowasaurus_death": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/cowasaurus/death1", "stream": false }
+    ]
+  },
+  "palaria_cowasaurus_step": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/cowasaurus/step1", "stream": false },
+      { "name": "palaria/cowasaurus/step2", "stream": false }
+    ]
+  },
+  "palaria_raptor_chicken_say": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/raptor_chicken/say1", "stream": false },
+      { "name": "palaria/raptor_chicken/say2", "stream": false },
+      { "name": "palaria/raptor_chicken/say3", "stream": false },
+      { "name": "palaria/raptor_chicken/say4", "stream": false }
+    ]
+  },
+  "palaria_raptor_chicken_hurt": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/raptor_chicken/hurt1", "stream": false },
+      { "name": "palaria/raptor_chicken/hurt2", "stream": false },
+      { "name": "palaria/raptor_chicken/hurt3", "stream": false }
+    ]
+  },
+  "palaria_ender_raptor_chicken_say": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/ender_raptor_chicken/say1", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/say2", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/say3", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/say4", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/say5", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/say6", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/say7", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/say8", "stream": false }
+    ]
+  },
+  "palaria_ender_raptor_chicken_hurt": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "palaria/ender_raptor_chicken/hurt1", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/hurt2", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/hurt3", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/hurt4", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/hurt5", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/hurt6", "stream": false },
+      { "name": "palaria/ender_raptor_chicken/hurt7", "stream": false }
+    ]
   }
 }
