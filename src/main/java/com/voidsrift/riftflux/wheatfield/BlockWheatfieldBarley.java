@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.wheatfield;
 
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.RFPlantContext;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -44,7 +45,11 @@ public class BlockWheatfieldBarley extends BlockBush implements IShearable {
 
     @Override
     public boolean canBlockStay(World world, int x, int y, int z) {
-        return canPlaceBlockOn(world.getBlock(x, y - 1, z));
+        Block below = world.getBlock(x, y - 1, z);
+        if (ModConfig.allowPlantsOnAnyBlock && RFPlantContext.isPlayerPlaced(world, x, y, z)) {
+            return below != null && below != Blocks.air && below.getMaterial().isSolid();
+        }
+        return canPlaceBlockOn(below);
     }
 
     @Override

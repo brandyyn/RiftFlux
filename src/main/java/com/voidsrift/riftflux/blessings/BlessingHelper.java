@@ -46,29 +46,6 @@ public final class BlessingHelper {
             "Porcupine"
     };
 
-    public static final String[] DESCRIPTIONS = new String[] {
-            "+25% mining speed with pickaxes, but non-pickaxe blocks are 40% slower",
-            "+25% breaking speed with axes, and +35% damage with axes",
-            "+20% melee damage",
-            "+20% projectile damage",
-            "Attacks will slow enemies",
-            "Mobs may drop additional items (5% chance each by default)",
-            "Take 20% extra damage, but gain 60% more EXP from orbs",
-            "Deal 50% more damage, but gain a negative potion effect when you take damage",
-            "While sneaking you are invisible and attacks on full-health enemies do double damage. Invisibility breaks on attack and has a 30s combat cooldown",
-            "Take 25% less explosive damage, and spike traps and caltrops don't affect you",
-            "Drinking potions grants an extra random positive effect",
-            "Move 20% faster, but take double fall damage",
-            "Take 20% less damage from all sources",
-            "Heal 7% of damage dealt to enemies and, in direct sunlight, you take 20% more damage and deal 20% less damage",
-            "You don't take fire damage, and do +35% damage while on fire",
-            "You can breathe underwater",
-            "Kills are counted until 10 - Key to toggle berserk mode. While active you deal 33% more damage, move 33% faster, take 33% less damage, and gain extra health - You lose 1 kill every 2 seconds, regain by bloodshed",
-            "The lower your health, the higher your damage, to a maximum of +100%",
-            "You don't take fall damage",
-            "Melee attackers receive damage"
-    };
-
     private BlessingHelper() {
     }
 
@@ -441,6 +418,7 @@ public final class BlessingHelper {
             if (translated != null && !translated.isEmpty() && !key.equals(translated)) {
                 return translated;
             }
+            return "";
         }
         String key = getDescriptionKey(blessing);
         if (!key.isEmpty()) {
@@ -449,11 +427,7 @@ public final class BlessingHelper {
                 return translated;
             }
         }
-        int idx = getBlessingIndex(blessing);
-        if (idx < 0 || idx >= DESCRIPTIONS.length) {
-            return "";
-        }
-        return DESCRIPTIONS[idx];
+        return "";
     }
 
     private static String formatPercent(float value) {

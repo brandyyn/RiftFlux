@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.vortex.event;
 
+import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.ClientRespawnDelayState;
 import com.voidsrift.riftflux.client.GuiDeathOverlayChat;
 import com.voidsrift.riftflux.mixin.accessor.GuiScreenAccessor;
@@ -130,6 +131,14 @@ public class GuiEventHandler {
                 && mc.theWorld.getWorldInfo().isHardcoreModeEnabled()
                 && WorldHelper.canPlayerHCRevive(player)) {
             event.gui = new GuiRuneGameOver();
+        }
+
+        if (isRespawnScreen(event.gui)
+                && player != null
+                && !player.isEntityAlive()
+                && ClientRespawnDelayState.getRemainingMs() <= 0L
+                && ModConfig.deathRespawnDelaySeconds > 0) {
+            ClientRespawnDelayState.applyRemainingMs(Math.max(0L, ModConfig.deathRespawnDelaySeconds) * 1000L);
         }
     }
 
