@@ -64,6 +64,7 @@ public class ModConfig {
     public static float chestLaunchUpward;
 
     public static boolean enableFullExplosionDrops;
+    public static boolean explosionsIgnoreThinPlantsForExposure;
 
     public static boolean enableMeleeDamageTooltip;
 
@@ -314,6 +315,10 @@ public class ModConfig {
     public static boolean enablePalariaCreeptile;
     public static int palariaCreeptileSpawnWeight;
     public static float palariaCreeptileMaxHealth;
+    public static float palariaCreeptileExplosionStrength;
+    public static float palariaCreeptileDamageMultiplier;
+    public static float palariaCreeptileKnockbackMultiplier;
+    public static boolean palariaCreeptileExplosionDamagesEnvironment;
     public static boolean enablePalariaRaptorChicken;
     public static int palariaRaptorChickenSpawnWeight;
     public static float palariaRaptorChickenMaxHealth;
@@ -346,6 +351,9 @@ public class ModConfig {
     public static String[] palariaNimatinDropEntries;
     public static String[] palariaCowasaurusDropEntries;
     public static String[] palariaCreeptileDropEntries;
+
+    public static boolean satisforestryLizardDoggoAllowNametagRename;
+    public static boolean satisforestryLizardDoggoDisableRandomItemFinding;
 
     public static boolean enableWitchHouseStructure;
     public static int witchHouseChunkChance;
@@ -990,6 +998,10 @@ public class ModConfig {
         enableFullExplosionDrops = config.getBoolean(
                 "EnableFullExplosionDrops", "general", true,
                 "If true, ALL explosions drop 100% of affected blocks.");
+
+        explosionsIgnoreThinPlantsForExposure = config.getBoolean(
+                "ExplosionsIgnoreThinPlantsForExposure", "general", true,
+                "If true, explosion exposure ray checks ignore collisionless plants like tall grass and Rift Flux barley so they do not block explosion damage.");
 
         enableMeleeDamageTooltip = config.getBoolean(
                 "EnableMeleeDamageTooltip", "general", true,
@@ -3802,6 +3814,36 @@ public class ModConfig {
                 10000.0F,
                 "Base max health for Creeptiles."
         );
+        palariaCreeptileExplosionStrength = config.getFloat(
+                "CreeptileExplosionStrength",
+                PALARIA_CATEGORY,
+                6.0F,
+                0.0F,
+                100.0F,
+                "Explosion strength for Creeptiles. Vanilla creepers use 3.0; 6.0 is double vanilla."
+        );
+        palariaCreeptileDamageMultiplier = config.getFloat(
+                "CreeptileDamageMultiplier",
+                PALARIA_CATEGORY,
+                1.5F,
+                0.0F,
+                100.0F,
+                "Multiplier applied to Creeptile explosion damage compared to normal explosion damage."
+        );
+        palariaCreeptileKnockbackMultiplier = config.getFloat(
+                "CreeptileKnockbackMultiplier",
+                PALARIA_CATEGORY,
+                1.5F,
+                0.0F,
+                100.0F,
+                "Multiplier applied to Creeptile explosion knockback compared to normal explosion knockback."
+        );
+        palariaCreeptileExplosionDamagesEnvironment = config.getBoolean(
+                "CreeptileExplosionDamagesEnvironment",
+                PALARIA_CATEGORY,
+                true,
+                "If false, Creeptile explosions still damage living entities but do not destroy blocks or non-living entities such as item frames."
+        );
         enablePalariaRaptorChicken = config.getBoolean(
                 "EnableRaptorChicken",
                 PALARIA_CATEGORY,
@@ -4037,6 +4079,19 @@ public class ModConfig {
                 PALARIA_CATEGORY,
                 DEFAULT_PALARIA_CREEPTILE_DROPS,
                 "Independent Creeptile drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%."
+        );
+
+        satisforestryLizardDoggoAllowNametagRename = config.getBoolean(
+                "LizardDoggoAllowNametagRename",
+                "general",
+                true,
+                "If true, Satisforestry Lizard Doggos use their vanilla custom name tag instead of always displaying Lizard Doggo."
+        );
+        satisforestryLizardDoggoDisableRandomItemFinding = config.getBoolean(
+                "LizardDoggoDisableRandomItemFinding",
+                "general",
+                true,
+                "If true, Satisforestry Lizard Doggos no longer generate random found items over time."
         );
 
         enableWitchHouseStructure = config.getBoolean(

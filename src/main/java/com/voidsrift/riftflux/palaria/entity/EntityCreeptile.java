@@ -36,12 +36,12 @@ public class EntityCreeptile extends EntityMob {
         getNavigator().setAvoidsWater(true);
         getNavigator().setBreakDoors(true);
         experienceValue = 15;
-        tasks.addTask(0, new EntityAISwimming(this));
-        tasks.addTask(1, new EntityAICreeptileSwell(this));
-        tasks.addTask(2, new EntityAIAvoidEntity(this, EntityOcelot.class, 6.0F, 0.25D, 0.3D));
-        tasks.addTask(3, new EntityAIAttackOnCollide(this, 0.25D, false));
-        tasks.addTask(4, new EntityAIWander(this, 0.2D));
-        tasks.addTask(5, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
+        tasks.addTask(1, new EntityAISwimming(this));
+        tasks.addTask(2, new EntityAICreeptileSwell(this));
+        tasks.addTask(3, new EntityAIAvoidEntity(this, EntityOcelot.class, 6.0F, 1.0D, 1.2D));
+        tasks.addTask(4, new EntityAIAttackOnCollide(this, 1.0D, false));
+        tasks.addTask(5, new EntityAIWander(this, 0.8D));
+        tasks.addTask(6, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
         tasks.addTask(6, new EntityAILookIdle(this));
         targetTasks.addTask(1, new EntityAINearestAttackableTarget(this, EntityPlayer.class, 0, true));
         targetTasks.addTask(2, new EntityAIHurtByTarget(this, false));
@@ -108,8 +108,7 @@ public class EntityCreeptile extends EntityMob {
             if (timeSinceIgnited >= fuseTime) {
                 timeSinceIgnited = fuseTime;
                 if (!worldObj.isRemote) {
-                    boolean mobGriefing = worldObj.getGameRules().getGameRuleBooleanValue("mobGriefing");
-                    worldObj.createExplosion(this, posX, posY, posZ, getPowered() ? explosionRadius * 2.0F : explosionRadius, mobGriefing);
+                    explodeCreeptile();
                     setDead();
                 }
             }
@@ -150,6 +149,11 @@ public class EntityCreeptile extends EntityMob {
         return dataWatcher.getWatchableObjectByte(17) == 1;
     }
 
+    @Override
+    public boolean isAIEnabled() {
+        return true;
+    }
+
     public int getCreeptileState() {
         return dataWatcher.getWatchableObjectByte(16);
     }
@@ -167,5 +171,34 @@ public class EntityCreeptile extends EntityMob {
     @Override
     protected void dropFewItems(boolean recentlyHit, int looting) {
         PalariaMobDrops.dropConfigured(this, ModConfig.palariaCreeptileDropEntries);
+    }
+
+    private void explodeCreeptile() {
+        float strength = getExplosionStrength();
+        if (strength <= 0.0F) {
+            return;
+        }
+
+        boolean mobGriefing = worldObj.getGameRules().getGameRuleBooleanValue("mobGriefing");
+        CreeptileExplosion explosion = new CreeptileExplosion(
+                worldObj,
+                this,
+                posX,
+                posY,
+                posZ,
+                strength,
+                ModConfig.palariaCreeptileExplosionDamagesEnvironment && mobGriefing,
+                ModConfig.palariaCreeptileDamageMultiplier,
+                ModConfig.palariaCreeptileKnockbackMultiplier
+        );
+        explosion.doExplosion();
+    }
+
+    private float getExplosionStrength() {
+        float strength = Math.max(0.0F, ModConfig.palariaCreeptileExplosionStrength);
+        if (getPowered()) {
+            strength *= 2.0F;
+        }
+        return strength;
     }
 }

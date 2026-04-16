@@ -147,6 +147,12 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.dimdoors.modern.MixinPocketBuilder");
         }
 
+        if (loadedMods.contains("Satisforestry")
+                && (ModConfig.satisforestryLizardDoggoAllowNametagRename
+                || ModConfig.satisforestryLizardDoggoDisableRandomItemFinding)) {
+            mixins.add("late.satisforestry.MixinEntityLizardDoggo");
+        }
+
         return mixins;
     }
 
