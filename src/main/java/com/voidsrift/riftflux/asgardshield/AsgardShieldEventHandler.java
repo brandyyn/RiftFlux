@@ -108,8 +108,9 @@ public class AsgardShieldEventHandler {
 
         ItemStack inUse = AsgardShieldLogic.getActiveGuardStack(player);
         boolean gildedShield = inUse != null
-                && inUse.getItem() instanceof ItemAsgardShield
-                && ((ItemAsgardShield) inUse.getItem()).isGilded();
+                && ((inUse.getItem() instanceof ItemAsgardShield
+                && ((ItemAsgardShield) inUse.getItem()).isGilded())
+                || AsgardShieldLogic.isEnderflameSword(inUse));
 
         if (guarding) {
             boolean wardActivated = false;

@@ -24,6 +24,9 @@ import com.voidsrift.riftflux.palaria.PalariaMobContent;
 import com.voidsrift.riftflux.axolotl.AxolotlContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.furniture.FurnitureContent;
+import com.voidsrift.riftflux.offlawn.OffLawnContent;
+import com.voidsrift.riftflux.offlawn.client.OffLawnClientContent;
+import com.voidsrift.riftflux.pumpkinpastures.PumpkinPasturesContent;
 import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.wam.WAMContent;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
@@ -155,6 +158,9 @@ public class ClientProxy extends CommonProxy {
         AxolotlContent.initClient();
         WheatfieldContent.initClient();
         WAMContent.initClient();
+        OffLawnContent.initClient();
+        OffLawnClientContent.initClient();
+        PumpkinPasturesContent.initClient();
         PalariaMobContent.initClient();
         if (PalariaMobContent.isEnabled()) {
             NimatinJumpHud.bootstrap();

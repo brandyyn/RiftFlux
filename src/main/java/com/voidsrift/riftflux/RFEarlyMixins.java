@@ -5,6 +5,7 @@ import com.voidsrift.riftflux.dualhotbar.DualHotbarTransformer;
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraft.launchwrapper.Launch;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,9 +15,12 @@ import java.util.Set;
 
 @IFMLLoadingPlugin.SortingIndex(1200)
 public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
+    private static final String ANGELICA_INCOMPATIBLE_TWEAKER =
+            "com.gtnewhorizons.angelica.loading.fml.tweakers.IncompatibleModsDisablerTweaker";
 
     public RFEarlyMixins() {
         ModConfig.init(new File("config/riftflux.cfg"));
+        removeAngelicaIncompatibleTweakerIfNeeded();
     }
 
     @Override
@@ -69,8 +73,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.allowPlantsOnAnyBlock) {
             mixins.add("early.MixinBlockBush_AnySupport");
             mixins.add("early.MixinBlockDoublePlant_AnySupport");
-            mixins.add("early.MixinBlock_PlayerPlacedBushMarker");
             mixins.add("early.MixinBiomeGenBase_WorldGenContext");
+        }
+        if (ModConfig.allowPlantsOnAnyBlock || ModConfig.directionalCrossedPlantRenderingByPlacement) {
+            mixins.add("early.MixinBlock_PlayerPlacedBushMarker");
+            mixins.add("early.MixinItemBlock_PlayerPlacedBushMarker");
         }
         if (ModConfig.deathRespawnDelaySeconds > 0) {
             mixins.add("early.MixinNetHandlerPlayServer_RespawnDelay");
@@ -218,6 +225,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("accessor.ChunkCacheAccessor");
             if (ModConfig.enableFenceTextureModule) {
                 mixins.add("early.MixinBlockFence_InfdevPlusTexture");
+            }
+            if (ModConfig.directionalCrossedPlantRenderingByPlacement) {
+                mixins.add("early.MixinRenderBlocks_DirectionalCrossedPlants");
             }
             if (ModConfig.enableJackOLanternHelmet) {
                 mixins.add("early.MixinGuiIngame_JackOLanternBlur");
@@ -426,6 +436,49 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
     }
 
+    private static boolean hasOptimizationsAndTweaks() {
+        try {
+            if (Loader.isModLoaded("optimizationsandtweaks")) {
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return hasClass("fr.iamacat.optimizationsandtweaks.OptimizationsAndTweaks")
+                || hasClass("fr.iamacat.optimizationsandtweaks.OptimizationsAndTweaksMod");
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void removeAngelicaIncompatibleTweakerIfNeeded() {
+        if (!hasOptimizationsAndTweaks()) {
+            return;
+        }
+        try {
+            Object tweakClasses = Launch.blackboard.get("TweakClasses");
+            removeTweakerEntries(tweakClasses);
+            Object loadedTweakers = Launch.blackboard.get("Tweaks");
+            removeTweakerEntries(loadedTweakers);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void removeTweakerEntries(Object listObj) {
+        if (!(listObj instanceof List)) {
+            return;
+        }
+        List list = (List) listObj;
+        for (int i = list.size() - 1; i >= 0; i--) {
+            Object entry = list.get(i);
+            if (entry == null) {
+                continue;
+            }
+            String className = entry instanceof String ? (String) entry : entry.getClass().getName();
+            if (ANGELICA_INCOMPATIBLE_TWEAKER.equals(className)) {
+                list.remove(i);
+            }
+        }
+    }
+
     @Override
     public String[] getASMTransformerClass() {
         return new String[]{
@@ -441,7 +494,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     public String getSetupClass() { return null; }
 
     @Override
-    public void injectData(Map<String, Object> data) {}
+    public void injectData(Map<String, Object> data) {
+        removeAngelicaIncompatibleTweakerIfNeeded();
+    }
 
     @Override
     public String getAccessTransformerClass() { return null; }

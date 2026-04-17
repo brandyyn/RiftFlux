@@ -18,11 +18,16 @@ extends SpellItem {
         this.setTextureName("legendgear:iceStaffWood");
         this.setMaxDamage(Math.max(0, ModConfig.legendGearIceStaffDurability));
         this.baseArcanePower += 2.0;
-        this.baseStaminaCost += 1.0f;
+        this.baseStaminaCost = Math.max(0.0f, ModConfig.legendGearIceStaffManaCost);
         this.baseMeleeDamage = 3;
         this.spellType = EntitySpellEffect.SpellType.Ice1;
         this.isStaff = true;
         this.hitsWater = true;
         this.tabs.add(CreativeTabs.tabCombat);
+    }
+
+    @Override
+    public float getManaCost() {
+        return Math.max(0.0f, ModConfig.legendGearIceStaffManaCost);
     }
 }

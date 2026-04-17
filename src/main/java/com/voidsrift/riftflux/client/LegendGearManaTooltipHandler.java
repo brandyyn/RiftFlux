@@ -66,7 +66,10 @@ public class LegendGearManaTooltipHandler {
             return;
         }
 
-        tooltip.add(EnumChatFormatting.GRAY + prefix + " " + this.formatMana(clamped));
+        EnumChatFormatting color = "Mana Cost".equalsIgnoreCase(label)
+                ? EnumChatFormatting.AQUA
+                : EnumChatFormatting.GRAY;
+        tooltip.add(color + prefix + " " + this.formatMana(clamped));
     }
 
     private void addMagicRingManaTooltip(List tooltip, ItemStack stack) {
@@ -117,7 +120,10 @@ public class LegendGearManaTooltipHandler {
                 return;
             }
         }
-        tooltip.add(EnumChatFormatting.GRAY + message);
+        EnumChatFormatting color = target.startsWith("mana cost:")
+                ? EnumChatFormatting.AQUA
+                : EnumChatFormatting.GRAY;
+        tooltip.add(color + message);
     }
 
     private static boolean hasTooltipPrefix(List tooltip, String prefix) {

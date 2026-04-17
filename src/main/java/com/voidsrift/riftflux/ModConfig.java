@@ -307,6 +307,28 @@ public class ModConfig {
     public static boolean blackWidowUseBiomeWhitelist;
     public static String[] blackWidowBiomeList;
 
+    // OffLawn ports
+    public static boolean enableOffLawnModule;
+    public static boolean offLawnEnableSunflowerWorldgen;
+    public static int offLawnSunflowerPatchChance;
+    public static int offLawnSunflowerAttemptsPerChunk;
+
+    // Pumpkin Pastures ports
+    public static boolean enablePumpkinPasturesModule;
+    public static boolean enablePumpkinPasturesNaturalSpawns;
+    public static int pumpkinPasturesZombieSpawnWeight;
+    public static int pumpkinPasturesSkeletonSpawnWeight;
+    public static int pumpkinPasturesCreeperSpawnWeight;
+    public static float pumpkinPasturesEnderflameSwordDamage;
+    public static float pumpkinPasturesEnderflameToolEfficiency;
+    public static String[] pumpkinPasturesCorruptedSoulDropEntries;
+    public static String[] pumpkinPasturesPumpkinSoulDropEntries;
+    public static boolean pumpkinPasturesEnderflameStaffCastsSpell;
+    public static float pumpkinPasturesEnderflameStaffManaCost;
+    public static int pumpkinPasturesEnderflameStaffDurability;
+    public static float pumpkinPasturesEnderflameStaffFireSeconds;
+    public static float pumpkinPasturesEnderflameStaffSpellDamage;
+
     // Palaria mob ports
     public static boolean enablePalariaModule;
     public static boolean enablePalariaCowasaurus;
@@ -348,6 +370,7 @@ public class ModConfig {
     public static boolean enablePalariaMagmaRaptorChicken;
     public static int palariaMagmaRaptorChickenSpawnWeight;
     public static float palariaMagmaRaptorChickenMaxHealth;
+    public static boolean palariaMagmaRaptorChickenPlaceFire;
     public static String[] palariaNimatinDropEntries;
     public static String[] palariaCowasaurusDropEntries;
     public static String[] palariaCreeptileDropEntries;
@@ -588,10 +611,15 @@ public class ModConfig {
     public static int legendGearFireStaffDurability;
     public static int legendGearZapStaffDurability;
     public static int legendGearIceStaffDurability;
+    public static float legendGearTwinkleStaffManaCost;
+    public static float legendGearFireStaffManaCost;
+    public static float legendGearZapStaffManaCost;
+    public static float legendGearIceStaffManaCost;
     public static int legendGearStarPieceInfuseLevels;
     public static boolean legendGearPlaceableStarPieces;
     public static int legendGearStarInJarLightLevel;
     public static int legendGearPlacedStarPiecesLightLevel;
+    public static boolean legendGearFulguriteRequiresSilkTouch;
     public static float legendGearEmberStaffFireSeconds;
     public static int legendGearManaRegenPotionId;
     public static int legendGearGroundedPotionId;
@@ -793,6 +821,7 @@ public class ModConfig {
     public static double bonemealFlowerChance;
 
     public static boolean allowPlantsOnAnyBlock;
+    public static boolean directionalCrossedPlantRenderingByPlacement;
 
     public static boolean strictMobSpawnsZeroBlockLight;
 
@@ -2895,6 +2924,38 @@ public class ModConfig {
                 32767,
                 "Durability for the Ice Staff. Set to 0 for unlimited durability."
         );
+        legendGearTwinkleStaffManaCost = config.getFloat(
+                "twinkleStaffManaCost",
+                "legendgear",
+                4.0F,
+                0.0F,
+                1024.0F,
+                "Mana cost per Twinkle Staff cast."
+        );
+        legendGearFireStaffManaCost = config.getFloat(
+                "fireStaffManaCost",
+                "legendgear",
+                5.0F,
+                0.0F,
+                1024.0F,
+                "Mana cost per Ember Staff cast."
+        );
+        legendGearZapStaffManaCost = config.getFloat(
+                "zapStaffManaCost",
+                "legendgear",
+                5.0F,
+                0.0F,
+                1024.0F,
+                "Mana cost per Zap Staff cast."
+        );
+        legendGearIceStaffManaCost = config.getFloat(
+                "iceStaffManaCost",
+                "legendgear",
+                5.0F,
+                0.0F,
+                1024.0F,
+                "Mana cost per Ice Staff cast."
+        );
         legendGearStarPieceInfuseLevels = config.getInt(
                 "starPieceInfuseLevels",
                 "legendgear",
@@ -2924,6 +2985,12 @@ public class ModConfig {
                 0,
                 15,
                 "Light level for placed Star Piece and Infused Star Piece blocks."
+        );
+        legendGearFulguriteRequiresSilkTouch = config.getBoolean(
+                "fulguriteRequiresSilkTouch",
+                "legendgear",
+                true,
+                "If true, harvesting lightning-struck sand with a shovel only yields Fulgurite when Silk Touch is applied."
         );
 
         legendGearEmberStaffFireSeconds = config.getFloat(
@@ -3773,6 +3840,153 @@ public class ModConfig {
                         + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
         );
 
+        enableOffLawnModule = config.getBoolean(
+                "EnableOffLawnModule",
+                "offlawn",
+                true,
+                "Master switch for integrated OffLawn content."
+        );
+
+        offLawnEnableSunflowerWorldgen = config.getBoolean(
+                "EnableSunflowerWorldgen",
+                "offlawn",
+                true,
+                "If true, sunflower bushes naturally generate in windswept/extreme-hills style biomes."
+        );
+
+        offLawnSunflowerPatchChance = config.getInt(
+                "SunflowerPatchChance",
+                "offlawn",
+                3,
+                1,
+                1000,
+                "One-in-N chunk chance to attempt OffLawn sunflower patch generation."
+        );
+
+        offLawnSunflowerAttemptsPerChunk = config.getInt(
+                "SunflowerAttemptsPerChunk",
+                "offlawn",
+                8,
+                0,
+                128,
+                "Placement attempts per successful OffLawn sunflower generation chunk."
+        );
+
+        enablePumpkinPasturesModule = config.getBoolean(
+                "EnablePumpkinPasturesModule",
+                "pumpkinpastures",
+                true,
+                "Master switch for integrated Pumpkin Pastures content."
+        );
+
+        enablePumpkinPasturesNaturalSpawns = config.getBoolean(
+                "EnableNaturalSpawns",
+                "pumpkinpastures",
+                true,
+                "If true, pumpkin zombie/skeleton/creeper naturally spawn in configured overworld biomes."
+        );
+
+        pumpkinPasturesZombieSpawnWeight = config.getInt(
+                "PumpkinZombieSpawnWeight",
+                "pumpkinpastures",
+                45,
+                0,
+                1000,
+                "Natural spawn weight for Pumpkin Zombies."
+        );
+
+        pumpkinPasturesSkeletonSpawnWeight = config.getInt(
+                "PumpkinSkeletonSpawnWeight",
+                "pumpkinpastures",
+                45,
+                0,
+                1000,
+                "Natural spawn weight for Pumpkin Skeletons."
+        );
+
+        pumpkinPasturesCreeperSpawnWeight = config.getInt(
+                "PumpkinCreeperSpawnWeight",
+                "pumpkinpastures",
+                25,
+                0,
+                1000,
+                "Natural spawn weight for Pumpkin Creepers."
+        );
+        pumpkinPasturesEnderflameSwordDamage = config.getFloat(
+                "EnderflameSwordDamage",
+                "pumpkinpastures",
+                12.0F,
+                0.0F,
+                1000.0F,
+                "Base attack damage for Enderflame Sword."
+        );
+        pumpkinPasturesEnderflameToolEfficiency = config.getFloat(
+                "EnderflameToolEfficiency",
+                "pumpkinpastures",
+                10.64F,
+                0.1F,
+                1000.0F,
+                "Mining speed (efficiency) for Enderflame tools. Diamond is 8.0, so 10.64 is ~33% faster."
+        );
+        pumpkinPasturesCorruptedSoulDropEntries = config.getStringList(
+                "CorruptedSoulDropEntries",
+                "pumpkinpastures",
+                new String[]{
+                        "RiftFluxPumpkinZombie|0.5",
+                        "RiftFluxPumpkinSkeleton|0.5",
+                        "RiftFluxPumpkinCreeper|0.5"
+                },
+                "Corrupted soul drop table. Format: mob_id|chance_percent. Example: RiftFluxPumpkinZombie|0.5"
+        );
+        pumpkinPasturesPumpkinSoulDropEntries = config.getStringList(
+                "PumpkinSoulDropEntries",
+                "pumpkinpastures",
+                new String[]{
+                        "RiftFluxPumpkinZombie|2.0",
+                        "RiftFluxPumpkinSkeleton|2.0",
+                        "RiftFluxPumpkinCreeper|2.0"
+                },
+                "Pumpkin soul drop table. Format: mob_id|chance_percent. Example: RiftFluxPumpkinZombie|2.0"
+        );
+        pumpkinPasturesEnderflameStaffCastsSpell = config.getBoolean(
+                "EnderflameStaffCastsSpell",
+                "pumpkinpastures",
+                true,
+                "If true, Enderflame Staff right-click charges and casts the Ember Staff fire spell. If false, it behaves like a normal blocking weapon."
+        );
+        pumpkinPasturesEnderflameStaffManaCost = config.getFloat(
+                "EnderflameStaffManaCost",
+                "pumpkinpastures",
+                7.0F,
+                0.0F,
+                1000.0F,
+                "Mana cost per Enderflame Staff cast."
+        );
+        pumpkinPasturesEnderflameStaffDurability = config.getInt(
+                "EnderflameStaffDurability",
+                "pumpkinpastures",
+                512,
+                0,
+                32767,
+                "Durability for Enderflame Staff. Set to 0 for unlimited durability."
+        );
+        pumpkinPasturesEnderflameStaffFireSeconds = config.getFloat(
+                "EnderflameStaffFireSeconds",
+                "pumpkinpastures",
+                4.5F,
+                0.0F,
+                600.0F,
+                "How long Enderflame Staff fire spells ignite entities for (in seconds)."
+        );
+        pumpkinPasturesEnderflameStaffSpellDamage = config.getFloat(
+                "EnderflameStaffSpellDamage",
+                "pumpkinpastures",
+                14.0F,
+                0.0F,
+                1000.0F,
+                "Base spell damage power for Enderflame Staff casts."
+        );
+
         enablePalariaModule = config.getBoolean(
                 "EnablePalariaModule",
                 PALARIA_CATEGORY,
@@ -4070,6 +4284,12 @@ public class ModConfig {
                 1.0F,
                 10000.0F,
                 "Base max health for Magma Raptor Chickens."
+        );
+        palariaMagmaRaptorChickenPlaceFire = config.getBoolean(
+                "MagmaRaptorChickenPlaceFire",
+                PALARIA_CATEGORY,
+                false,
+                "If true, Magma Raptor Chickens place fire blocks around where they stand."
         );
         palariaNimatinDropEntries = config.getStringList(
                 "NimatinDropEntries",
@@ -4700,6 +4920,13 @@ public class ModConfig {
                 "general",
                 true,
                 "If true, tall grass and all BlockBush-based plants can be placed on any block instead of only on grass/dirt/farmland."
+        );
+
+        directionalCrossedPlantRenderingByPlacement = config.getBoolean(
+                "DirectionalCrossedPlantRenderingByPlacement",
+                "client",
+                true,
+                "If true, crossed-plant rendering (flowers, tall grass, mushrooms, etc.) uses fixed world orientation based on player placement direction instead of the default crossed layout."
         );
 
         strictMobSpawnsZeroBlockLight = config.getBoolean(

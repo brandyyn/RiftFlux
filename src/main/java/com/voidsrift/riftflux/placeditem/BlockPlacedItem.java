@@ -92,7 +92,7 @@ public class BlockPlacedItem extends Block {
     public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
         TileEntity te = world.getTileEntity(x, y, z);
         TilePlacedItem tile = te instanceof TilePlacedItem ? (TilePlacedItem) te : null;
-        if (tile != null && tile.getStack() != null && tile.getStack().getItem() instanceof ItemBlock) {
+        if (tile != null && tile.getStack() != null && PlacedItemRenderRules.isBlockLikePlacedItem(tile.getStack())) {
             setBlockBoundsBasedOnState(world, x, y, z);
             return super.getCollisionBoundingBoxFromPool(world, x, y, z);
         }
@@ -115,7 +115,7 @@ public class BlockPlacedItem extends Block {
         int meta = world.getBlockMetadata(x, y, z);
         if (tile != null && tile.getStack() != null) {
             ItemStack stack = tile.getStack();
-            boolean isBlock = stack.getItem() instanceof ItemBlock;
+            boolean isBlock = PlacedItemRenderRules.isBlockLikePlacedItem(stack);
             if (isBlock) {
                 int face = meta;
                 if (face >= 2 && face < Facing.oppositeSide.length) {

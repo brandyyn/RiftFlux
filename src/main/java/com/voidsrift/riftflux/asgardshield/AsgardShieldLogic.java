@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.asgardshield;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.compat.BackhandCompat;
 import com.voidsrift.riftflux.inventorypets.ItemInventoryShieldPet;
+import com.voidsrift.riftflux.pumpkinpastures.ItemPumpkinSword;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -39,7 +40,10 @@ public final class AsgardShieldLogic {
             return false;
         }
         Item item = stack.getItem();
-        return item instanceof ItemAsgardShield || item instanceof ItemAsgardGreatsword || item instanceof ItemInventoryShieldPet;
+        return item instanceof ItemAsgardShield
+                || item instanceof ItemAsgardGreatsword
+                || item instanceof ItemInventoryShieldPet
+                || item instanceof ItemPumpkinSword;
     }
 
     public static boolean isAsgardShield(ItemStack stack) {
@@ -48,6 +52,10 @@ public final class AsgardShieldLogic {
 
     public static boolean isAsgardGreatsword(ItemStack stack) {
         return stack != null && stack.getItem() instanceof ItemAsgardGreatsword;
+    }
+
+    public static boolean isEnderflameSword(ItemStack stack) {
+        return stack != null && stack.getItem() instanceof ItemPumpkinSword;
     }
 
     public static boolean isBlockingWithAsgardItem(EntityPlayer player) {
@@ -145,6 +153,9 @@ public final class AsgardShieldLogic {
         if (held.getItem() instanceof ItemAsgardGreatsword) {
             return ((ItemAsgardGreatsword) held.getItem()).getDamageMultiplier();
         }
+        if (held.getItem() instanceof ItemPumpkinSword) {
+            return 0.80F;
+        }
         return 1.0F;
     }
 
@@ -165,6 +176,8 @@ public final class AsgardShieldLogic {
             result = handleShieldGuard(player, (ItemAsgardShield) held.getItem(), held, source, incoming);
         } else if (held.getItem() instanceof ItemInventoryShieldPet) {
             result = handleShieldPetGuard(player, (ItemInventoryShieldPet) held.getItem(), held, source, incoming);
+        } else if (held.getItem() instanceof ItemPumpkinSword) {
+            result = handleEnderflameSwordGuard(player, held, source, incoming);
         } else {
             result = handleGreatswordGuard(player, (ItemAsgardGreatsword) held.getItem(), held, source, incoming);
         }
@@ -418,6 +431,33 @@ public final class AsgardShieldLogic {
         int durabilityDamage = Math.max(1, Math.round(incomingDamage * swordItem.getDamageMultiplier()));
         durabilityDamage = applyEnchantMitigation(swordStack, player, source, durabilityDamage);
         durabilityDamage *= explosionPenalty(source, true);
+        durabilityDamage = applyVitalityAndSanguinary(swordStack, player, source, durabilityDamage);
+
+        result.itemDamage = Math.max(0, durabilityDamage);
+        result.playGuardSound = true;
+        return result;
+    }
+
+    private static GuardResult handleEnderflameSwordGuard(EntityPlayer player,
+                                                          ItemStack swordStack,
+                                                          DamageSource source,
+                                                          int incomingDamage) {
+        GuardResult result = new GuardResult();
+        result.soundProfile = "metal";
+        result.consumeProjectile = true;
+
+        int durabilityDamage = Math.max(1, Math.round(incomingDamage * 0.80F));
+        durabilityDamage = applyEnchantMitigation(swordStack, player, source, durabilityDamage);
+
+        boolean allowExplosionPenalty = false; // Matches gilded iron shield explosive resistance behavior.
+        if (source.isExplosion()) {
+            durabilityDamage = Math.max(0, durabilityDamage / 2);
+        }
+        if (player.isInWater()) {
+            durabilityDamage += 15;
+        }
+
+        durabilityDamage *= explosionPenalty(source, allowExplosionPenalty);
         durabilityDamage = applyVitalityAndSanguinary(swordStack, player, source, durabilityDamage);
 
         result.itemDamage = Math.max(0, durabilityDamage);

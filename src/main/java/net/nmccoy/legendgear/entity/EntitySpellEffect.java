@@ -74,6 +74,7 @@ implements IEntityAdditionalSpawnData {
     public int maxLife = 10;
     public HashSet hits;
     public ArrayList<ChunkPosition> blocksAffected;
+    private int overrideFireSeconds = -1;
     private static float blockRadiusFudge = 0.25f;
 
     public EntitySpellEffect(World world) {
@@ -89,15 +90,24 @@ implements IEntityAdditionalSpawnData {
         return Math.max(0, (int)Math.ceil((double)Math.max(0.0F, ModConfig.legendGearEmberStaffFireSeconds)));
     }
 
-    private static void applyConfiguredFire(EntityLivingBase living) {
+    private static void applyConfiguredFire(EntitySpellEffect spell, EntityLivingBase living) {
         if (living == null || living.isImmuneToFire()) {
             return;
         }
 
-        int fireSeconds = getConfiguredFireSeconds();
+        int fireSeconds = spell == null ? getConfiguredFireSeconds() : spell.getEffectiveFireSeconds();
         if (fireSeconds > 0) {
             living.setFire(fireSeconds);
         }
+    }
+
+    public EntitySpellEffect withOverrideFireSeconds(int fireSeconds) {
+        this.overrideFireSeconds = fireSeconds < 0 ? -1 : fireSeconds;
+        return this;
+    }
+
+    private int getEffectiveFireSeconds() {
+        return this.overrideFireSeconds >= 0 ? this.overrideFireSeconds : getConfiguredFireSeconds();
     }
 
     private static boolean hasBedrockAbove(World world, int x, int y, int z) {
@@ -233,6 +243,7 @@ implements IEntityAdditionalSpawnData {
         this.isCrit = tag.getBoolean("isCrit");
         this.maxLife = tag.getInteger("maxLife");
         this.lifeTicks = tag.getInteger("lifeTicks");
+        this.overrideFireSeconds = tag.hasKey("overrideFireSeconds") ? tag.getInteger("overrideFireSeconds") : -1;
     }
 
     protected void writeEntityToNBT(NBTTagCompound tag) {
@@ -242,6 +253,7 @@ implements IEntityAdditionalSpawnData {
         tag.setBoolean("isCrit", this.isCrit);
         tag.setInteger("maxLife", this.maxLife);
         tag.setInteger("lifeTicks", this.lifeTicks);
+        tag.setInteger("overrideFireSeconds", this.overrideFireSeconds);
     }
 
     public void writeSpawnData(ByteBuf buffer) {
@@ -251,6 +263,7 @@ implements IEntityAdditionalSpawnData {
         buffer.writeBoolean(this.isCrit);
         buffer.writeInt(this.maxLife);
         buffer.writeInt(this.lifeTicks);
+        buffer.writeInt(this.overrideFireSeconds);
     }
 
     public void readSpawnData(ByteBuf additionalData) {
@@ -260,6 +273,7 @@ implements IEntityAdditionalSpawnData {
         this.isCrit = additionalData.readBoolean();
         this.maxLife = additionalData.readInt();
         this.lifeTicks = additionalData.readInt();
+        this.overrideFireSeconds = additionalData.readInt();
     }
 
     static /* synthetic */ boolean access$000() {
@@ -546,7 +560,7 @@ implements IEntityAdditionalSpawnData {
                 }
                 hit = living.attackEntityFrom(this.getDamageSource(spell), damage);
                 if (this.element == Spell.Element.Fire) {
-                    EntitySpellEffect.applyConfiguredFire(living);
+                    EntitySpellEffect.applyConfiguredFire(spell, living);
                 }
                 if (hit) {
                     spell.knockAwayFrom((Entity)living, spell.attackSource, knockback, knockback);

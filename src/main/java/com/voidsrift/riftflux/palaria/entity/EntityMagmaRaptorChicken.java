@@ -43,7 +43,7 @@ public class EntityMagmaRaptorChicken extends EntityAbstractRaptorChicken {
                     posY + rand.nextDouble() * (double) height,
                     posZ + (rand.nextDouble() - 0.5D) * (double) width, 0.0D, 0.0D, 0.0D);
         }
-        if (!worldObj.isRemote) {
+        if (!worldObj.isRemote && ModConfig.palariaMagmaRaptorChickenPlaceFire) {
             for (int i = 0; i < 4; ++i) {
                 int x = MathHelper.floor_double(posX + (double) ((float) (i % 2 * 2 - 1) * 0.25F));
                 int y = MathHelper.floor_double(posY);

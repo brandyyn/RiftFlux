@@ -90,8 +90,9 @@ public final class AsgardShieldHud extends Gui {
 
         ItemStack active = AsgardShieldLogic.getEquippedAsgardItem(player);
         boolean gilded = active != null
-                && active.getItem() instanceof ItemAsgardShield
-                && ((ItemAsgardShield) active.getItem()).isGilded();
+                && ((active.getItem() instanceof ItemAsgardShield
+                && ((ItemAsgardShield) active.getItem()).isGilded())
+                || AsgardShieldLogic.isEnderflameSword(active));
         boolean greatsword = active != null && active.getItem() instanceof ItemAsgardGreatsword;
         boolean broken = AsgardShieldState.isGuardBroken(player);
         boolean ward = active != null && getConfiguredEnchantLevel(ModConfig.asgardShieldHarkenWardAugmentId, active) > 0;

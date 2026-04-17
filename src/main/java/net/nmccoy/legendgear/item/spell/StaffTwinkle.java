@@ -17,9 +17,15 @@ extends SpellItem {
         this.setUnlocalizedName("twinkleStaff");
         this.setTextureName("legendgear:twinkleStaff");
         this.setMaxDamage(Math.max(0, ModConfig.legendGearTwinkleStaffDurability));
+        this.baseStaminaCost = Math.max(0.0f, ModConfig.legendGearTwinkleStaffManaCost);
         this.baseMeleeDamage = 3;
         this.spellType = EntitySpellEffect.SpellType.Twinkle;
         this.isStaff = true;
         this.tabs.add(CreativeTabs.tabCombat);
+    }
+
+    @Override
+    public float getManaCost() {
+        return Math.max(0.0f, ModConfig.legendGearTwinkleStaffManaCost);
     }
 }

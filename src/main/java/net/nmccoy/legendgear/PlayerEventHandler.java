@@ -454,9 +454,21 @@ public class PlayerEventHandler {
     public void fulguriteHarvest(BlockEvent.HarvestDropsEvent event) {
         ItemTool tool;
         ItemStack held;
-        if (event.harvester != null && event.block == LegendGear2.struckGroundBlock && (held = event.harvester.getHeldItem()) != null && held.getItem() instanceof ItemTool && (tool = (ItemTool)held.getItem()).getToolClasses(held).contains("shovel") && !event.isSilkTouching) {
-            event.drops.add(new ItemStack(LegendGear2.fulgurite));
+        if (event.harvester == null || event.block != LegendGear2.struckGroundBlock) {
+            return;
         }
+        held = event.harvester.getHeldItem();
+        if (held == null || !(held.getItem() instanceof ItemTool)) {
+            return;
+        }
+        tool = (ItemTool) held.getItem();
+        if (!tool.getToolClasses(held).contains("shovel")) {
+            return;
+        }
+        if (ModConfig.legendGearFulguriteRequiresSilkTouch && !event.isSilkTouching) {
+            return;
+        }
+        event.drops.add(new ItemStack(LegendGear2.fulgurite));
     }
 
     @SubscribeEvent

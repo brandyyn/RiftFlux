@@ -146,7 +146,7 @@ public class ItemWhoopieCushion extends Item {
     public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advanced) {
         float manaCost = getConfiguredLegendGearManaCost();
         if (manaCost > 0.0F && ModConfig.enableLegendGearModule) {
-            list.add(EnumChatFormatting.GRAY + "Mana Cost: " + formatManaValue(manaCost));
+            list.add(EnumChatFormatting.AQUA + "Mana Cost: " + formatManaValue(manaCost));
         }
     }
 

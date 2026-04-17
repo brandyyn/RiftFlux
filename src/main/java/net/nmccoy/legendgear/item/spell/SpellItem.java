@@ -208,7 +208,8 @@ implements IMana {
         if (MagicRing.PlayerWears(player, MagicRing.RingType.MAGE_RING)) {
             multiplier = MagicRing.PlayerWears(player, MagicRing.RingType.RESONANCE_RING) ? MagicRing.MAGE_AND_RESONANCE_FACTOR : MagicRing.MAGE_RING_FACTOR;
         }
-        pse.expendMana(stack, this.baseStaminaCost * multiplier);
+        float manaCost = Math.max(0.0f, this.getManaCost());
+        pse.expendMana(stack, manaCost * multiplier);
         player.swingItem();
     }
 

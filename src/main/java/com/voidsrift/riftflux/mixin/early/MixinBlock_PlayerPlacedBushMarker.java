@@ -15,8 +15,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Marks bush blocks that are explicitly placed by a real player so that
- * allowPlantsOnAnyBlock can later distinguish them from world-generated plants.
+ * Marks bush blocks explicitly placed by a real player for:
+ * - allowPlantsOnAnyBlock survival checks
+ * - optional directional crossed-plant rendering
  */
 @Mixin(Block.class)
 public abstract class MixinBlock_PlayerPlacedBushMarker {
@@ -25,7 +26,7 @@ public abstract class MixinBlock_PlayerPlacedBushMarker {
     private void riftflux$markBushPlayerPlaced(World world, int x, int y, int z,
                                                EntityLivingBase placer, ItemStack stack,
                                                CallbackInfo ci) {
-        if (!ModConfig.allowPlantsOnAnyBlock) {
+        if (!ModConfig.allowPlantsOnAnyBlock && !ModConfig.directionalCrossedPlantRenderingByPlacement) {
             return;
         }
 
@@ -40,8 +41,10 @@ public abstract class MixinBlock_PlayerPlacedBushMarker {
         }
 
         RFPlantContext.markPlayerPlaced(world, x, y, z);
+        RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y, z, placer);
         if (((Object) this) instanceof BlockDoublePlant) {
             RFPlantContext.markPlayerPlaced(world, x, y + 1, z);
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y + 1, z, placer);
         }
     }
 }

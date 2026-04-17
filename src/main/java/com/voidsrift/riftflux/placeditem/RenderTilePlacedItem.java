@@ -72,6 +72,12 @@ public class RenderTilePlacedItem extends TileEntitySpecialRenderer {
     }
 
     private static int getRenderTypeFromStack(ItemStack stack) {
+        if (stack == null || stack.getItem() == null) {
+            return 0;
+        }
+        if (stack.getItem() instanceof ItemBlock && !PlacedItemRenderRules.isBlockLikePlacedItem(stack)) {
+            return 0;
+        }
         IItemRenderer renderer = MinecraftForgeClient.getItemRenderer(stack, IItemRenderer.ItemRenderType.ENTITY);
         if (renderer != null) {
             boolean helper = renderer.shouldUseRenderHelper(
