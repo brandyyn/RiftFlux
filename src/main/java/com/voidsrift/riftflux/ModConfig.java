@@ -572,6 +572,7 @@ public class ModConfig {
     public static int legendGearMaxStarwellRetries;
     public static boolean legendGearFallingStarDamageEnabled;
     public static float legendGearFallingStarDamage;
+    public static float legendGearNightFallingStarFrequency;
     public static boolean legendGearAprilFoolsBananaFallingStars;
     public static boolean legendGearMagicBoomerangInfiniteDurability;
     public static float legendGearMagicBoomerangDamage;
@@ -2775,6 +2776,14 @@ public class ModConfig {
                 0.0F,
                 2048.0F,
                 "Damage dealt by Falling Stars to entities hit mid-air and in the 3x3x3 impact area."
+        );
+        legendGearNightFallingStarFrequency = config.getFloat(
+                "nightFallingStarFrequency",
+                "legendgear",
+                1.0F,
+                0.0F,
+                64.0F,
+                "Multiplier for natural Falling Star frequency while under open sky at night. 0 disables them, 1 keeps current behavior, 2 makes them happen about twice as often."
         );
         legendGearAprilFoolsBananaFallingStars = config.getBoolean(
                 "aprilFoolsBananaFallingStars",

@@ -6,9 +6,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.Vec3;
 import org.objectweb.asm.Opcodes;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,6 +41,7 @@ public abstract class MixinRenderGlobal_IsometricPhotoMode {
     @Inject(method = "renderSky(F)V", at = @At("HEAD"), require = 0)
     private void riftflux$disableFogBeforeSkyPass(float partialTicks, CallbackInfo ci) {
         if (IsometricPhotoModeController.instance().isActive()) {
+            this.riftflux$drawPhotoModeSkyBackdrop(partialTicks);
             AngelicaPhotoModeCompat.enforceNoFog();
             GL11.glDisable(GL11.GL_FOG);
         }
@@ -183,6 +186,58 @@ public abstract class MixinRenderGlobal_IsometricPhotoMode {
     @Unique
     private boolean riftflux$useVanillaPhotoChunkFallback() {
         return IsometricPhotoModeController.instance().isActive() && !RIFTFLUX_HAS_ANGELICA;
+    }
+
+    @Unique
+    private void riftflux$drawPhotoModeSkyBackdrop(float partialTicks) {
+        if (this.mc == null || this.mc.theWorld == null || this.mc.theWorld.provider == null
+                || this.mc.theWorld.provider.hasNoSky || !this.mc.theWorld.provider.isSurfaceWorld()) {
+            return;
+        }
+
+        float red;
+        float green;
+        float blue;
+        if (this.mc.theWorld.getStarBrightness(partialTicks) > 0.05F) {
+            red = 0.0F;
+            green = 0.0F;
+            blue = 0.0F;
+        } else {
+            Vec3 skyColor = this.mc.theWorld.getSkyColor(this.mc.renderViewEntity, partialTicks);
+            red = skyColor == null ? 0.0F : (float) skyColor.xCoord;
+            green = skyColor == null ? 0.0F : (float) skyColor.yCoord;
+            blue = skyColor == null ? 0.0F : (float) skyColor.zCoord;
+        }
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_FOG);
+        GL11.glDepthMask(false);
+
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0.0D, 1.0D, 0.0D, 1.0D, -1.0D, 1.0D);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+        tessellator.setColorOpaque_F(red, green, blue);
+        tessellator.addVertex(0.0D, 0.0D, 0.0D);
+        tessellator.addVertex(1.0D, 0.0D, 0.0D);
+        tessellator.addVertex(1.0D, 1.0D, 0.0D);
+        tessellator.addVertex(0.0D, 1.0D, 0.0D);
+        tessellator.draw();
+
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glDepthMask(true);
+        GL11.glPopAttrib();
     }
 
     @Unique

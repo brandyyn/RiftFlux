@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
+import com.voidsrift.riftflux.client.photomode.PhotoModeBlockRenderContext;
 import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
 import java.lang.reflect.Field;
 import net.minecraft.block.Block;
@@ -152,11 +153,15 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             int side
     ) {
         boolean shouldRender = block.shouldSideBeRendered(access, x, y, z, side);
-        if (shouldRender || access == null || !this.riftflux$isLavaBlock(block) || side < 2 || side > 5) {
+        if (shouldRender || access == null || side < 2 || side > 5) {
             return shouldRender;
         }
 
-        if (!this.riftflux$isNetherPhotoModeHideActive()) {
+        if (this.riftflux$isLiquidBlock(block) && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, z)) {
+            return true;
+        }
+
+        if (!this.riftflux$isLavaBlock(block) || !this.riftflux$isNetherPhotoModeHideActive()) {
             return shouldRender;
         }
 
@@ -178,6 +183,18 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             int y,
             int z
     ) {
+        if (access != null
+                && this.riftflux$isLiquidBlock(block)
+                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, z)) {
+            int sourceBrightness = block.getMixedBrightnessForBlock(
+                    access,
+                    PhotoModeBlockRenderContext.x(),
+                    PhotoModeBlockRenderContext.y(),
+                    PhotoModeBlockRenderContext.z()
+            );
+            return this.riftflux$hasSkyLight() ? 0x00F00000 | sourceBrightness & 0x000000F0 : sourceBrightness;
+        }
+
         if (!this.riftflux$isLavaBlock(block)
                 || !this.riftflux$isNetherPhotoModeHideActive()
                 || access == null
@@ -200,6 +217,14 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             Material material,
             CallbackInfoReturnable<Float> cir
     ) {
+        if (material != null
+                && material.isLiquid()
+                && this.blockAccess != null
+                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(this.blockAccess, x, z)) {
+            cir.setReturnValue(1.0F);
+            return;
+        }
+
         if (material != Material.lava
                 || !this.riftflux$isNetherPhotoModeHideActive()
                 || this.blockAccess == null
@@ -459,6 +484,22 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
 
     private boolean riftflux$isLavaBlock(Block block) {
         return block == Blocks.lava || block == Blocks.flowing_lava;
+    }
+
+    private boolean riftflux$isLiquidBlock(Block block) {
+        return block != null && block.getMaterial() != null && block.getMaterial().isLiquid();
+    }
+
+    private boolean riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(IBlockAccess access, int x, int z) {
+        return access != null
+                && PhotoModeBlockRenderContext.isOutsideHorizontalRenderGrid(x, z)
+                && !this.riftflux$isNetherBlockAccess(access);
+    }
+
+    private boolean riftflux$hasSkyLight() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        World world = minecraft == null ? null : minecraft.theWorld;
+        return world == null || world.provider == null || !world.provider.hasNoSky;
     }
 
     private boolean riftflux$hasSecondaryExposureNeighbor(

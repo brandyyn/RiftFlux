@@ -237,6 +237,8 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.MixinRenderGlobal_IsometricPhotoMode");
                 mixins.add("early.MixinEffectRenderer_IsometricPhotoMode");
                 mixins.add("early.MixinBlock_NetherHideBlocks_PhotoMode");
+                mixins.add("early.MixinWorldRenderer_PhotoModeBlockFaceCulling");
+                mixins.add("early.MixinRenderBlocks_PhotoModeAllFacesBrightness");
                 mixins.add("early.MixinRenderBlocks_NetherHideBlocks_PhotoMode");
                 if (hasClass("com.gtnewhorizons.angelica.glsm.AngelicaFogService")) {
                     mixins.add("early.angelica.MixinAngelicaFogService_PhotoMode");

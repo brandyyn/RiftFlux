@@ -22,6 +22,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderer.class)
 public abstract class MixinEntityRenderer_IsometricPhotoMode {
 
+    private static final boolean RIFTFLUX_HAS_ANGELICA = riftflux$hasClass("com.gtnewhorizons.angelica.AngelicaMod");
+
+    private boolean riftflux$photoModeCullFaceWasEnabled;
+    private boolean riftflux$restoreCullFaceAfterPhotoWorld;
+
     @Shadow
     private Minecraft mc;
 
@@ -169,14 +174,26 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
         if (IsometricPhotoModeController.instance().isActive()) {
             AngelicaPhotoModeCompat.enforceNoFog();
             GL11.glDisable(GL11.GL_FOG);
+            if (this.riftflux$shouldDisableCullFaceForPhotoWorld()) {
+                this.riftflux$photoModeCullFaceWasEnabled = GL11.glIsEnabled(GL11.GL_CULL_FACE);
+                this.riftflux$restoreCullFaceAfterPhotoWorld = true;
+                GL11.glDisable(GL11.GL_CULL_FACE);
+            }
         }
-        // Keep standard OpenGL cull state to avoid chunk seam artifacts.
     }
 
     @Inject(method = "renderWorld(FJ)V", at = @At("RETURN"))
     private void riftflux$restoreCullFaceAfterPhotoWorld(float partialTicks, long finishTimeNano, CallbackInfo ci) {
         IsometricPhotoModeController.instance().restoreRenderTweenState();
-        // Keep standard OpenGL cull state to avoid chunk seam artifacts.
+        if (this.riftflux$restoreCullFaceAfterPhotoWorld) {
+            if (this.riftflux$photoModeCullFaceWasEnabled) {
+                GL11.glEnable(GL11.GL_CULL_FACE);
+            } else {
+                GL11.glDisable(GL11.GL_CULL_FACE);
+            }
+            this.riftflux$restoreCullFaceAfterPhotoWorld = false;
+            this.riftflux$photoModeCullFaceWasEnabled = false;
+        }
     }
 
     @Inject(
@@ -231,6 +248,9 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
         if (IsometricPhotoModeController.instance().isActive() && capability == GL11.GL_FOG) {
             return;
         }
+        if (capability == GL11.GL_CULL_FACE && this.riftflux$shouldDisableCullFaceForPhotoWorld()) {
+            return;
+        }
 
         GL11.glEnable(capability);
     }
@@ -275,7 +295,12 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glPushMatrix();
         GL11.glLoadIdentity();
-        Project.gluPerspective(this.getFOVModifier(partialTicks, useFovSetting), aspect, 0.05F, this.farPlaneDistance * 2.0F);
+        Project.gluPerspective(
+                this.getFOVModifier(partialTicks, useFovSetting),
+                aspect,
+                0.05F,
+                Math.max(this.farPlaneDistance * 2.0F, 1024.0F)
+        );
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
     }
 
@@ -283,5 +308,23 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glPopMatrix();
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
+    }
+
+    private boolean riftflux$shouldDisableCullFaceForPhotoWorld() {
+        return IsometricPhotoModeController.instance().isActive()
+                && !RIFTFLUX_HAS_ANGELICA
+                && (this.mc == null
+                || this.mc.theWorld == null
+                || this.mc.theWorld.provider == null
+                || (!this.mc.theWorld.provider.isHellWorld && this.mc.theWorld.provider.dimensionId != -1));
+    }
+
+    private static boolean riftflux$hasClass(String className) {
+        try {
+            ClassLoader loader = MixinEntityRenderer_IsometricPhotoMode.class.getClassLoader();
+            return loader.getResource(className.replace('.', '/') + ".class") != null;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }

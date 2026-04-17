@@ -1,6 +1,5 @@
 package com.voidsrift.riftflux.mixin.early;
 
-import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import com.voidsrift.riftflux.client.sky.SunriseSkyTintHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;

@@ -102,6 +102,25 @@ public class PlayerEventHandler {
     static final float WISH_RING_BONUS = 0.3f;
     private long lastPoofSoundTime = 0L;
 
+    private static int getNightFallingStarProgress(World world, int baseAmount) {
+        if (world == null || baseAmount <= 0) {
+            return 0;
+        }
+
+        float frequency = LegendGear2.CONFIG_NIGHT_FALLING_STAR_FREQUENCY;
+        if (frequency <= 0.0f) {
+            return 0;
+        }
+
+        float scaledAmount = (float)baseAmount * frequency;
+        int wholeAmount = (int)scaledAmount;
+        float fractionalAmount = scaledAmount - (float)wholeAmount;
+        if (fractionalAmount > 0.0f && world.rand.nextFloat() < fractionalAmount) {
+            ++wholeAmount;
+        }
+        return wholeAmount;
+    }
+
     public static void addPlayerStarCharge(EntityPlayer player, int amount, boolean respectCap) {
         PlayerStarstatsExtension pse = PlayerStarstatsExtension.get(player);
         if (respectCap) {
@@ -940,9 +959,12 @@ public class PlayerEventHandler {
                         int chargeBonus = (int)(player.worldObj.rand.nextFloat() + bonus);
                         chargeRate += chargeBonus;
                     }
-                    PlayerEventHandler.addPlayerStarCharge((EntityPlayer)player, chargeRate, true);
+                    int scaledChargeRate = PlayerEventHandler.getNightFallingStarProgress(player.worldObj, chargeRate);
+                    if (scaledChargeRate > 0) {
+                        PlayerEventHandler.addPlayerStarCharge((EntityPlayer)player, scaledChargeRate, true);
+                    }
                     if (pse.starChargePoints >= LegendGear2.starKarmaCost) {
-                        ++pse.starCooldownTimer;
+                        pse.starCooldownTimer += PlayerEventHandler.getNightFallingStarProgress(player.worldObj, 1);
                         if (pse.starCooldownTimer >= LegendGear2.starCooldown) {
                             pse.starChargePoints -= LegendGear2.starKarmaCost;
                             pse.starCooldownTimer = 0 - player.worldObj.rand.nextInt(LegendGear2.starCooldownFuzz);

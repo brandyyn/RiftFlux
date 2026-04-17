@@ -172,6 +172,7 @@ public class LegendGear2 {
     public static int CONFIG_MAX_STARWELL_ATTEMPTS;
     public static boolean CONFIG_FALLING_STAR_DAMAGE_ENABLED = true;
     public static float CONFIG_FALLING_STAR_DAMAGE = 25.0f;
+    public static float CONFIG_NIGHT_FALLING_STAR_FREQUENCY = 1.0f;
     public static boolean CONFIG_MAGIC_BOOMERANG_INFINITE_DURABILITY = false;
     public static float CONFIG_MAGIC_BOOMERANG_DAMAGE = 6.0f;
     public static boolean CONFIG_ENABLE_BAD_BOW = true;
@@ -396,6 +397,7 @@ public class LegendGear2 {
         CONFIG_MAX_STARWELL_ATTEMPTS = config.getInt("maxStarwellRetries", "general", 16, 0, 16, "Times to retry placing a starwell in a chunk if invalid");
         CONFIG_FALLING_STAR_DAMAGE_ENABLED = config.getBoolean("fallingStarDamageEnabled", "general", true, "If true, Falling Stars can deal damage on impact and while descending");
         CONFIG_FALLING_STAR_DAMAGE = config.getFloat("fallingStarDamage", "general", 25.0f, 0.0f, 2048.0f, "Damage dealt by Falling Stars to entities hit mid-air and at impact");
+        CONFIG_NIGHT_FALLING_STAR_FREQUENCY = config.getFloat("nightFallingStarFrequency", "general", 1.0f, 0.0f, 64.0f, "Multiplier for natural Falling Star frequency while under open sky at night. 0 disables them, 1 keeps current behavior, 2 makes them happen about twice as often");
         CONFIG_MAGIC_BOOMERANG_INFINITE_DURABILITY = config.getBoolean("magicBoomerangInfiniteDurability", "general", false, "If true, Magic Boomerang does not lose durability");
         CONFIG_MAGIC_BOOMERANG_DAMAGE = config.getFloat("magicBoomerangDamage", "general", 6.0f, 0.0f, 1024.0f, "Damage dealt by the Magic Boomerang on hit");
         CONFIG_ENABLE_BAD_BOW = config.getBoolean("enableBadBow", "general", true, "If false, legendgear:badBow is not registered");
@@ -449,6 +451,7 @@ public class LegendGear2 {
             CONFIG_MAX_STARWELL_ATTEMPTS = ModConfig.legendGearMaxStarwellRetries;
             CONFIG_FALLING_STAR_DAMAGE_ENABLED = ModConfig.legendGearFallingStarDamageEnabled;
             CONFIG_FALLING_STAR_DAMAGE = ModConfig.legendGearFallingStarDamage;
+            CONFIG_NIGHT_FALLING_STAR_FREQUENCY = ModConfig.legendGearNightFallingStarFrequency;
             CONFIG_MAGIC_BOOMERANG_INFINITE_DURABILITY = ModConfig.legendGearMagicBoomerangInfiniteDurability;
             CONFIG_MAGIC_BOOMERANG_DAMAGE = ModConfig.legendGearMagicBoomerangDamage;
             CONFIG_ENABLE_BAD_BOW = ModConfig.legendGearEnableBadBow;
