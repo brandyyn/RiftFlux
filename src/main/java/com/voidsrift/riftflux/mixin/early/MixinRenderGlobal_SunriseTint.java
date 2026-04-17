@@ -5,17 +5,12 @@ import com.voidsrift.riftflux.client.sky.SunriseSkyTintHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Vec3;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.FloatBuffer;
 
@@ -68,12 +63,7 @@ public abstract class MixinRenderGlobal_SunriseTint {
             require = 0
     )
     private void riftflux$tintSkyColorLowerColored(float red, float green, float blue, float partialTicks) {
-        float[] tint;
-        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
-            tint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
-        } else {
-            tint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
-        }
+        float[] tint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
         if (tint == null || tint.length < 3) {
             tint = SunriseSkyTintHelper.blendSkyTint(this.theWorld, Minecraft.getMinecraft(), partialTicks, red, green, blue);
         }
@@ -91,12 +81,7 @@ public abstract class MixinRenderGlobal_SunriseTint {
             require = 0
     )
     private void riftflux$tintSkyColorLowerVanilla(float red, float green, float blue, float partialTicks) {
-        float[] tint;
-        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
-            tint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
-        } else {
-            tint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
-        }
+        float[] tint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
         if (tint == null || tint.length < 3) {
             tint = SunriseSkyTintHelper.blendSkyTint(this.theWorld, Minecraft.getMinecraft(), partialTicks, red, green, blue);
         }
@@ -114,9 +99,9 @@ public abstract class MixinRenderGlobal_SunriseTint {
             require = 0
     )
     private void riftflux$applyTopSkyFogColor(int list, float partialTicks) {
-        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
-            float[] skyTint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
-            float[] fogTint = SunriseSkyTintHelper.resolveBetaStyleBiomeFogColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
+        float[] skyTint = this.riftflux$resolveSkyPassTint(partialTicks);
+        float[] fogTint = this.riftflux$resolveActiveFogColor(partialTicks);
+        if (skyTint != null && fogTint != null) {
             riftflux$setFogColor(skyTint);
             GL11.glCallList(list);
             riftflux$setFogColor(fogTint);
@@ -136,19 +121,60 @@ public abstract class MixinRenderGlobal_SunriseTint {
             require = 0
     )
     private void riftflux$forceLowerSkyCallColor(int list, float partialTicks) {
-        float[] tint;
-        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
-            tint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
-        } else {
-            tint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, Minecraft.getMinecraft(), partialTicks);
-        }
+        float[] tint = this.riftflux$resolveSkyPassTint(partialTicks);
         if (tint != null && tint.length >= 3) {
             GL11.glColor3f(tint[0], tint[1], tint[2]);
         }
-        GL11.glCallList(list);
-        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
-            riftflux$setFogColor(SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(this.theWorld, Minecraft.getMinecraft(), partialTicks));
+        float[] fogTint = this.riftflux$resolveActiveFogColor(partialTicks);
+        if (tint != null && fogTint != null) {
+            riftflux$setFogColor(tint);
+            GL11.glCallList(list);
+            riftflux$setFogColor(fogTint);
+            return;
         }
+        GL11.glCallList(list);
+    }
+
+    private float[] riftflux$resolveActiveFogColor(float partialTicks) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (this.theWorld == null || mc == null) {
+            return null;
+        }
+        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
+            float[] fogTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(this.theWorld, mc, partialTicks);
+            if (fogTint == null || fogTint.length < 3) {
+                return fogTint;
+            }
+            fogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
+            return SunriseSkyTintHelper.applyNightFogFloor(this.theWorld, partialTicks, fogTint);
+        }
+        if (SunriseSkyTintHelper.shouldMatchFogToSky(this.theWorld)) {
+            float[] fogTint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, mc, partialTicks);
+            if (fogTint == null || fogTint.length < 3) {
+                return fogTint;
+            }
+            fogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
+            return SunriseSkyTintHelper.applyNightFogFloor(this.theWorld, partialTicks, fogTint);
+        }
+        if (SunriseSkyTintHelper.shouldUseBlackNightFog(this.theWorld, partialTicks)) {
+            float[] fogTint = SunriseSkyTintHelper.resolveBlackNightFogColor(this.theWorld, mc, partialTicks);
+            if (fogTint == null || fogTint.length < 3) {
+                return fogTint;
+            }
+            return SunriseSkyTintHelper.applyNightFogFloor(this.theWorld, partialTicks, fogTint);
+        }
+        return null;
+    }
+
+    private float[] riftflux$resolveSkyPassTint(float partialTicks) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (this.theWorld == null || mc == null) {
+            return null;
+        }
+        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
+            return SunriseSkyTintHelper.resolveBetaStyleClearColor(this.theWorld, mc, partialTicks);
+        }
+        return SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, mc, partialTicks);
     }
 
     private static void riftflux$setFogColor(float[] rgb) {
@@ -161,70 +187,4 @@ public abstract class MixinRenderGlobal_SunriseTint {
         FogStateCompat.fog(GL11.GL_FOG_COLOR, RIFTFLUX_FOG_BUFFER);
     }
 
-    @Inject(method = "renderSky(F)V", at = @At("RETURN"), require = 0)
-    private void riftflux$drawDedicatedBetaHorizon(float partialTicks, CallbackInfo ci) {
-        if (!SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
-            return;
-        }
-
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.renderViewEntity == null || this.theWorld == null || !this.theWorld.provider.isSurfaceWorld()) {
-            return;
-        }
-
-        float[] lowerSkyTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(this.theWorld, mc, partialTicks);
-        float[] skyTint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, mc, partialTicks);
-        if (lowerSkyTint == null || skyTint == null) {
-            return;
-        }
-
-        Vec3 cameraPos = mc.renderViewEntity.getPosition(partialTicks);
-        if (cameraPos == null) {
-            return;
-        }
-
-        double horizonDelta = cameraPos.yCoord - this.theWorld.getHorizon();
-        float horizonY = (float) (-horizonDelta);
-
-        GL11.glPushMatrix();
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
-        GL11.glDisable(GL11.GL_FOG);
-        GL11.glDisable(GL11.GL_CULL_FACE);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glDepthMask(false);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-        riftflux$drawHorizonGradientBand(horizonY, skyTint, lowerSkyTint);
-
-        GL11.glDepthMask(true);
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glEnable(GL11.GL_FOG);
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glPopMatrix();
-    }
-
-    private static void riftflux$drawHorizonGradientBand(float horizonY, float[] topTint, float[] bottomTint) {
-        final Tessellator tessellator = Tessellator.instance;
-        final int segments = 64;
-        final double radius = 384.0D;
-        final double topY = horizonY + 120.0D;
-        final double bottomY = horizonY - 24.0D;
-
-        GL11.glShadeModel(GL11.GL_SMOOTH);
-        tessellator.startDrawing(8);
-        for (int i = 0; i <= segments; i++) {
-            double angle = (double) i * Math.PI * 2.0D / (double) segments;
-            double x = Math.sin(angle) * radius;
-            double z = Math.cos(angle) * radius;
-            tessellator.setColorRGBA_F(topTint[0], topTint[1], topTint[2], 1.0F);
-            tessellator.addVertex(x, topY, z);
-            tessellator.setColorRGBA_F(bottomTint[0], bottomTint[1], bottomTint[2], 1.0F);
-            tessellator.addVertex(x, bottomY, z);
-        }
-        tessellator.draw();
-        GL11.glShadeModel(GL11.GL_FLAT);
-    }
 }

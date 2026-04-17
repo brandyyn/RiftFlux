@@ -29,6 +29,7 @@ import com.voidsrift.riftflux.offlawn.client.OffLawnClientContent;
 import com.voidsrift.riftflux.pumpkinpastures.PumpkinPasturesContent;
 import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.wam.WAMContent;
+import com.voidsrift.riftflux.util.RFPlantContext;
 import com.voidsrift.riftflux.tweaks.ladder.client.DoubleSidedLadderRenderer;
 import com.voidsrift.riftflux.tweaks.ladder.client.RFRenderIds;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
@@ -109,6 +110,18 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void applyFenceOverrideSync(boolean fullSync, int dimensionId, boolean enabled, int[] coordinates) {
         FenceOverrideClientState.applySync(fullSync, dimensionId, enabled, coordinates);
+    }
+
+    @Override
+    public void applyCrossedPlantFacingSync(int dimensionId, int x, int y, int z, int facing) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null || mc.theWorld.provider == null) {
+            return;
+        }
+        if (mc.theWorld.provider.dimensionId != dimensionId) {
+            return;
+        }
+        RFPlantContext.markCrossedPlantFacing(mc.theWorld, x, y, z, facing);
     }
 
     @Override

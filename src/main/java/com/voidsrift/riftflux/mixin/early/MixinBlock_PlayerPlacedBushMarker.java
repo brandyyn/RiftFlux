@@ -8,6 +8,7 @@ import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,7 +27,9 @@ public abstract class MixinBlock_PlayerPlacedBushMarker {
     private void riftflux$markBushPlayerPlaced(World world, int x, int y, int z,
                                                EntityLivingBase placer, ItemStack stack,
                                                CallbackInfo ci) {
-        if (!ModConfig.allowPlantsOnAnyBlock && !ModConfig.directionalCrossedPlantRenderingByPlacement) {
+        boolean shouldMarkFacing = ModConfig.directionalCrossedPlantRenderingByPlacement
+                && ModConfig.directionalCrossedPlantFacePlayerOnPlacement;
+        if (!ModConfig.allowPlantsOnAnyBlock && !shouldMarkFacing) {
             return;
         }
 
@@ -41,10 +44,23 @@ public abstract class MixinBlock_PlayerPlacedBushMarker {
         }
 
         RFPlantContext.markPlayerPlaced(world, x, y, z);
-        RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y, z, placer);
+        if (shouldMarkFacing) {
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y, z, placer);
+        }
         if (((Object) this) instanceof BlockDoublePlant) {
+            if (world != null
+                    && world.getBlock(x, y, z) == (Block) (Object) this
+                    && world.getBlock(x, y + 1, z) == (Block) (Object) this) {
+                int lowerMeta = world.getBlockMetadata(x, y, z) & 7;
+                if (lowerMeta == 0) {
+                    int sunflowerFacing = ((MathHelper.floor_double((double) (placer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3) + 3) % 4;
+                    world.setBlockMetadataWithNotify(x, y + 1, z, 8 | sunflowerFacing, 2);
+                }
+            }
             RFPlantContext.markPlayerPlaced(world, x, y + 1, z);
-            RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y + 1, z, placer);
+            if (shouldMarkFacing) {
+                RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y + 1, z, placer);
+            }
         }
     }
 }

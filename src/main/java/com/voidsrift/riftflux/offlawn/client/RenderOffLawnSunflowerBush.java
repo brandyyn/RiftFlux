@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.offlawn.client;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
+import com.voidsrift.riftflux.mixin.accessor.angelica.WorldSliceAccessor;
 import com.voidsrift.riftflux.offlawn.OffLawnRenderIds;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
@@ -9,6 +11,7 @@ import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.ChunkCache;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -39,7 +42,10 @@ public class RenderOffLawnSunflowerBush implements ISimpleBlockRenderingHandler 
         if (ModConfig.directionalCrossedPlantRenderingByPlacement) {
             int anchorY = getFacingAnchorY(world, x, y, z);
             int fallbackFacing = (int) (((long) (x * 73428767) ^ (long) (anchorY * 912367) ^ (long) (z * 1315423911)) & 3L);
-            int facing = RFPlantContext.getCrossedPlantFacing(world instanceof World ? (World) world : null, x, anchorY, z, fallbackFacing);
+            int facing = fallbackFacing;
+            if (ModConfig.directionalCrossedPlantFacePlayerOnPlacement) {
+                facing = RFPlantContext.getCrossedPlantFacing(resolveWorld(world), x, anchorY, z, fallbackFacing);
+            }
             renderDirectionalPlane(tessellator, x, y, z, icon, facing);
         } else {
             renderFixedCross(tessellator, x, y, z, icon);
@@ -55,6 +61,23 @@ public class RenderOffLawnSunflowerBush implements ISimpleBlockRenderingHandler 
     @Override
     public int getRenderId() {
         return OffLawnRenderIds.sunflowerBushRenderId;
+    }
+
+    private static World resolveWorld(IBlockAccess access) {
+        if (access instanceof World) {
+            return (World) access;
+        }
+        if (access instanceof WorldSliceAccessor) {
+            return ((WorldSliceAccessor) access).riftflux$getWorld();
+        }
+        if (access instanceof ChunkCache) {
+            try {
+                return ((ChunkCacheAccessor) access).riftflux$getWorldObj();
+            } catch (Throwable ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private static void renderFixedCross(Tessellator tessellator, int x, int y, int z, IIcon icon) {
@@ -120,16 +143,38 @@ public class RenderOffLawnSunflowerBush implements ISimpleBlockRenderingHandler 
         double centerZ = z + 0.5D;
         double y0 = y;
         double y1 = y + 1.0D;
+        double diagonal = Math.sqrt(0.5D);
+        int cardinalFacing = facing & 3;
+        switch (cardinalFacing) {
+            case 0:
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, -diagonal, -diagonal, minU, minV, maxU, maxV);
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, diagonal, -diagonal, minU, minV, maxU, maxV);
+                break;
+            case 1:
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, diagonal, -diagonal, minU, minV, maxU, maxV);
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, diagonal, diagonal, minU, minV, maxU, maxV);
+                break;
+            case 2:
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, diagonal, diagonal, minU, minV, maxU, maxV);
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, -diagonal, diagonal, minU, minV, maxU, maxV);
+                break;
+            default:
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, -diagonal, diagonal, minU, minV, maxU, maxV);
+                renderTwoSidedPlane(tessellator, centerX, centerZ, y0, y1, half, -diagonal, -diagonal, minU, minV, maxU, maxV);
+                break;
+        }
+    }
 
-        double angle = (double) (facing & 3) * (Math.PI / 2.0D) + (Math.PI / 4.0D);
-        double dirX = Math.cos(angle);
-        double dirZ = Math.sin(angle);
-
-        double x1 = centerX - dirX * half;
-        double z1 = centerZ - dirZ * half;
-        double x2 = centerX + dirX * half;
-        double z2 = centerZ + dirZ * half;
-
+    private static void renderTwoSidedPlane(Tessellator tessellator,
+                                            double centerX, double centerZ, double y0, double y1,
+                                            double half, double frontX, double frontZ,
+                                            double minU, double minV, double maxU, double maxV) {
+        double tangentX = frontZ;
+        double tangentZ = -frontX;
+        double x1 = centerX - tangentX * half;
+        double z1 = centerZ - tangentZ * half;
+        double x2 = centerX + tangentX * half;
+        double z2 = centerZ + tangentZ * half;
         addQuad(
                 tessellator,
                 x1, y1, z1, minU, minV,
@@ -143,28 +188,6 @@ public class RenderOffLawnSunflowerBush implements ISimpleBlockRenderingHandler 
                 x2, y0, z2, maxU, maxV,
                 x1, y0, z1, minU, maxV,
                 x1, y1, z1, minU, minV
-        );
-
-        double dirX2 = -dirZ;
-        double dirZ2 = dirX;
-        double x3 = centerX - dirX2 * half;
-        double z3 = centerZ - dirZ2 * half;
-        double x4 = centerX + dirX2 * half;
-        double z4 = centerZ + dirZ2 * half;
-
-        addQuad(
-                tessellator,
-                x3, y1, z3, minU, minV,
-                x3, y0, z3, minU, maxV,
-                x4, y0, z4, maxU, maxV,
-                x4, y1, z4, maxU, minV
-        );
-        addQuad(
-                tessellator,
-                x4, y1, z4, maxU, minV,
-                x4, y0, z4, maxU, maxV,
-                x3, y0, z3, minU, maxV,
-                x3, y1, z3, minU, minV
         );
     }
 

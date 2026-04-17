@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.offlawn;
 
+import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -35,6 +36,12 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
 
     @Override
     public boolean canPlaceBlockAt(World world, int x, int y, int z) {
+        if (ModConfig.allowPlantsOnAnyBlock) {
+            Block support = world.getBlock(x, y - 1, z);
+            if (support != null && support.getMaterial().isSolid() && world.isAirBlock(x, y + 1, z)) {
+                return true;
+            }
+        }
         return super.canPlaceBlockAt(world, x, y, z)
                 || (canPlaceOnBeanstalk(world, x, y, z) && world.isAirBlock(x, y + 1, z));
     }
@@ -49,6 +56,12 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
 
         if (canPlaceOnBeanstalk(world, x, y, z)) {
             return world.getBlock(x, y + 1, z) == this;
+        }
+        if (ModConfig.allowPlantsOnAnyBlock) {
+            Block support = world.getBlock(x, y - 1, z);
+            if (support != null && support.getMaterial().isSolid()) {
+                return world.getBlock(x, y + 1, z) == this;
+            }
         }
         return super.canBlockStay(world, x, y, z);
     }
@@ -91,9 +104,21 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
         if (!BlockDoublePlant.func_149887_c(world.getBlockMetadata(x, y, z))) {
             world.setBlockMetadataWithNotify(x, y, z, 1, 2);
         }
-        world.setBlock(x, y + 1, z, this, 8, 2);
-        RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y, z, placer);
-        RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y + 1, z, placer);
+        boolean shouldMarkFacing = ModConfig.directionalCrossedPlantRenderingByPlacement
+                && ModConfig.directionalCrossedPlantFacePlayerOnPlacement;
+        int topMeta = 8;
+        if (shouldMarkFacing && placer != null) {
+            int sunflowerFacing = ((net.minecraft.util.MathHelper
+                    .floor_double((double) (placer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3) + 3) % 4;
+            topMeta = 8 | sunflowerFacing;
+        }
+        world.setBlock(x, y + 1, z, this, topMeta, 2);
+        RFPlantContext.markPlayerPlaced(world, x, y, z);
+        RFPlantContext.markPlayerPlaced(world, x, y + 1, z);
+        if (shouldMarkFacing && placer != null) {
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y, z, placer);
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y + 1, z, placer);
+        }
     }
 
     @Override

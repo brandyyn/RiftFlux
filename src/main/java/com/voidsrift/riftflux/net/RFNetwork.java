@@ -82,5 +82,8 @@ public final class RFNetwork {
 
         // Nimatin jump charge (ID 18)
         CH.registerMessage(MsgNimatinJump.Handler.class, MsgNimatinJump.class, 18, Side.SERVER);
+
+        // Crossed-plant facing sync (ID 19)
+        CH.registerMessage(MsgSyncCrossedPlantFacing.Handler.class, MsgSyncCrossedPlantFacing.class, 19, Side.CLIENT);
     }
 }

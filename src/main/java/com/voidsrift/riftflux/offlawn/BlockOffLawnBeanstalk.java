@@ -11,6 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
@@ -65,6 +66,46 @@ public class BlockOffLawnBeanstalk extends BlockBush implements IGrowable, IShea
     @Override
     public boolean renderAsNormalBlock() {
         return false;
+    }
+
+    @Override
+    public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side,
+                                    float hitX, float hitY, float hitZ) {
+        if (player == null) {
+            return false;
+        }
+        ItemStack held = player.getCurrentEquippedItem();
+        if (held == null || held.getItem() != Item.getItemFromBlock(this)) {
+            return false;
+        }
+
+        int topY = y;
+        while (topY < 255 && world.getBlock(x, topY + 1, z) == this) {
+            topY++;
+        }
+        if (topY >= 255 || !world.isAirBlock(x, topY + 1, z)) {
+            return false;
+        }
+
+        if (!world.isRemote) {
+            world.setBlock(x, topY + 1, z, this, 0, 3);
+            world.playSoundEffect(
+                    x + 0.5D,
+                    topY + 1.5D,
+                    z + 0.5D,
+                    this.stepSound.getStepResourcePath(),
+                    (this.stepSound.getVolume() + 1.0F) / 2.0F,
+                    this.stepSound.getPitch() * 0.8F
+            );
+            if (!player.capabilities.isCreativeMode) {
+                held.stackSize--;
+                if (held.stackSize <= 0) {
+                    player.setCurrentItemOrArmor(0, null);
+                }
+            }
+        }
+
+        return true;
     }
 
     @Override

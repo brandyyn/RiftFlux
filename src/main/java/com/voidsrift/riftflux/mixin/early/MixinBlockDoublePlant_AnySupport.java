@@ -4,11 +4,16 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoublePlant;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockDoublePlant.class)
@@ -98,6 +103,32 @@ public abstract class MixinBlockDoublePlant_AnySupport {
 
         if (ground.getMaterial().isSolid()) {
             cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "onBlockPlacedBy", at = @At("TAIL"))
+    private void riftflux$markDoublePlantPlacement(World world, int x, int y, int z,
+                                                   EntityLivingBase placer, ItemStack stack,
+                                                   CallbackInfo ci) {
+        boolean shouldMarkFacing = ModConfig.directionalCrossedPlantRenderingByPlacement
+                && ModConfig.directionalCrossedPlantFacePlayerOnPlacement;
+        if (!ModConfig.allowPlantsOnAnyBlock && !shouldMarkFacing) {
+            return;
+        }
+        if (!(placer instanceof EntityPlayer)) {
+            return;
+        }
+
+        RFPlantContext.markPlayerPlaced(world, x, y, z);
+        RFPlantContext.markPlayerPlaced(world, x, y + 1, z);
+        if (shouldMarkFacing) {
+            int lowerMeta = world.getBlockMetadata(x, y, z) & 7;
+            if (lowerMeta == 0) {
+                int sunflowerFacing = ((MathHelper.floor_double((double) (placer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3) + 3) % 4;
+                world.setBlockMetadataWithNotify(x, y + 1, z, 8 | sunflowerFacing, 2);
+            }
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y, z, placer);
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, x, y + 1, z, placer);
         }
     }
 }

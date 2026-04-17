@@ -1,5 +1,7 @@
 package com.voidsrift.riftflux.util;
 
+import com.voidsrift.riftflux.net.MsgSyncCrossedPlantFacing;
+import com.voidsrift.riftflux.net.RFNetwork;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
@@ -72,6 +74,8 @@ public class RFPlantContext {
      */
     public static void markCrossedPlantFacingFromPlacer(World world, int x, int y, int z, EntityLivingBase placer) {
         if (placer == null) return;
+        // For crossed plants we store a direct "face the player" cardinal:
+        // 0=north, 1=east, 2=south, 3=west.
         int facing = MathHelper.floor_double((double) (placer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
         markCrossedPlantFacing(world, x, y, z, facing);
     }
@@ -90,6 +94,12 @@ public class RFPlantContext {
                 CROSSED_PLANT_FACING.put(world, map);
             }
             map.put(key, value);
+        }
+        if (!world.isRemote && world.provider != null && RFNetwork.CH != null) {
+            RFNetwork.CH.sendToDimension(
+                    new MsgSyncCrossedPlantFacing(world.provider.dimensionId, x, y, z, value & 3),
+                    world.provider.dimensionId
+            );
         }
     }
 

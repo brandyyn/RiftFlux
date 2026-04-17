@@ -8,7 +8,6 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -57,9 +56,11 @@ public abstract class MixinEntityRenderer_BlackNightFog {
             if (material != Material.water && material != Material.lava) {
                 float[] fogTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(world, this.mc, partialTicks);
                 if (fogTint != null && fogTint.length >= 3) {
-                    this.fogColorRed = fogTint[0];
-                    this.fogColorGreen = fogTint[1];
-                    this.fogColorBlue = fogTint[2];
+                    float[] desaturatedFogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
+                    desaturatedFogTint = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, desaturatedFogTint);
+                    this.fogColorRed = desaturatedFogTint[0];
+                    this.fogColorGreen = desaturatedFogTint[1];
+                    this.fogColorBlue = desaturatedFogTint[2];
                 }
             }
             return;
@@ -76,9 +77,11 @@ public abstract class MixinEntityRenderer_BlackNightFog {
             if (material != Material.water && material != Material.lava) {
                 float[] skyTint = SunriseSkyTintHelper.resolveSkyTintedColor(world, this.mc, partialTicks);
                 if (skyTint != null && skyTint.length >= 3) {
-                    this.fogColorRed = skyTint[0];
-                    this.fogColorGreen = skyTint[1];
-                    this.fogColorBlue = skyTint[2];
+                    float[] desaturatedSkyTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(skyTint);
+                    desaturatedSkyTint = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, desaturatedSkyTint);
+                    this.fogColorRed = desaturatedSkyTint[0];
+                    this.fogColorGreen = desaturatedSkyTint[1];
+                    this.fogColorBlue = desaturatedSkyTint[2];
                 }
             }
             return;
@@ -88,9 +91,17 @@ public abstract class MixinEntityRenderer_BlackNightFog {
             return;
         }
 
-        this.fogColorRed = 0.0F;
-        this.fogColorGreen = 0.0F;
-        this.fogColorBlue = 0.0F;
+        float[] blackNightFog = SunriseSkyTintHelper.resolveBlackNightFogColor(world, this.mc, partialTicks);
+        if (blackNightFog != null && blackNightFog.length >= 3) {
+            blackNightFog = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, blackNightFog);
+            this.fogColorRed = blackNightFog[0];
+            this.fogColorGreen = blackNightFog[1];
+            this.fogColorBlue = blackNightFog[2];
+        } else {
+            this.fogColorRed = 0.0F;
+            this.fogColorGreen = 0.0F;
+            this.fogColorBlue = 0.0F;
+        }
     }
 
     @Redirect(
@@ -114,7 +125,7 @@ public abstract class MixinEntityRenderer_BlackNightFog {
             Block block = ActiveRenderInfo.getBlockAtEntityViewpoint(world, view, partialTicks);
             Material material = block == null ? Material.air : block.getMaterial();
             if (material != Material.water && material != Material.lava) {
-                float[] clearTint = SunriseSkyTintHelper.resolveBetaStyleClearColor(world, this.mc, partialTicks);
+                float[] clearTint = SunriseSkyTintHelper.resolveSkyTintedColor(world, this.mc, partialTicks);
                 if (clearTint != null && clearTint.length >= 3) {
                     finalRed = clearTint[0];
                     finalGreen = clearTint[1];
@@ -137,9 +148,12 @@ public abstract class MixinEntityRenderer_BlackNightFog {
                 }
             }
         } else if (SunriseSkyTintHelper.shouldUseBlackNightFog(world, partialTicks)) {
-            finalRed = 0.0F;
-            finalGreen = 0.0F;
-            finalBlue = 0.0F;
+            float[] skyTint = SunriseSkyTintHelper.resolveSkyTintedColor(world, this.mc, partialTicks);
+            if (skyTint != null && skyTint.length >= 3) {
+                finalRed = skyTint[0];
+                finalGreen = skyTint[1];
+                finalBlue = skyTint[2];
+            }
         }
 
         GL11.glClearColor(finalRed, finalGreen, finalBlue, alpha);

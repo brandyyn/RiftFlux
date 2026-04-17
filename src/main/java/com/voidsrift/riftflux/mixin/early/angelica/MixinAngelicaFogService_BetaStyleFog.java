@@ -24,14 +24,19 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
 
         Minecraft mc = Minecraft.getMinecraft();
         WorldClient world = mc == null ? null : mc.theWorld;
-        if (!SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)) {
-            return;
-        }
-
         float partialTicks = 0.0F;
-        float[] fogTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(world, mc, partialTicks);
+        float[] fogTint = null;
+        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)) {
+            fogTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(world, mc, partialTicks);
+        } else if (SunriseSkyTintHelper.shouldMatchFogToSky(world)) {
+            fogTint = SunriseSkyTintHelper.resolveSkyTintedColor(world, mc, partialTicks);
+        } else if (SunriseSkyTintHelper.shouldUseBlackNightFog(world, partialTicks)) {
+            fogTint = SunriseSkyTintHelper.resolveBlackNightFogColor(world, mc, partialTicks);
+        }
         if (fogTint != null && fogTint.length >= 3) {
-            cir.setReturnValue(new float[] { fogTint[0], fogTint[1], fogTint[2], 1.0F });
+            float[] desaturated = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
+            desaturated = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, desaturated);
+            cir.setReturnValue(new float[] { desaturated[0], desaturated[1], desaturated[2], 1.0F });
         }
     }
 

@@ -10,6 +10,7 @@ import net.minecraft.util.Vec3;
 public final class SunriseSkyTintHelper {
     private static final float DEFAULT_BETA_FOG_TINT_STRENGTH = 0.38F;
     private static final float DEFAULT_SKY_MATCH_TOLERANCE = 0.08F;
+    private static final float NIGHT_FOG_MIN_BRIGHTNESS = 0.03F;
     private static final float[] DEFAULT_OVERWORLD_SKY = toRgbFloats(Color.getHSBColor(0.62222224F, 0.5F, 1.0F).getRGB());
 
     private SunriseSkyTintHelper() {
@@ -62,10 +63,18 @@ public final class SunriseSkyTintHelper {
     }
 
     public static boolean shouldUseBetaStyleBiomeFog(WorldClient world) {
-        return ModConfig.celestialBetaStyleFogBiomeTint
+        return (ModConfig.celestialBetaStyleFogBiomeTint || shouldUseBetaStyleBiomeFogWeatherEvent(world))
                 && world != null
                 && world.provider != null
                 && !world.provider.hasNoSky;
+    }
+
+    public static boolean shouldUseBetaStyleBiomeFogWeatherEvent(WorldClient world) {
+        return ModConfig.celestialBetaStyleFogBiomeTintWeatherEvent
+                && world != null
+                && world.provider != null
+                && !world.provider.hasNoSky
+                && (world.getRainStrength(1.0F) > 0.01F || world.getWeightedThunderStrength(1.0F) > 0.01F);
     }
 
     public static float[] resolveRawSkyColor(WorldClient world, Minecraft mc, float partialTicks) {
@@ -185,6 +194,72 @@ public final class SunriseSkyTintHelper {
             timeOfDay += 24000L;
         }
         return timeOfDay >= 13000L && timeOfDay < 23000L;
+    }
+
+    public static float[] resolveBlackNightFogColor(WorldClient world, Minecraft mc, float partialTicks) {
+        if (!shouldUseBlackNightFog(world, partialTicks)) {
+            return null;
+        }
+
+        float[] skyTint = resolveSkyTintedColor(world, mc, partialTicks);
+        if (skyTint == null || skyTint.length < 3) {
+            float floor = NIGHT_FOG_MIN_BRIGHTNESS;
+            return new float[] { floor, floor, floor };
+        }
+
+        float[] desaturated = applyConfiguredFogDesaturation(skyTint);
+        float floor = NIGHT_FOG_MIN_BRIGHTNESS;
+        return new float[] {
+                clamp01(desaturated[0] * 0.45F + floor * 0.55F),
+                clamp01(desaturated[1] * 0.45F + floor * 0.55F),
+                clamp01(desaturated[2] * 0.45F + floor * 0.55F)
+        };
+    }
+
+    public static float[] applyNightFogFloor(WorldClient world, float partialTicks, float[] rgb) {
+        if (rgb == null || rgb.length < 3) {
+            return rgb;
+        }
+        if (world == null) {
+            return new float[] { clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2]) };
+        }
+        if (isSunriseOrSunsetActive(world, partialTicks)) {
+            return new float[] { clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2]) };
+        }
+        long timeOfDay = world.getWorldTime() % 24000L;
+        if (timeOfDay < 0L) {
+            timeOfDay += 24000L;
+        }
+        if (timeOfDay < 13000L || timeOfDay >= 23000L) {
+            return new float[] { clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2]) };
+        }
+
+        float floor = NIGHT_FOG_MIN_BRIGHTNESS;
+        return new float[] {
+                Math.max(clamp01(rgb[0]), floor),
+                Math.max(clamp01(rgb[1]), floor),
+                Math.max(clamp01(rgb[2]), floor)
+        };
+    }
+
+    public static float[] applyConfiguredFogDesaturation(float[] rgb) {
+        if (rgb == null || rgb.length < 3) {
+            return rgb;
+        }
+        float amount = clamp01(ModConfig.celestialFogDesaturationPercent / 100.0F);
+        if (amount <= 0.0F) {
+            return new float[] { clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2]) };
+        }
+
+        float red = clamp01(rgb[0]);
+        float green = clamp01(rgb[1]);
+        float blue = clamp01(rgb[2]);
+        float gray = clamp01(red * 0.299F + green * 0.587F + blue * 0.114F);
+        return new float[] {
+                red * (1.0F - amount) + gray * amount,
+                green * (1.0F - amount) + gray * amount,
+                blue * (1.0F - amount) + gray * amount
+        };
     }
 
     private static float[] getSunriseSunsetColors(WorldClient world, float partialTicks) {

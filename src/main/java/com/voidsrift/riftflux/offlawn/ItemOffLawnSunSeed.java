@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.offlawn;
 
+import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -40,7 +41,10 @@ public class ItemOffLawnSunSeed extends Item {
         if (soil == null || !(OffLawnContent.sunflowerBush instanceof IPlantable)) {
             return false;
         }
-        if (!soil.canSustainPlant(world, x, y, z, ForgeDirection.UP, (IPlantable) OffLawnContent.sunflowerBush)) {
+        boolean supportsAnyPlant = ModConfig.allowPlantsOnAnyBlock && soil.getMaterial().isSolid();
+        boolean supportsSunflower = soil == OffLawnContent.beanstalk
+                || soil.canSustainPlant(world, x, y, z, ForgeDirection.UP, (IPlantable) OffLawnContent.sunflowerBush);
+        if (!supportsAnyPlant && !supportsSunflower) {
             return false;
         }
 
@@ -50,8 +54,17 @@ public class ItemOffLawnSunSeed extends Item {
             world.setBlock(placeX, placeY, placeZ, OffLawnContent.sunflowerBush, 0, 3);
         }
 
-        RFPlantContext.markCrossedPlantFacingFromPlacer(world, placeX, placeY, placeZ, player);
-        RFPlantContext.markCrossedPlantFacingFromPlacer(world, placeX, placeY + 1, placeZ, player);
+        RFPlantContext.markPlayerPlaced(world, placeX, placeY, placeZ);
+        RFPlantContext.markPlayerPlaced(world, placeX, placeY + 1, placeZ);
+        boolean shouldMarkFacing = ModConfig.directionalCrossedPlantRenderingByPlacement
+                && ModConfig.directionalCrossedPlantFacePlayerOnPlacement;
+        if (shouldMarkFacing && player != null) {
+            int sunflowerFacing = ((net.minecraft.util.MathHelper
+                    .floor_double((double) (player.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3) + 3) % 4;
+            world.setBlockMetadataWithNotify(placeX, placeY + 1, placeZ, 8 | sunflowerFacing, 2);
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, placeX, placeY, placeZ, player);
+            RFPlantContext.markCrossedPlantFacingFromPlacer(world, placeX, placeY + 1, placeZ, player);
+        }
 
         if (OffLawnContent.sunflowerBush != null && OffLawnContent.sunflowerBush.stepSound != null) {
             world.playSoundEffect(

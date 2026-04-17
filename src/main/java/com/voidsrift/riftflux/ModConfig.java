@@ -111,7 +111,9 @@ public class ModConfig {
     public static boolean celestialFullSunriseSunsetTint;
     public static boolean celestialFogMatchesSky;
     public static boolean celestialBetaStyleFogBiomeTint;
+    public static boolean celestialBetaStyleFogBiomeTintWeatherEvent;
     public static boolean celestialBlackNightFog;
+    public static float celestialFogDesaturationPercent;
     public static int celestialVoidFogStartHeight;
     public static int celestialVoidParticleStartHeight;
     public static boolean betaStarsEnabled;
@@ -822,6 +824,7 @@ public class ModConfig {
 
     public static boolean allowPlantsOnAnyBlock;
     public static boolean directionalCrossedPlantRenderingByPlacement;
+    public static boolean directionalCrossedPlantFacePlayerOnPlacement;
 
     public static boolean strictMobSpawnsZeroBlockLight;
 
@@ -1544,11 +1547,25 @@ public class ModConfig {
                 false,
                 "If true, overworld fog keeps a desaturated beta-style grey and only tints toward non-default biome sky colors. Takes precedence over CelestialFogMatchesSky. [WIP]"
         );
+        celestialBetaStyleFogBiomeTintWeatherEvent = config.getBoolean(
+                "CelestialBetaStyleFogBiomeTintWeatherEvent",
+                "celestial",
+                false,
+                "If true, the beta-style biome fog temporarily activates during rain and thunderstorms even when CelestialBetaStyleFogBiomeTint itself is disabled."
+        );
         celestialBlackNightFog = config.getBoolean(
                 "CelestialBlackNightFog",
                 "celestial",
                 true,
                 "If true, night-time fog is forced fully black after sunrise and sunset tint have finished. Ignored while CelestialFogMatchesSky or CelestialBetaStyleFogBiomeTint is enabled."
+        );
+        celestialFogDesaturationPercent = config.getFloat(
+                "CelestialFogDesaturationPercent",
+                "celestial",
+                15.0F,
+                0.0F,
+                100.0F,
+                "Desaturates fog colors by this percentage for RiftFlux celestial fog modes (CelestialFogMatchesSky, CelestialBlackNightFog, CelestialBetaStyleFogBiomeTint). 0 disables desaturation."
         );
         celestialVoidFogStartHeight = config.getInt(
                 "CelestialVoidFogStartHeight",
@@ -4927,6 +4944,12 @@ public class ModConfig {
                 "client",
                 true,
                 "If true, crossed-plant rendering (flowers, tall grass, mushrooms, etc.) uses fixed world orientation based on player placement direction instead of the default crossed layout."
+        );
+        directionalCrossedPlantFacePlayerOnPlacement = config.getBoolean(
+                "DirectionalCrossedPlantFacePlayerOnPlacement",
+                "client",
+                true,
+                "If true, player-placed crossed plants store and use the player's facing direction at placement time. If false, directional crossed-plant rendering falls back to deterministic position-based orientation."
         );
 
         strictMobSpawnsZeroBlockLight = config.getBoolean(

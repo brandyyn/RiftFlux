@@ -26,4 +26,8 @@ public class CommonProxy {
     public void applyFenceOverrideSync(boolean fullSync, int dimensionId, boolean enabled, int[] coordinates) {
         // no-op on server
     }
+
+    public void applyCrossedPlantFacingSync(int dimensionId, int x, int y, int z, int facing) {
+        // no-op on server
+    }
 }

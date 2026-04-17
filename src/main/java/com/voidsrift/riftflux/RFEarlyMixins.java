@@ -70,9 +70,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.disableBonemeal) {
             mixins.add("early.MixinItemDye_DisableBonemeal");
         }
+        if (ModConfig.allowPlantsOnAnyBlock || ModConfig.directionalCrossedPlantRenderingByPlacement) {
+            mixins.add("early.MixinBlockDoublePlant_AnySupport");
+        }
         if (ModConfig.allowPlantsOnAnyBlock) {
             mixins.add("early.MixinBlockBush_AnySupport");
-            mixins.add("early.MixinBlockDoublePlant_AnySupport");
             mixins.add("early.MixinBiomeGenBase_WorldGenContext");
         }
         if (ModConfig.allowPlantsOnAnyBlock || ModConfig.directionalCrossedPlantRenderingByPlacement) {
@@ -223,6 +225,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("accessor.ModelBoxAccessor");
             mixins.add("accessor.PlayerControllerMPAccessor");
             mixins.add("accessor.ChunkCacheAccessor");
+            if (hasClass("com.gtnewhorizons.angelica.rendering.celeritas.world.WorldSlice")) {
+                mixins.add("accessor.angelica.WorldSliceAccessor");
+            }
             if (ModConfig.enableFenceTextureModule) {
                 mixins.add("early.MixinBlockFence_InfdevPlusTexture");
             }

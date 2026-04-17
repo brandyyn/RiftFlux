@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
+import com.voidsrift.riftflux.mixin.accessor.angelica.WorldSliceAccessor;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.client.renderer.RenderBlocks;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RenderBlocks.class)
@@ -39,7 +41,10 @@ public abstract class MixinRenderBlocks_DirectionalCrossedPlants {
         int anchorY = this.riftflux$getFacingAnchorY(blockX, blockY, blockZ);
         int fallbackFacing = (int) (((long) (blockX * 73428767) ^ (long) (anchorY * 912367) ^ (long) (blockZ * 1315423911)) & 3L);
         World world = this.riftflux$getWorldFromBlockAccess(this.blockAccess);
-        int facing = RFPlantContext.getCrossedPlantFacing(world, blockX, anchorY, blockZ, fallbackFacing);
+        int facing = fallbackFacing;
+        if (ModConfig.directionalCrossedPlantFacePlayerOnPlacement) {
+            facing = RFPlantContext.getCrossedPlantFacing(world, blockX, anchorY, blockZ, fallbackFacing);
+        }
 
         this.riftflux$drawDirectionalCross(icon, x, y, z, scale, facing);
         ci.cancel();
@@ -49,6 +54,9 @@ public abstract class MixinRenderBlocks_DirectionalCrossedPlants {
     private World riftflux$getWorldFromBlockAccess(IBlockAccess access) {
         if (access instanceof World) {
             return (World) access;
+        }
+        if (access instanceof WorldSliceAccessor) {
+            return ((WorldSliceAccessor) access).riftflux$getWorld();
         }
         if (access instanceof ChunkCache) {
             return ((ChunkCacheAccessor) access).riftflux$getWorldObj();
@@ -85,24 +93,38 @@ public abstract class MixinRenderBlocks_DirectionalCrossedPlants {
         double centerZ = z + 0.5D;
         double y0 = y;
         double y1 = y + scale;
-
-        double angle = (double) (facing & 3) * (Math.PI / 2.0D) + (Math.PI / 4.0D);
-        double dirX = Math.cos(angle);
-        double dirZ = Math.sin(angle);
-
-        this.riftflux$drawTwoSidedPlane(centerX, centerZ, y0, y1, half, dirX, dirZ, minU, minV, maxU, maxV);
-        this.riftflux$drawTwoSidedPlane(centerX, centerZ, y0, y1, half, -dirZ, dirX, minU, minV, maxU, maxV);
+        double diagonal = Math.sqrt(0.5D);
+        int cardinalFacing = facing & 3;
+        switch (cardinalFacing) {
+            case 0:
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, -diagonal, -diagonal, minU, minV, maxU, maxV);
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, diagonal, -diagonal, minU, minV, maxU, maxV);
+                break;
+            case 1:
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, diagonal, -diagonal, minU, minV, maxU, maxV);
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, diagonal, diagonal, minU, minV, maxU, maxV);
+                break;
+            case 2:
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, diagonal, diagonal, minU, minV, maxU, maxV);
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, -diagonal, diagonal, minU, minV, maxU, maxV);
+                break;
+            default:
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, -diagonal, diagonal, minU, minV, maxU, maxV);
+                this.riftflux$drawPlaneFacing(centerX, centerZ, y0, y1, half, -diagonal, -diagonal, minU, minV, maxU, maxV);
+                break;
+        }
     }
 
     @Unique
-    private void riftflux$drawTwoSidedPlane(double centerX, double centerZ, double y0, double y1, double half,
-                                            double dirX, double dirZ,
-                                            double minU, double minV, double maxU, double maxV) {
-        double x1 = centerX - dirX * half;
-        double z1 = centerZ - dirZ * half;
-        double x2 = centerX + dirX * half;
-        double z2 = centerZ + dirZ * half;
-
+    private void riftflux$drawPlaneFacing(double centerX, double centerZ, double y0, double y1, double half,
+                                          double frontX, double frontZ,
+                                          double minU, double minV, double maxU, double maxV) {
+        double tangentX = frontZ;
+        double tangentZ = -frontX;
+        double x1 = centerX - tangentX * half;
+        double z1 = centerZ - tangentZ * half;
+        double x2 = centerX + tangentX * half;
+        double z2 = centerZ + tangentZ * half;
         Tessellator tessellator = Tessellator.instance;
 
         this.riftflux$addQuad(
@@ -119,6 +141,35 @@ public abstract class MixinRenderBlocks_DirectionalCrossedPlants {
                 x1, y0, z1, minU, maxV,
                 x1, y1, z1, minU, minV
         );
+    }
+
+    @Redirect(
+            method = "renderBlockDoublePlant",
+            at = @At(value = "INVOKE", target = "Ljava/lang/Math;cos(D)D", ordinal = 0),
+            require = 0
+    )
+    private double riftflux$usePlacedFacingForVanillaSunflowerHead(double value, BlockDoublePlant block, int x, int y, int z) {
+        if (!ModConfig.directionalCrossedPlantRenderingByPlacement
+                || !ModConfig.directionalCrossedPlantFacePlayerOnPlacement
+                || this.blockAccess == null) {
+            return Math.cos(value);
+        }
+
+        try {
+            int topMeta = this.blockAccess.getBlockMetadata(x, y, z);
+            if (!BlockDoublePlant.func_149887_c(topMeta)) {
+                return Math.cos(value);
+            }
+            int lowerMeta = this.blockAccess.getBlockMetadata(x, y - 1, z);
+            if (BlockDoublePlant.func_149890_d(lowerMeta) != 0) {
+                return Math.cos(value);
+            }
+            int facing = topMeta & 3;
+            double angle = (double) facing * (Math.PI / 2.0D);
+            return angle / (Math.PI * 0.1D);
+        } catch (Throwable ignored) {
+            return Math.cos(value);
+        }
     }
 
     @Unique
