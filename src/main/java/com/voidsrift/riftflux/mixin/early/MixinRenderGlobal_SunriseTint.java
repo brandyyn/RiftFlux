@@ -141,20 +141,10 @@ public abstract class MixinRenderGlobal_SunriseTint {
             return null;
         }
         if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(this.theWorld)) {
-            float[] fogTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(this.theWorld, mc, partialTicks);
-            if (fogTint == null || fogTint.length < 3) {
-                return fogTint;
-            }
-            fogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
-            return SunriseSkyTintHelper.applyNightFogFloor(this.theWorld, partialTicks, fogTint);
+            return SunriseSkyTintHelper.resolveEffectiveBetaStyleFogColor(this.theWorld, mc, partialTicks, null);
         }
         if (SunriseSkyTintHelper.shouldMatchFogToSky(this.theWorld)) {
-            float[] fogTint = SunriseSkyTintHelper.resolveSkyTintedColor(this.theWorld, mc, partialTicks);
-            if (fogTint == null || fogTint.length < 3) {
-                return fogTint;
-            }
-            fogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
-            return SunriseSkyTintHelper.applyNightFogFloor(this.theWorld, partialTicks, fogTint);
+            return SunriseSkyTintHelper.resolveEffectiveSkyMatchingFogColor(this.theWorld, mc, partialTicks, null);
         }
         if (SunriseSkyTintHelper.shouldUseBlackNightFog(this.theWorld, partialTicks)) {
             float[] fogTint = SunriseSkyTintHelper.resolveBlackNightFogColor(this.theWorld, mc, partialTicks);

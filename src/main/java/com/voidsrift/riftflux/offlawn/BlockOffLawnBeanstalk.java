@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.offlawn;
 
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -49,7 +50,7 @@ public class BlockOffLawnBeanstalk extends BlockBush implements IGrowable, IShea
 
     @Override
     public boolean canPlaceBlockAt(World world, int x, int y, int z) {
-        return canBlockStay(world, x, y, z);
+        return canBlockStay(world, x, y, z) && isWithinMaxGrowthLevel(world, x, y, z);
     }
 
     @Override
@@ -84,6 +85,9 @@ public class BlockOffLawnBeanstalk extends BlockBush implements IGrowable, IShea
             topY++;
         }
         if (topY >= 255 || !world.isAirBlock(x, topY + 1, z)) {
+            return false;
+        }
+        if (getBeanstalkHeightAt(world, x, topY, z) >= getMaxGrowthLevel()) {
             return false;
         }
 
@@ -148,6 +152,9 @@ public class BlockOffLawnBeanstalk extends BlockBush implements IGrowable, IShea
         if (!canBlockStay(world, x, y, z)) {
             return false;
         }
+        if (getBeanstalkHeightAt(world, x, y, z) >= getMaxGrowthLevel()) {
+            return false;
+        }
         return world.isAirBlock(x, y + 1, z) && world.isAirBlock(x, y + 2, z);
     }
 
@@ -167,6 +174,28 @@ public class BlockOffLawnBeanstalk extends BlockBush implements IGrowable, IShea
         } else if (world.getBlock(x, y + 1, z) != this && OffLawnContent.sunflowerBush instanceof BlockOffLawnSunflowerBush) {
             ((BlockOffLawnSunflowerBush) OffLawnContent.sunflowerBush).placeAt(world, x, y + 1, z, 2);
         }
+    }
+
+    private boolean isWithinMaxGrowthLevel(World world, int x, int y, int z) {
+        return getBeanstalkHeightAt(world, x, y, z) <= getMaxGrowthLevel();
+    }
+
+    private int getBeanstalkHeightAt(World world, int x, int y, int z) {
+        int bottomY = y;
+        while (bottomY > 0 && world.getBlock(x, bottomY - 1, z) == this) {
+            bottomY--;
+        }
+
+        int topY = y;
+        while (topY < 255 && world.getBlock(x, topY + 1, z) == this) {
+            topY++;
+        }
+
+        return topY - bottomY + 1;
+    }
+
+    private static int getMaxGrowthLevel() {
+        return MathHelper.clamp_int(ModConfig.offLawnBeanstalkMaxGrowthLevel, 1, 256);
     }
 
     @Override

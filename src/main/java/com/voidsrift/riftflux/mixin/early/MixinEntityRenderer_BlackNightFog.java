@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import com.voidsrift.riftflux.client.sky.FogDistanceGradientState;
 import com.voidsrift.riftflux.client.sky.SunriseSkyTintHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -8,6 +9,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.potion.Potion;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -54,15 +56,15 @@ public abstract class MixinEntityRenderer_BlackNightFog {
             Material material = block == null ? Material.air : block.getMaterial();
 
             if (material != Material.water && material != Material.lava) {
-                float[] fogTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(world, this.mc, partialTicks);
+                float[] fallback = new float[] { this.fogColorRed, this.fogColorGreen, this.fogColorBlue };
+                float[] fogTint = SunriseSkyTintHelper.resolveEffectiveBetaStyleFogColor(world, this.mc, partialTicks, fallback);
                 if (fogTint != null && fogTint.length >= 3) {
-                    float[] desaturatedFogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
-                    desaturatedFogTint = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, desaturatedFogTint);
-                    this.fogColorRed = desaturatedFogTint[0];
-                    this.fogColorGreen = desaturatedFogTint[1];
-                    this.fogColorBlue = desaturatedFogTint[2];
+                    this.fogColorRed = fogTint[0];
+                    this.fogColorGreen = fogTint[1];
+                    this.fogColorBlue = fogTint[2];
                 }
             }
+            riftflux$storeDistanceGradientFogColor(world, partialTicks);
             return;
         }
 
@@ -75,33 +77,35 @@ public abstract class MixinEntityRenderer_BlackNightFog {
             Material material = block == null ? Material.air : block.getMaterial();
 
             if (material != Material.water && material != Material.lava) {
-                float[] skyTint = SunriseSkyTintHelper.resolveSkyTintedColor(world, this.mc, partialTicks);
+                float[] fallback = new float[] { this.fogColorRed, this.fogColorGreen, this.fogColorBlue };
+                float[] skyTint = SunriseSkyTintHelper.resolveEffectiveSkyMatchingFogColor(world, this.mc, partialTicks, fallback);
                 if (skyTint != null && skyTint.length >= 3) {
-                    float[] desaturatedSkyTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(skyTint);
-                    desaturatedSkyTint = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, desaturatedSkyTint);
-                    this.fogColorRed = desaturatedSkyTint[0];
-                    this.fogColorGreen = desaturatedSkyTint[1];
-                    this.fogColorBlue = desaturatedSkyTint[2];
+                    this.fogColorRed = skyTint[0];
+                    this.fogColorGreen = skyTint[1];
+                    this.fogColorBlue = skyTint[2];
                 }
             }
+            riftflux$storeDistanceGradientFogColor(world, partialTicks);
             return;
         }
 
-        if (!SunriseSkyTintHelper.shouldUseBlackNightFog(world, partialTicks)) {
+        if (SunriseSkyTintHelper.shouldUseBlackNightFog(world, partialTicks)) {
+            float[] blackNightFog = SunriseSkyTintHelper.resolveBlackNightFogColor(world, this.mc, partialTicks);
+            if (blackNightFog != null && blackNightFog.length >= 3) {
+                blackNightFog = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, blackNightFog);
+                this.fogColorRed = blackNightFog[0];
+                this.fogColorGreen = blackNightFog[1];
+                this.fogColorBlue = blackNightFog[2];
+            } else {
+                this.fogColorRed = 0.0F;
+                this.fogColorGreen = 0.0F;
+                this.fogColorBlue = 0.0F;
+            }
+            riftflux$storeDistanceGradientFogColor(world, partialTicks);
             return;
         }
 
-        float[] blackNightFog = SunriseSkyTintHelper.resolveBlackNightFogColor(world, this.mc, partialTicks);
-        if (blackNightFog != null && blackNightFog.length >= 3) {
-            blackNightFog = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, blackNightFog);
-            this.fogColorRed = blackNightFog[0];
-            this.fogColorGreen = blackNightFog[1];
-            this.fogColorBlue = blackNightFog[2];
-        } else {
-            this.fogColorRed = 0.0F;
-            this.fogColorGreen = 0.0F;
-            this.fogColorBlue = 0.0F;
-        }
+        riftflux$storeDistanceGradientFogColor(world, partialTicks);
     }
 
     @Redirect(
@@ -157,5 +161,30 @@ public abstract class MixinEntityRenderer_BlackNightFog {
         }
 
         GL11.glClearColor(finalRed, finalGreen, finalBlue, alpha);
+    }
+
+    private void riftflux$storeDistanceGradientFogColor(WorldClient world, float partialTicks) {
+        if (!SunriseSkyTintHelper.shouldUseFogDistanceGradient(world)
+                || this.mc == null
+                || !(this.mc.renderViewEntity instanceof EntityLivingBase)
+                || this.cloudFog) {
+            FogDistanceGradientState.invalidate(world);
+            return;
+        }
+
+        EntityLivingBase view = (EntityLivingBase) this.mc.renderViewEntity;
+        if (view.isPotionActive(Potion.blindness)) {
+            FogDistanceGradientState.invalidate(world);
+            return;
+        }
+
+        Block block = ActiveRenderInfo.getBlockAtEntityViewpoint(world, view, partialTicks);
+        Material material = block == null ? Material.air : block.getMaterial();
+        if (material == Material.water || material == Material.lava) {
+            FogDistanceGradientState.invalidate(world);
+            return;
+        }
+
+        FogDistanceGradientState.setFogColor(world, this.fogColorRed, this.fogColorGreen, this.fogColorBlue);
     }
 }

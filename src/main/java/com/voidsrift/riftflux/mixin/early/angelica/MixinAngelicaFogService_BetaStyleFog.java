@@ -26,17 +26,23 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
         WorldClient world = mc == null ? null : mc.theWorld;
         float partialTicks = 0.0F;
         float[] fogTint = null;
+        boolean processed = false;
         if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)) {
-            fogTint = SunriseSkyTintHelper.resolveBetaStyleLowerSkyColor(world, mc, partialTicks);
+            fogTint = SunriseSkyTintHelper.resolveEffectiveBetaStyleFogColor(world, mc, partialTicks, null);
+            processed = true;
         } else if (SunriseSkyTintHelper.shouldMatchFogToSky(world)) {
-            fogTint = SunriseSkyTintHelper.resolveSkyTintedColor(world, mc, partialTicks);
+            fogTint = SunriseSkyTintHelper.resolveEffectiveSkyMatchingFogColor(world, mc, partialTicks, null);
+            processed = true;
         } else if (SunriseSkyTintHelper.shouldUseBlackNightFog(world, partialTicks)) {
             fogTint = SunriseSkyTintHelper.resolveBlackNightFogColor(world, mc, partialTicks);
+            processed = true;
         }
         if (fogTint != null && fogTint.length >= 3) {
-            float[] desaturated = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
-            desaturated = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, desaturated);
-            cir.setReturnValue(new float[] { desaturated[0], desaturated[1], desaturated[2], 1.0F });
+            if (!processed) {
+                fogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
+                fogTint = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, fogTint);
+            }
+            cir.setReturnValue(new float[] { fogTint[0], fogTint[1], fogTint[2], 1.0F });
         }
     }
 
@@ -79,7 +85,8 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
     private static float[] riftflux$resolveFogDistance() {
         Minecraft mc = Minecraft.getMinecraft();
         WorldClient world = mc == null ? null : mc.theWorld;
-        if (!SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)
+        float partialTicks = 0.0F;
+        if (!SunriseSkyTintHelper.shouldUseDenseFogDistance(world, partialTicks)
                 || mc == null
                 || !(mc.renderViewEntity instanceof EntityLivingBase)) {
             return null;
@@ -91,6 +98,6 @@ public abstract class MixinAngelicaFogService_BetaStyleFog {
         }
 
         float farPlaneDistance = mc.gameSettings == null ? 128.0F : (float) (mc.gameSettings.renderDistanceChunks * 16);
-        return SunriseSkyTintHelper.resolveBetaStyleFogDistance(world, view, farPlaneDistance, false);
+        return SunriseSkyTintHelper.resolveDenseFogDistance(world, view, farPlaneDistance, false, partialTicks);
     }
 }

@@ -112,8 +112,17 @@ public class ModConfig {
     public static boolean celestialFogMatchesSky;
     public static boolean celestialBetaStyleFogBiomeTint;
     public static boolean celestialBetaStyleFogBiomeTintWeatherEvent;
+    public static boolean celestialFogChanceEventsUseSkyMatchingFog;
+    public static float celestialBetaStyleFogBiomeTintWeatherEventChancePercent;
+    public static float celestialBetaStyleFogBiomeTintDayEventChancePercent;
+    public static float celestialBetaStyleFogBiomeTintNightEventChancePercent;
     public static boolean celestialBlackNightFog;
     public static float celestialFogDesaturationPercent;
+    public static float celestialNightFogDesaturationPercent;
+    public static boolean celestialFogDistanceGradient;
+    public static float celestialFogDistanceGradientStrengthPercent;
+    public static float celestialFogDistanceGradientStartPercent;
+    public static float celestialFogDistanceGradientEndPercent;
     public static int celestialVoidFogStartHeight;
     public static int celestialVoidParticleStartHeight;
     public static boolean betaStarsEnabled;
@@ -314,6 +323,7 @@ public class ModConfig {
     public static boolean offLawnEnableSunflowerWorldgen;
     public static int offLawnSunflowerPatchChance;
     public static int offLawnSunflowerAttemptsPerChunk;
+    public static int offLawnBeanstalkMaxGrowthLevel;
 
     // Pumpkin Pastures ports
     public static boolean enablePumpkinPasturesModule;
@@ -1545,13 +1555,43 @@ public class ModConfig {
                 "CelestialBetaStyleFogBiomeTint",
                 "celestial",
                 false,
-                "If true, overworld fog keeps a desaturated beta-style grey and only tints toward non-default biome sky colors. Takes precedence over CelestialFogMatchesSky. [WIP]"
+                "If true, overworld fog keeps a desaturated beta-style grey and only tints toward non-default biome sky colors. Takes precedence over CelestialFogMatchesSky."
         );
         celestialBetaStyleFogBiomeTintWeatherEvent = config.getBoolean(
                 "CelestialBetaStyleFogBiomeTintWeatherEvent",
                 "celestial",
-                false,
-                "If true, the beta-style biome fog temporarily activates during rain and thunderstorms even when CelestialBetaStyleFogBiomeTint itself is disabled."
+                true,
+                "If true, the chance-based fog event can activate during rain and thunderstorms even when CelestialBetaStyleFogBiomeTint itself is disabled."
+        );
+        celestialFogChanceEventsUseSkyMatchingFog = config.getBoolean(
+                "CelestialFogChanceEventsUseSkyMatchingFog",
+                "celestial",
+                true,
+                "If true, the weather/day/night fog chance events use the CelestialFogMatchesSky color style with the day or night fog desaturation percent instead of beta-style biome fog. CelestialBetaStyleFogBiomeTint still forces beta-style fog when enabled."
+        );
+        celestialBetaStyleFogBiomeTintWeatherEventChancePercent = config.getFloat(
+                "CelestialBetaStyleFogBiomeTintWeatherEventChancePercent",
+                "celestial",
+                30.0F,
+                0.0F,
+                100.0F,
+                "Chance that a rain or thunderstorm starts a fog event. Only used when CelestialBetaStyleFogBiomeTintWeatherEvent is true."
+        );
+        celestialBetaStyleFogBiomeTintDayEventChancePercent = config.getFloat(
+                "CelestialBetaStyleFogBiomeTintDayEventChancePercent",
+                "celestial",
+                15.0F,
+                0.0F,
+                100.0F,
+                "Chance per Minecraft day that a fog event appears during the daytime without rain. 0 disables random daytime fog events."
+        );
+        celestialBetaStyleFogBiomeTintNightEventChancePercent = config.getFloat(
+                "CelestialBetaStyleFogBiomeTintNightEventChancePercent",
+                "celestial",
+                15.0F,
+                0.0F,
+                100.0F,
+                "Chance per Minecraft night that a fog event appears during the night without rain. 0 disables random nighttime fog events."
         );
         celestialBlackNightFog = config.getBoolean(
                 "CelestialBlackNightFog",
@@ -1566,6 +1606,44 @@ public class ModConfig {
                 0.0F,
                 100.0F,
                 "Desaturates fog colors by this percentage for RiftFlux celestial fog modes (CelestialFogMatchesSky, CelestialBlackNightFog, CelestialBetaStyleFogBiomeTint). 0 disables desaturation."
+        );
+        celestialNightFogDesaturationPercent = config.getFloat(
+                "CelestialNightFogDesaturationPercent",
+                "celestial",
+                0.0F,
+                0.0F,
+                100.0F,
+                "Separate night-time fog desaturation/brightness lift. 0 keeps night fog black; higher values make night fog less black without changing daytime fog."
+        );
+        celestialFogDistanceGradient = config.getBoolean(
+                "CelestialFogDistanceGradient",
+                "celestial",
+                false,
+                "If true, applies the depth-aware fog colour gradient after world rendering so entities and tile entities are covered by the same distant fog as blocks. [WIP]"
+        );
+        celestialFogDistanceGradientStrengthPercent = config.getFloat(
+                "CelestialFogDistanceGradientStrengthPercent",
+                "celestial",
+                100.0F,
+                0.0F,
+                100.0F,
+                "How strongly distant fog shifts toward the current sky colour. 100 applies the full colour shift to the fogged portion of far pixels."
+        );
+        celestialFogDistanceGradientStartPercent = config.getFloat(
+                "CelestialFogDistanceGradientStartPercent",
+                "celestial",
+                30.0F,
+                0.0F,
+                100.0F,
+                "Where the distance colour shift begins, as a percent through the active vanilla fog distance range."
+        );
+        celestialFogDistanceGradientEndPercent = config.getFloat(
+                "CelestialFogDistanceGradientEndPercent",
+                "celestial",
+                100.0F,
+                0.0F,
+                100.0F,
+                "Where the distance colour shift reaches full strength, as a percent through the active vanilla fog distance range."
         );
         celestialVoidFogStartHeight = config.getInt(
                 "CelestialVoidFogStartHeight",
@@ -3887,6 +3965,15 @@ public class ModConfig {
                 0,
                 128,
                 "Placement attempts per successful OffLawn sunflower generation chunk."
+        );
+
+        offLawnBeanstalkMaxGrowthLevel = config.getInt(
+                "BeanstalkMaxGrowthLevel",
+                "offlawn",
+                256,
+                1,
+                256,
+                "Maximum contiguous beanstalk height from the base block. 256 preserves the previous effectively-unlimited growth behavior."
         );
 
         enablePumpkinPasturesModule = config.getBoolean(

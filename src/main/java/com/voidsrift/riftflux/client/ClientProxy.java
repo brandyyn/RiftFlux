@@ -10,6 +10,7 @@ import com.voidsrift.riftflux.fence.FenceOverrideClientState;
 import com.voidsrift.riftflux.client.chatcopy.ChatSelectionManager;
 import com.voidsrift.riftflux.client.chatbubbles.ChatBubblesClient;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeHandler;
+import com.voidsrift.riftflux.client.sky.FogDistanceGradientRenderer;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
@@ -183,6 +184,9 @@ public class ClientProxy extends CommonProxy {
         }
         if (ModConfig.enableFenceTextureModule) {
             MinecraftForge.EVENT_BUS.register(new FenceOverrideClientEvents());
+        }
+        if (ModConfig.celestialFogDistanceGradient) {
+            MinecraftForge.EVENT_BUS.register(new FogDistanceGradientRenderer());
         }
         MinecraftForge.EVENT_BUS.register(new LegendGearManaTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodDurabilityTooltipHandler());
