@@ -2,8 +2,6 @@ package com.voidsrift.riftflux.client.sky;
 
 import com.voidsrift.riftflux.ModConfig;
 import java.awt.Color;
-import java.util.Map;
-import java.util.WeakHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.EntityLivingBase;
@@ -15,8 +13,10 @@ public final class SunriseSkyTintHelper {
     private static final float NIGHT_FOG_MIN_BRIGHTNESS = 0.009F;
     private static final float NIGHT_FOG_DESATURATION_BRIGHTNESS_RANGE = 0.011F;
     private static final int EVENT_FADE_TICKS = 1200;
-    private static final Map<WorldClient, WeatherFogEventState> WEATHER_FOG_EVENTS =
-            new WeakHashMap<WorldClient, WeatherFogEventState>();
+    private static final int DAY_EVENT_START_TICK = 23000;
+    private static final int DAY_EVENT_END_TICK = 13000;
+    private static final int NIGHT_EVENT_START_TICK = 12000;
+    private static final int NIGHT_EVENT_END_TICK = 24000;
     private static final float[] DEFAULT_OVERWORLD_SKY = toRgbFloats(Color.getHSBColor(0.62222224F, 0.5F, 1.0F).getRGB());
 
     private SunriseSkyTintHelper() {
@@ -113,29 +113,30 @@ public final class SunriseSkyTintHelper {
         if (world == null || world.provider == null || world.provider.hasNoSky) {
             return 0.0F;
         }
+        if (!CelestialFogEventClientState.hasSync(world)) {
+            return 0.0F;
+        }
+
         float weather = getBetaStyleBiomeFogWeatherEventStrength(world, partialTicks);
-        float daytime = getRandomTimeFogEventStrength(
+        float daytime = getSyncedTimeFogEventStrength(
                 world,
                 partialTicks,
-                23000,
-                13000,
-                0x47A3B21,
-                ModConfig.celestialBetaStyleFogBiomeTintDayEventChancePercent
+                DAY_EVENT_START_TICK,
+                DAY_EVENT_END_TICK,
+                CelestialFogEventClientState.isDayFogActive(world)
         );
-        float night = getRandomTimeFogEventStrength(
+        float night = getSyncedTimeFogEventStrength(
                 world,
                 partialTicks,
-                12000,
-                24000,
-                0x7D13F5B,
-                ModConfig.celestialBetaStyleFogBiomeTintNightEventChancePercent
+                NIGHT_EVENT_START_TICK,
+                NIGHT_EVENT_END_TICK,
+                CelestialFogEventClientState.isNightFogActive(world)
         );
         return clamp01(Math.max(weather, Math.max(daytime, night)));
     }
 
     public static float getBetaStyleBiomeFogWeatherEventStrength(WorldClient world, float partialTicks) {
-        if (!ModConfig.celestialBetaStyleFogBiomeTintWeatherEvent
-                || ModConfig.celestialBetaStyleFogBiomeTintWeatherEventChancePercent <= 0.0F
+        if (!CelestialFogEventClientState.isWeatherFogActive(world)
                 || world == null
                 || world.provider == null
                 || world.provider.hasNoSky) {
@@ -143,29 +144,8 @@ public final class SunriseSkyTintHelper {
         }
 
         float weatherStrength = clamp01(Math.max(world.getRainStrength(partialTicks), world.getWeightedThunderStrength(partialTicks)));
-        boolean weatherVisible = weatherStrength > 0.001F;
-        WeatherFogEventState state;
-        synchronized (WEATHER_FOG_EVENTS) {
-            state = WEATHER_FOG_EVENTS.get(world);
-            if (state == null) {
-                state = new WeatherFogEventState();
-                WEATHER_FOG_EVENTS.put(world, state);
-            }
-
-            if (!weatherVisible) {
-                state.inWeather = false;
-                state.enabled = false;
-                return 0.0F;
-            }
-
-            if (!state.inWeather) {
-                state.inWeather = true;
-                state.enabled = rollChance(world, world.getTotalWorldTime(), 0x3E9C1A71, ModConfig.celestialBetaStyleFogBiomeTintWeatherEventChancePercent);
-            }
-
-            if (!state.enabled) {
-                return 0.0F;
-            }
+        if (weatherStrength <= 0.001F) {
+            return 0.0F;
         }
 
         return smoothStep(weatherStrength);
@@ -564,13 +544,12 @@ public final class SunriseSkyTintHelper {
         };
     }
 
-    private static float getRandomTimeFogEventStrength(WorldClient world, float partialTicks, int startTick, int endTick, int salt, float chancePercent) {
-        if (chancePercent <= 0.0F || world == null) {
+    private static float getSyncedTimeFogEventStrength(WorldClient world, float partialTicks, int startTick, int endTick, boolean enabled) {
+        if (!enabled || world == null) {
             return 0.0F;
         }
 
         long worldTime = world.getWorldTime();
-        long dayIndex = Math.floorDiv(worldTime, 24000L);
         double timeOfDay = (double) (worldTime % 24000L) + partialTicks;
         if (timeOfDay < 0.0D) {
             timeOfDay += 24000.0D;
@@ -584,11 +563,6 @@ public final class SunriseSkyTintHelper {
             return 0.0F;
         }
 
-        long period = wraps && timeOfDay < (double) endTick ? dayIndex - 1L : dayIndex;
-        if (!rollChance(world, period, salt, chancePercent)) {
-            return 0.0F;
-        }
-
         double duration = wraps ? 24000.0D - (double) startTick + (double) endTick : (double) endTick - (double) startTick;
         double elapsed = wraps && timeOfDay < (double) endTick
                 ? timeOfDay + 24000.0D - (double) startTick
@@ -596,29 +570,6 @@ public final class SunriseSkyTintHelper {
         double fadeIn = Math.min(1.0D, elapsed / (double) EVENT_FADE_TICKS);
         double fadeOut = Math.min(1.0D, (duration - elapsed) / (double) EVENT_FADE_TICKS);
         return smoothStep((float) Math.min(fadeIn, fadeOut));
-    }
-
-    private static boolean rollChance(WorldClient world, long period, int salt, float chancePercent) {
-        float chance = clamp01(chancePercent / 100.0F);
-        if (chance <= 0.0F) {
-            return false;
-        }
-        if (chance >= 1.0F) {
-            return true;
-        }
-
-        int dimension = world != null && world.provider != null ? world.provider.dimensionId : 0;
-        long hash = period;
-        hash ^= (long) dimension * 0x9E3779B97F4A7C15L;
-        hash ^= (long) salt * 0xBF58476D1CE4E5B9L;
-        hash ^= (hash >>> 30);
-        hash *= 0xBF58476D1CE4E5B9L;
-        hash ^= (hash >>> 27);
-        hash *= 0x94D049BB133111EBL;
-        hash ^= (hash >>> 31);
-
-        float roll = (float) (hash & 0xFFFFFFL) / (float) 0x1000000;
-        return roll < chance;
     }
 
     private static float smoothStep(float value) {
@@ -693,10 +644,5 @@ public final class SunriseSkyTintHelper {
                 ((rgb >> 8) & 255) / 255.0F,
                 (rgb & 255) / 255.0F
         };
-    }
-
-    private static final class WeatherFogEventState {
-        private boolean inWeather;
-        private boolean enabled;
     }
 }

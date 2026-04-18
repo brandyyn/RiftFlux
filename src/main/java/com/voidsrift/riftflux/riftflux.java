@@ -20,6 +20,7 @@ import com.voidsrift.riftflux.palaria.PalariaMobContent;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.pumpkinpastures.PumpkinPasturesContent;
 import com.voidsrift.riftflux.offlawn.OffLawnContent;
+import com.voidsrift.riftflux.server.CelestialFogEventServerEvents;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
@@ -118,6 +119,9 @@ public class riftflux {
             MinecraftForge.EVENT_BUS.register(fenceOverrideEvents);
             FMLCommonHandler.instance().bus().register(fenceOverrideEvents);
         }
+        final CelestialFogEventServerEvents celestialFogEvents = new CelestialFogEventServerEvents();
+        MinecraftForge.EVENT_BUS.register(celestialFogEvents);
+        FMLCommonHandler.instance().bus().register(celestialFogEvents);
         ChatBubbleColorManager.bootstrapServer();
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.PlayerHurtSoundEventHandler());

@@ -1561,7 +1561,7 @@ public class ModConfig {
                 "CelestialBetaStyleFogBiomeTintWeatherEvent",
                 "celestial",
                 true,
-                "If true, the chance-based fog event can activate during rain and thunderstorms even when CelestialBetaStyleFogBiomeTint itself is disabled."
+                "If true, the chance-based fog event can activate during rain and thunderstorms even when CelestialBetaStyleFogBiomeTint itself is disabled. In multiplayer, the server owns this event state."
         );
         celestialFogChanceEventsUseSkyMatchingFog = config.getBoolean(
                 "CelestialFogChanceEventsUseSkyMatchingFog",
@@ -1575,7 +1575,7 @@ public class ModConfig {
                 30.0F,
                 0.0F,
                 100.0F,
-                "Chance that a rain or thunderstorm starts a fog event. Only used when CelestialBetaStyleFogBiomeTintWeatherEvent is true."
+                "Server-side chance that a rain or thunderstorm starts a fog event. Only used when CelestialBetaStyleFogBiomeTintWeatherEvent is true."
         );
         celestialBetaStyleFogBiomeTintDayEventChancePercent = config.getFloat(
                 "CelestialBetaStyleFogBiomeTintDayEventChancePercent",
@@ -1583,7 +1583,7 @@ public class ModConfig {
                 15.0F,
                 0.0F,
                 100.0F,
-                "Chance per Minecraft day that a fog event appears during the daytime without rain. 0 disables random daytime fog events."
+                "Server-side chance per Minecraft day that a fog event appears during the daytime without rain. 0 disables random daytime fog events."
         );
         celestialBetaStyleFogBiomeTintNightEventChancePercent = config.getFloat(
                 "CelestialBetaStyleFogBiomeTintNightEventChancePercent",
@@ -1591,7 +1591,7 @@ public class ModConfig {
                 15.0F,
                 0.0F,
                 100.0F,
-                "Chance per Minecraft night that a fog event appears during the night without rain. 0 disables random nighttime fog events."
+                "Server-side chance per Minecraft night that a fog event appears during the night without rain. 0 disables random nighttime fog events."
         );
         celestialBlackNightFog = config.getBoolean(
                 "CelestialBlackNightFog",

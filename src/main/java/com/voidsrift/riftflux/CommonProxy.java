@@ -30,4 +30,8 @@ public class CommonProxy {
     public void applyCrossedPlantFacingSync(int dimensionId, int x, int y, int z, int facing) {
         // no-op on server
     }
+
+    public void applyCelestialFogEventSync(int dimensionId, boolean dayFog, boolean nightFog, boolean weatherFog) {
+        // no-op on server
+    }
 }

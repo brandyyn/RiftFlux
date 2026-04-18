@@ -85,5 +85,8 @@ public final class RFNetwork {
 
         // Crossed-plant facing sync (ID 19)
         CH.registerMessage(MsgSyncCrossedPlantFacing.Handler.class, MsgSyncCrossedPlantFacing.class, 19, Side.CLIENT);
+
+        // Server-authoritative celestial fog event sync (ID 20)
+        CH.registerMessage(MsgSyncCelestialFogEvents.Handler.class, MsgSyncCelestialFogEvents.class, 20, Side.CLIENT);
     }
 }

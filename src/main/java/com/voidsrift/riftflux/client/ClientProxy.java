@@ -10,6 +10,7 @@ import com.voidsrift.riftflux.fence.FenceOverrideClientState;
 import com.voidsrift.riftflux.client.chatcopy.ChatSelectionManager;
 import com.voidsrift.riftflux.client.chatbubbles.ChatBubblesClient;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeHandler;
+import com.voidsrift.riftflux.client.sky.CelestialFogEventClientState;
 import com.voidsrift.riftflux.client.sky.FogDistanceGradientRenderer;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
@@ -126,6 +127,11 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
+    public void applyCelestialFogEventSync(int dimensionId, boolean dayFog, boolean nightFog, boolean weatherFog) {
+        CelestialFogEventClientState.applySync(dimensionId, dayFog, nightFog, weatherFog);
+    }
+
+    @Override
     public void initClientFeatures() {
         // Register NEI handler tab icon
         com.voidsrift.riftflux.nei.GTNHNeiHandlerInfo.register();
@@ -150,6 +156,7 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enableWorldTooltips) {
             WorldTooltipClient.bootstrap();
         }
+        CelestialFogEventClientState.bootstrap();
         // Stars (tag new items so the GUI mixin can draw)
         if (ModConfig.enableItemPickupStar) {
             PickupStarClientTracker.bootstrap();
