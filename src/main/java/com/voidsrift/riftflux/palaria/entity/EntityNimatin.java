@@ -8,6 +8,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackOnCollide;
 import net.minecraft.entity.ai.EntityAIFollowOwner;
@@ -745,6 +746,9 @@ public class EntityNimatin extends EntityTameable {
                 || entity == this
                 || entity instanceof EntityNimatin
                 || entity instanceof com.voidsrift.riftflux.avatar.appa.EntityBison) {
+            return false;
+        }
+        if (entity instanceof IBossDisplayData) {
             return false;
         }
         String[] filter = ModConfig.palariaNimatinMobPassengerBlacklist;

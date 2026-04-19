@@ -15,17 +15,20 @@ import com.voidsrift.riftflux.heartcrystal.HeartCrystalContent;
 import com.voidsrift.riftflux.armoroverlay.ArmorOverlayContent;
 import com.voidsrift.riftflux.axolotl.AxolotlContent;
 import com.voidsrift.riftflux.levelup.LevelUpContent;
+import com.voidsrift.riftflux.morebows.MoreBowsContent;
 import com.voidsrift.riftflux.painting.PaintingTooltipHandler;
 import com.voidsrift.riftflux.palaria.PalariaMobContent;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.pumpkinpastures.PumpkinPasturesContent;
 import com.voidsrift.riftflux.offlawn.OffLawnContent;
+import com.voidsrift.riftflux.riftexplorer.RiftExplorerContent;
 import com.voidsrift.riftflux.server.CelestialFogEventServerEvents;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.furniture.FurnitureContent;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
+import com.voidsrift.riftflux.gokistats.GokiStatsContent;
 import com.voidsrift.riftflux.wam.WAMContent;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
@@ -88,6 +91,9 @@ public class riftflux {
         WAMContent.preInit(event);
         OffLawnContent.preInit(event);
         PumpkinPasturesContent.preInit(event);
+        GokiStatsContent.preInit(event);
+        RiftExplorerContent.preInit(event);
+        MoreBowsContent.preInit(event);
         PalariaMobContent.preInit(event);
         SpecialArmorContent.preInit(event);
         InventoryPetsContent.preInit(event);
@@ -151,6 +157,8 @@ public class riftflux {
         WAMContent.init(event);
         OffLawnContent.init(event);
         PumpkinPasturesContent.init(event);
+        GokiStatsContent.init(event);
+        RiftExplorerContent.init(event);
         PalariaMobContent.init(event);
         SpecialArmorContent.init(event);
         InventoryPetsContent.init(event);
@@ -178,6 +186,8 @@ public class riftflux {
         SoulHeartsContent.postInit(event);
         HeartCrystalContent.postInit(event);
         AxolotlContent.postInit(event);
+        GokiStatsContent.postInit(event);
+        RiftExplorerContent.postInit(event);
     }
 
     @EventHandler
@@ -193,6 +203,7 @@ public class riftflux {
         event.registerServerCommand(CommandRiftFlux.chatBubbleTextCommand());
         event.registerServerCommand(CommandRiftFlux.chatBubbleSizeCommand());
         BlessingContent.serverStarting(event);
+        GokiStatsContent.serverStarting(event);
     }
 
     @EventHandler

@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.pumpkinpastures;
 
+import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemPickaxe;
@@ -12,6 +13,7 @@ public class ItemPumpkinPickaxe extends ItemPickaxe {
         setUnlocalizedName("pumpkin_pickaxe");
         setTextureName("riftflux:pumpkinpastures/pumpkin_pickaxe");
         setCreativeTab(CreativeTabs.tabTools);
+        setMaxDamage(Math.max(0, ModConfig.pumpkinPasturesEnderflamePickaxeDurability));
     }
 
     @Override

@@ -99,6 +99,12 @@ public class ItemGlider extends Item {
         return this.color;
     }
 
+    public static void clearLastToggle(String playerName) {
+        if (playerName != null) {
+            LAST_TOGGLE_TICK.remove(playerName);
+        }
+    }
+
     private static boolean shouldIgnoreOffhandActivation(ItemStack stack, EntityPlayer player) {
         if (!BackhandCompat.isAvailable() || stack == null || player == null) {
             return false;

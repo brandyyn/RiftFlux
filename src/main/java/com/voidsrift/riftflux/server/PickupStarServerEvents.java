@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.net.MsgPickup;
 import com.voidsrift.riftflux.net.RFNetwork;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -79,17 +80,21 @@ public final class PickupStarServerEvents {
     @SubscribeEvent
     public void onPickup(EntityItemPickupEvent e) {
         if (e.entityPlayer == null || e.entityPlayer.worldObj.isRemote) return;
+        if (!ModConfig.enablePickupNotifier && !ModConfig.enableItemPickupStar) return;
+
         final EntityPlayer player = e.entityPlayer;
 
-        State st = states.computeIfAbsent(player.getUniqueID(), k -> new State());
+        if (ModConfig.enablePickupNotifier) {
+            State st = states.computeIfAbsent(player.getUniqueID(), k -> new State());
 
-        // establish baseline from last snapshot, not current inventory
-        st.baseTotals = (st.lastTotals != null)
-                ? new HashMap<>(st.lastTotals)
-                : totalsNow(player.openContainer, player);
+            // establish baseline from last snapshot, not current inventory
+            st.baseTotals = (st.lastTotals != null)
+                    ? new HashMap<Key, Integer>(st.lastTotals)
+                    : totalsNow(player.openContainer, player);
 
-        st.pending = true;
-        st.idleTicks = MAX_IDLE_TICKS;
+            st.pending = true;
+            st.idleTicks = MAX_IDLE_TICKS;
+        }
 
         if (ModConfig.enableItemPickupStar && e.item != null && e.item.getEntityItem() != null) {
             ItemStack stack = e.item.getEntityItem();
@@ -108,49 +113,61 @@ public final class PickupStarServerEvents {
 
         final EntityPlayer player = e.player;
         final UUID id = player.getUniqueID();
-        State st = states.computeIfAbsent(id, k -> new State());
 
-        // Always update lastTotals
-        final Map<Key,Integer> cur = totalsNow(player.openContainer, player);
-
-        if (st.pending && ModConfig.enablePickupNotifier) {
-            if (st.baseTotals != null) {
-                int sent = 0;
-                boolean changed = false;
-
-                for (Map.Entry<Key,Integer> ent : cur.entrySet()) {
-                    if (sent >= MAX_PER_TICK_KEYS) break;
-
-                    final Key k = ent.getKey();
-                    final int now = ent.getValue();
-                    final int before = st.baseTotals.getOrDefault(k, 0);
-                    final int delta = now - before;
-
-                    if (delta > 0) {
-                        changed = true;
-                        RFNetwork.CH.sendTo(new MsgPickup(k.toStack(delta), delta), (EntityPlayerMP) player);
-                        sent++;
-                    }
-                }
-
-                if (changed) {
-                    st.baseTotals = cur; // reset baseline
-                    st.idleTicks = MAX_IDLE_TICKS;
-                } else {
-                    st.idleTicks--;
-                }
-
-                if (st.idleTicks <= 0) {
-                    st.pending = false;
-                    st.baseTotals = null;
-                }
-            }
+        if (!ModConfig.enablePickupNotifier && !ModConfig.enableItemPickupStar) {
+            clearPlayer(id);
+            return;
         }
 
-        st.lastTotals = cur; // always update
+        if (ModConfig.enablePickupNotifier) {
+            State st = states.computeIfAbsent(id, k -> new State());
+
+            // Always update lastTotals while the pickup notifier is enabled.
+            final Map<Key, Integer> cur = totalsNow(player.openContainer, player);
+
+            if (st.pending) {
+                if (st.baseTotals != null) {
+                    int sent = 0;
+                    boolean changed = false;
+
+                    for (Map.Entry<Key, Integer> ent : cur.entrySet()) {
+                        if (sent >= MAX_PER_TICK_KEYS) break;
+
+                        final Key k = ent.getKey();
+                        final int now = ent.getValue();
+                        final int before = st.baseTotals.getOrDefault(k, 0);
+                        final int delta = now - before;
+
+                        if (delta > 0) {
+                            changed = true;
+                            RFNetwork.CH.sendTo(new MsgPickup(k.toStack(delta), delta), (EntityPlayerMP) player);
+                            sent++;
+                        }
+                    }
+
+                    if (changed) {
+                        st.baseTotals = cur; // reset baseline
+                        st.idleTicks = MAX_IDLE_TICKS;
+                    } else {
+                        st.idleTicks--;
+                    }
+
+                    if (st.idleTicks <= 0) {
+                        st.pending = false;
+                        st.baseTotals = null;
+                    }
+                }
+            }
+
+            st.lastTotals = cur; // always update
+        } else {
+            states.remove(id);
+        }
 
         if (ModConfig.enableItemPickupStar) {
             tickStarTracking(player);
+        } else {
+            clearStarTracking(id);
         }
 
         if (ModConfig.itemPickupStarClearHeldItem) {
@@ -160,6 +177,32 @@ public final class PickupStarServerEvents {
         if (ModConfig.itemPickupStarClearOnLeaveInventory) {
             clearStarsInNonPlayerSlots(player.openContainer, player);
         }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event == null || event.player == null || event.player.worldObj == null || event.player.worldObj.isRemote) {
+            return;
+        }
+        clearPlayer(event.player.getUniqueID());
+    }
+
+    private void clearPlayer(UUID id) {
+        if (id == null) {
+            return;
+        }
+        states.remove(id);
+        clearStarTracking(id);
+    }
+
+    private void clearStarTracking(UUID id) {
+        if (id == null) {
+            return;
+        }
+        starQueues.remove(id);
+        starBaselineMain.remove(id);
+        starBaselineCont.remove(id);
+        starBaselineContRef.remove(id);
     }
 
     // ---- inventory aggregation ----

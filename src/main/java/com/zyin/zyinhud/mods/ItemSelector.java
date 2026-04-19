@@ -109,6 +109,9 @@ public class ItemSelector extends ZyinHUDModBase
 	 */
 	public static void Scroll(int direction)
 	{
+		if (mc.thePlayer == null)
+			return;
+
 		// Bind to current player state
 		if (currentInventory == null)
 		{
@@ -138,6 +141,9 @@ public class ItemSelector extends ZyinHUDModBase
 	 */
 	public static void SideButton(int direction)
 	{
+		if (mc.thePlayer == null)
+			return;
+
 		currentHotbarSlot = mc.thePlayer.inventory.currentItem;
 		currentInventory = mc.thePlayer.inventory.mainInventory.clone();
 		int hotbarColumn = getHotbarColumn(currentHotbarSlot);
@@ -240,6 +246,12 @@ public class ItemSelector extends ZyinHUDModBase
 	{
 		if (!isCurrentlySelecting)
 			return;
+
+		if (!ItemSelector.Enabled || mc.thePlayer == null)
+		{
+			Done();
+			return;
+		}
 
 		if (currentInventory == null || targetInvSlot < 0 || targetInvSlot >= currentInventory.length)
 		{
@@ -366,6 +378,12 @@ public class ItemSelector extends ZyinHUDModBase
 
 	private static void SelectItem()
 	{
+		if (mc.thePlayer == null)
+		{
+			Done();
+			return;
+		}
+
 		ItemStack currentStack = mc.thePlayer.inventory.mainInventory[currentHotbarSlot];
 		ItemStack targetStack = mc.thePlayer.inventory.mainInventory[targetInvSlot];
 		int displayHotbarSize = getDisplayHotbarSize(mc.thePlayer.inventory.mainInventory);

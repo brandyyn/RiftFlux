@@ -51,7 +51,7 @@ public class InventoryUtil
 	 */
 
     private static Minecraft mc = Minecraft.getMinecraft();
-    private Timer timer = new Timer();
+    private Timer timer = new Timer("ZyinHUD-InventoryUtil", true);
     
     /**
      * Minimum suggested delay between swapping items around.
@@ -239,9 +239,15 @@ public class InventoryUtil
 	 */
 	public TimerTask SwapWithDelay(int srcIndex, int destIndex, int delay)
 	{
+		timer.purge();
 		TimerTask swapTimerTask = new SwapTimerTask(srcIndex, destIndex);
 		timer.schedule(swapTimerTask, delay);
 		return swapTimerTask;
+	}
+
+	public void PurgeDelayedActions()
+	{
+		timer.purge();
 	}
 
 	

@@ -153,12 +153,18 @@ public final class PickupNotifierHud {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent e){
-        if (!ModConfig.enablePickupNotifier) return;
+        if (!ModConfig.enablePickupNotifier) {
+            reset();
+            return;
+        }
         if (e.phase != TickEvent.Phase.END) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null) {
+            reset();
+            return;
+        }
         if (entries.isEmpty()) return;
 
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null) return;
         final long now = overlayNowMs(mc);
 
         if (isPauseMenuOpen(mc)) {
@@ -337,5 +343,14 @@ public final class PickupNotifierHud {
             pauseClockFrozen = false;
         }
         return now - pauseClockOffsetMs;
+    }
+
+    private static void reset() {
+        entries.clear();
+        pauseTicks = 0;
+        firstDelayTicks = 0;
+        pauseClockOffsetMs = 0L;
+        pauseClockStartMs = 0L;
+        pauseClockFrozen = false;
     }
 }

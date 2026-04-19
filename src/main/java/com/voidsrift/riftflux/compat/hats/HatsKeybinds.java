@@ -8,7 +8,7 @@ import org.lwjgl.input.Keyboard;
 
 public final class HatsKeybinds {
 
-    private static final String CATEGORY = "Hats";
+    private static final String CATEGORY = "RiftFlux";
     private static final String DESCRIPTION = "Open Hats GUI";
     private static boolean registered = false;
     private static KeyBinding openGui;

@@ -85,7 +85,7 @@ public class EatingAid extends ZyinHUDModBase
     /** Treat mushroom stew as instant-eat */
     public static boolean UsePvPSoup;
     
-    private Timer timer = new Timer();
+    private Timer timer = new Timer("ZyinHUD-EatingAid", true);
     private TimerTask swapTimerTask;
     private TimerTask eatTimerTask;
 
@@ -280,16 +280,25 @@ public class EatingAid extends ZyinHUDModBase
     private void StopEatingFromInventory()
     {
         r.mouseRelease(InputEvent.BUTTON3_MASK); //release right click
-        eatTimerTask.cancel();
-    	swapTimerTask.cancel();
+        if (eatTimerTask != null)
+            eatTimerTask.cancel();
+        if (swapTimerTask != null)
+            swapTimerTask.cancel();
+        timer.purge();
+        InventoryUtil.instance.PurgeDelayedActions();
         InventoryUtil.Swap(currentItemInventoryIndex, foodItemIndex);
+        eatTimerTask = null;
+        swapTimerTask = null;
         isCurrentlyEating = false;
     }
     private void StopEatingFromHotbar()
     {
         r.mouseRelease(InputEvent.BUTTON3_MASK); //release right click
-        eatTimerTask.cancel();
+        if (eatTimerTask != null)
+            eatTimerTask.cancel();
+        timer.purge();
         mc.thePlayer.inventory.currentItem = currentItemHotbarIndex;
+        eatTimerTask = null;
         isCurrentlyEating = false;
     }
 
@@ -553,6 +562,7 @@ public class EatingAid extends ZyinHUDModBase
         {
             r.mouseRelease(InputEvent.BUTTON3_MASK); //release right click
             isCurrentlyEating = false;
+            eatTimerTask = null;
             
             if(hotbarIndexToBeSelected > -1)
             {

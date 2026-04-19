@@ -7,6 +7,7 @@ import com.voidsrift.riftflux.furniture.container.ContainerBedsideCabinet;
 import com.voidsrift.riftflux.furniture.container.ContainerCabinet;
 import com.voidsrift.riftflux.furniture.tileentity.TileEntityBedsideCabinet;
 import com.voidsrift.riftflux.furniture.tileentity.TileEntityCabinet;
+import com.voidsrift.riftflux.riftexplorer.RiftExplorerGuiIds;
 import cpw.mods.fml.common.network.IGuiHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -22,6 +23,9 @@ import makamys.satchels.gui.GuiEquipment;
 import makamys.satchels.inventory.ContainerSatchels;
 import makamys.satchels.inventory.ContainerEquipment;
 import makamys.satchels.item.ItemPouch;
+import zairus.worldexplorer.core.gui.GuiStudyDesk;
+import zairus.worldexplorer.core.inventory.ContainerStudyDesk;
+import zairus.worldexplorer.core.tileentity.TileEntityDesk;
 
 public class GuiProxy implements IGuiHandler {
    public static final int toolbeltId = 0;
@@ -54,6 +58,12 @@ public class GuiProxy implements IGuiHandler {
          net.minecraft.inventory.IInventory pouchInv = ItemPouch.getInventory(player.getHeldItem(), world);
          return pouchInv == null ? null : ItemPouch.constructUpgradesContainer(player.inventory, pouchInv);
       }
+      case RiftExplorerGuiIds.STUDY_DESK: {
+         TileEntity tileEntity = world.getTileEntity(x, y, z);
+         return tileEntity instanceof TileEntityDesk
+                 ? new ContainerStudyDesk(player.inventory, (TileEntityDesk) tileEntity, world)
+                 : null;
+      }
       default:
          return null;
       }
@@ -84,6 +94,12 @@ public class GuiProxy implements IGuiHandler {
       case GuiHandler.ID_POUCH: {
          net.minecraft.inventory.IInventory pouchInv = ItemPouch.getInventory(player.getHeldItem(), world);
          return pouchInv == null ? null : new GuiChestGeneric(player.inventory, pouchInv);
+      }
+      case RiftExplorerGuiIds.STUDY_DESK: {
+         TileEntity tileEntity = world.getTileEntity(x, y, z);
+         return tileEntity instanceof TileEntityDesk
+                 ? new GuiStudyDesk(player.inventory, (TileEntityDesk) tileEntity, world)
+                 : null;
       }
       default:
          return null;

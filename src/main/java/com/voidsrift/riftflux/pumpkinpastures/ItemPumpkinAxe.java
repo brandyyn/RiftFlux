@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.pumpkinpastures;
 
+import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -32,6 +33,7 @@ public class ItemPumpkinAxe extends ItemAxe {
         setUnlocalizedName("pumpkin_axe");
         setTextureName("riftflux:pumpkinpastures/pumpkin_axe");
         setCreativeTab(CreativeTabs.tabTools);
+        setMaxDamage(Math.max(0, ModConfig.pumpkinPasturesEnderflameShaxDurability));
     }
 
     @Override

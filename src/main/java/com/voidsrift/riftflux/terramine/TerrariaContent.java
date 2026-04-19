@@ -19,6 +19,7 @@ import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.init.Items;
 import net.minecraftforge.common.ChestGenHooks;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.MinecraftForgeClient;
 import cpw.mods.fml.client.registry.ClientRegistry;
 
@@ -127,6 +128,7 @@ public final class TerrariaContent {
         }
 
         GameRegistry.registerWorldGenerator(new TerraPlantWorldGenerator(), 0);
+        MinecraftForge.EVENT_BUS.register(new TerraLifecycleEvents());
         ChestGenHooks.addItem(
                 ChestGenHooks.DUNGEON_CHEST,
                 new WeightedRandomChestContent(new ItemStack(whoopieCushion), 1, 1, 8)

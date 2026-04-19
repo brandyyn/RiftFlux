@@ -171,6 +171,10 @@ public class DurabilityInfo extends ZyinHUDModBase
                 }
             }
         }
+        else
+        {
+            damagedItemsList.clear();
+        }
     }
     
     /**

@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.avatar.appa;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.projectile.EntityArrow;
@@ -234,7 +235,7 @@ public class EntityBison extends EntityFamiliar {
 
     @Override
     protected String getLivingSound() {
-        return "avatarMobs.BisonRoar";
+        return "mob.cow.say";
     }
 
     @Override
@@ -244,7 +245,7 @@ public class EntityBison extends EntityFamiliar {
 
     @Override
     protected String getDeathSound() {
-        return "avatarMobs.BisonDeath";
+        return "mob.cow.hurt";
     }
 
     @Override
@@ -517,6 +518,9 @@ public class EntityBison extends EntityFamiliar {
 
     private boolean isMobPassengerAllowed(EntityLivingBase entity) {
         if (entity == null) {
+            return false;
+        }
+        if (entity instanceof IBossDisplayData) {
             return false;
         }
         if (entity instanceof com.voidsrift.riftflux.palaria.entity.EntityNimatin) {

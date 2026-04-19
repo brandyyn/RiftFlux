@@ -1,0 +1,14 @@
+item.DiamondBow.name=Crystal Bow
+item.EnderBow.name=Ender Bow
+item.FlameBow.name=Blazing Bow
+item.FrostBow.name=Frostbite Bow
+item.GoldBow.name=Golden Bow
+item.IronBow.name=Iron Bow
+item.MultiBow.name=Legia Bow
+item.StoneBow.name=Reinforced Bow
+frostArrowsShouldBeCold.tooltip=If this is enabled, frost arrows will deal triple damage to Blazes, and extinguish Entities that are on fire. Enabling this also prevents frost arrows from being on fire.
+frostArrowsShouldBeCold=Frost arrows should be cold
+oldFrostArrowMobSlowdown.tooltip=If this is enabled, frost arrows will slow Entities down by pretending to have set them in a web for one tick. If this is disabled, frost arrows apply the slowness potion effect on hit.
+oldFrostArrowMobSlowdown=Old frost arrow mob slowdown
+oldFrostArrowRendering.tooltip=If this is enabled, frost arrows will render as cubes.
+oldFrostArrowRendering=Old frost arrow rendering

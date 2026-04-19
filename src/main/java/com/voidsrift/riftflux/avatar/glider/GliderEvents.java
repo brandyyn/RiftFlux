@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.avatar.glider;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import de.rinonline.korinrpg.Helper.NBT.RINPlayer2;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.compat.EtFuturumElytraCompat;
@@ -83,5 +84,20 @@ public class GliderEvents {
                 evt.distance = 1.1f;
             }
         }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
+        if (event == null || event.player == null) {
+            return;
+        }
+        EntityPlayer player = event.player;
+        String playerName = player.getDisplayName();
+        if (playerName == null) {
+            return;
+        }
+        boolean serverSide = player.worldObj != null && !player.worldObj.isRemote;
+        GliderState.removeGlidingPlayerName(playerName, !serverSide);
+        ItemGlider.clearLastToggle(playerName);
     }
 }

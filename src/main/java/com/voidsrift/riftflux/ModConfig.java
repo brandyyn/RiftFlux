@@ -332,6 +332,9 @@ public class ModConfig {
     public static int pumpkinPasturesSkeletonSpawnWeight;
     public static int pumpkinPasturesCreeperSpawnWeight;
     public static float pumpkinPasturesEnderflameSwordDamage;
+    public static int pumpkinPasturesEnderflameSwordDurability;
+    public static int pumpkinPasturesEnderflamePickaxeDurability;
+    public static int pumpkinPasturesEnderflameShaxDurability;
     public static float pumpkinPasturesEnderflameToolEfficiency;
     public static String[] pumpkinPasturesCorruptedSoulDropEntries;
     public static String[] pumpkinPasturesPumpkinSoulDropEntries;
@@ -340,6 +343,16 @@ public class ModConfig {
     public static int pumpkinPasturesEnderflameStaffDurability;
     public static float pumpkinPasturesEnderflameStaffFireSeconds;
     public static float pumpkinPasturesEnderflameStaffSpellDamage;
+
+    // Embedded legacy module ports
+    public static boolean enableGokiStatsModule;
+    public static boolean enableRiftExplorerModule;
+    public static boolean enableMoreBowsModule;
+    public static boolean riftExplorerSlingshotUsesCobblestoneAmmo;
+    public static int riftExplorerLongbowDurability;
+    public static int riftExplorerSlingshotDurability;
+    public static int riftExplorerBoomerangDurability;
+    public static int riftExplorerBlowpipeDurability;
 
     // Palaria mob ports
     public static boolean enablePalariaModule;
@@ -4016,6 +4029,66 @@ public class ModConfig {
                 1000,
                 "Natural spawn weight for Pumpkin Creepers."
         );
+
+        enableGokiStatsModule = config.getBoolean(
+                "EnableGokiStatsModule",
+                "gokistats",
+                true,
+                "Master switch for integrated GokiStats content."
+        );
+
+        enableRiftExplorerModule = config.getBoolean(
+                "EnableRiftExplorerModule",
+                "riftexplorer",
+                true,
+                "Master switch for integrated Rift Explorer content."
+        );
+        riftExplorerSlingshotUsesCobblestoneAmmo = config.getBoolean(
+                "SlingshotUsesCobblestoneAmmo",
+                "riftexplorer",
+                true,
+                "If true, slingshots consume vanilla cobblestone as ammo, pebble ammo usage is disabled, and pebble conversion recipes are disabled."
+        );
+        riftExplorerLongbowDurability = config.getInt(
+                "LongbowDurability",
+                "riftexplorer",
+                512,
+                0,
+                32767,
+                "Durability for the Rift Explorer Longbow. Set to 0 for unlimited durability."
+        );
+        riftExplorerSlingshotDurability = config.getInt(
+                "SlingshotDurability",
+                "riftexplorer",
+                192,
+                0,
+                32767,
+                "Durability for the Rift Explorer Slingshot. Set to 0 for unlimited durability."
+        );
+        riftExplorerBoomerangDurability = config.getInt(
+                "BoomerangDurability",
+                "riftexplorer",
+                256,
+                0,
+                32767,
+                "Durability for the Rift Explorer Boomerang. Set to 0 for unlimited durability."
+        );
+        riftExplorerBlowpipeDurability = config.getInt(
+                "BlowpipeDurability",
+                "riftexplorer",
+                350,
+                0,
+                32767,
+                "Durability for the Rift Explorer Blowpipe. Set to 0 for unlimited durability."
+        );
+
+        enableMoreBowsModule = config.getBoolean(
+                "EnableMoreBowsModule",
+                "morebows",
+                true,
+                "Master switch for integrated More Bows content. The original steel ingot and steel crafting content is not included."
+        );
+
         pumpkinPasturesEnderflameSwordDamage = config.getFloat(
                 "EnderflameSwordDamage",
                 "pumpkinpastures",
@@ -4023,6 +4096,30 @@ public class ModConfig {
                 0.0F,
                 1000.0F,
                 "Base attack damage for Enderflame Sword."
+        );
+        pumpkinPasturesEnderflameSwordDurability = config.getInt(
+                "EnderflameSwordDurability",
+                "pumpkinpastures",
+                350,
+                0,
+                32767,
+                "Durability for Enderflame Sword. Set to 0 for unlimited durability."
+        );
+        pumpkinPasturesEnderflamePickaxeDurability = config.getInt(
+                "EnderflamePickaxeDurability",
+                "pumpkinpastures",
+                350,
+                0,
+                32767,
+                "Durability for Enderflame Pickaxe. Set to 0 for unlimited durability."
+        );
+        pumpkinPasturesEnderflameShaxDurability = config.getInt(
+                "EnderflameShaxDurability",
+                "pumpkinpastures",
+                350,
+                0,
+                32767,
+                "Durability for Enderflame Shax. Set to 0 for unlimited durability."
         );
         pumpkinPasturesEnderflameToolEfficiency = config.getFloat(
                 "EnderflameToolEfficiency",

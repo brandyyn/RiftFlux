@@ -91,6 +91,9 @@ public final class CelestialFogEventClientState {
                 return;
             }
             clearDimension(event.world.provider.dimensionId);
+            if (event.world instanceof WorldClient) {
+                FogDistanceGradientState.invalidate((WorldClient) event.world);
+            }
         }
     }
 

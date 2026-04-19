@@ -40,9 +40,11 @@ public final class FogDistanceGradientState {
     public static void invalidate(WorldClient world) {
         if (world == null || colorWorld == world) {
             colorValid = false;
+            colorWorld = null;
         }
         if (world == null || distanceWorld == world) {
             distanceValid = false;
+            distanceWorld = null;
         }
     }
 

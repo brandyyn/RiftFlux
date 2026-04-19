@@ -36,7 +36,7 @@ public class PotionAid extends ZyinHUDModBase
     	return Enabled = !Enabled;
     }
     
-    private Timer timer = new Timer();
+    private Timer timer = new Timer("ZyinHUD-PotionAid", true);
     private TimerTask swapTimerTask;
     private TimerTask drinkTimerTask;
 
@@ -171,16 +171,25 @@ public class PotionAid extends ZyinHUDModBase
     private void StopDrinkingFromInventory()
     {
         r.mouseRelease(InputEvent.BUTTON3_MASK); //release right click
-        drinkTimerTask.cancel();
-    	swapTimerTask.cancel();
+        if (drinkTimerTask != null)
+            drinkTimerTask.cancel();
+        if (swapTimerTask != null)
+            swapTimerTask.cancel();
+        timer.purge();
+        InventoryUtil.instance.PurgeDelayedActions();
         InventoryUtil.Swap(currentItemInventoryIndex, potionItemIndex);
+        drinkTimerTask = null;
+        swapTimerTask = null;
         isCurrentlyDrinking = false;
     }
     private void StopDrinkingFromHotbar()
     {
         r.mouseRelease(InputEvent.BUTTON3_MASK); //release right click
-        drinkTimerTask.cancel();
+        if (drinkTimerTask != null)
+            drinkTimerTask.cancel();
+        timer.purge();
         mc.thePlayer.inventory.currentItem = currentItemHotbarIndex;
+        drinkTimerTask = null;
         isCurrentlyDrinking = false;
     }
 
@@ -343,6 +352,7 @@ public class PotionAid extends ZyinHUDModBase
         {
             r.mouseRelease(InputEvent.BUTTON3_MASK); //release right click
             isCurrentlyDrinking = false;
+            drinkTimerTask = null;
             
             if(hotbarIndexToBeSelected > -1)
             {

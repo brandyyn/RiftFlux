@@ -284,6 +284,7 @@ public class SafeOverlay extends ZyinHUDModBase
         {
             super("Safe Overlay Calculator Thread at y=" + y);
             this.y = y;
+            setDaemon(true);
 
             //Start the thread
             start();
@@ -370,11 +371,13 @@ public class SafeOverlay extends ZyinHUDModBase
     {
         if (!SafeOverlay.Enabled || Mode == Modes.OFF)
         {
+            ClearUnsafePositionCache();
             return;
         }
 
         if (!displayInNether && mc.thePlayer.dimension == -1)	//turn off in the nether, mobs can spawn no matter what
         {
+            ClearUnsafePositionCache();
             return;
         }
 
@@ -531,6 +534,7 @@ public class SafeOverlay extends ZyinHUDModBase
      */
     protected void CalculateUnsafePositionsMultithreaded()
     {
+        safeCalculatorThreads.clear();
         unsafePositionCache.clear();
 
         for (int y = -drawDistance; y < drawDistance; y++)
@@ -553,8 +557,17 @@ public class SafeOverlay extends ZyinHUDModBase
                 e.printStackTrace();
             }
         }
+        safeCalculatorThreads.clear();
         
         lastGenerate = System.currentTimeMillis();
+    }
+
+    public static void ClearUnsafePositionCache()
+    {
+        if (unsafePositionCache != null)
+        {
+            unsafePositionCache.clear();
+        }
     }
 
     /**

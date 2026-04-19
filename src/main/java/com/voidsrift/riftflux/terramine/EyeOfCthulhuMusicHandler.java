@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +53,7 @@ public class EyeOfCthulhuMusicHandler {
             restoreBackgroundMusic(mc);
             return;
         }
+        pruneGrowls();
 
         EntityEyeOfCthulhu eye = findBestEye(mc.theWorld, mc.thePlayer, mc);
         if (eye == null) {
@@ -118,6 +120,22 @@ public class EyeOfCthulhuMusicHandler {
             }
         }
         ACTIVE_GROWLS.clear();
+    }
+
+    private static void pruneGrowls() {
+        if (ACTIVE_GROWLS.isEmpty()) {
+            return;
+        }
+        Iterator<Map.Entry<Integer, EyeGrowlSound>> iterator = ACTIVE_GROWLS.entrySet().iterator();
+        while (iterator.hasNext()) {
+            EyeGrowlSound sound = iterator.next().getValue();
+            if (sound == null || sound.isDonePlaying() || sound.target == null || sound.target.isDead || sound.target.getHealth() <= 0.0F) {
+                if (sound != null) {
+                    sound.stop();
+                }
+                iterator.remove();
+            }
+        }
     }
 
     private void stopCurrent(Minecraft mc) {

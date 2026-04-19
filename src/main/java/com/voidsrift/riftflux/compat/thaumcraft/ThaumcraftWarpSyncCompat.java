@@ -61,6 +61,7 @@ public class ThaumcraftWarpSyncCompat {
         }
 
         UUID id = player.getGameProfile().getId();
+        clearLoggedEarlyWarpResearch(player);
         if (!PENDING_WARP_SYNC.remove(id)) {
             return;
         }
@@ -68,5 +69,21 @@ public class ThaumcraftWarpSyncCompat {
         PacketHandler.INSTANCE.sendTo(new PacketSyncWarp(player, (byte) 0), player);
         PacketHandler.INSTANCE.sendTo(new PacketSyncWarp(player, (byte) 1), player);
         PacketHandler.INSTANCE.sendTo(new PacketSyncWarp(player, (byte) 2), player);
+    }
+
+    private static void clearLoggedEarlyWarpResearch(EntityPlayerMP player) {
+        String playerKey = player.getGameProfile() != null && player.getGameProfile().getId() != null
+                ? player.getGameProfile().getId().toString()
+                : player.getCommandSenderName();
+        if (playerKey == null || playerKey.isEmpty()) {
+            return;
+        }
+        String prefix = playerKey + "|";
+        String[] logged = LOGGED_EARLY_WARP_RESEARCH.toArray(new String[LOGGED_EARLY_WARP_RESEARCH.size()]);
+        for (String key : logged) {
+            if (key != null && key.startsWith(prefix)) {
+                LOGGED_EARLY_WARP_RESEARCH.remove(key);
+            }
+        }
     }
 }

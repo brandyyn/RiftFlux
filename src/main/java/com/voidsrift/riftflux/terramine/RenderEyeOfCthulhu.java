@@ -10,15 +10,18 @@ import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class RenderEyeOfCthulhu extends RenderLiving {
     private static final ResourceLocation EYE_TEXTURE = new ResourceLocation("riftflux:textures/entities/eye_of_cthulhu.png");
     private static final String WDMLA_ENTITY_DRAWABLE = "com.gtnewhorizons.wdmla.impl.ui.drawable.EntityDrawable";
     private static final String WDMLA_GUI_DRAW = "com.gtnewhorizons.wdmla.overlay.GuiDraw";
     private static final String WAILA_GUI_DRAW = "mcp.mobius.waila.overlay.GuiDraw";
-    private static final Map<Integer, YawSmoothingState> SMOOTH_YAWS = new HashMap<Integer, YawSmoothingState>();
+    private static final Map<EntityLivingBase, YawSmoothingState> SMOOTH_YAWS =
+            Collections.synchronizedMap(new WeakHashMap<EntityLivingBase, YawSmoothingState>());
 
     public RenderEyeOfCthulhu(ModelBase model, float shadowSize) {
         super(model, shadowSize);
@@ -62,7 +65,7 @@ public class RenderEyeOfCthulhu extends RenderLiving {
             living.prevRotationYawHead = prevRotationYawHead;
             living.rotationYawHead = rotationYawHead;
             if (living.isDead) {
-                SMOOTH_YAWS.remove(Integer.valueOf(living.getEntityId()));
+                SMOOTH_YAWS.remove(living);
             }
         }
     }
@@ -105,13 +108,12 @@ public class RenderEyeOfCthulhu extends RenderLiving {
             return target;
         }
 
-        Integer id = Integer.valueOf(living.getEntityId());
-        YawSmoothingState state = SMOOTH_YAWS.get(id);
+        YawSmoothingState state = SMOOTH_YAWS.get(living);
         long tick = living.ticksExisted;
 
         if (state == null) {
             state = new YawSmoothingState(tick, target, target);
-            SMOOTH_YAWS.put(id, state);
+            SMOOTH_YAWS.put(living, state);
         } else if (state.lastTick != tick) {
             state.previousYaw = state.currentYaw;
             float delta = MathHelper.wrapAngleTo180_float(target - state.currentYaw);

@@ -45,9 +45,9 @@ public final class GliderState {
         if (name == null) {
             return;
         }
-        GLIDING_PLAYERS.remove(name);
-        HOVERING_PLAYERS.remove(name);
-        if (!skipSync) {
+        boolean changed = GLIDING_PLAYERS.remove(name);
+        changed = HOVERING_PLAYERS.remove(name) || changed;
+        if (!skipSync && changed) {
             syncGliding(false, name);
         }
     }

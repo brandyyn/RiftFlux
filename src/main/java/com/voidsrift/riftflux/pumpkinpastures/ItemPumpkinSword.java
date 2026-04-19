@@ -22,6 +22,7 @@ public class ItemPumpkinSword extends ItemSword {
         setUnlocalizedName("pumpkin_sword");
         setTextureName("riftflux:pumpkinpastures/pumpkin_sword");
         setCreativeTab(CreativeTabs.tabCombat);
+        setMaxDamage(Math.max(0, ModConfig.pumpkinPasturesEnderflameSwordDurability));
     }
 
     @Override

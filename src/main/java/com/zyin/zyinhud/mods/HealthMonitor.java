@@ -78,7 +78,7 @@ public class HealthMonitor extends ZyinHUDModBase
         }
     }
     
-	private static Timer timer = new Timer();
+	private static Timer timer = new Timer("ZyinHUD-HealthMonitor", true);
 	
 	private static int LowHealthSoundThreshold;
 	public static boolean PlayFasterNearDeath;

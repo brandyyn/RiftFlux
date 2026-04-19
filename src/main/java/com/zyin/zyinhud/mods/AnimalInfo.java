@@ -105,8 +105,6 @@ public class AnimalInfo extends ZyinHUDModBase
     public static int minNumberOfDecimalsDisplayed = 0;
     public static int maxNumberOfDecimalsDisplayed = 20;
     
-    private static EntityClientPlayerMP me;
-    
     //values above the perfect value are aqua
     //values between the perfect and good values are green
     //values between the good and bad values are white

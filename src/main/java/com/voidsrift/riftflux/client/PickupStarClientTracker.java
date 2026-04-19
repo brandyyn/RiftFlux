@@ -71,12 +71,18 @@ public final class PickupStarClientTracker {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent evt){
-        if (!ModConfig.enableItemPickupStar) return;
+        if (!ModConfig.enableItemPickupStar) {
+            reset();
+            return;
+        }
         if (evt.phase != TickEvent.Phase.END) return;
 
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayer p = (mc != null) ? mc.thePlayer : null;
-        if (p == null) return;
+        if (p == null) {
+            reset();
+            return;
+        }
 
         // decay queue
         if (!queue.isEmpty()){
@@ -245,6 +251,14 @@ public final class PickupStarClientTracker {
         if (recentMainTtl == null) return;
         if (mainIndex < 0 || mainIndex >= recentMainTtl.length) return;
         recentMainTtl[mainIndex] = 0;
+    }
+
+    private static void reset() {
+        baselineMain = null;
+        recentMainTtl = null;
+        baselineCont = null;
+        lastCont = null;
+        queue.clear();
     }
 
     private static ItemStack copy(ItemStack in){ return in!=null ? in.copy() : null; }

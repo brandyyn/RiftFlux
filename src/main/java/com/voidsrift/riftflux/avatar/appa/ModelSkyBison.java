@@ -16,10 +16,11 @@ import com.voidsrift.riftflux.mixin.accessor.ModelBoxAccessor;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 
 public class ModelSkyBison extends ModelBase {
     private static final String CEM_RESOURCE = "/assets/riftflux/cem/sky_bison.jem";
@@ -35,9 +36,12 @@ public class ModelSkyBison extends ModelBase {
     private final ModelRenderer leg6;
     private final ModelRenderer tail;
     private final ModelRenderer tail2;
-    private static final Map<Integer, Float> PREV_HEAD_YAW = new ConcurrentHashMap<Integer, Float>();
-    private static final Map<Integer, Float> PREV_SPEED = new ConcurrentHashMap<Integer, Float>();
-    private static final Map<Integer, Float> PREV_PHASE = new ConcurrentHashMap<Integer, Float>();
+    private static final Map<Entity, Float> PREV_HEAD_YAW =
+            Collections.synchronizedMap(new WeakHashMap<Entity, Float>());
+    private static final Map<Entity, Float> PREV_SPEED =
+            Collections.synchronizedMap(new WeakHashMap<Entity, Float>());
+    private static final Map<Entity, Float> PREV_PHASE =
+            Collections.synchronizedMap(new WeakHashMap<Entity, Float>());
 
     public ModelSkyBison() {
         CemBuildResult result = loadCem();
@@ -71,7 +75,6 @@ public class ModelSkyBison extends ModelBase {
             head.rotateAngleX = 0.0f;
         }
 
-        int entityId = entity.getEntityId();
         float dx = (float) (entity.posX - entity.prevPosX);
         float dz = (float) (entity.posZ - entity.prevPosZ);
         float moveMag = (float) Math.sqrt(dx * dx + dz * dz);
@@ -80,19 +83,19 @@ public class ModelSkyBison extends ModelBase {
         if (riding) {
             // Keep a steady stride while mounted to avoid stop-start leg jitter.
             smoothSpeed = 1.0f;
-            PREV_SPEED.put(entityId, smoothSpeed);
+            PREV_SPEED.put(entity, smoothSpeed);
         } else {
             float limbSpeed = limbSwingAmount;
             boolean useMotion = limbSpeed < 0.001f;
             float speedScale = useMotion ? Math.min(moveMag * 20.0f, 1.0f) : limbSpeed;
-            float prevSpeed = PREV_SPEED.containsKey(entityId) ? PREV_SPEED.get(entityId) : speedScale;
+            float prevSpeed = PREV_SPEED.containsKey(entity) ? PREV_SPEED.get(entity) : speedScale;
             smoothSpeed = prevSpeed + (speedScale - prevSpeed) * 0.2f;
-            PREV_SPEED.put(entityId, smoothSpeed);
+            PREV_SPEED.put(entity, smoothSpeed);
         }
 
         float offset = getRandomOffset(entity);
         float baseTime = (ageInTicks / 6.0f) + offset;
-        PREV_PHASE.put(entityId, baseTime);
+        PREV_PHASE.put(entity, baseTime);
 
         float speedClamp = smoothSpeed > 0.001f ? clamp(0.05f * smoothSpeed, 0.02f, 0.1f) : 0.0f;
         float legBase = smoothSpeed > 0.001f ? (float) Math.toRadians(15.0f * smoothSpeed) : 0.0f;
@@ -128,12 +131,12 @@ public class ModelSkyBison extends ModelBase {
             }
             float lerpAmount = Math.min(1.0f, 3.0f * frameTime);
             if (Math.abs(turning) <= 8.0f) {
-                PREV_HEAD_YAW.put(entityId, 0.0f);
+                PREV_HEAD_YAW.put(entity, 0.0f);
                 head.rotateAngleY = 0.0f;
             } else {
-                float lastHead = PREV_HEAD_YAW.containsKey(entityId) ? PREV_HEAD_YAW.get(entityId) : targetYaw;
+                float lastHead = PREV_HEAD_YAW.containsKey(entity) ? PREV_HEAD_YAW.get(entity) : targetYaw;
                 float headYaw = lastHead + (targetYaw - lastHead) * lerpAmount;
-                PREV_HEAD_YAW.put(entityId, headYaw);
+                PREV_HEAD_YAW.put(entity, headYaw);
                 head.rotateAngleY = headYaw;
             }
         }

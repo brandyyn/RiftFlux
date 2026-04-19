@@ -12,11 +12,13 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
 public class BlockIceRodIce extends Block {
     private static final Map<String, CrackState> CRACK_STATES = new HashMap<String, CrackState>();
+    private static long lastPruneTick = Long.MIN_VALUE;
 
     @SideOnly(Side.CLIENT)
     private IIcon normalIcon;
@@ -138,6 +140,7 @@ public class BlockIceRodIce extends Block {
     }
 
     private static void initializeCrackState(World world, int x, int y, int z) {
+        pruneExpiredStates(world);
         clearCrackProgress(world, x, y, z);
         long now = world.getTotalWorldTime();
         int total = TerrariaContent.getIceRodLifetimeTicks();
@@ -149,6 +152,7 @@ public class BlockIceRodIce extends Block {
     }
 
     private static CrackState getOrCreateCrackState(World world, int x, int y, int z) {
+        pruneExpiredStates(world);
         String key = getStateKey(world, x, y, z);
         CrackState state = CRACK_STATES.get(key);
         if (state == null) {
@@ -164,6 +168,38 @@ public class BlockIceRodIce extends Block {
 
     private static void removeCrackState(World world, int x, int y, int z) {
         CRACK_STATES.remove(getStateKey(world, x, y, z));
+    }
+
+    public static void clearCrackStatesForWorld(World world) {
+        if (world == null || world.provider == null) {
+            return;
+        }
+        String prefix = world.provider.dimensionId + ":";
+        Iterator<Map.Entry<String, CrackState>> iterator = CRACK_STATES.entrySet().iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getKey().startsWith(prefix)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private static void pruneExpiredStates(World world) {
+        if (world == null || world.provider == null || CRACK_STATES.isEmpty()) {
+            return;
+        }
+        long now = world.getTotalWorldTime();
+        if (lastPruneTick != Long.MIN_VALUE && now >= lastPruneTick && now - lastPruneTick < 200L) {
+            return;
+        }
+        lastPruneTick = now;
+        String prefix = world.provider.dimensionId + ":";
+        Iterator<Map.Entry<String, CrackState>> iterator = CRACK_STATES.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, CrackState> entry = iterator.next();
+            if (entry.getKey().startsWith(prefix) && entry.getValue().expireTick + 200L < now) {
+                iterator.remove();
+            }
+        }
     }
 
     private static void setCrackProgress(World world, int x, int y, int z, int progress) {
