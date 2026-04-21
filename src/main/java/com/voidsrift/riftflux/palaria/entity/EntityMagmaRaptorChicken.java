@@ -18,12 +18,6 @@ public class EntityMagmaRaptorChicken extends EntityAbstractRaptorChicken {
     }
 
     @Override
-    protected void entityInit() {
-        super.entityInit();
-        dataWatcher.addObject(16, Byte.valueOf((byte) 0));
-    }
-
-    @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
         getEntityAttribute(SharedMonsterAttributes.maxHealth).setBaseValue(ModConfig.palariaMagmaRaptorChickenMaxHealth);

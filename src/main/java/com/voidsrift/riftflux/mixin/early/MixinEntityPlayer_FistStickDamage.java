@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.blessings.BlessingCombatHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -38,6 +39,11 @@ public class MixinEntityPlayer_FistStickDamage {
                     baseDamage = min;
                 }
             }
+        }
+
+        final float blessingMultiplier = BlessingCombatHelper.getDirectMeleeDamageMultiplier(self, target);
+        if (blessingMultiplier != 1.0F) {
+            baseDamage *= blessingMultiplier;
         }
 
         return baseDamage;

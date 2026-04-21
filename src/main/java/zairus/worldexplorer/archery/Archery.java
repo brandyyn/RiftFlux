@@ -70,8 +70,6 @@ public class Archery implements IWEAddonMod {
         GameRegistry.addShapedRecipe(new ItemStack(WEArcheryItems.longbow_string), " ss", " ss", " ss", 's', Items.string);
         GameRegistry.addShapedRecipe(new ItemStack(WEArcheryItems.longbow), "hs", 'h', WEArcheryItems.longbow_handle, 's', WEArcheryItems.longbow_string);
 
-        // Crossbow and Wooden Handle are intentionally removed in RiftFlux.
-
         if (SpecialArrow.isArrowTypeEnabled(0)) {
             if (SlingshotAmmoHelper.isCobblestoneAllowed()) {
                 GameRegistry.addShapelessRecipe(new ItemStack(WEArcheryItems.specialarrow, 2, 0), Blocks.cobblestone, Items.stick);

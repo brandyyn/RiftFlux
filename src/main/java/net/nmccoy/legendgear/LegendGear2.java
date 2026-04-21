@@ -208,8 +208,6 @@ public class LegendGear2 {
     public static Item.ToolMaterial starsteelMaterial;
     public static RitualManager ritualManager;
     public static int RITUAL_MODE;
-    public static int MANA_DATAWATCHER_ID;
-    public static int GLIDE_DATAWATCHER_ID;
     public static SimpleNetworkWrapper snw;
     public static LegendGear2 instance;
     public static CommonProxy proxy;
@@ -388,14 +386,6 @@ public class LegendGear2 {
         CONFIG_ALLOW_HEART_DROPS = config.getBoolean("allowHeartDrops", "general", true, "allow heart drops from mobs and grass");
         CONFIG_PICKUP_SOUND_VOLUME = config.getFloat("itemSoundVolume", "general", 0.3f, 0.0f, 1.0f, "volume of heart/emerald sounds");
         CONFIG_FANCY_XP = config.getBoolean("fancyExperience", "general", true, "render fancy rainbow experience orbs");
-        MANA_DATAWATCHER_ID = config.getInt("manaDatawatcherID", "general", 20, 0, ModConfig.DATAWATCHER_MAX_ID, "ID for player mana datawatcher, change if there's a conflict");
-        GLIDE_DATAWATCHER_ID = config.getInt("glideDatawatcherID", "general", 21, 0, ModConfig.DATAWATCHER_MAX_ID, "ID for player glide datawatcher, change if there's a conflict");
-        if (GLIDE_DATAWATCHER_ID == MANA_DATAWATCHER_ID) {
-            GLIDE_DATAWATCHER_ID = Math.min(ModConfig.DATAWATCHER_MAX_ID, MANA_DATAWATCHER_ID + 1);
-            if (GLIDE_DATAWATCHER_ID == MANA_DATAWATCHER_ID) {
-                GLIDE_DATAWATCHER_ID = Math.max(0, MANA_DATAWATCHER_ID - 1);
-            }
-        }
         CONFIG_MAX_STARWELL_ATTEMPTS = config.getInt("maxStarwellRetries", "general", 16, 0, 16, "Times to retry placing a starwell in a chunk if invalid");
         CONFIG_FALLING_STAR_DAMAGE_ENABLED = config.getBoolean("fallingStarDamageEnabled", "general", true, "If true, Falling Stars can deal damage on impact and while descending");
         CONFIG_FALLING_STAR_DAMAGE = config.getFloat("fallingStarDamage", "general", 25.0f, 0.0f, 2048.0f, "Damage dealt by Falling Stars to entities hit mid-air and at impact");
@@ -450,8 +440,6 @@ public class LegendGear2 {
             CONFIG_ALLOW_HEART_DROPS = ModConfig.legendGearAllowHeartDrops;
             CONFIG_PICKUP_SOUND_VOLUME = ModConfig.legendGearItemSoundVolume;
             CONFIG_FANCY_XP = ModConfig.legendGearFancyExperience;
-            MANA_DATAWATCHER_ID = ModConfig.legendGearManaDatawatcherId;
-            GLIDE_DATAWATCHER_ID = ModConfig.legendGearGlideDatawatcherId;
             CONFIG_MAX_STARWELL_ATTEMPTS = ModConfig.legendGearMaxStarwellRetries;
             CONFIG_FALLING_STAR_DAMAGE_ENABLED = ModConfig.legendGearFallingStarDamageEnabled;
             CONFIG_FALLING_STAR_DAMAGE = ModConfig.legendGearFallingStarDamage;
@@ -709,8 +697,6 @@ public class LegendGear2 {
         starglassMaterial = EnumHelper.addToolMaterial((String)"STARGLASS", (int)2, (int)13, (float)16.0f, (float)2.0f, (int)0);
         starsteelMaterial = EnumHelper.addToolMaterial((String)"STARSTEEL", (int)2, (int)512, (float)6.0f, (float)2.0f, (int)18);
         RITUAL_MODE = 1;
-        MANA_DATAWATCHER_ID = 20;
-        GLIDE_DATAWATCHER_ID = 21;
         legendgearTab = new CreativeTabs("lgTab"){
 
             public Item getTabIconItem() {

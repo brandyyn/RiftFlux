@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.wam.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -18,13 +20,12 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-public class EntityBlackWidow extends EntitySpider {
+public class EntityBlackWidow extends EntitySpider implements IEntitySyncData {
     private static final int CLIMB_FACE_NONE = 0;
     private static final int CLIMB_FACE_NORTH = 1;
     private static final int CLIMB_FACE_SOUTH = 2;
     private static final int CLIMB_FACE_WEST = 3;
     private static final int CLIMB_FACE_EAST = 4;
-    private static final int ON_THREAD_DATA_WATCHER = 24;
     private static final byte AGGRO_FLAG = 4;
     private static final byte THREAD_FLAG = 8;
     private static final double BASE_MOVEMENT_SPEED = 0.8D;
@@ -60,6 +61,7 @@ public class EntityBlackWidow extends EntitySpider {
     private int threadAnchorX = Integer.MIN_VALUE;
     private int threadAnchorY = Integer.MIN_VALUE;
     private int threadAnchorZ = Integer.MIN_VALUE;
+    private byte syncedFlags;
 
     public EntityBlackWidow(World world) {
         super(world);
@@ -69,7 +71,6 @@ public class EntityBlackWidow extends EntitySpider {
     @Override
     protected void entityInit() {
         super.entityInit();
-        dataWatcher.addObject(ON_THREAD_DATA_WATCHER, Byte.valueOf((byte) 0));
     }
 
     @Override
@@ -485,33 +486,21 @@ public class EntityBlackWidow extends EntitySpider {
     }
 
     public boolean isOnThread() {
-        try {
-            return dataWatcher != null && (dataWatcher.getWatchableObjectByte(ON_THREAD_DATA_WATCHER) & THREAD_FLAG) != 0;
-        } catch (RuntimeException ignored) {
-            return false;
-        }
+        return (this.syncedFlags & THREAD_FLAG) != 0;
     }
 
     public void setOnThread(boolean onThread) {
-        if (dataWatcher == null) {
-            return;
-        }
-
-        byte value;
-        try {
-            value = dataWatcher.getWatchableObjectByte(ON_THREAD_DATA_WATCHER);
-        } catch (RuntimeException ignored) {
-            value = 0;
-        }
+        byte value = this.syncedFlags;
         if (onThread) {
             value = (byte) (value | THREAD_FLAG);
         } else {
             value = (byte) (value & ~THREAD_FLAG);
         }
-        try {
-            dataWatcher.updateObject(ON_THREAD_DATA_WATCHER, Byte.valueOf(value));
-        } catch (RuntimeException ignored) {
+        if (this.syncedFlags == value) {
+            return;
         }
+        this.syncedFlags = value;
+        EntitySyncHelper.sync(this);
     }
 
     public boolean isThreadAmbushPose() {
@@ -592,35 +581,21 @@ public class EntityBlackWidow extends EntitySpider {
     }
 
     private boolean hasAggroFlag() {
-        try {
-            return dataWatcher != null && (dataWatcher.getWatchableObjectByte(ON_THREAD_DATA_WATCHER) & AGGRO_FLAG) != 0;
-        } catch (RuntimeException ignored) {
-            return false;
-        }
+        return (this.syncedFlags & AGGRO_FLAG) != 0;
     }
 
     private void setAggroFlag(boolean aggressive) {
-        if (dataWatcher == null) {
-            return;
-        }
-
-        byte value;
-        try {
-            value = dataWatcher.getWatchableObjectByte(ON_THREAD_DATA_WATCHER);
-        } catch (RuntimeException ignored) {
-            value = 0;
-        }
-
+        byte value = this.syncedFlags;
         if (aggressive) {
             value = (byte) (value | AGGRO_FLAG);
         } else {
             value = (byte) (value & ~AGGRO_FLAG);
         }
-
-        try {
-            dataWatcher.updateObject(ON_THREAD_DATA_WATCHER, Byte.valueOf(value));
-        } catch (RuntimeException ignored) {
+        if (this.syncedFlags == value) {
+            return;
         }
+        this.syncedFlags = value;
+        EntitySyncHelper.sync(this);
     }
 
     private boolean setThreadAnchorFromCurrentPosition() {
@@ -733,5 +708,15 @@ public class EntityBlackWidow extends EntitySpider {
             return max;
         }
         return value;
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setByte("WidowFlags", this.syncedFlags);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.syncedFlags = tag.getByte("WidowFlags");
     }
 }

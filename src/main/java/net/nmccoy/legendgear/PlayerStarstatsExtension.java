@@ -15,6 +15,8 @@
  */
 package net.nmccoy.legendgear;
 
+import com.voidsrift.riftflux.net.sync.IPlayerSyncData;
+import com.voidsrift.riftflux.net.sync.PlayerSyncHelper;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,7 +30,7 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import net.nmccoy.legendgear.LegendGear2;
 
 public class PlayerStarstatsExtension
-implements IExtendedEntityProperties {
+implements IExtendedEntityProperties, IPlayerSyncData {
     public int starChargePoints = 0;
     public int starCooldownTimer = 0;
     public int starsCollected = 0;
@@ -53,6 +55,8 @@ implements IExtendedEntityProperties {
     public int skylensTagCharge = 0;
     public float lastGlideCharge = 0.0f;
     public int starwellCharge = 0;
+    private int manaWhole;
+    private float glideValue;
 
     public int fatigueLevel() {
         float magicFatigue = this.getMana();
@@ -120,8 +124,6 @@ implements IExtendedEntityProperties {
         this.grassEmeraldSupply = LegendGear2.maxEmeraldGrassDropsBanked;
         this.phoenixAffinity = 0;
         this.rechargeDelay = 0.0f;
-        this.player.getDataWatcher().addObject(LegendGear2.MANA_DATAWATCHER_ID, (Object)0);
-        this.player.getDataWatcher().addObject(LegendGear2.GLIDE_DATAWATCHER_ID, (Object)Float.valueOf(0.0f));
     }
 
     public boolean adjustManaFatigue(float amount) {
@@ -182,10 +184,10 @@ implements IExtendedEntityProperties {
         this.lastSkyX = data.getInteger("lastSkyX");
         this.lastSkyZ = data.getInteger("lastSkyZ");
         this.lastSkyWorld = data.getInteger("lastSkyWorld");
-        float magicFatigue = data.getFloat("magicFatigue");
-        this.setMana(magicFatigue);
+        this.applyLocalMana(data.getFloat("magicFatigue"));
         this.rechargeDelay = data.getFloat("rechargeDelay");
-        this.setGlide(data.getFloat("glideEnergy"));
+        this.glideValue = data.getFloat("glideEnergy");
+        this.lastGlideCharge = this.glideValue;
         this.lastStarwellDrink = data.getLong("lastStarwellDrink");
         this.starwellCharge = data.getInteger("starwellCharge");
     }
@@ -202,15 +204,21 @@ implements IExtendedEntityProperties {
     }
 
     public float getGlide() {
-        return this.player.getDataWatcher().getWatchableObjectFloat(LegendGear2.GLIDE_DATAWATCHER_ID);
+        return this.glideValue;
     }
 
     public void setGlide(float glide) {
-        this.lastGlideCharge = this.getGlide();
-        if (this.player.worldObj.isRemote) {
+        float previous = this.glideValue;
+        if (Float.compare(previous, glide) == 0) {
             return;
         }
-        this.player.getDataWatcher().updateObject(LegendGear2.GLIDE_DATAWATCHER_ID, (Object)Float.valueOf(glide));
+        this.lastGlideCharge = previous;
+        if (this.player.worldObj.isRemote) {
+            this.glideValue = glide;
+            return;
+        }
+        this.glideValue = glide;
+        PlayerSyncHelper.sync(this.player, this);
         if (this.getGlide() == 0.0f) {
             this.lastGlideCharge = 0.0f;
         } else {
@@ -219,7 +227,7 @@ implements IExtendedEntityProperties {
     }
 
     public float getMana() {
-        return this.fractionalMana + (float)this.player.getDataWatcher().getWatchableObjectInt(LegendGear2.MANA_DATAWATCHER_ID);
+        return this.fractionalMana + (float)this.manaWhole;
     }
 
     public static float availableMana(EntityPlayer player) {
@@ -229,7 +237,38 @@ implements IExtendedEntityProperties {
     public void setMana(float amount) {
         int intAmount = (int)Math.floor(amount);
         float fracAmount = amount - (float)intAmount;
-        this.player.getDataWatcher().updateObject(LegendGear2.MANA_DATAWATCHER_ID, (Object)intAmount);
+        if (this.manaWhole == intAmount && Float.compare(this.fractionalMana, fracAmount) == 0) {
+            return;
+        }
+        this.manaWhole = intAmount;
         this.fractionalMana = fracAmount;
+        if (this.player.worldObj != null && !this.player.worldObj.isRemote) {
+            PlayerSyncHelper.sync(this.player, this);
+        }
+    }
+
+    private void applyLocalMana(float amount) {
+        int intAmount = (int)Math.floor(amount);
+        this.manaWhole = intAmount;
+        this.fractionalMana = amount - (float)intAmount;
+    }
+
+    @Override
+    public String rf$getSyncKey() {
+        return EXT_PROP_NAME;
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("ManaWhole", this.manaWhole);
+        tag.setFloat("ManaFraction", this.fractionalMana);
+        tag.setFloat("Glide", this.glideValue);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.manaWhole = tag.getInteger("ManaWhole");
+        this.fractionalMana = tag.getFloat("ManaFraction");
+        this.glideValue = tag.getFloat("Glide");
     }
 }

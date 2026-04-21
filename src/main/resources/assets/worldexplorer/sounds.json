@@ -29,16 +29,6 @@
 		"category": "master"
 		,"sounds": [{"name": "longbow_draw_1","stream": false}]
 	}
-	,"whip_swing":
-	{
-		"category": "master"
-		,"sounds": [{"name": "whip_swing","stream": false}]
-	}
-	,"whip_snap":
-	{
-		"category": "master"
-		,"sounds": [{"name": "whip_snap","stream": false}]
-	}
 	,"blowpipe_breathe1":
 	{
 		"category": "master"
@@ -105,36 +95,6 @@
 		,"sounds": [
 			{
 				"name": "spyglass_close"
-				,"stream": false
-			}
-		]
-	}
-	,"crossbow_charge":
-	{
-		"category": "master"
-		,"sounds": [
-			{
-				"name": "crossbow_charge"
-				,"stream": false
-			}
-		]
-	}
-	,"crossbow_handle":
-	{
-		"category": "master"
-		,"sounds": [
-			{
-				"name": "crossbow_handle"
-				,"stream": false
-			}
-		]
-	}
-	,"crossbow_pull":
-	{
-		"category": "master"
-		,"sounds": [
-			{
-				"name": "crossbow_pull"
 				,"stream": false
 			}
 		]

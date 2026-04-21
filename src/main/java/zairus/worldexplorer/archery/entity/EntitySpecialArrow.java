@@ -30,6 +30,8 @@
 package zairus.worldexplorer.archery.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import cpw.mods.fml.common.registry.IThrowableEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -61,7 +63,7 @@ import zairus.worldexplorer.archery.items.WEArcheryItems;
 
 public class EntitySpecialArrow
 extends Entity
-implements IProjectile, IThrowableEntity {
+implements IProjectile, IThrowableEntity, IEntitySyncData {
     public int canBePickedUp;
     public int arrowShake;
     public Entity shootingEntity;
@@ -76,11 +78,13 @@ implements IProjectile, IThrowableEntity {
     private int ticksInAir;
     private double damage = 2.0;
     private int knockbackStrength;
+    private boolean critical;
+    private int arrowType;
 
     public EntitySpecialArrow(World world) {
         super(world);
         this.arrowStack = new ItemStack((Item)WEArcheryItems.specialarrow, 1, 0);
-        this.dataWatcher.updateObject(17, (Object)0);
+        this.arrowType = 0;
         this.renderDistanceWeight = 10.0;
         this.setSize(0.5f, 0.5f);
     }
@@ -88,7 +92,7 @@ implements IProjectile, IThrowableEntity {
     public EntitySpecialArrow(World world, double x, double y, double z) {
         super(world);
         this.arrowStack = new ItemStack((Item)WEArcheryItems.specialarrow, 1, 0);
-        this.dataWatcher.updateObject(17, (Object)0);
+        this.arrowType = 0;
         this.renderDistanceWeight = 10.0;
         this.setSize(0.5f, 0.5f);
         this.setPosition(x, y, z);
@@ -143,8 +147,6 @@ implements IProjectile, IThrowableEntity {
     }
 
     protected void entityInit() {
-        this.dataWatcher.addObject(16, (Object)Byte.valueOf((byte)0));
-        this.dataWatcher.addObject(17, (Object)0);
     }
 
     public void setThrowableHeading(double p_70186_1_, double p_70186_3_, double p_70186_5_, float p_70186_7_, float p_70186_8_) {
@@ -388,7 +390,7 @@ implements IProjectile, IThrowableEntity {
         this.arrowShake = p_70037_1_.getByte("shake") & 0xFF;
         this.inGround = p_70037_1_.getByte("inGround") == 1;
         this.arrowStack = new ItemStack((Item)WEArcheryItems.specialarrow, 1, this.normalizeArrowType(p_70037_1_.getInteger("arrowType")));
-        this.dataWatcher.updateObject(17, (Object)this.arrowStack.getItemDamage());
+        this.arrowType = this.arrowStack.getItemDamage();
         if (p_70037_1_.hasKey("damage", 99)) {
             this.damage = p_70037_1_.getDouble("damage");
         }
@@ -440,34 +442,33 @@ implements IProjectile, IThrowableEntity {
     }
 
     public void setIsCritical(boolean p_70243_1_) {
-        byte b0 = this.dataWatcher.getWatchableObjectByte(16);
-        if (p_70243_1_) {
-            this.dataWatcher.updateObject(16, (Object)((byte)(b0 | 1)));
-        } else {
-            this.dataWatcher.updateObject(16, (Object)((byte)(b0 & 0xFFFFFFFE)));
+        if (this.critical == p_70243_1_) {
+            return;
         }
+        this.critical = p_70243_1_;
+        EntitySyncHelper.sync(this);
     }
 
     public boolean getIsCritical() {
-        byte b0 = this.dataWatcher.getWatchableObjectByte(16);
-        return (b0 & 1) != 0;
+        return this.critical;
     }
 
     public int getArrowType() {
-        return this.normalizeArrowType(this.dataWatcher.getWatchableObjectInt(17));
+        return this.normalizeArrowType(this.arrowType);
     }
 
     private void setArrowStack(ItemStack ammo) {
         if (ammo == null || ammo.getItem() == null || ammo.getItem() != WEArcheryItems.specialarrow) {
             this.arrowStack = new ItemStack((Item)WEArcheryItems.specialarrow, 1, 0);
-            this.dataWatcher.updateObject(17, (Object)0);
+            this.arrowType = 0;
             return;
         }
         this.arrowStack = ammo.copy();
         this.arrowStack.stackSize = 1;
         int arrowType = this.normalizeArrowType(this.arrowStack.getItemDamage());
         this.arrowStack.setItemDamage(arrowType);
-        this.dataWatcher.updateObject(17, (Object)arrowType);
+        this.arrowType = arrowType;
+        EntitySyncHelper.sync(this);
     }
 
     private int normalizeArrowType(int type) {
@@ -482,5 +483,18 @@ implements IProjectile, IThrowableEntity {
     @Override
     public void setThrower(Entity entity) {
         this.shootingEntity = entity;
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setBoolean("Critical", this.critical);
+        tag.setInteger("ArrowType", this.arrowType);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.critical = tag.getBoolean("Critical");
+        this.arrowType = this.normalizeArrowType(tag.getInteger("ArrowType"));
+        this.arrowStack = new ItemStack((Item)WEArcheryItems.specialarrow, 1, this.arrowType);
     }
 }

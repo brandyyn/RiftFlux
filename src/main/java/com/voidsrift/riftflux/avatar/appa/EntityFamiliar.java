@@ -1,5 +1,7 @@
 package com.voidsrift.riftflux.avatar.appa;
 
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -13,12 +15,12 @@ import java.util.Random;
 
 import com.voidsrift.riftflux.ModConfig;
 
-public abstract class EntityFamiliar extends EntityCreature implements EntityChatListener {
-    private static final int DEFAULT_NAME_WATCHER = 19;
+public abstract class EntityFamiliar extends EntityCreature implements EntityChatListener, IEntitySyncData {
     public String owner = "";
     public int mood = 0;
     private int moodrandom = 0;
     private long moodrandomtime = 0L;
+    private String familiarName = "";
 
     public EntityFamiliar(World world) {
         super(world);
@@ -27,7 +29,6 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     @Override
     protected void entityInit() {
         super.entityInit();
-        this.dataWatcher.addObject(getNameWatcherId(), "");
     }
 
     public void setOwner(EntityPlayer owner) {
@@ -44,12 +45,12 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     }
 
     public void setName(String name) {
-        this.dataWatcher.updateObject(getNameWatcherId(), name);
+        this.familiarName = name == null ? "" : name;
         this.sendNameUpdate();
     }
 
     public String getName() {
-        return this.dataWatcher.getWatchableObjectString(getNameWatcherId());
+        return this.familiarName;
     }
 
     @Override
@@ -130,7 +131,7 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     }
 
     public void sendNameUpdate() {
-        // No-op: data watcher already syncs name to clients.
+        EntitySyncHelper.sync(this);
     }
 
     public void sendDeathUpdate() {
@@ -150,25 +151,27 @@ public abstract class EntityFamiliar extends EntityCreature implements EntityCha
     @Override
     public void writeEntityToNBT(NBTTagCompound tag) {
         super.writeEntityToNBT(tag);
-        tag.setString("Name", this.dataWatcher.getWatchableObjectString(getNameWatcherId()));
+        tag.setString("Name", this.familiarName);
         tag.setString("Owner", this.owner);
     }
 
     @Override
     public void readEntityFromNBT(NBTTagCompound tag) {
         super.readEntityFromNBT(tag);
-        if (tag.getString("Name") != null) {
-            this.dataWatcher.updateObject(getNameWatcherId(), tag.getString("Name"));
-        }
+        this.familiarName = tag.getString("Name");
         this.owner = tag.getString("Owner");
     }
 
-    private static int getNameWatcherId() {
-        int id = ModConfig.appaFamiliarNameDatawatcherId;
-        if (ModConfig.isValidEntityDatawatcherId(id)) {
-            return id;
-        }
-        return DEFAULT_NAME_WATCHER;
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setString("Name", this.familiarName);
+        tag.setString("Owner", this.owner == null ? "" : this.owner);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.familiarName = tag.getString("Name");
+        this.owner = tag.getString("Owner");
     }
 
     public static EntityFamiliar getFamiliarByOwner(EntityPlayer owner) {

@@ -1,5 +1,9 @@
 package com.voidsrift.riftflux.palaria.entity;
 
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -8,11 +12,11 @@ import net.minecraft.world.World;
 
 import java.util.UUID;
 
-public class EntityNimatinSeat extends Entity {
-    private static final int DATA_PARENT = 20;
-    private static final int DATA_INDEX = 21;
+public class EntityNimatinSeat extends Entity implements IEntitySyncData, IEntityAdditionalSpawnData {
     private EntityNimatin cachedParent;
     private UUID parentUniqueId;
+    private int parentEntityId = -1;
+    private int seatIndex;
 
     public EntityNimatinSeat(World world) {
         super(world);
@@ -31,28 +35,32 @@ public class EntityNimatinSeat extends Entity {
 
     @Override
     protected void entityInit() {
-        dataWatcher.addObject(DATA_PARENT, Integer.valueOf(-1));
-        dataWatcher.addObject(DATA_INDEX, Integer.valueOf(0));
     }
 
     public void setParent(EntityNimatin parent) {
+        UUID newParentUniqueId = parent == null ? null : parent.getUniqueID();
+        int newParentEntityId = parent == null ? -1 : parent.getEntityId();
+        boolean changed = cachedParent != parent
+                || parentEntityId != newParentEntityId
+                || !sameUuid(parentUniqueId, newParentUniqueId);
         cachedParent = parent;
-        parentUniqueId = parent == null ? null : parent.getUniqueID();
-        dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(parent == null ? -1 : parent.getEntityId()));
+        parentUniqueId = newParentUniqueId;
+        parentEntityId = newParentEntityId;
+        if (changed) {
+            EntitySyncHelper.sync(this);
+        }
     }
 
     public EntityNimatin getParent() {
         if (cachedParent != null && !cachedParent.isDead && cachedParent.worldObj == worldObj) {
             return cachedParent;
         }
-        int id = dataWatcher.getWatchableObjectInt(DATA_PARENT);
-        if (id < 0) {
-            return null;
-        }
-        Entity entity = worldObj.getEntityByID(id);
-        if (entity instanceof EntityNimatin) {
-            cachedParent = (EntityNimatin) entity;
-            return cachedParent;
+        if (parentEntityId >= 0) {
+            Entity entity = worldObj.getEntityByID(parentEntityId);
+            if (entity instanceof EntityNimatin) {
+                cachedParent = (EntityNimatin) entity;
+                return cachedParent;
+            }
         }
         if (parentUniqueId != null && worldObj != null && worldObj.loadedEntityList != null) {
             for (Object obj : worldObj.loadedEntityList) {
@@ -60,7 +68,8 @@ public class EntityNimatinSeat extends Entity {
                     EntityNimatin nimatin = (EntityNimatin) obj;
                     if (!nimatin.isDead && parentUniqueId.equals(nimatin.getUniqueID())) {
                         cachedParent = nimatin;
-                        dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(nimatin.getEntityId()));
+                        parentEntityId = nimatin.getEntityId();
+                        EntitySyncHelper.sync(this);
                         return cachedParent;
                     }
                 }
@@ -70,11 +79,15 @@ public class EntityNimatinSeat extends Entity {
     }
 
     public void setSeatIndex(int seatIndex) {
-        dataWatcher.updateObject(DATA_INDEX, Integer.valueOf(seatIndex));
+        if (this.seatIndex == seatIndex) {
+            return;
+        }
+        this.seatIndex = seatIndex;
+        EntitySyncHelper.sync(this);
     }
 
     public int getSeatIndex() {
-        return dataWatcher.getWatchableObjectInt(DATA_INDEX);
+        return seatIndex;
     }
 
     @Override
@@ -163,26 +176,27 @@ public class EntityNimatinSeat extends Entity {
     @Override
     protected void readEntityFromNBT(NBTTagCompound tag) {
         if (tag.hasKey("Parent")) {
-            dataWatcher.updateObject(DATA_PARENT, Integer.valueOf(tag.getInteger("Parent")));
+            parentEntityId = tag.getInteger("Parent");
+            cachedParent = null;
         }
         if (tag.hasKey("ParentUUIDMost") && tag.hasKey("ParentUUIDLeast")) {
             parentUniqueId = new UUID(tag.getLong("ParentUUIDMost"), tag.getLong("ParentUUIDLeast"));
         }
         if (tag.hasKey("SeatIndex")) {
-            dataWatcher.updateObject(DATA_INDEX, Integer.valueOf(tag.getInteger("SeatIndex")));
+            seatIndex = tag.getInteger("SeatIndex");
         }
     }
 
     @Override
     protected void writeEntityToNBT(NBTTagCompound tag) {
-        tag.setInteger("Parent", dataWatcher.getWatchableObjectInt(DATA_PARENT));
+        tag.setInteger("Parent", parentEntityId);
         EntityNimatin parent = getParent();
         UUID uuid = parent == null ? parentUniqueId : parent.getUniqueID();
         if (uuid != null) {
             tag.setLong("ParentUUIDMost", uuid.getMostSignificantBits());
             tag.setLong("ParentUUIDLeast", uuid.getLeastSignificantBits());
         }
-        tag.setInteger("SeatIndex", dataWatcher.getWatchableObjectInt(DATA_INDEX));
+        tag.setInteger("SeatIndex", seatIndex);
     }
 
     @Override
@@ -229,5 +243,52 @@ public class EntityNimatinSeat extends Entity {
     @Override
     public boolean shouldRenderInPass(int pass) {
         return false;
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("Parent", parentEntityId);
+        tag.setInteger("SeatIndex", seatIndex);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        parentEntityId = tag.getInteger("Parent");
+        seatIndex = tag.getInteger("SeatIndex");
+        cachedParent = null;
+    }
+
+    @Override
+    public void writeSpawnData(ByteBuf buffer) {
+        buffer.writeInt(parentEntityId);
+        buffer.writeInt(seatIndex);
+        writeUuid(buffer, parentUniqueId);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf buffer) {
+        parentEntityId = buffer.readInt();
+        seatIndex = buffer.readInt();
+        parentUniqueId = readUuid(buffer);
+        cachedParent = null;
+    }
+
+    private static void writeUuid(ByteBuf buffer, UUID uuid) {
+        buffer.writeBoolean(uuid != null);
+        if (uuid != null) {
+            buffer.writeLong(uuid.getMostSignificantBits());
+            buffer.writeLong(uuid.getLeastSignificantBits());
+        }
+    }
+
+    private static UUID readUuid(ByteBuf buffer) {
+        if (!buffer.readBoolean()) {
+            return null;
+        }
+        return new UUID(buffer.readLong(), buffer.readLong());
+    }
+
+    private static boolean sameUuid(UUID left, UUID right) {
+        return left == right || (left != null && left.equals(right));
     }
 }

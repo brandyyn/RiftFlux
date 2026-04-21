@@ -92,8 +92,6 @@ public final class LegendGearContent {
         LegendGear2.CONFIG_ALLOW_HEART_DROPS = ModConfig.legendGearAllowHeartDrops;
         LegendGear2.CONFIG_PICKUP_SOUND_VOLUME = ModConfig.legendGearItemSoundVolume;
         LegendGear2.CONFIG_FANCY_XP = ModConfig.legendGearFancyExperience;
-        LegendGear2.MANA_DATAWATCHER_ID = ModConfig.legendGearManaDatawatcherId;
-        LegendGear2.GLIDE_DATAWATCHER_ID = ModConfig.legendGearGlideDatawatcherId;
         LegendGear2.CONFIG_MAX_STARWELL_ATTEMPTS = ModConfig.legendGearMaxStarwellRetries;
         LegendGear2.CONFIG_FALLING_STAR_DAMAGE_ENABLED = ModConfig.legendGearFallingStarDamageEnabled;
         LegendGear2.CONFIG_FALLING_STAR_DAMAGE = ModConfig.legendGearFallingStarDamage;

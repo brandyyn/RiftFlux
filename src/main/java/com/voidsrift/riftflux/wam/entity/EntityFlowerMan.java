@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.wam.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.IEntityLivingData;
@@ -21,8 +23,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-public class EntityFlowerMan extends EntityAnimal {
-    private static final int COLOR_DATA_WATCHER = 16;
+public class EntityFlowerMan extends EntityAnimal implements IEntitySyncData {
+    private int color = 1;
 
     public EntityFlowerMan(World world) {
         super(world);
@@ -38,7 +40,6 @@ public class EntityFlowerMan extends EntityAnimal {
     @Override
     protected void entityInit() {
         super.entityInit();
-        dataWatcher.addObject(COLOR_DATA_WATCHER, Integer.valueOf(0));
     }
 
     @Override
@@ -58,21 +59,16 @@ public class EntityFlowerMan extends EntityAnimal {
     }
 
     public int getColor() {
-        try {
-            return dataWatcher != null ? Math.max(1, dataWatcher.getWatchableObjectInt(COLOR_DATA_WATCHER)) : 1;
-        } catch (RuntimeException ignored) {
-            return 1;
-        }
+        return Math.max(1, this.color);
     }
 
     public void setColor(int color) {
-        if (dataWatcher == null) {
+        int clamped = Math.max(1, Math.min(10, color));
+        if (this.color == clamped) {
             return;
         }
-        try {
-            dataWatcher.updateObject(COLOR_DATA_WATCHER, Integer.valueOf(Math.max(1, Math.min(10, color))));
-        } catch (RuntimeException ignored) {
-        }
+        this.color = clamped;
+        EntitySyncHelper.sync(this);
     }
 
     @Override
@@ -182,5 +178,15 @@ public class EntityFlowerMan extends EntityAnimal {
             default:
                 return 0;
         }
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("Color", this.color);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.color = Math.max(1, Math.min(10, tag.getInteger("Color")));
     }
 }

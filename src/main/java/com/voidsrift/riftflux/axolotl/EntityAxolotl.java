@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.axolotl;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
@@ -35,8 +37,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-public class EntityAxolotl extends EntityTameable {
-    private static final int DEFAULT_STATE_WATCHER = 18;
+public class EntityAxolotl extends EntityTameable implements IEntitySyncData {
     private static final int TOTAL_AIR_SUPPLY = 6000;
     private static final float AXOLOTL_WIDTH = 0.75F;
     private static final float AXOLOTL_HEIGHT = 0.42F + 0.0625F;
@@ -54,6 +55,7 @@ public class EntityAxolotl extends EntityTameable {
     private float swimCruiseTurnRate;
     private double swimCruiseTargetY;
     private double swimCruiseSpeed;
+    private int packedState = AxolotlVariant.LUCY.getId();
 
     public EntityAxolotl(World world) {
         super(world);
@@ -80,7 +82,6 @@ public class EntityAxolotl extends EntityTameable {
     @Override
     protected void entityInit() {
         super.entityInit();
-        this.dataWatcher.addObject(getStateWatcherId(), Integer.valueOf(AxolotlVariant.LUCY.getId()));
     }
 
     @Override
@@ -475,19 +476,25 @@ public class EntityAxolotl extends EntityTameable {
     }
 
     private int getPackedState() {
-        return this.dataWatcher.getWatchableObjectInt(getStateWatcherId());
+        return this.packedState;
     }
 
     private void setPackedState(int state) {
-        this.dataWatcher.updateObject(getStateWatcherId(), Integer.valueOf(state));
+        if (this.packedState == state) {
+            return;
+        }
+        this.packedState = state;
+        EntitySyncHelper.sync(this);
     }
 
-    private static int getStateWatcherId() {
-        int id = ModConfig.axolotlStateDatawatcherId;
-        if (id >= DEFAULT_STATE_WATCHER && ModConfig.isValidEntityDatawatcherId(id)) {
-            return id;
-        }
-        return DEFAULT_STATE_WATCHER;
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("PackedState", this.packedState);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.packedState = tag.getInteger("PackedState");
     }
 
     private void updateWaterSwimming() {

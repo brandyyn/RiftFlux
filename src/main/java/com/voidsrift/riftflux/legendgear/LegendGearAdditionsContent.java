@@ -4,12 +4,16 @@ import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import net.minecraftforge.common.MinecraftForge;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.item.StarglassSword;
@@ -104,7 +108,7 @@ public final class LegendGearAdditionsContent {
     private static void registerBlocks() {
         starrySand = registerBlock(new LegendGearFallingBlock("starry_sand", "starry_sand", 0.5F, 0.4F), "starry_sand");
         redStarrySand = registerBlock(new LegendGearFallingBlock("red_starry_sand", "red_starry_sand", 0.5F, 0.4F), "red_starry_sand");
-        lightningStruckRedSand = registerBlock(new LegendGearFallingBlock("lightning_struck_red_sand", "lightning_struck_red_sand", 0.5F, 0.0F), "lightning_struck_red_sand");
+        lightningStruckRedSand = registerBlock(new LightningStruckRedSandBlock(), "lightning_struck_red_sand");
     }
 
     private static void registerItems() {
@@ -120,7 +124,7 @@ public final class LegendGearAdditionsContent {
 
     private static void addRecipes() {
         ItemStack chargedDust = new ItemStack(LegendGear2.starDust, 1, 3);
-        GameRegistry.addShapelessRecipe(new ItemStack(starrySand), Blocks.sand, chargedDust);
+        GameRegistry.addShapelessRecipe(new ItemStack(starrySand), new ItemStack(LegendGear2.starSandBlock));
         GameRegistry.addShapelessRecipe(new ItemStack(redStarrySand), new ItemStack(Blocks.sand, 1, 1), chargedDust);
         starglassSword.addRecipes();
     }
@@ -162,6 +166,36 @@ public final class LegendGearAdditionsContent {
             setLightLevel(light);
             setStepSound(Block.soundTypeSand);
             setCreativeTab(LegendGear2.legendgearTab);
+        }
+    }
+
+    private static final class LightningStruckRedSandBlock extends LegendGearFallingBlock {
+        @SideOnly(Side.CLIENT)
+        private IIcon topIcon;
+        @SideOnly(Side.CLIENT)
+        private IIcon sideIcon;
+
+        private LightningStruckRedSandBlock() {
+            super("lightning_struck_red_sand", "lightning_struck_red_sand", 0.5F, 0.0F);
+        }
+
+        @Override
+        @SideOnly(Side.CLIENT)
+        public void registerBlockIcons(IIconRegister register) {
+            this.topIcon = register.registerIcon("legendgear:lightning_struck_red_sand");
+            this.sideIcon = Blocks.sand.getIcon(2, 1);
+            this.blockIcon = this.sideIcon != null ? this.sideIcon : this.topIcon;
+        }
+
+        @Override
+        public IIcon getIcon(int side, int meta) {
+            if (side == 1 && this.topIcon != null) {
+                return this.topIcon;
+            }
+            if (this.sideIcon != null) {
+                return this.sideIcon;
+            }
+            return Blocks.sand.getIcon(side, 1);
         }
     }
 }

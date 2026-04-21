@@ -199,8 +199,6 @@ implements IProjectile {
     }
 
     protected void entityInit() {
-        this.dataWatcher.addObject(16, (Object)0);
-        this.dataWatcher.addObject(10, (Object)new ItemStack((Item)WEArcheryItems.boomerang));
     }
 
     public void setKnockbackStrength(float knockback) {

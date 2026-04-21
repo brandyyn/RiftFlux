@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.pumpkinpastures;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import com.voidsrift.riftflux.palaria.entity.CreeptileExplosion;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -27,10 +29,13 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-public class EntityPumpkinCreeper extends EntityMob {
+public class EntityPumpkinCreeper extends EntityMob implements IEntitySyncData {
     private int lastActiveTime;
     private int timeSinceIgnited;
     private int fuseTime = 30;
+    private int creeperState = -1;
+    private boolean powered;
+    private boolean ignited;
 
     public EntityPumpkinCreeper(World world) {
         super(world);
@@ -50,9 +55,6 @@ public class EntityPumpkinCreeper extends EntityMob {
     @Override
     protected void entityInit() {
         super.entityInit();
-        dataWatcher.addObject(16, Byte.valueOf((byte) -1));
-        dataWatcher.addObject(17, Byte.valueOf((byte) 0));
-        dataWatcher.addObject(18, Byte.valueOf((byte) 0));
     }
 
     @Override
@@ -90,12 +92,12 @@ public class EntityPumpkinCreeper extends EntityMob {
     @Override
     public void readEntityFromNBT(NBTTagCompound tag) {
         super.readEntityFromNBT(tag);
-        dataWatcher.updateObject(17, Byte.valueOf((byte) (tag.getBoolean("powered") ? 1 : 0)));
+        this.powered = tag.getBoolean("powered");
         if (tag.hasKey("Fuse")) {
             fuseTime = tag.getShort("Fuse");
         }
         if (tag.getBoolean("ignited")) {
-            ignite();
+            this.ignited = true;
         }
     }
 
@@ -175,21 +177,28 @@ public class EntityPumpkinCreeper extends EntityMob {
     }
 
     public boolean getPowered() {
-        return dataWatcher.getWatchableObjectByte(17) == 1;
+        return this.powered;
     }
 
     public int getCreeperState() {
-        return dataWatcher.getWatchableObjectByte(16);
+        return this.creeperState;
     }
 
     public void setCreeperState(int state) {
-        dataWatcher.updateObject(16, Byte.valueOf((byte) state));
+        if (this.creeperState == state) {
+            return;
+        }
+        this.creeperState = state;
+        EntitySyncHelper.sync(this);
     }
 
     @Override
     public void onStruckByLightning(EntityLightningBolt lightning) {
         super.onStruckByLightning(lightning);
-        dataWatcher.updateObject(17, Byte.valueOf((byte) 1));
+        if (!this.powered) {
+            this.powered = true;
+            EntitySyncHelper.sync(this);
+        }
     }
 
     @Override
@@ -246,10 +255,28 @@ public class EntityPumpkinCreeper extends EntityMob {
     }
 
     public boolean isIgnited() {
-        return dataWatcher.getWatchableObjectByte(18) != 0;
+        return this.ignited;
     }
 
     public void ignite() {
-        dataWatcher.updateObject(18, Byte.valueOf((byte) 1));
+        if (this.ignited) {
+            return;
+        }
+        this.ignited = true;
+        EntitySyncHelper.sync(this);
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("State", this.creeperState);
+        tag.setBoolean("Powered", this.powered);
+        tag.setBoolean("Ignited", this.ignited);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.creeperState = tag.getInteger("State");
+        this.powered = tag.getBoolean("Powered");
+        this.ignited = tag.getBoolean("Ignited");
     }
 }

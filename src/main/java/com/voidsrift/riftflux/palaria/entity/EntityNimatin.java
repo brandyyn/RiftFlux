@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.palaria.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import com.voidsrift.riftflux.palaria.PalariaMobDrops;
 import com.voidsrift.riftflux.util.ConfigResolver;
 import cpw.mods.fml.relauncher.Side;
@@ -42,7 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class EntityNimatin extends EntityTameable {
+public class EntityNimatin extends EntityTameable implements IEntitySyncData {
     private float headRotationCourse;
     private float headRotationCourseOld;
     private boolean isShaking;
@@ -63,6 +65,8 @@ public class EntityNimatin extends EntityTameable {
     private int mountedJumpTicks;
     private final EntityNimatinSeat[] passengerSeats = new EntityNimatinSeat[PASSENGER_SEATS];
     private final Map<Integer, Integer> seatNoRemountTicks = new HashMap<Integer, Integer>();
+    private boolean angry;
+    private boolean begging;
 
     public EntityNimatin(World world) {
         super(world);
@@ -91,8 +95,6 @@ public class EntityNimatin extends EntityTameable {
     @Override
     protected void entityInit() {
         super.entityInit();
-        dataWatcher.addObject(18, Float.valueOf(getHealth()));
-        dataWatcher.addObject(19, Byte.valueOf((byte) 0));
     }
 
     @Override
@@ -127,7 +129,6 @@ public class EntityNimatin extends EntityTameable {
 
     @Override
     protected void updateAITick() {
-        dataWatcher.updateObject(18, Float.valueOf(getHealth()));
         super.updateAITick();
     }
 
@@ -298,10 +299,7 @@ public class EntityNimatin extends EntityTameable {
 
     @Override
     public void onUpdate() {
-        repairDirectRiderLink();
         super.onUpdate();
-        repairDirectRiderLink();
-        syncIdleClientSeatPassengers();
         if (!worldObj.isRemote && isTamed()) {
             ensureSeats();
             tickSeatNoRemounts();
@@ -314,7 +312,6 @@ public class EntityNimatin extends EntityTameable {
             } else {
                 ejectMobPassengers();
             }
-            syncSeatPassengers();
         }
         if (!worldObj.isRemote && isShaking && !isWetShaking && !hasPath() && onGround) {
             isWetShaking = true;
@@ -356,7 +353,7 @@ public class EntityNimatin extends EntityTameable {
             if (held != null) {
                 if (held.getItem() instanceof ItemFood) {
                     ItemFood food = (ItemFood) held.getItem();
-                    if (isNimatinMeat(held, food) && dataWatcher.getWatchableObjectFloat(18) < getMaxHealth()) {
+                    if (isNimatinMeat(held, food) && getHealth() < getMaxHealth()) {
                         if (!player.capabilities.isCreativeMode) {
                             --held.stackSize;
                         }
@@ -587,48 +584,15 @@ public class EntityNimatin extends EntityTameable {
         }
     }
 
-    private void syncSeatPassengers() {
-        for (EntityNimatinSeat seat : passengerSeats) {
-            if (seat == null || seat.isDead || seat.worldObj != worldObj || seat.riddenByEntity == null) {
-                continue;
-            }
-            updatePassenger(seat.riddenByEntity);
-        }
-    }
-
-    private void syncIdleClientSeatPassengers() {
-        if (worldObj == null || !worldObj.isRemote || riddenByEntity != null || !isIdleSeatRotationChanging()) {
-            return;
-        }
-        for (Object obj : worldObj.loadedEntityList) {
-            if (!(obj instanceof Entity)) {
-                continue;
-            }
-            Entity passenger = (Entity) obj;
-            if (isSeatPassenger(passenger)) {
-                updatePassenger(passenger);
-            }
-        }
-    }
-
-    private boolean isIdleSeatRotationChanging() {
-        double motionSq = motionX * motionX + motionZ * motionZ;
-        double deltaX = posX - prevPosX;
-        double deltaZ = posZ - prevPosZ;
-        double deltaSq = deltaX * deltaX + deltaZ * deltaZ;
-        if (motionSq >= 9.0E-4D || deltaSq >= 9.0E-4D) {
-            return false;
-        }
-        return Math.abs(getSeatYaw() - prevRenderYawOffset) > 0.01F
-                || Math.abs(rotationYaw - prevRotationYaw) > 0.01F;
-    }
-
     private float getSeatYaw() {
         return riddenByEntity instanceof EntityLivingBase ? rotationYaw : renderYawOffset;
     }
 
     private void repairDirectRiderLink() {
         if (riddenByEntity instanceof EntityPlayer && riddenByEntity.ridingEntity == this) {
+            return;
+        }
+        if (worldObj != null && worldObj.isRemote) {
             return;
         }
         if (worldObj == null || worldObj.playerEntities == null) {
@@ -988,20 +952,27 @@ public class EntityNimatin extends EntityTameable {
     }
 
     public boolean isAngry() {
-        return (dataWatcher.getWatchableObjectByte(16) & 2) != 0;
+        return this.angry;
     }
 
     public void setAngry(boolean angry) {
-        byte flags = dataWatcher.getWatchableObjectByte(16);
-        dataWatcher.updateObject(16, Byte.valueOf((byte) (angry ? flags | 2 : flags & -3)));
+        if (this.angry == angry) {
+            return;
+        }
+        this.angry = angry;
+        EntitySyncHelper.sync(this);
     }
 
     public boolean isBegging() {
-        return dataWatcher.getWatchableObjectByte(19) == 1;
+        return this.begging;
     }
 
     public void setBegging(boolean begging) {
-        dataWatcher.updateObject(19, Byte.valueOf((byte) (begging ? 1 : 0)));
+        if (this.begging == begging) {
+            return;
+        }
+        this.begging = begging;
+        EntitySyncHelper.sync(this);
     }
 
     private double getConfiguredJumpVelocity() {
@@ -1081,4 +1052,17 @@ public class EntityNimatin extends EntityTameable {
         }
         return heightTravelled;
     }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setBoolean("Angry", this.angry);
+        tag.setBoolean("Begging", this.begging);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.angry = tag.getBoolean("Angry");
+        this.begging = tag.getBoolean("Begging");
+    }
+
 }

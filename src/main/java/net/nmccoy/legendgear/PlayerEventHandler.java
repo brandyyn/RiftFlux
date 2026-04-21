@@ -46,6 +46,7 @@ package net.nmccoy.legendgear;
 
 import baubles.api.BaublesApi;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.legendgear.LegendGearAdditionsContent;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
@@ -990,8 +991,13 @@ public class PlayerEventHandler {
                     player.worldObj.addWeatherEffect((Entity)new EntityLightningBolt(player.worldObj, (double)strikeX, (double)strikeY, (double)strikeZ));
                     if (strikeY > 0) {
                         Block struckBlock = player.worldObj.getBlock(strikeX, strikeY - 1, strikeZ);
+                        int struckMeta = player.worldObj.getBlockMetadata(strikeX, strikeY - 1, strikeZ);
                         if (struckBlock == Blocks.sand) {
-                            player.worldObj.setBlock(strikeX, strikeY - 1, strikeZ, (Block)LegendGear2.struckGroundBlock, 0, 3);
+                            if (struckMeta == 1 && LegendGearAdditionsContent.lightningStruckRedSand != null) {
+                                player.worldObj.setBlock(strikeX, strikeY - 1, strikeZ, LegendGearAdditionsContent.lightningStruckRedSand, 0, 3);
+                            } else {
+                                player.worldObj.setBlock(strikeX, strikeY - 1, strikeZ, (Block)LegendGear2.struckGroundBlock, 0, 3);
+                            }
                         }
                         if (struckBlock == Blocks.dirt || struckBlock == Blocks.grass || struckBlock == Blocks.mycelium) {
                             player.worldObj.setBlock(strikeX, strikeY - 1, strikeZ, (Block)LegendGear2.struckGroundBlock, 1, 3);

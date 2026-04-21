@@ -27,6 +27,7 @@
 package net.nmccoy.legendgear.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.legendgear.LegendGearAdditionsContent;
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -535,7 +536,11 @@ implements IEntityAdditionalSpawnData {
                 spell.worldObj.setBlock(x, y, z, Blocks.water);
             }
             if (this.element == Spell.Element.Star && block == Blocks.sand) {
-                spell.worldObj.setBlock(x, y, z, (Block)LegendGear2.starSandBlock);
+                if (meta == 1 && LegendGearAdditionsContent.redStarrySand != null) {
+                    spell.worldObj.setBlock(x, y, z, LegendGearAdditionsContent.redStarrySand);
+                } else {
+                    spell.worldObj.setBlock(x, y, z, (Block)LegendGear2.starSandBlock);
+                }
             }
             return false;
         }

@@ -9,6 +9,5 @@ public class EquipmentEntityManager
 implements IWEAddonEntityManager {
     @Override
     public void registerEntities() {
-        // Whip content is removed in RiftFlux.
     }
 }

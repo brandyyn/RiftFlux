@@ -88,5 +88,12 @@ public final class RFNetwork {
 
         // Server-authoritative celestial fog event sync (ID 20)
         CH.registerMessage(MsgSyncCelestialFogEvents.Handler.class, MsgSyncCelestialFogEvents.class, 20, Side.CLIENT);
+
+        // Rift chest random mob state sync (ID 21)
+        CH.registerMessage(MsgSyncRiftChestRandomMobState.Handler.class, MsgSyncRiftChestRandomMobState.class, 21, Side.CLIENT);
+
+        // Generic entity/player sync (IDs 22-23)
+        CH.registerMessage(MsgSyncEntityData.Handler.class, MsgSyncEntityData.class, 22, Side.CLIENT);
+        CH.registerMessage(MsgSyncPlayerData.Handler.class, MsgSyncPlayerData.class, 23, Side.CLIENT);
     }
 }

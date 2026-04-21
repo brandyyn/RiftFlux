@@ -31,8 +31,13 @@
 package zairus.worldexplorer.archery.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import io.netty.buffer.ByteBuf;
 import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -62,7 +67,7 @@ import zairus.worldexplorer.archery.items.SlingshotAmmoHelper;
 
 public class EntityPebble
 extends Entity
-implements IProjectile {
+implements IProjectile, IEntitySyncData, IEntityAdditionalSpawnData {
     private int positionX = -1;
     private int positionY = -1;
     private int positionZ = -1;
@@ -80,6 +85,7 @@ implements IProjectile {
     private float specialKnockbackStrength;
     private float explosionStrength;
     private ItemStack pickupStack;
+    private boolean critical;
 
     public EntityPebble(World world) {
         super(world);
@@ -144,9 +150,6 @@ implements IProjectile {
     }
 
     protected void entityInit() {
-        this.dataWatcher.addObject(16, (Object)Byte.valueOf((byte)0));
-        this.dataWatcher.addObject(17, (Object)0);
-        this.dataWatcher.addObject(18, (Object)0);
     }
 
     public void setThrowableHeading(double p_70186_1_, double p_70186_3_, double p_70186_5_, float p_70186_7_, float p_70186_8_) {
@@ -222,7 +225,7 @@ implements IProjectile {
             int j = this.worldObj.getBlockMetadata(this.positionX, this.positionY, this.positionZ);
             if (block == this.field_145790_g && j == this.inData) {
                 if (!this.isDead) {
-                    if (!this.worldObj.isRemote) {
+                    if (!this.worldObj.isRemote && this.canBePickedUp > 0) {
                         ItemStack pickupItem = this.getPickupStack();
                         if (pickupItem != null) {
                             this.entityDropItem(pickupItem, 0.0f);
@@ -518,17 +521,15 @@ implements IProjectile {
     }
 
     public void setIsCritical(boolean p_70243_1_) {
-        byte b0 = this.dataWatcher.getWatchableObjectByte(16);
-        if (p_70243_1_) {
-            this.dataWatcher.updateObject(16, (Object)((byte)(b0 | 1)));
-        } else {
-            this.dataWatcher.updateObject(16, (Object)((byte)(b0 & 0xFFFFFFFE)));
+        if (this.critical == p_70243_1_) {
+            return;
         }
+        this.critical = p_70243_1_;
+        EntitySyncHelper.sync(this);
     }
 
     public boolean getIsCritical() {
-        byte b0 = this.dataWatcher.getWatchableObjectByte(16);
-        return (b0 & 1) != 0;
+        return this.critical;
     }
 
     public void setPickupStack(ItemStack stack) {
@@ -556,20 +557,11 @@ implements IProjectile {
 
     @SideOnly(value=Side.CLIENT)
     public ItemStack getRenderStack() {
-        int itemId = this.dataWatcher.getWatchableObjectInt(17);
-        Item item = itemId <= 0 ? null : Item.getItemById(itemId);
-        if (item == null) {
-            return this.getPickupStack();
-        }
-        return new ItemStack(item, 1, this.dataWatcher.getWatchableObjectInt(18));
+        return this.getPickupStack();
     }
 
     private void syncPickupStack() {
-        ItemStack stack = this.getPickupStack();
-        int itemId = stack == null || stack.getItem() == null ? 0 : Item.getIdFromItem(stack.getItem());
-        int meta = stack == null ? 0 : stack.getItemDamage();
-        this.dataWatcher.updateObject(17, (Object)itemId);
-        this.dataWatcher.updateObject(18, (Object)meta);
+        EntitySyncHelper.sync(this);
     }
 
     private boolean handleSpecialEntityHit(MovingObjectPosition hit) {
@@ -716,6 +708,52 @@ implements IProjectile {
         if (this.explosionStrength <= 0.0f || this.worldObj.isRemote) {
             return;
         }
-        this.worldObj.newExplosion((Entity)this, x, y, z, this.explosionStrength, false, true);
+        boolean damageTerrain = this.shootingEntity instanceof EntityPlayer;
+        this.worldObj.newExplosion((Entity)this, x, y, z, this.explosionStrength, false, damageTerrain);
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setBoolean("Critical", this.critical);
+        if (this.pickupStack != null && this.pickupStack.getItem() != null) {
+            NBTTagCompound pickupTag = new NBTTagCompound();
+            this.pickupStack.writeToNBT(pickupTag);
+            tag.setTag("PickupStack", pickupTag);
+        }
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.critical = tag.getBoolean("Critical");
+        if (tag.hasKey("PickupStack", 10)) {
+            this.pickupStack = ItemStack.loadItemStackFromNBT((NBTTagCompound)tag.getCompoundTag("PickupStack"));
+        } else {
+            this.pickupStack = SlingshotAmmoHelper.defaultPickupStack();
+        }
+    }
+
+    @Override
+    public void writeSpawnData(ByteBuf buffer) {
+        buffer.writeBoolean(this.critical);
+        buffer.writeFloat(this.explosionStrength);
+        if (this.pickupStack != null && this.pickupStack.getItem() != null) {
+            NBTTagCompound pickupTag = new NBTTagCompound();
+            this.pickupStack.writeToNBT(pickupTag);
+            ByteBufUtils.writeTag(buffer, pickupTag);
+        } else {
+            ByteBufUtils.writeTag(buffer, null);
+        }
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf buffer) {
+        this.critical = buffer.readBoolean();
+        this.explosionStrength = Math.max(0.0f, buffer.readFloat());
+        NBTTagCompound pickupTag = ByteBufUtils.readTag(buffer);
+        if (pickupTag != null) {
+            this.pickupStack = ItemStack.loadItemStackFromNBT(pickupTag);
+        } else {
+            this.pickupStack = SlingshotAmmoHelper.defaultPickupStack();
+        }
     }
 }

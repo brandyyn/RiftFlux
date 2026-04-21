@@ -6,9 +6,11 @@ import com.voidsrift.riftflux.command.CommandRiftFlux;
 import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
 import com.voidsrift.riftflux.combat.torohealth.ToroHealthContent;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
+import com.voidsrift.riftflux.duckling.DucklingContent;
 import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
 import com.voidsrift.riftflux.legendgear.LegendGearAdditionsContent;
 import com.voidsrift.riftflux.legendgear.LegendGearContent;
+import com.voidsrift.riftflux.net.sync.SyncEventHandler;
 import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
 import com.voidsrift.riftflux.soulhearts.SoulHeartsContent;
@@ -87,6 +89,7 @@ public class riftflux {
         BlessingContent.preInit(event);
         FurnitureContent.preInit(event);
         AxolotlContent.preInit(event);
+        DucklingContent.preInit(event);
         TerrariaContent.preInit(event);
         WheatfieldContent.preInit(event);
         WAMContent.preInit(event);
@@ -113,6 +116,7 @@ public class riftflux {
         BlessingContent.init();
         FurnitureContent.init();
         AxolotlContent.init(event);
+        DucklingContent.init(event);
 
         com.voidsrift.riftflux.tweaks.ladder.RiftFluxLadderContent.init();
 
@@ -129,6 +133,9 @@ public class riftflux {
         final CelestialFogEventServerEvents celestialFogEvents = new CelestialFogEventServerEvents();
         MinecraftForge.EVENT_BUS.register(celestialFogEvents);
         FMLCommonHandler.instance().bus().register(celestialFogEvents);
+        final SyncEventHandler syncEventHandler = new SyncEventHandler();
+        MinecraftForge.EVENT_BUS.register(syncEventHandler);
+        FMLCommonHandler.instance().bus().register(syncEventHandler);
         ChatBubbleColorManager.bootstrapServer();
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.PlayerHurtSoundEventHandler());

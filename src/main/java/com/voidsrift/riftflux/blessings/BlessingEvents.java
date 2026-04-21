@@ -417,26 +417,15 @@ public class BlessingEvents {
         String blessing = getActiveBlessing(player);
         if (!"Ninja".equals(blessing)) {
             clearNinjaDamageBoost(player);
+            player.getEntityData().removeTag(BlessingHelper.NBT_NINJA_DAMAGE_BOOST_TICK);
             return;
         }
-        if (!player.isSneaking()) {
-            clearNinjaDamageBoost(player);
+        clearNinjaDamageBoost(player);
+        if (!(event.target instanceof EntityLivingBase)
+                || !BlessingCombatHelper.shouldApplyNinjaFirstStrike(player, (EntityLivingBase) event.target)) {
+            player.getEntityData().removeTag(BlessingHelper.NBT_NINJA_DAMAGE_BOOST_TICK);
             return;
         }
-        if (!ensureNinjaInvisibility(player)) {
-            clearNinjaDamageBoost(player);
-            return;
-        }
-        if (!(event.target instanceof EntityLivingBase)) {
-            clearNinjaDamageBoost(player);
-            return;
-        }
-        EntityLivingBase target = (EntityLivingBase) event.target;
-        if (target.getHealth() < target.getMaxHealth()) {
-            clearNinjaDamageBoost(player);
-            return;
-        }
-        applyNinjaDamageBoost(player, true);
         player.getEntityData().setInteger(BlessingHelper.NBT_NINJA_DAMAGE_BOOST_TICK, player.ticksExisted);
     }
 
@@ -573,42 +562,26 @@ public class BlessingEvents {
         if (blessing == null) {
             return;
         }
-        boolean projectile = event.source != null && event.source.isProjectile();
-        ItemStack held = attacker.getHeldItem();
+        boolean directMelee = BlessingCombatHelper.isDirectPlayerMeleeSource(attacker, event.source);
+        if (!directMelee) {
+            float blessingMultiplier = BlessingCombatHelper.getIndirectDamageMultiplier(attacker, victim, event.source);
+            if (blessingMultiplier != 1.0F) {
+                event.ammount *= blessingMultiplier;
+            }
+        }
 
         switch (blessing) {
-            case "Lumberjack":
-                break;
-            case "Warrior":
-                break;
-            case "Hunter":
-                if (projectile) {
-                    event.ammount *= 1.2f;
-                }
-                break;
             case "Swamp":
                 if (victim != null) {
                     victim.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 80, 1));
                 }
                 break;
             case "Ninja":
-                if (attacker.isSneaking() && ensureNinjaInvisibility(attacker)
-                        && victim != null && victim.getHealth() >= victim.getMaxHealth()
-                        && !hasNinjaDamageBoost(attacker)) {
+                if (!directMelee && attacker.isSneaking() && ensureNinjaInvisibility(attacker)
+                        && victim != null && victim.getHealth() >= victim.getMaxHealth()) {
                     event.ammount *= 2.0f;
                 }
                 triggerNinjaCooldown(attacker);
-                break;
-            case "Vampire":
-                if (isInDirectSun(attacker)) {
-                    event.ammount *= 0.8f;
-                }
-                break;
-            case "Inferno":
-                break;
-            case "Berserker":
-                break;
-            case "Rogue":
                 break;
             default:
                 break;
@@ -713,35 +686,7 @@ public class BlessingEvents {
     }
 
     private void updateDamageModifiers(EntityPlayer player, String blessing, boolean berserkerActive) {
-        IAttributeInstance attr = player.getEntityAttribute(SharedMonsterAttributes.attackDamage);
-        if (attr == null) {
-            return;
-        }
-        ItemStack held = player.getHeldItem();
-
-        boolean warrior = "Warrior".equals(blessing);
-        boolean lumberjack = "Lumberjack".equals(blessing) && held != null && held.getItem() instanceof ItemAxe;
-        boolean berserker = "Berserker".equals(blessing) && berserkerActive;
-        boolean inferno = "Inferno".equals(blessing) && player.isBurning();
-        boolean rogue = "Rogue".equals(blessing);
-        boolean drunk = "Drunk".equals(blessing);
-
-        applyOrUpdateModifier(attr, WARRIOR_DAMAGE_UUID, "BlessingWarriorDamage", 0.2D, warrior);
-        applyOrUpdateModifier(attr, LUMBERJACK_DAMAGE_UUID, "BlessingLumberjackDamage", 0.35D, lumberjack);
-        applyOrUpdateModifier(attr, BERSERKER_DAMAGE_UUID, "BlessingBerserkerDamage", 0.33D, berserker);
-        applyOrUpdateModifier(attr, INFERNO_DAMAGE_UUID, "BlessingInfernoDamage", 0.35D, inferno);
-        applyOrUpdateModifier(attr, DRUNK_DAMAGE_UUID, "BlessingDrunkDamage", 0.5D, drunk);
-
-        if (rogue) {
-            float max = player.getMaxHealth();
-            double amount = 0.0D;
-            if (max > 0.0f) {
-                amount = Math.min(1.0D, Math.max(0.0D, (max - player.getHealth()) / max));
-            }
-            applyOrUpdateModifier(attr, ROGUE_DAMAGE_UUID, "BlessingRogueDamage", amount, amount > 0.0D);
-        } else {
-            applyOrUpdateModifier(attr, ROGUE_DAMAGE_UUID, "BlessingRogueDamage", 0.0D, false);
-        }
+        clearDamageModifiers(player);
     }
 
     private void clearDamageModifiers(EntityPlayer player) {

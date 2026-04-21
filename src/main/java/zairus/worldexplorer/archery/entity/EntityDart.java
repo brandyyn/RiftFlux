@@ -1,6 +1,8 @@
 package zairus.worldexplorer.archery.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import cpw.mods.fml.common.registry.IThrowableEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -29,7 +31,7 @@ import net.minecraft.world.World;
 import zairus.worldexplorer.archery.items.DartEffectHelper;
 import zairus.worldexplorer.archery.items.WEArcheryItems;
 
-public class EntityDart extends Entity implements IProjectile, IThrowableEntity {
+public class EntityDart extends Entity implements IProjectile, IThrowableEntity, IEntitySyncData {
     public int canBePickedUp;
     public int arrowShake;
     public Entity shootingEntity;
@@ -43,6 +45,7 @@ public class EntityDart extends Entity implements IProjectile, IThrowableEntity 
     private int ticksInGround;
     private int ticksInAir;
     private double damage;
+    private boolean critical;
 
     public EntityDart(World world) {
         super(world);
@@ -79,7 +82,6 @@ public class EntityDart extends Entity implements IProjectile, IThrowableEntity 
 
     @Override
     protected void entityInit() {
-        this.dataWatcher.addObject(16, (Object)Byte.valueOf((byte)0));
     }
 
     @Override
@@ -399,16 +401,15 @@ public class EntityDart extends Entity implements IProjectile, IThrowableEntity 
     }
 
     public void setIsCritical(boolean critical) {
-        byte value = this.dataWatcher.getWatchableObjectByte(16);
-        if (critical) {
-            this.dataWatcher.updateObject(16, (Object)((byte)(value | 1)));
-        } else {
-            this.dataWatcher.updateObject(16, (Object)((byte)(value & 0xFFFFFFFE)));
+        if (this.critical == critical) {
+            return;
         }
+        this.critical = critical;
+        EntitySyncHelper.sync(this);
     }
 
     public boolean getIsCritical() {
-        return (this.dataWatcher.getWatchableObjectByte(16) & 1) != 0;
+        return this.critical;
     }
 
     private void setDartStack(ItemStack stack) {
@@ -437,5 +438,15 @@ public class EntityDart extends Entity implements IProjectile, IThrowableEntity 
     @Override
     public void setThrower(Entity entity) {
         this.shootingEntity = entity;
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setBoolean("Critical", this.critical);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.critical = tag.getBoolean("Critical");
     }
 }

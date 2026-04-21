@@ -1,0 +1,14 @@
+item.raw_duck.name=Raw Duck Meat
+item.cooked_duck.name=Cooked Duck Meat
+item.duck_egg.name=Duck Egg
+item.duck_spawn_egg.name=Duck Spawn Egg
+item.quackling_spawn_egg.name=Quackling Spawn Egg
+entity.duck.name=Duck
+entity.quackling.name=Quackling
+entity.duck_egg.name=Duck Egg
+entity.riftflux.duck.name=Duck
+entity.riftflux.quackling.name=Quackling
+entity.riftflux.duck_egg.name=Duck Egg
+entity.duckling.duck.name=Duck
+entity.duckling.quackling.name=Quackling
+entity.duckling.duck_egg.name=Duck Egg

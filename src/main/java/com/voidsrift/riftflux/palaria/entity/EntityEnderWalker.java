@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.palaria.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import com.voidsrift.riftflux.palaria.PalariaMobContent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -11,15 +13,17 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSourceIndirect;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-public class EntityEnderWalker extends EntityMob {
+public class EntityEnderWalker extends EntityMob implements IEntitySyncData {
     private int teleportDelay;
     private int stareTimer;
+    private boolean screaming;
 
     public EntityEnderWalker(World world) {
         super(world);
@@ -30,9 +34,6 @@ public class EntityEnderWalker extends EntityMob {
     @Override
     protected void entityInit() {
         super.entityInit();
-        dataWatcher.addObject(16, Byte.valueOf((byte) 0));
-        dataWatcher.addObject(17, Byte.valueOf((byte) 0));
-        dataWatcher.addObject(18, Byte.valueOf((byte) 0));
     }
 
     @Override
@@ -238,10 +239,24 @@ public class EntityEnderWalker extends EntityMob {
     }
 
     public boolean isScreaming() {
-        return dataWatcher.getWatchableObjectByte(18) > 0;
+        return this.screaming;
     }
 
     public void setScreaming(boolean screaming) {
-        dataWatcher.updateObject(18, Byte.valueOf((byte) (screaming ? 1 : 0)));
+        if (this.screaming == screaming) {
+            return;
+        }
+        this.screaming = screaming;
+        EntitySyncHelper.sync(this);
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setBoolean("Screaming", this.screaming);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.screaming = tag.getBoolean("Screaming");
     }
 }

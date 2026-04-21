@@ -98,6 +98,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinTooltip");
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            if (ModConfig.fixUnderwaterMobDarkening) {
+                mixins.add("early.MixinEntity_RiftFluxUnderwaterBrightness");
+            }
             if (hasClass("Reika.DragonAPI.Instantiable.Event.Client.RenderBlockAtPosEvent")
                     && ModConfig.optimizeDragonAPIBlockRenderFastPaths) {
                 mixins.add("early.dragonapi.MixinRenderBlockAtPosEvent_FastPath");
@@ -188,6 +191,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.legacyBoatBuoyancy || ModConfig.boatsFallBreakDistance > 0.0F) {
             mixins.add("early.MixinEntityBoat_WaterClimb");
         }
+        mixins.add("early.MixinEntity_NoUnderwaterLivingDismount");
         if (ModConfig.playerOnlyHurtSound) {
             mixins.add("early.MixinEntityPlayer_CustomHurtSound");
             mixins.add("early.MixinEntityLivingBase_DrownPlayerHurtSoundFix");

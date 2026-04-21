@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.Set;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -76,6 +77,46 @@ public final class SlingshotAmmoHelper {
         return new ItemStack(Blocks.cobblestone, 1, 0);
     }
 
+    public static boolean isMobUsableAmmo(ItemStack stack) {
+        if (stack == null || stack.getItem() == null || stack.stackSize <= 0 || isDisabledAmmoStack(stack)) {
+            return false;
+        }
+        SpecialAmmoBehavior behavior = getSpecialBehavior(stack);
+        if (behavior != null) {
+            return !behavior.isCapture();
+        }
+        return matchesExactAmmo(stack) || matchesOreDictionaryAmmo(stack);
+    }
+
+    public static ItemStack randomMobAmmo(Random random) {
+        Random rng = random == null ? new Random() : random;
+        List<ItemStack> rolledCandidates = rollConfiguredMobAmmoCandidates(rng);
+        if (!rolledCandidates.isEmpty()) {
+            ItemStack selected = rolledCandidates.get(rng.nextInt(rolledCandidates.size()));
+            return selected == null ? null : selected.copy();
+        }
+
+        List<ItemStack> configuredCandidates = getConfiguredMobAmmoCandidates();
+        if (!configuredCandidates.isEmpty()) {
+            ItemStack selected = configuredCandidates.get(rng.nextInt(configuredCandidates.size()));
+            return selected == null ? null : selected.copy();
+        }
+
+        List<ItemStack> candidates = getFallbackMobAmmoCandidates();
+        if (candidates.isEmpty()) {
+            if (WEArcheryItems.pebble != null) {
+                ItemStack pebble = new ItemStack(WEArcheryItems.pebble, 1, 0);
+                if (isMobUsableAmmo(pebble)) {
+                    return pebble;
+                }
+            }
+            ItemStack fallback = new ItemStack(Blocks.cobblestone, 1, 0);
+            return isMobUsableAmmo(fallback) ? fallback : null;
+        }
+        ItemStack selected = candidates.get(rng.nextInt(candidates.size()));
+        return selected == null ? null : selected.copy();
+    }
+
     public static SpecialAmmoBehavior getSpecialBehavior(ItemStack stack) {
         if (stack == null || stack.getItem() == null || stack.stackSize <= 0) {
             return null;
@@ -105,13 +146,13 @@ public final class SlingshotAmmoHelper {
         SpecialAmmoBehavior behavior = getSpecialBehavior(stack);
         if (behavior == null) {
             if (ModConfig.riftExplorerSlingshotBaseDamage > 0.0F) {
-                addTooltipLine(tooltip, EnumChatFormatting.GRAY + "Base damage: " + formatNumber(ModConfig.riftExplorerSlingshotBaseDamage) + " before speed/enchantments/blessings");
+                addTooltipLine(tooltip, EnumChatFormatting.GRAY + "Base damage: " + formatNumber(ModConfig.riftExplorerSlingshotBaseDamage));
             }
             return;
         }
 
         if (behavior.getDamage() > 0.0D) {
-            addTooltipLine(tooltip, EnumChatFormatting.GRAY + "Damage: " + formatNumber(behavior.getDamage()) + " before enchantments/blessings");
+            addTooltipLine(tooltip, EnumChatFormatting.GRAY + "Damage: " + formatNumber(behavior.getDamage()));
         }
         if (behavior.getKnockbackStrength() > 0.0f) {
             addTooltipLine(tooltip, EnumChatFormatting.GRAY + "Knockback: " + formatNumber(behavior.getKnockbackStrength()));
@@ -223,6 +264,117 @@ public final class SlingshotAmmoHelper {
         return null;
     }
 
+    private static List<ItemStack> rollConfiguredMobAmmoCandidates(Random random) {
+        List<ItemStack> rolled = new ArrayList<ItemStack>();
+        Set<String> keys = new HashSet<String>();
+        List<MobAmmoEntry> entries = getConfiguredMobAmmoEntries();
+        for (int i = 0; i < entries.size(); i++) {
+            MobAmmoEntry entry = entries.get(i);
+            if (entry == null || !entry.roll(random)) {
+                continue;
+            }
+            addMobAmmoCandidate(rolled, keys, entry.toStack());
+        }
+        return rolled;
+    }
+
+    private static List<ItemStack> getConfiguredMobAmmoCandidates() {
+        List<ItemStack> candidates = new ArrayList<ItemStack>();
+        Set<String> keys = new HashSet<String>();
+        List<MobAmmoEntry> entries = getConfiguredMobAmmoEntries();
+        for (int i = 0; i < entries.size(); i++) {
+            MobAmmoEntry entry = entries.get(i);
+            if (entry != null) {
+                addMobAmmoCandidate(candidates, keys, entry.toStack());
+            }
+        }
+        return candidates;
+    }
+
+    private static List<ItemStack> getFallbackMobAmmoCandidates() {
+        List<ItemStack> candidates = new ArrayList<ItemStack>();
+        Set<String> keys = new HashSet<String>();
+
+        List<AmmoEntry> exactEntries = getExactAmmoEntries();
+        for (int i = 0; i < exactEntries.size(); i++) {
+            addMobAmmoCandidate(candidates, keys, exactEntries.get(i).toStack());
+        }
+
+        Set<String> oreNames = getAcceptedOreNames();
+        for (String oreName : oreNames) {
+            addMobAmmoCandidate(candidates, keys, firstOreDictionaryStack(oreName));
+        }
+
+        List<SpecialAmmoEntry> specialEntries = getSpecialAmmoEntries();
+        for (int i = 0; i < specialEntries.size(); i++) {
+            addMobAmmoCandidate(candidates, keys, specialEntries.get(i).toRepresentativeStack());
+        }
+
+        return candidates;
+    }
+
+    private static List<MobAmmoEntry> getConfiguredMobAmmoEntries() {
+        List<MobAmmoEntry> entries = new ArrayList<MobAmmoEntry>();
+        String[] configured = ModConfig.riftExplorerSlingshotSkeletonAmmoEntries;
+        if (configured == null) {
+            return entries;
+        }
+        for (int i = 0; i < configured.length; i++) {
+            MobAmmoEntry entry = MobAmmoEntry.parse(configured[i]);
+            if (entry != null && entry.toStack() != null) {
+                entries.add(entry);
+            }
+        }
+        return entries;
+    }
+
+    private static void addMobAmmoCandidate(List<ItemStack> candidates, Set<String> keys, ItemStack stack) {
+        if (!isMobUsableAmmo(stack)) {
+            return;
+        }
+        ItemStack copy = stack.copy();
+        copy.stackSize = 1;
+        String key = Item.getIdFromItem(copy.getItem()) + ":" + copy.getItemDamage();
+        if (keys.add(key)) {
+            candidates.add(copy);
+        }
+    }
+
+    private static ItemStack firstOreDictionaryStack(String oreName) {
+        if (oreName == null || oreName.isEmpty()) {
+            return null;
+        }
+        String actualName = findOreDictionaryName(oreName);
+        if (actualName == null || actualName.isEmpty()) {
+            return null;
+        }
+        List ores = OreDictionary.getOres(actualName);
+        for (int i = 0; i < ores.size(); i++) {
+            Object candidate = ores.get(i);
+            if (!(candidate instanceof ItemStack)) {
+                continue;
+            }
+            ItemStack stack = ((ItemStack)candidate).copy();
+            stack.stackSize = 1;
+            if (stack.getItem() != null) {
+                return stack;
+            }
+        }
+        return null;
+    }
+
+    private static String findOreDictionaryName(String oreName) {
+        String normalized = normalizeOreName(oreName);
+        String[] available = OreDictionary.getOreNames();
+        for (int i = 0; i < available.length; i++) {
+            String candidate = available[i];
+            if (candidate != null && normalizeOreName(candidate).equals(normalized)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
     private static List<AmmoEntry> getExactAmmoEntries() {
         List<AmmoEntry> entries = new ArrayList<AmmoEntry>();
         String[] configured = ModConfig.riftExplorerSlingshotAmmoItems;
@@ -308,6 +460,22 @@ public final class SlingshotAmmoHelper {
         return entry != null && entry.matches(stack);
     }
 
+    private static ItemStack resolveConfiguredAmmoMatcher(String raw) {
+        String match = extractMatchPart(raw);
+        if (match.isEmpty()) {
+            return null;
+        }
+        String lower = match.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("ore:")
+                || lower.startsWith("oredict:")
+                || lower.startsWith("dictionary:")
+                || lower.startsWith("dict:")) {
+            return firstOreDictionaryStack(match);
+        }
+        AmmoEntry entry = AmmoEntry.parse(match);
+        return entry == null ? null : entry.toStack();
+    }
+
     private static String extractMatchPart(String raw) {
         if (raw == null) {
             return "";
@@ -347,6 +515,26 @@ public final class SlingshotAmmoHelper {
             return Integer.toString((int)Math.rint(rounded));
         }
         return String.format(Locale.ROOT, "%.2f", rounded).replaceAll("0+$", "").replaceAll("\\.$", "");
+    }
+
+    private static double parseChancePercent(String raw, double fallbackPercent) {
+        if (raw == null) {
+            return fallbackPercent;
+        }
+        try {
+            double value = Double.parseDouble(raw.trim());
+            if (value <= 1.0D) {
+                value *= 100.0D;
+            }
+            if (value < 0.0D) {
+                value = 0.0D;
+            } else if (value > 100.0D) {
+                value = 100.0D;
+            }
+            return value;
+        } catch (Exception ignored) {
+            return fallbackPercent;
+        }
     }
 
     private static String normalizeOreName(String name) {
@@ -465,6 +653,13 @@ public final class SlingshotAmmoHelper {
             return false;
         }
 
+        private ItemStack toRepresentativeStack() {
+            if (this.exactEntry != null) {
+                return this.exactEntry.toStack();
+            }
+            return firstOreDictionaryStack(this.oreName);
+        }
+
         private static SpecialAmmoEntry parse(String raw) {
             if (raw == null) {
                 return null;
@@ -515,6 +710,50 @@ public final class SlingshotAmmoHelper {
             } catch (Exception ignored) {
                 return fallback;
             }
+        }
+    }
+
+    private static final class MobAmmoEntry {
+        private final String rawMatch;
+        private final double chancePercent;
+
+        private MobAmmoEntry(String rawMatch, double chancePercent) {
+            this.rawMatch = rawMatch;
+            this.chancePercent = chancePercent;
+        }
+
+        private ItemStack toStack() {
+            ItemStack stack = resolveConfiguredAmmoMatcher(this.rawMatch);
+            if (!isMobUsableAmmo(stack)) {
+                return null;
+            }
+            ItemStack copy = stack.copy();
+            copy.stackSize = 1;
+            return copy;
+        }
+
+        private boolean roll(Random random) {
+            if (random == null) {
+                return false;
+            }
+            return random.nextDouble() * 100.0D < this.chancePercent;
+        }
+
+        private static MobAmmoEntry parse(String raw) {
+            if (raw == null) {
+                return null;
+            }
+            String value = raw.trim();
+            if (value.isEmpty()) {
+                return null;
+            }
+            String[] parts = value.split("\\|");
+            String match = parts.length > 0 ? parts[0].trim() : "";
+            if (match.isEmpty()) {
+                return null;
+            }
+            double chancePercent = parts.length > 1 ? parseChancePercent(parts[1], 100.0D) : 100.0D;
+            return new MobAmmoEntry(match, chancePercent);
         }
     }
 

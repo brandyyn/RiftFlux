@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.palaria.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import com.voidsrift.riftflux.palaria.PalariaMobDrops;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -24,11 +26,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
-public class EntityCreeptile extends EntityMob {
+public class EntityCreeptile extends EntityMob implements IEntitySyncData {
     private int lastActiveTime;
     private int timeSinceIgnited;
     private int fuseTime = 25;
     private int explosionRadius = 4;
+    private int creeptileState = -1;
+    private boolean powered;
 
     public EntityCreeptile(World world) {
         super(world);
@@ -50,8 +54,6 @@ public class EntityCreeptile extends EntityMob {
     @Override
     protected void entityInit() {
         super.entityInit();
-        dataWatcher.addObject(16, Byte.valueOf((byte) -1));
-        dataWatcher.addObject(17, Byte.valueOf((byte) 0));
     }
 
     @Override
@@ -84,7 +86,7 @@ public class EntityCreeptile extends EntityMob {
     @Override
     public void readEntityFromNBT(NBTTagCompound tag) {
         super.readEntityFromNBT(tag);
-        dataWatcher.updateObject(17, Byte.valueOf((byte) (tag.getBoolean("powered") ? 1 : 0)));
+        this.powered = tag.getBoolean("powered");
         if (tag.hasKey("Fuse")) {
             fuseTime = tag.getShort("Fuse");
         }
@@ -146,7 +148,7 @@ public class EntityCreeptile extends EntityMob {
     }
 
     public boolean getPowered() {
-        return dataWatcher.getWatchableObjectByte(17) == 1;
+        return this.powered;
     }
 
     @Override
@@ -155,17 +157,24 @@ public class EntityCreeptile extends EntityMob {
     }
 
     public int getCreeptileState() {
-        return dataWatcher.getWatchableObjectByte(16);
+        return this.creeptileState;
     }
 
     public void setCreeptileState(int state) {
-        dataWatcher.updateObject(16, Byte.valueOf((byte) state));
+        if (this.creeptileState == state) {
+            return;
+        }
+        this.creeptileState = state;
+        EntitySyncHelper.sync(this);
     }
 
     @Override
     public void onStruckByLightning(EntityLightningBolt lightning) {
         super.onStruckByLightning(lightning);
-        dataWatcher.updateObject(17, Byte.valueOf((byte) 1));
+        if (!this.powered) {
+            this.powered = true;
+            EntitySyncHelper.sync(this);
+        }
     }
 
     @Override
@@ -200,5 +209,17 @@ public class EntityCreeptile extends EntityMob {
             strength *= 2.0F;
         }
         return strength;
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("State", this.creeptileState);
+        tag.setBoolean("Powered", this.powered);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.creeptileState = tag.getInteger("State");
+        this.powered = tag.getBoolean("Powered");
     }
 }

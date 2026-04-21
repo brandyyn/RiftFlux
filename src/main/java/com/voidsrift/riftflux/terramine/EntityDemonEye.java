@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.terramine;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityMob;
@@ -11,9 +13,9 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-public class EntityDemonEye extends EntityMob {
-    private static final int DEFAULT_FLAGS_WATCHER = 16;
+public class EntityDemonEye extends EntityMob implements IEntitySyncData {
     private ChunkCoordinates currentFlightTarget;
+    private byte batFlags;
 
     public EntityDemonEye(World world) {
         super(world);
@@ -26,7 +28,6 @@ public class EntityDemonEye extends EntityMob {
     @Override
     protected void entityInit() {
         super.entityInit();
-        this.dataWatcher.addObject(getFlagsWatcherId(), Byte.valueOf((byte) 0));
     }
 
     @Override
@@ -77,15 +78,19 @@ public class EntityDemonEye extends EntityMob {
     }
 
     public boolean getIsBatHanging() {
-        return (this.dataWatcher.getWatchableObjectByte(getFlagsWatcherId()) & 1) != 0;
+        return (this.batFlags & 1) != 0;
     }
 
     public void setIsBatHanging(boolean hanging) {
-        byte flags = this.dataWatcher.getWatchableObjectByte(getFlagsWatcherId());
+        byte flags = this.batFlags;
         if (hanging) {
-            this.dataWatcher.updateObject(getFlagsWatcherId(), Byte.valueOf((byte) (flags | 1)));
+            flags = (byte) (flags | 1);
         } else {
-            this.dataWatcher.updateObject(getFlagsWatcherId(), Byte.valueOf((byte) (flags & 0xFFFFFFFE)));
+            flags = (byte) (flags & 0xFFFFFFFE);
+        }
+        if (this.batFlags != flags) {
+            this.batFlags = flags;
+            EntitySyncHelper.sync(this);
         }
     }
 
@@ -226,13 +231,13 @@ public class EntityDemonEye extends EntityMob {
     @Override
     public void readEntityFromNBT(NBTTagCompound nbt) {
         super.readEntityFromNBT(nbt);
-        this.dataWatcher.updateObject(getFlagsWatcherId(), Byte.valueOf(nbt.getByte("BatFlags")));
+        this.batFlags = nbt.getByte("BatFlags");
     }
 
     @Override
     public void writeEntityToNBT(NBTTagCompound nbt) {
         super.writeEntityToNBT(nbt);
-        nbt.setByte("BatFlags", this.dataWatcher.getWatchableObjectByte(getFlagsWatcherId()));
+        nbt.setByte("BatFlags", this.batFlags);
     }
 
     @Override
@@ -246,11 +251,13 @@ public class EntityDemonEye extends EntityMob {
         return super.getCanSpawnHere();
     }
 
-    private static int getFlagsWatcherId() {
-        int id = ModConfig.terrariaDemonEyeFlagsDatawatcherId;
-        if (ModConfig.isValidEntityDatawatcherId(id)) {
-            return id;
-        }
-        return DEFAULT_FLAGS_WATCHER;
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setByte("BatFlags", this.batFlags);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.batFlags = tag.getByte("BatFlags");
     }
 }

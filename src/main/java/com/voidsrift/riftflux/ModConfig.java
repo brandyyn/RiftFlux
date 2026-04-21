@@ -18,9 +18,6 @@ public class ModConfig {
     private static final String PALARIA_CATEGORY = "palaria";
 
     public static Configuration config;
-    public static final int DATAWATCHER_MAX_ID = 65536;
-    public static final int PLAYER_DATAWATCHER_MIN_ID = 20;
-    public static final int ENTITY_DATAWATCHER_MIN_ID = 16;
     private static final int VANILLA_POTION_ID_SLOWNESS = 2;
     private static final int VANILLA_POTION_ID_CONFUSION = 9;
     private static final int VANILLA_POTION_ID_REGENERATION = 10;
@@ -105,6 +102,7 @@ public class ModConfig {
     public static boolean enableJackOLanternHelmet;
     public static boolean disablePumpkinOverlay;
     public static boolean disableUnderwaterOverlay;
+    public static boolean fixUnderwaterMobDarkening;
     public static boolean enableCelestialEventTextures;
     public static float celestialSunEventChance;
     public static float celestialMoonEventChance;
@@ -372,14 +370,15 @@ public class ModConfig {
     public static boolean enableRiftExplorerModule;
     public static boolean enableMoreBowsModule;
     public static boolean riftExplorerEnablePebbleRecipes;
-    public static String[] riftExplorerSlingshotAmmoItems;
-    public static boolean riftExplorerSlingshotEnableOreDictionaryAmmo;
-    public static String[] riftExplorerSlingshotAmmoOreDictionary;
-    public static String[] riftExplorerSlingshotSpecialAmmoEntries;
-    public static String[] riftExplorerSlingshotDisabledAmmoItems;
-    public static String riftExplorerSlingshotAmmoIconCorner;
-    public static boolean riftExplorerSlingshotBlockBossCapture;
-    public static String[] riftExplorerSlingshotCaptureMobBlacklist;
+public static String[] riftExplorerSlingshotAmmoItems;
+public static boolean riftExplorerSlingshotEnableOreDictionaryAmmo;
+public static String[] riftExplorerSlingshotAmmoOreDictionary;
+public static String[] riftExplorerSlingshotSpecialAmmoEntries;
+public static String[] riftExplorerSlingshotDisabledAmmoItems;
+public static String[] riftExplorerSlingshotSkeletonAmmoEntries;
+public static String riftExplorerSlingshotAmmoIconCorner;
+public static boolean riftExplorerSlingshotBlockBossCapture;
+public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static float riftExplorerSlingshotBaseDamage;
     public static String[] riftExplorerDisabledLongbowArrows;
     public static int riftExplorerLongbowDurability;
@@ -652,11 +651,42 @@ public class ModConfig {
             "EntityBison"
     };
 
+    private static final String[] DEFAULT_DUCKLING_QUACKLING_TRADES = new String[]{
+            "minecraft:emerald*1-6 -> minecraft:fish*1-6",
+            "minecraft:emerald*1-6 -> duckling:duck_egg*1-6"
+    };
+
+    private static final String[] DEFAULT_DUCKLING_QUACKLING_BREED_ITEMS = new String[]{
+            "minecraft:fish"
+    };
+
+    private static final String[] DEFAULT_DUCKLING_QUACKLING_BREED_ORE_DICTIONARY = new String[]{
+            "listAllfishraw",
+            "foodFishraw",
+            "fishRaw"
+    };
+
     // Axolotl module
     public static boolean enableAxolotlModule;
     public static boolean enableAxolotlNaturalSpawning;
     public static int axolotlSpawnWeight;
     public static float axolotlMaxHealth;
+
+    // Duckling module
+    public static boolean enableDucklingModule;
+    public static boolean enableDucklingNaturalSpawning;
+    public static int ducklingDuckSpawnWeight;
+    public static int ducklingQuacklingSpawnWeight;
+    public static float ducklingQuacklingMaxHealth;
+    public static boolean ducklingQuacklingTradingEnabled;
+    public static boolean ducklingQuacklingTradeOnlyWhileFishing;
+    public static String[] ducklingQuacklingTrades;
+    public static String[] ducklingQuacklingBreedItems;
+    public static String[] ducklingQuacklingBreedOreDictionary;
+    public static int[] ducklingQuacklingFishingCatchDelayTicks;
+    public static int[] ducklingQuacklingFishingCatchesBeforeStop;
+    public static int[] ducklingQuacklingFishingSessionsPerDay;
+    public static int ducklingQuacklingFishingBumpRecoveryTicks;
 
     // LegendGear module
     public static boolean enableLegendGearModule;
@@ -668,8 +698,6 @@ public class ModConfig {
     public static boolean legendGearAllowHeartDrops;
     public static float legendGearItemSoundVolume;
     public static boolean legendGearFancyExperience;
-    public static int legendGearManaDatawatcherId;
-    public static int legendGearGlideDatawatcherId;
     public static int legendGearMaxStarwellRetries;
     public static boolean legendGearFallingStarDamageEnabled;
     public static float legendGearFallingStarDamage;
@@ -740,13 +768,6 @@ public class ModConfig {
     public static int asgardShieldColorPatchwork;
     public static int asgardShieldColorLivingmetal;
     public static int asgardShieldColorBiomass;
-    public static int healAltarSoulHeartsDatawatcherId;
-    public static int appaFamiliarNameDatawatcherId;
-    public static int appaBisonSeatParentDatawatcherId;
-    public static int appaBisonSeatIndexDatawatcherId;
-    public static int terrariaDemonEyeFlagsDatawatcherId;
-    public static int axolotlStateDatawatcherId;
-
     // Soul Hearts
     public static boolean enableSoulHeartsModule;
     public static float soulHeartsDamageMultiplier;
@@ -1314,6 +1335,13 @@ public class ModConfig {
                 "client",
                 true,
                 "If true, hides the underwater distortion overlay while submerged."
+        );
+
+        fixUnderwaterMobDarkening = config.getBoolean(
+                "FixUnderwaterMobDarkening",
+                "client",
+                true,
+                "If true, living entities use water-surface light while underwater so mobs do not become unusually dark when submerged."
         );
 
         deathRespawnDelaySeconds = config.getInt(
@@ -2955,33 +2983,6 @@ public class ModConfig {
                 "Render fancy rainbow experience orbs."
         );
 
-        int legacyLegendGearManaDatawatcherId = config.getInt(
-                "manaDatawatcherID",
-                "legendgear",
-                20,
-                PLAYER_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "Legacy key for player mana datawatcher ID. Kept for compatibility."
-        );
-
-        legendGearManaDatawatcherId = config.getInt(
-                "LegendGearManaDatawatcherID",
-                "datawatchers",
-                legacyLegendGearManaDatawatcherId,
-                PLAYER_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for LegendGear mana on players."
-        );
-
-        legendGearGlideDatawatcherId = config.getInt(
-                "LegendGearGlideDatawatcherID",
-                "datawatchers",
-                Math.min(DATAWATCHER_MAX_ID, legendGearManaDatawatcherId + 1),
-                PLAYER_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for LegendGear glide state on players."
-        );
-
         legendGearMaxStarwellRetries = config.getInt(
                 "maxStarwellRetries",
                 "legendgear",
@@ -3544,74 +3545,6 @@ public class ModConfig {
                 "Default tint color for Biomass shields."
         );
 
-        healAltarSoulHeartsDatawatcherId = config.getInt(
-                "HealingAltarSoulHeartsDatawatcherID",
-                "datawatchers",
-                Math.min(DATAWATCHER_MAX_ID, legendGearGlideDatawatcherId + 1),
-                PLAYER_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for Healing Altar soul hearts on players."
-        );
-
-        appaFamiliarNameDatawatcherId = config.getInt(
-                "AppaFamiliarNameDatawatcherID",
-                "datawatchers",
-                19,
-                ENTITY_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for familiar name sync."
-        );
-
-        appaBisonSeatParentDatawatcherId = config.getInt(
-                "AppaBisonSeatParentDatawatcherID",
-                "datawatchers",
-                20,
-                ENTITY_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for bison seat parent entity ID."
-        );
-
-        appaBisonSeatIndexDatawatcherId = config.getInt(
-                "AppaBisonSeatIndexDatawatcherID",
-                "datawatchers",
-                21,
-                ENTITY_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for bison seat index."
-        );
-
-        terrariaDemonEyeFlagsDatawatcherId = config.getInt(
-                "TerrariaDemonEyeFlagsDatawatcherID",
-                "datawatchers",
-                16,
-                ENTITY_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for Demon Eye state flags."
-        );
-
-        axolotlStateDatawatcherId = config.getInt(
-                "AxolotlStateDatawatcherID",
-                "datawatchers",
-                18,
-                ENTITY_DATAWATCHER_MIN_ID,
-                DATAWATCHER_MAX_ID,
-                "DataWatcher ID for axolotl variant and state sync."
-        );
-        if (axolotlStateDatawatcherId < 18) {
-            axolotlStateDatawatcherId = 18;
-        }
-
-        resolveDatawatcherConflicts();
-        persistDatawatcherConfigValue("legendgear", "manaDatawatcherID", legendGearManaDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "LegendGearManaDatawatcherID", legendGearManaDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "LegendGearGlideDatawatcherID", legendGearGlideDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "HealingAltarSoulHeartsDatawatcherID", healAltarSoulHeartsDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "AppaFamiliarNameDatawatcherID", appaFamiliarNameDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "AppaBisonSeatParentDatawatcherID", appaBisonSeatParentDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "AppaBisonSeatIndexDatawatcherID", appaBisonSeatIndexDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "TerrariaDemonEyeFlagsDatawatcherID", terrariaDemonEyeFlagsDatawatcherId);
-        persistDatawatcherConfigValue("datawatchers", "AxolotlStateDatawatcherID", axolotlStateDatawatcherId);
-
         enableSoulHeartsModule = config.getBoolean(
                 "EnableSoulHeartsModule",
                 "soulhearts",
@@ -3800,7 +3733,7 @@ public class ModConfig {
         wheatfieldAllowVillage = config.getBoolean(
                 "AllowVillages",
                 "wheatfield",
-                true,
+                false,
                 "If true, villages may generate in the Wheatfield biome."
         );
 
@@ -4349,6 +4282,20 @@ public class ModConfig {
                 "riftexplorer",
                 new String[0],
                 "Ammo entries that are blocked even if they appear in SlingshotAmmoItems, SlingshotAmmoOreDictionary, or SlingshotSpecialAmmoEntries. Format: modid:item, modid:item:meta, or ore:name."
+        );
+        riftExplorerSlingshotSkeletonAmmoEntries = config.getStringList(
+                "SlingshotSkeletonAmmoEntries",
+                "riftexplorer",
+                new String[]{
+                        "riftflux:pebble|70",
+                        "minecraft:cobblestone|70",
+                        "minecraft:stone:0|70",
+                        "minecraft:iron_block|15",
+                        "minecraft:ender_eye|15",
+                        "minecraft:ender_pearl|15",
+                        "minecraft:obsidian|15"
+                },
+                "Ammo entries that slingshot skeletons can spawn with. Format: match|chance. match accepts modid:item, modid:item:meta, or ore:name. chance accepts 0-1 or 0-100 values and each entry is rolled independently; one successful entry is chosen at random. Capture ammo is always excluded."
         );
         riftExplorerSlingshotAmmoIconCorner = config.getString(
                 "SlingshotAmmoIconCorner",
@@ -5181,6 +5128,121 @@ public class ModConfig {
                 "Base max health for axolotls."
         );
 
+        enableDucklingModule = config.getBoolean(
+                "EnableDucklingModule",
+                "duckling",
+                true,
+                "Master switch for integrated Duckling content."
+        );
+
+        enableDucklingNaturalSpawning = config.getBoolean(
+                "EnableNaturalSpawning",
+                "duckling",
+                true,
+                "If true, ducks spawn in river biomes and quacklings spawn in swamp-like biomes."
+        );
+
+        ducklingDuckSpawnWeight = config.getInt(
+                "DuckSpawnWeight",
+                "duckling",
+                5,
+                0,
+                1000,
+                "Spawn weight for natural duck spawning."
+        );
+
+        ducklingQuacklingSpawnWeight = config.getInt(
+                "QuacklingSpawnWeight",
+                "duckling",
+                1,
+                0,
+                1000,
+                "Spawn weight for natural quackling spawning."
+        );
+
+        ducklingQuacklingMaxHealth = config.getFloat(
+                "QuacklingMaxHealth",
+                "duckling",
+                40.0F,
+                1.0F,
+                4096.0F,
+                "Base max health for Quacklings."
+        );
+
+        ducklingQuacklingTradingEnabled = config.getBoolean(
+                "EnableQuacklingTrading",
+                "duckling",
+                true,
+                "If false, Quacklings cannot open their trade GUI."
+        );
+
+        ducklingQuacklingTradeOnlyWhileFishing = config.getBoolean(
+                "QuacklingTradeOnlyWhileFishing",
+                "duckling",
+                true,
+                "If true, players can only trade with Quacklings while they are sitting and actively fishing."
+        );
+
+        ducklingQuacklingTrades = config.getStringList(
+                "QuacklingTrades",
+                "duckling",
+                DEFAULT_DUCKLING_QUACKLING_TRADES,
+                "Trades Quacklings can offer. Leave this list empty to disable Quackling trading. Syntax: buy_item[*count or *min-max][@meta][ + second_buy_item[*count or *min-max][@meta]] -> sell_item[*count or *min-max][@meta]. Examples: minecraft:emerald*1-4 -> minecraft:fish*1-4 or minecraft:emerald*1 + minecraft:fish*2 -> duckling:duck_egg*1. Meta defaults to 0; use 32767 for wildcard input meta."
+        );
+
+        ducklingQuacklingBreedItems = config.getStringList(
+                "QuacklingBreedItems",
+                "duckling",
+                DEFAULT_DUCKLING_QUACKLING_BREED_ITEMS,
+                "Item registry names that can breed and tempt Quacklings. Syntax: modid:item or modid:item@meta. If meta is omitted, all metadata values match. Entries starting with ore: are treated as ore dictionary names."
+        );
+
+        ducklingQuacklingBreedOreDictionary = config.getStringList(
+                "QuacklingBreedOreDictionary",
+                "duckling",
+                DEFAULT_DUCKLING_QUACKLING_BREED_ORE_DICTIONARY,
+                "Ore dictionary names that can breed and tempt Quacklings."
+        );
+
+        ducklingQuacklingFishingCatchDelayTicks = getIntRangeConfig(
+                "duckling",
+                "QuacklingFishingCatchDelayTicks",
+                1200,
+                3600,
+                20,
+                72000,
+                "Random delay range in ticks before a fishing Quackling pulls up a fish. Format: [minimum, maximum]. 20 ticks = 1 second."
+        );
+
+        ducklingQuacklingFishingCatchesBeforeStop = getIntRangeConfig(
+                "duckling",
+                "QuacklingFishingCatchesBeforeStop",
+                6,
+                12,
+                1,
+                1024,
+                "Random catch-count range before a Quackling ends one autonomous fishing session. Format: [minimum, maximum]."
+        );
+
+        ducklingQuacklingFishingSessionsPerDay = getIntRangeConfig(
+                "duckling",
+                "QuacklingFishingSessionsPerDay",
+                0,
+                2,
+                0,
+                2,
+                "Random daily autonomous fishing session range for each Quackling. Format: [minimum, maximum]. Maximum is capped at 2."
+        );
+
+        ducklingQuacklingFishingBumpRecoveryTicks = config.getInt(
+                "QuacklingFishingBumpRecoveryTicks",
+                "duckling",
+                300,
+                20,
+                72000,
+                "How long a bumped or displaced Quackling keeps trying to return to its fishing session before giving up. 20 ticks = 1 second."
+        );
+
         protectCircuitryFromWater = config.getBoolean(
                 "ProtectCircuitryFromWater",
                 "general",
@@ -5235,8 +5297,8 @@ public class ModConfig {
                 "If true, show raw armor values next to the overlay."
         );
 
-        persistDatawatcherConfigValue("armoroverlay", "OverlayLevels", armorOverlayLevels);
-        persistDatawatcherConfigValue("armoroverlay", "ArmorPieces", armorOverlayArmorPieces);
+        persistConfigIntValue("armoroverlay", "OverlayLevels", armorOverlayLevels);
+        persistConfigIntValue("armoroverlay", "ArmorPieces", armorOverlayArmorPieces);
 
         divineRpgDisableHaliteExtraArmorPieceRender = config.getBoolean(
                 "DisableHaliteExtraArmorPieceRender",
@@ -6232,44 +6294,86 @@ public class ModConfig {
         config.save();
     }
 
-    private static void resolveDatawatcherConflicts() {
-        Set<Integer> used = new HashSet<Integer>();
-
-        legendGearManaDatawatcherId = reserveUniqueDatawatcherId(legendGearManaDatawatcherId, PLAYER_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
-        legendGearGlideDatawatcherId = reserveUniqueDatawatcherId(legendGearGlideDatawatcherId, PLAYER_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
-        healAltarSoulHeartsDatawatcherId = reserveUniqueDatawatcherId(healAltarSoulHeartsDatawatcherId, PLAYER_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
-        appaFamiliarNameDatawatcherId = reserveUniqueDatawatcherId(appaFamiliarNameDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
-        appaBisonSeatParentDatawatcherId = reserveUniqueDatawatcherId(appaBisonSeatParentDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
-        appaBisonSeatIndexDatawatcherId = reserveUniqueDatawatcherId(appaBisonSeatIndexDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
-        terrariaDemonEyeFlagsDatawatcherId = reserveUniqueDatawatcherId(terrariaDemonEyeFlagsDatawatcherId, ENTITY_DATAWATCHER_MIN_ID, DATAWATCHER_MAX_ID, used);
-        axolotlStateDatawatcherId = reserveUniqueDatawatcherId(axolotlStateDatawatcherId, 18, DATAWATCHER_MAX_ID, used);
-    }
-
-    private static int reserveUniqueDatawatcherId(int requested, int min, int max, Set<Integer> used) {
-        int candidate = Math.max(min, Math.min(max, requested));
-        if (!used.contains(candidate)) {
-            used.add(candidate);
-            return candidate;
-        }
-        for (int i = min; i <= max; i++) {
-            if (!used.contains(i)) {
-                used.add(i);
-                return i;
-            }
-        }
-        return candidate;
-    }
-
-    private static void persistDatawatcherConfigValue(String category, String key, int value) {
+    private static void persistConfigIntValue(String category, String key, int value) {
         config.get(category, key, value).set(value);
     }
 
-    public static boolean isValidPlayerDatawatcherId(int id) {
-        return id >= PLAYER_DATAWATCHER_MIN_ID && id <= DATAWATCHER_MAX_ID;
+    private static int[] getIntRangeConfig(String category, String key, int defaultMin, int defaultMax,
+            int minimumAllowed, int maximumAllowed, String comment) {
+        Property property = config.get(category, key, new int[]{defaultMin, defaultMax}, comment);
+        int[] range = sanitizeIntRange(property.getIntList(), defaultMin, defaultMax, minimumAllowed, maximumAllowed);
+        property.set(range);
+        return range;
     }
 
-    public static boolean isValidEntityDatawatcherId(int id) {
-        return id >= ENTITY_DATAWATCHER_MIN_ID && id <= DATAWATCHER_MAX_ID;
+    private static int[] sanitizeIntRange(int[] values, int defaultMin, int defaultMax, int minimumAllowed,
+            int maximumAllowed) {
+        int min = defaultMin;
+        int max = defaultMax;
+        if (values != null && values.length > 0) {
+            min = values[0];
+            max = values.length > 1 ? values[1] : values[0];
+        }
+        min = clampInt(min, minimumAllowed, maximumAllowed);
+        max = clampInt(max, minimumAllowed, maximumAllowed);
+        if (max < min) {
+            max = min;
+        }
+        return new int[]{min, max};
+    }
+
+    private static int clampInt(int value, int minimumAllowed, int maximumAllowed) {
+        if (value < minimumAllowed) {
+            return minimumAllowed;
+        }
+        if (value > maximumAllowed) {
+            return maximumAllowed;
+        }
+        return value;
+    }
+
+    public static int getQuacklingFishingMinCatchDelayTicks() {
+        return getRangeMin(ducklingQuacklingFishingCatchDelayTicks, 360);
+    }
+
+    public static int getQuacklingFishingMaxCatchDelayTicks() {
+        return getRangeMax(ducklingQuacklingFishingCatchDelayTicks, 400);
+    }
+
+    public static int getQuacklingFishingMinCatchesBeforeStop() {
+        return getRangeMin(ducklingQuacklingFishingCatchesBeforeStop, 8);
+    }
+
+    public static int getQuacklingFishingMaxCatchesBeforeStop() {
+        return getRangeMax(ducklingQuacklingFishingCatchesBeforeStop, 16);
+    }
+
+    public static int getQuacklingFishingMinSessionsPerDay() {
+        return getRangeMin(ducklingQuacklingFishingSessionsPerDay, 0);
+    }
+
+    public static int getQuacklingFishingMaxSessionsPerDay() {
+        return getRangeMax(ducklingQuacklingFishingSessionsPerDay, 2);
+    }
+
+    public static boolean hasQuacklingTradesConfigured() {
+        if (ducklingQuacklingTrades == null) {
+            return false;
+        }
+        for (String trade : ducklingQuacklingTrades) {
+            if (trade != null && !trade.trim().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int getRangeMin(int[] range, int fallback) {
+        return range != null && range.length > 0 ? range[0] : fallback;
+    }
+
+    private static int getRangeMax(int[] range, int fallback) {
+        return range != null && range.length > 1 ? range[1] : getRangeMin(range, fallback);
     }
 
     private static String[] sanitizeAppaPassengerFilter(String[] values) {

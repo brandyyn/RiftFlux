@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.wam.entity;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -26,14 +28,14 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-public class EntityCyclops extends EntityMob {
-    private static final int HAS_EYE_DATA_WATCHER = 17;
+public class EntityCyclops extends EntityMob implements IEntitySyncData {
     private static final double SCAVENGE_RANGE = 10.0D;
     private static final String SOUND_CYCLOPS_IDLE = "riftflux:ender_troll_idle";
     private static final String SOUND_CYCLOPS_HURT = "riftflux:ender_troll_hurt";
     private static final String SOUND_CYCLOPS_DEATH = "riftflux:ender_troll_death";
     private static final String SOUND_HEAVY_WALK = "riftflux:wam_heavy_walk";
     private int attackTimer;
+    private boolean hasEye = true;
 
     public EntityCyclops(World world) {
         super(world);
@@ -53,7 +55,6 @@ public class EntityCyclops extends EntityMob {
     @Override
     protected void entityInit() {
         super.entityInit();
-        dataWatcher.addObject(HAS_EYE_DATA_WATCHER, Byte.valueOf((byte) 1));
     }
 
     @Override
@@ -159,21 +160,16 @@ public class EntityCyclops extends EntityMob {
     }
 
     public boolean hasEye() {
-        try {
-            return dataWatcher != null && dataWatcher.getWatchableObjectByte(HAS_EYE_DATA_WATCHER) == 1;
-        } catch (RuntimeException ignored) {
-            return true;
-        }
+        return this.hasEye;
     }
 
     public void setHasEye(boolean hasEye) {
-        if (dataWatcher == null) {
+        if (this.hasEye == hasEye) {
             return;
         }
-        try {
-            dataWatcher.updateObject(HAS_EYE_DATA_WATCHER, Byte.valueOf((byte) (hasEye ? 1 : 0)));
-        } catch (RuntimeException ignored) {
-        }
+        this.hasEye = hasEye;
+        EntitySyncHelper.sync(this);
+        this.syncEyeState();
     }
 
     @Override
@@ -266,5 +262,16 @@ public class EntityCyclops extends EntityMob {
     private static double getConfiguredMaxHealth(boolean hasEye) {
         double configured = Math.max(1.0D, ModConfig.cyclopsMaxHealth);
         return hasEye ? configured : Math.max(1.0D, configured * (2.0D / 3.0D));
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setBoolean("HasEye", this.hasEye);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        this.hasEye = tag.getBoolean("HasEye");
+        this.syncEyeState();
     }
 }

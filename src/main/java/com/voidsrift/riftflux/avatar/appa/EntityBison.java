@@ -412,13 +412,20 @@ public class EntityBison extends EntityFamiliar {
                 seat = null;
             }
             if (seat == null) {
-                seat = new EntityBisonSeat(this.worldObj, this, i);
-                seat.setPosition(this.posX, this.posY, this.posZ);
-                if (this.worldObj.spawnEntityInWorld(seat)) {
+                seat = findExistingSeat(i);
+                if (seat != null) {
+                    seat.setParent(this);
+                    seat.setSeatIndex(i);
                     passengerSeats[i] = seat;
                 } else {
-                    passengerSeats[i] = null;
-                    continue;
+                    seat = new EntityBisonSeat(this.worldObj, this, i);
+                    seat.setPosition(this.posX, this.posY, this.posZ);
+                    if (this.worldObj.spawnEntityInWorld(seat)) {
+                        passengerSeats[i] = seat;
+                    } else {
+                        passengerSeats[i] = null;
+                        continue;
+                    }
                 }
             } else {
                 seat.setParent(this);
@@ -431,6 +438,22 @@ public class EntityBison extends EntityFamiliar {
                 }
             }
         }
+    }
+
+    private EntityBisonSeat findExistingSeat(int seatIndex) {
+        if (this.worldObj == null || this.worldObj.loadedEntityList == null) {
+            return null;
+        }
+        for (Object obj : this.worldObj.loadedEntityList) {
+            if (!(obj instanceof EntityBisonSeat)) {
+                continue;
+            }
+            EntityBisonSeat seat = (EntityBisonSeat) obj;
+            if (!seat.isDead && seat.worldObj == this.worldObj && seat.getSeatIndex() == seatIndex && seat.getParent() == this) {
+                return seat;
+            }
+        }
+        return null;
     }
 
     private void clearSeats() {
