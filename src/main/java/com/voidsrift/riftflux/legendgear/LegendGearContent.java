@@ -44,6 +44,7 @@ public final class LegendGearContent {
 
         module = LegendGear2.instance;
         module.preInit(event);
+        LegendGearAdditionsContent.preInit(event);
         activated = true;
     }
 
@@ -53,6 +54,7 @@ public final class LegendGearContent {
         }
         initialized = true;
         module.init(event);
+        LegendGearAdditionsContent.init(event);
     }
 
     public static void postInit(FMLPostInitializationEvent event) {

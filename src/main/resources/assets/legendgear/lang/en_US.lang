@@ -219,3 +219,12 @@ attribute.name.lg2.armorPenaltyScaling=Armor Penalty Multiplier
 
 lg2text.armorPenaltyAnnotation=(Armored: -%1$d%% casting speed)
 
+item.starglass_sword.name=Starglass Sword
+
+tooltip.legendgear.phoenix_feather.revive=Carry in inventory to revive once on death.
+tooltip.legendgear.phoenix_feather.consume=Consumes one feather and grants brief protection.
+
+tile.starry_sand.name=Starry Sand
+tile.red_starry_sand.name=Red Starry Sand
+tile.lightning_struck_red_sand.name=Lightning-Struck Red Sand
+

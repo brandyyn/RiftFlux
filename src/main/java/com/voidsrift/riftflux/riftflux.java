@@ -7,6 +7,7 @@ import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
 import com.voidsrift.riftflux.combat.torohealth.ToroHealthContent;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
+import com.voidsrift.riftflux.legendgear.LegendGearAdditionsContent;
 import com.voidsrift.riftflux.legendgear.LegendGearContent;
 import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
@@ -271,6 +272,10 @@ public class riftflux {
     }
 
     private static Item resolveLegendGearItemAlias(String fullName) {
+        Item additionsItem = LegendGearAdditionsContent.resolveLegacyItemAlias(fullName);
+        if (additionsItem != null) {
+            return additionsItem;
+        }
         String key = legendGearAliasKey(fullName);
         switch (key) {
             case "emeraldshard":
@@ -346,6 +351,10 @@ public class riftflux {
     }
 
     private static Block resolveLegendGearBlockAlias(String fullName) {
+        Block additionsBlock = LegendGearAdditionsContent.resolveLegacyBlockAlias(fullName);
+        if (additionsBlock != null) {
+            return additionsBlock;
+        }
         String key = legendGearAliasKey(fullName);
         switch (key) {
             case "starstoneblock":
@@ -603,6 +612,7 @@ public class riftflux {
                 registerItemAliasVariants(block == null ? null : Item.getItemFromBlock(block), namespace + ":" + blockAlias);
             }
         }
+        LegendGearAdditionsContent.registerLegacyAliases();
     }
 
     private static void registerSatchelsLegacyAliases() {

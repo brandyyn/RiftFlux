@@ -17,7 +17,11 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
 import net.nmccoy.legendgear.item.LGItem;
+
+import java.util.List;
 
 public class PhoenixFeather
 extends LGItem {
@@ -29,6 +33,11 @@ extends LGItem {
 
     public EnumRarity getRarity(ItemStack p_77613_1_) {
         return EnumRarity.uncommon;
+    }
+
+    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advanced) {
+        list.add(EnumChatFormatting.GOLD + StatCollector.translateToLocal("tooltip.legendgear.phoenix_feather.revive"));
+        list.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("tooltip.legendgear.phoenix_feather.consume"));
     }
 
     @Override
@@ -44,4 +53,3 @@ extends LGItem {
         return false;
     }
 }
-
