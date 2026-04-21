@@ -32,6 +32,7 @@ public final class WheatfieldContent {
     private static boolean clientInitialized;
     private static boolean terrainHooksRegistered;
     private static boolean spawnHooksRegistered;
+    private static WheatfieldTerrainHandler terrainHandler;
 
     private WheatfieldContent() {
     }
@@ -87,7 +88,9 @@ public final class WheatfieldContent {
         }
         if (!terrainHooksRegistered) {
             terrainHooksRegistered = true;
-            MinecraftForge.TERRAIN_GEN_BUS.register(new WheatfieldTerrainHandler());
+            terrainHandler = new WheatfieldTerrainHandler();
+            MinecraftForge.TERRAIN_GEN_BUS.register(terrainHandler);
+            MinecraftForge.EVENT_BUS.register(terrainHandler);
         }
         if (!spawnHooksRegistered) {
             spawnHooksRegistered = true;

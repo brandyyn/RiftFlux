@@ -45,6 +45,7 @@ import java.util.Random;
 import java.util.UUID;
 
 public class BlessingEvents {
+    private static final ThreadLocal<Boolean> APPLYING_NINJA_INVISIBILITY = new ThreadLocal<Boolean>();
     private static final String NBT_PENDING_SYNC = "BlessingPendingSync";
     private static final String NBT_PENDING_SYNC_DELAY = "BlessingPendingSyncDelay";
     private static final Random RNG = new Random();
@@ -495,7 +496,7 @@ public class BlessingEvents {
         if ("Ninja".equals(blessing) && player.isSneaking() && ninjaCooldown <= 0) {
             PotionEffect effect = player.getActivePotionEffect(Potion.invisibility);
             if (effect == null || effect.getDuration() < 10) {
-                player.addPotionEffect(new PotionEffect(Potion.invisibility.id, 10, 0, false));
+                addNinjaInvisibility(player);
             }
         } else if ("Diver".equals(blessing)) {
             player.setAir(300);
@@ -689,10 +690,26 @@ public class BlessingEvents {
         if (!player.isPotionActive(Potion.invisibility)) {
             int ninjaCooldown = player.getEntityData().getInteger(BlessingHelper.NBT_NINJA_INVIS_COOLDOWN);
             if (ninjaCooldown <= 0) {
-                player.addPotionEffect(new PotionEffect(Potion.invisibility.id, 10, 0, false));
+                addNinjaInvisibility(player);
             }
         }
         return player.isPotionActive(Potion.invisibility);
+    }
+
+    public static boolean isApplyingNinjaInvisibility() {
+        return Boolean.TRUE.equals(APPLYING_NINJA_INVISIBILITY.get());
+    }
+
+    private static void addNinjaInvisibility(EntityPlayer player) {
+        if (player == null) {
+            return;
+        }
+        APPLYING_NINJA_INVISIBILITY.set(Boolean.TRUE);
+        try {
+            player.addPotionEffect(new PotionEffect(Potion.invisibility.id, 10, 0, false));
+        } finally {
+            APPLYING_NINJA_INVISIBILITY.remove();
+        }
     }
 
     private void updateDamageModifiers(EntityPlayer player, String blessing, boolean berserkerActive) {

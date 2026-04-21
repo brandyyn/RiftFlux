@@ -33,7 +33,7 @@ extends WEItem {
     public WERareGem() {
         this.setUnlocalizedName("raregem");
         this.setTextureName("worldexplorer:raregem_1");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabMaterials);
         this.setHasSubtypes(true);
     }
 
@@ -63,4 +63,3 @@ extends WEItem {
         }
     }
 }
-

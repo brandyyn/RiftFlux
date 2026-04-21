@@ -255,6 +255,7 @@ blessing.riftflux.pillar_destroyed.line2=I am no longer blessed.
 tile.glowstoneDust.name=Glowstone Dust
 tile.offlawn_lawn_block.name=Lawn Block
 tile.offlawn_sunflower_bush.name=Sunflower Bush
+tile.bright_sunflower.name=Bright Sunflower
 tile.offlawn_beanstalk.name=Beanstalk
 item.offlawn_sun_seed.name=Sunflower Seed
 tile.pumpkin_j.name=Haunted Pumpkin

@@ -34,11 +34,10 @@ extends Render {
         float var10 = 0.5f;
         GL11.glScalef((float)(var10 / 1.0f), (float)(var10 / 1.0f), (float)(var10 / 1.0f));
         GL11.glRotatef((float)(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * p_76986_9_ - 90.0f), (float)0.0f, (float)1.0f, (float)0.0f);
-        GL11.glRotatef((float)((entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * p_76986_9_ - 45.0f) * -1.0f), (float)0.0f, (float)0.0f, (float)1.0f);
-        GL11.glRotatef((float)90.0f, (float)0.0f, (float)0.0f, (float)1.0f);
+        GL11.glRotatef((float)(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * p_76986_9_), (float)0.0f, (float)0.0f, (float)1.0f);
+        GL11.glRotatef((float)-90.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         this.renderFace();
         GL11.glRotatef((float)90.0f, (float)0.0f, (float)1.0f, (float)0.0f);
-        GL11.glTranslatef((float)0.5f, (float)0.0f, (float)-0.5f);
         this.renderFace();
         GL11.glDisable((int)32826);
         GL11.glPopMatrix();
@@ -50,22 +49,23 @@ extends Render {
         float var14 = 1.0f;
         float var15 = 0.0f;
         float var16 = 1.0f;
-        float var17 = 1.0f;
-        float var18 = 1.0f;
-        float var19 = 0.25f;
+        float minX = -0.5f;
+        float maxX = 0.5f;
+        float minY = -0.5f;
+        float maxY = 0.5f;
         var12.startDrawingQuads();
         var12.setNormal(0.0f, 1.0f, 0.0f);
-        var12.addVertexWithUV((double)(0.0f - var18), (double)(0.0f - var19), 0.0, (double)var13, (double)var16);
-        var12.addVertexWithUV((double)(var17 - var18), (double)(0.0f - var19), 0.0, (double)var14, (double)var16);
-        var12.addVertexWithUV((double)(var17 - var18), (double)(1.0f - var19), 0.0, (double)var14, (double)var15);
-        var12.addVertexWithUV((double)(0.0f - var18), (double)(1.0f - var19), 0.0, (double)var13, (double)var15);
+        var12.addVertexWithUV((double)minX, (double)minY, 0.0, (double)var13, (double)var16);
+        var12.addVertexWithUV((double)maxX, (double)minY, 0.0, (double)var14, (double)var16);
+        var12.addVertexWithUV((double)maxX, (double)maxY, 0.0, (double)var14, (double)var15);
+        var12.addVertexWithUV((double)minX, (double)maxY, 0.0, (double)var13, (double)var15);
         var12.draw();
         var12.startDrawingQuads();
         var12.setNormal(0.0f, 1.0f, 0.0f);
-        var12.addVertexWithUV((double)(var17 - var18), (double)(0.0f - var19), 0.0, (double)var14, (double)var16);
-        var12.addVertexWithUV((double)(0.0f - var18), (double)(0.0f - var19), 0.0, (double)var13, (double)var16);
-        var12.addVertexWithUV((double)(0.0f - var18), (double)(1.0f - var19), 0.0, (double)var13, (double)var15);
-        var12.addVertexWithUV((double)(var17 - var18), (double)(1.0f - var19), 0.0, (double)var14, (double)var15);
+        var12.addVertexWithUV((double)maxX, (double)minY, 0.0, (double)var14, (double)var16);
+        var12.addVertexWithUV((double)minX, (double)minY, 0.0, (double)var13, (double)var16);
+        var12.addVertexWithUV((double)minX, (double)maxY, 0.0, (double)var13, (double)var15);
+        var12.addVertexWithUV((double)maxX, (double)maxY, 0.0, (double)var14, (double)var15);
         var12.draw();
     }
 
@@ -81,4 +81,3 @@ extends Render {
         this.doRender((EntityDart)p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
     }
 }
-

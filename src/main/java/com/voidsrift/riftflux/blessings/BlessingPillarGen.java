@@ -14,6 +14,7 @@ public class BlessingPillarGen implements IWorldGenerator {
     private static final int CHUNK_SAFE_SPAN = 16 - CHUNK_BORDER * 2;
     private static final int MIN_GROUND_Y = 30;
     private static final int ATTEMPTS_PER_PILLAR = 24;
+    private static final int CHANCE_MULTIPLIER = 32;
 
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world,
@@ -30,7 +31,8 @@ public class BlessingPillarGen implements IWorldGenerator {
         if (ModConfig.blessingsPillarGenChance <= 0) {
             return;
         }
-        if (random.nextInt(ModConfig.blessingsPillarGenChance) != 0) {
+        int effectiveChance = Math.max(1, ModConfig.blessingsPillarGenChance * CHANCE_MULTIPLIER);
+        if (random.nextInt(effectiveChance) != 0) {
             return;
         }
 

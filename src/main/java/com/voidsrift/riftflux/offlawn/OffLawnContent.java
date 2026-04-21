@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 public final class OffLawnContent {
     public static Block lawnBlock;
     public static Block sunflowerBush;
+    public static Block brightSunflower;
     public static Block beanstalk;
     public static Item sunSeed;
 
@@ -35,11 +36,17 @@ public final class OffLawnContent {
 
         lawnBlock = new BlockOffLawnBlock();
         sunflowerBush = new BlockOffLawnSunflowerBush();
+        brightSunflower = new BlockOffLawnSunflowerBush(
+                "bright_sunflower",
+                "riftflux:offlawn/bright_sunflower_bottom",
+                "riftflux:offlawn/bright_sunflower_top"
+        );
         beanstalk = new BlockOffLawnBeanstalk();
         sunSeed = new ItemOffLawnSunSeed();
 
         GameRegistry.registerBlock(lawnBlock, ItemBlock.class, "lawn_block");
         GameRegistry.registerBlock(sunflowerBush, ItemBlock.class, "sunflower_bush");
+        GameRegistry.registerBlock(brightSunflower, ItemOffLawnBrightSunflower.class, "bright_sunflower");
         GameRegistry.registerBlock(beanstalk, ItemBlock.class, "beanstalk");
         GameRegistry.registerItem(sunSeed, "sun_seed");
     }
@@ -89,18 +96,10 @@ public final class OffLawnContent {
         }
 
         if (sunflowerBush != null) {
-            GameRegistry.addShapelessRecipe(
-                    new ItemStack(sunflowerBush, 1, 1),
-                    new ItemStack(Blocks.double_plant, 1, 0),
-                    new ItemStack(Blocks.tallgrass, 1, 1)
-            );
-            if (lawnBlock != null) {
-                GameRegistry.addShapelessRecipe(
-                        new ItemStack(sunflowerBush, 1, 1),
-                        new ItemStack(Blocks.double_plant, 1, 0),
-                        new ItemStack(lawnBlock, 1)
-                );
-            }
+            registerSunflowerRecipes(sunflowerBush);
+        }
+        if (brightSunflower != null) {
+            registerSunflowerRecipes(brightSunflower);
         }
 
         if (sunSeed != null) {
@@ -108,6 +107,32 @@ public final class OffLawnContent {
                     new ItemStack(sunSeed, 1),
                     "#",
                     '#', new ItemStack(Blocks.double_plant, 1, 0)
+            );
+        }
+    }
+
+    public static Block getMixedSunflowerVariant(java.util.Random random) {
+        if (sunflowerBush != null && brightSunflower != null) {
+            return random != null && random.nextBoolean() ? brightSunflower : sunflowerBush;
+        }
+        return sunflowerBush != null ? sunflowerBush : brightSunflower;
+    }
+
+    public static boolean hasSunflowerBushes() {
+        return sunflowerBush != null || brightSunflower != null;
+    }
+
+    private static void registerSunflowerRecipes(Block block) {
+        GameRegistry.addShapelessRecipe(
+                new ItemStack(block, 1, 1),
+                new ItemStack(Blocks.double_plant, 1, 0),
+                new ItemStack(Blocks.tallgrass, 1, 1)
+        );
+        if (lawnBlock != null) {
+            GameRegistry.addShapelessRecipe(
+                    new ItemStack(block, 1, 1),
+                    new ItemStack(Blocks.double_plant, 1, 0),
+                    new ItemStack(lawnBlock, 1)
             );
         }
     }

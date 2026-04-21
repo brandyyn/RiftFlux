@@ -35,6 +35,8 @@ package zairus.worldexplorer.archery.entity;
 
 import cpw.mods.fml.common.eventhandler.Event;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -69,14 +71,18 @@ import zairus.worldexplorer.core.WorldExplorer;
 public class EntityBoomerang
 extends Entity
 implements IProjectile {
+    private static final String PICKUP_STAR_TAG = "riftflux_new";
+    private static final String SYNTHETIC_PICKUP_EVENT_TAG = "riftflux_synthetic_pickup";
+    private static final float BOOMERANG_VOLUME_SCALE = 0.78f;
     private int positionX = -1;
     private int positionY = -1;
     private int positionZ = -1;
     private Block collisionBlock;
     private int ticksInAir;
     private double damage = 2.5;
-    private int knockbackStrength;
+    private float knockbackStrength;
     private ItemStack thrownBoomerang;
+    private int thrownFromSlot = -1;
     private float strength;
     private double boomerangReach = 16.0;
     private boolean destReached = false;
@@ -84,6 +90,8 @@ implements IProjectile {
     private List<ItemStack> inventory = new ArrayList<ItemStack>();
     private List<EntityXPOrb> orbsCollected = new ArrayList<EntityXPOrb>();
     private int capacity = 1;
+    private float instantReturnChance = 0.0f;
+    private float durabilityPreservationChance = 0.0f;
     public Entity shootingEntity;
 
     public EntityBoomerang(World world) {
@@ -166,6 +174,14 @@ implements IProjectile {
         this.capacity = cap;
     }
 
+    public void setInstantReturnChance(float chance) {
+        this.instantReturnChance = Math.max(0.0f, Math.min(1.0f, chance));
+    }
+
+    public void setDurabilityPreservationChance(float chance) {
+        this.durabilityPreservationChance = Math.max(0.0f, Math.min(1.0f, chance));
+    }
+
     public List<ItemStack> getInventory() {
         return this.inventory;
     }
@@ -178,12 +194,16 @@ implements IProjectile {
         return this.thrownBoomerang;
     }
 
+    public void setThrownFromSlot(int slot) {
+        this.thrownFromSlot = slot;
+    }
+
     protected void entityInit() {
         this.dataWatcher.addObject(16, (Object)0);
         this.dataWatcher.addObject(10, (Object)new ItemStack((Item)WEArcheryItems.boomerang));
     }
 
-    public void setKnockbackStrength(int knockback) {
+    public void setKnockbackStrength(float knockback) {
         this.knockbackStrength = knockback;
     }
 
@@ -233,9 +253,12 @@ implements IProjectile {
                     WorldExplorer.log(e.getMessage());
                 }
                 if (block.stepSound.getBreakSound().length() > 0) {
-                    this.playSound(block.stepSound.getBreakSound(), 1.0f, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+                    this.playSound(block.stepSound.getBreakSound(), 1.0f * BOOMERANG_VOLUME_SCALE, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
                 }
                 block.breakBlock(this.worldObj, this.positionX, this.positionY, this.positionZ, block, 1);
+                if (this.tryInstantReturn()) {
+                    return;
+                }
             } else {
                 this.destReached = true;
             }
@@ -246,7 +269,7 @@ implements IProjectile {
             return;
         }
         if ((double)this.ticksInAir / 2.0 - Math.floor((double)this.ticksInAir / 2.0) == 0.0) {
-            this.playSound("worldexplorer:boomerang_swoosh", 2.5f, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+            this.playSound("worldexplorer:boomerang_swoosh", 2.5f * BOOMERANG_VOLUME_SCALE, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
         }
         Vec3 vec31 = Vec3.createVectorHelper((double)this.posX, (double)this.posY, (double)this.posZ);
         Vec3 vec3 = Vec3.createVectorHelper((double)(this.posX + this.motionX), (double)(this.posY + this.motionY), (double)(this.posZ + this.motionZ));
@@ -256,8 +279,13 @@ implements IProjectile {
         if (movingobjectposition != null) {
             vec3 = Vec3.createVectorHelper((double)movingobjectposition.hitVec.xCoord, (double)movingobjectposition.hitVec.yCoord, (double)movingobjectposition.hitVec.zCoord);
         }
+        AxisAlignedBB searchBox = this.boundingBox.addCoord(this.motionX, this.motionY, this.motionZ).expand(1.0, 1.0, 1.0);
+        AxisAlignedBB itemCollectionBox = this.boundingBox.addCoord(this.motionX, this.motionY, this.motionZ).expand(0.45, 0.45, 0.45);
+        if (this.collectNearbyItems(itemCollectionBox)) {
+            return;
+        }
         Entity entity = null;
-        List list = this.worldObj.getEntitiesWithinAABBExcludingEntity((Entity)this, this.boundingBox.addCoord(this.motionX, this.motionY, this.motionZ).expand(1.0, 1.0, 1.0));
+        List list = this.worldObj.getEntitiesWithinAABBExcludingEntity((Entity)this, searchBox);
         double d0 = 0.0;
         for (i = 0; i < list.size(); ++i) {
             double d1;
@@ -266,12 +294,6 @@ implements IProjectile {
             Entity entity1 = (Entity)list.get(i);
             if (entity1 instanceof EntityXPOrb) {
                 this.orbsCollected.add((EntityXPOrb)entity1);
-            }
-            if (entity1 instanceof EntityItem && this.canCollectItems && !this.isDead && this.inventory.size() < this.capacity && ((EntityItem)entity1).getEntityItem() != this.thrownBoomerang) {
-                this.inventory.add(((EntityItem)entity1).getEntityItem().copy());
-                if (!this.worldObj.isRemote) {
-                    entity1.setDead();
-                }
             }
             if (entity1.isDead || !entity1.canBeCollidedWith() || entity1 == this.shootingEntity && this.ticksInAir < 5 || (movingobjectposition1 = (axisalignedbb1 = entity1.boundingBox.expand((double)(f1 = 0.3f), (double)f1, (double)f1)).calculateIntercept(vec31, vec3)) == null || !((d1 = vec31.distanceTo(movingobjectposition1.hitVec)) < d0) && d0 != 0.0) continue;
             entity = entity1;
@@ -298,9 +320,9 @@ implements IProjectile {
                         if (this.shootingEntity instanceof EntityPlayer && ((EntityPlayer)this.shootingEntity).capabilities.isCreativeMode) {
                             dFlag = false;
                         }
-                        if (dFlag && this.thrownBoomerang.attemptDamageItem(1, ((EntityLivingBase)this.shootingEntity).getRNG()) && this.thrownBoomerang.getItemDamage() >= this.thrownBoomerang.getMaxDamage()) {
+                        if (dFlag && this.shouldConsumeDurability(((EntityLivingBase)this.shootingEntity)) && this.thrownBoomerang.attemptDamageItem(1, ((EntityLivingBase)this.shootingEntity).getRNG()) && this.thrownBoomerang.getItemDamage() >= this.thrownBoomerang.getMaxDamage()) {
                             this.setDead();
-                            this.playSound("random.break", 1.0f, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+                            this.playSound("random.break", 1.0f * BOOMERANG_VOLUME_SCALE, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
                             return;
                         }
                     }
@@ -319,17 +341,26 @@ implements IProjectile {
                         }
                     }
                     if (!(movingobjectposition.entityHit instanceof EntityEnderman)) {
-                        this.playSound("worldexplorer:pebble_hit_1", 1.0f, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+                        this.playSound("worldexplorer:pebble_hit_1", 1.0f * BOOMERANG_VOLUME_SCALE, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+                        if (this.tryInstantReturn()) {
+                            return;
+                        }
                         this.destReached = true;
                     }
                 } else {
+                    if (this.tryInstantReturn()) {
+                        return;
+                    }
                     this.destReached = true;
                 }
             } else {
                 this.collisionBlock = this.worldObj.getBlock(movingobjectposition.blockX, movingobjectposition.blockY, movingobjectposition.blockZ);
                 if (this.collisionBlock.getMaterial() != Material.air) {
-                    this.playSound("worldexplorer:pebble_hit_1", 1.0f, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+                    this.playSound("worldexplorer:pebble_hit_1", 1.0f * BOOMERANG_VOLUME_SCALE, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
                     this.collisionBlock.onEntityCollidedWithBlock(this.worldObj, this.positionX, this.positionY, this.positionZ, (Entity)this);
+                    if (this.tryInstantReturn()) {
+                        return;
+                    }
                     this.destReached = true;
                 }
             }
@@ -406,8 +437,17 @@ implements IProjectile {
         this.positionY = tagCompound.getShort("yTile");
         this.positionZ = tagCompound.getShort("zTile");
         this.collisionBlock = Block.getBlockById((int)(tagCompound.getByte("inTile") & 0xFF));
+        if (tagCompound.hasKey("thrownFromSlot", 99)) {
+            this.thrownFromSlot = tagCompound.getInteger("thrownFromSlot");
+        }
         if (tagCompound.hasKey("damage", 99)) {
             this.damage = tagCompound.getDouble("damage");
+        }
+        if (tagCompound.hasKey("instantReturnChance", 99)) {
+            this.instantReturnChance = tagCompound.getFloat("instantReturnChance");
+        }
+        if (tagCompound.hasKey("durabilityPreservationChance", 99)) {
+            this.durabilityPreservationChance = tagCompound.getFloat("durabilityPreservationChance");
         }
     }
 
@@ -416,7 +456,10 @@ implements IProjectile {
         tagCompound.setShort("yTile", (short)this.positionY);
         tagCompound.setShort("zTile", (short)this.positionZ);
         tagCompound.setByte("inTile", (byte)Block.getIdFromBlock((Block)this.collisionBlock));
+        tagCompound.setInteger("thrownFromSlot", this.thrownFromSlot);
         tagCompound.setDouble("damage", this.damage);
+        tagCompound.setFloat("instantReturnChance", this.instantReturnChance);
+        tagCompound.setFloat("durabilityPreservationChance", this.durabilityPreservationChance);
     }
 
     public void onCollideWithPlayer(EntityPlayer player) {
@@ -454,27 +497,165 @@ implements IProjectile {
             if (this.isBurning()) {
                 player.setFire(3);
             }
-            if (!player.inventory.addItemStackToInventory(this.thrownBoomerang)) {
-                if (!this.worldObj.isRemote) {
+            boolean restoredToThrownSlot = this.restoreToThrownSlot(player, this.thrownBoomerang, catched);
+            if (!restoredToThrownSlot) {
+                ItemStack returnedBoomerang = this.thrownBoomerang.copy();
+                int[] beforeCounts = this.snapshotInventoryCounts(player);
+                if (player.inventory.addItemStackToInventory(this.thrownBoomerang)) {
+                    this.clearPickupStarFromReturnedBoomerang(player, beforeCounts, returnedBoomerang);
+                } else if (!this.worldObj.isRemote) {
                     this.worldObj.spawnEntityInWorld((Entity)new EntityItem(this.worldObj, catched ? this.posX : this.shootingEntity.posX, catched ? this.posY : this.shootingEntity.posY, catched ? this.posZ : this.shootingEntity.posZ, this.thrownBoomerang));
                 }
-            } else {
-                EntityItemPickupEvent event = new EntityItemPickupEvent(player, new EntityItem(this.worldObj, catched ? this.posX : this.shootingEntity.posX, catched ? this.posY : this.shootingEntity.posY, catched ? this.posZ : this.shootingEntity.posZ, this.thrownBoomerang));
-                MinecraftForge.EVENT_BUS.post((Event)event);
             }
             for (int i = 0; i < this.inventory.size(); ++i) {
-                if (!player.inventory.addItemStackToInventory(this.inventory.get(i))) {
-                    if (this.worldObj.isRemote) continue;
-                    this.worldObj.spawnEntityInWorld((Entity)new EntityItem(this.worldObj, catched ? this.posX : this.shootingEntity.posX, catched ? this.posY : this.shootingEntity.posY, catched ? this.posZ : this.shootingEntity.posZ, this.inventory.get(i)));
+                ItemStack carriedStack = this.inventory.get(i);
+                if (carriedStack == null) {
                     continue;
                 }
-                EntityItemPickupEvent event = new EntityItemPickupEvent(player, new EntityItem(this.worldObj, catched ? this.posX : this.shootingEntity.posX, catched ? this.posY : this.shootingEntity.posY, catched ? this.posZ : this.shootingEntity.posZ, this.inventory.get(i)));
-                MinecraftForge.EVENT_BUS.post((Event)event);
+                ItemStack announcedStack = carriedStack.copy();
+                int originalSize = announcedStack.stackSize;
+                if (!player.inventory.addItemStackToInventory(carriedStack)) {
+                    int insertedAmount = originalSize - Math.max(0, carriedStack.stackSize);
+                    if (insertedAmount > 0) {
+                        this.postSyntheticPickup(player, announcedStack, insertedAmount, catched);
+                    }
+                    if (this.worldObj.isRemote) continue;
+                    this.worldObj.spawnEntityInWorld((Entity)new EntityItem(this.worldObj, catched ? this.posX : this.shootingEntity.posX, catched ? this.posY : this.shootingEntity.posY, catched ? this.posZ : this.shootingEntity.posZ, carriedStack));
+                    continue;
+                }
+                this.postSyntheticPickup(player, announcedStack, originalSize, catched);
             }
             this.setDead();
-            this.playSound("worldexplorer:boomerang_catch", 1.0f, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.7f + 1.0f) * 2.0f);
-            player.onItemPickup((Entity)this, 1);
+            this.playSound("worldexplorer:boomerang_catch", 1.0f * BOOMERANG_VOLUME_SCALE, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.7f + 1.0f) * 2.0f);
         }
     }
-}
 
+    private void postSyntheticPickup(EntityPlayer player, ItemStack pickedUpStack, int insertedAmount, boolean catched) {
+        if (player == null || pickedUpStack == null || insertedAmount <= 0) {
+            return;
+        }
+        ItemStack announcedStack = pickedUpStack.copy();
+        announcedStack.stackSize = insertedAmount;
+        EntityItem syntheticPickup = new EntityItem(this.worldObj, catched ? this.posX : this.shootingEntity.posX, catched ? this.posY : this.shootingEntity.posY, catched ? this.posZ : this.shootingEntity.posZ, announcedStack);
+        syntheticPickup.getEntityData().setBoolean(SYNTHETIC_PICKUP_EVENT_TAG, true);
+        EntityItemPickupEvent event = new EntityItemPickupEvent(player, syntheticPickup);
+        MinecraftForge.EVENT_BUS.post((Event)event);
+    }
+
+    private boolean restoreToThrownSlot(EntityPlayer player, ItemStack returnedBoomerang, boolean catched) {
+        if (player == null || player.inventory == null || returnedBoomerang == null) {
+            return false;
+        }
+        if (this.thrownFromSlot < 0 || this.thrownFromSlot >= player.inventory.mainInventory.length) {
+            return false;
+        }
+
+        ItemStack crowded = player.inventory.getStackInSlot(this.thrownFromSlot);
+        player.inventory.setInventorySlotContents(this.thrownFromSlot, returnedBoomerang.copy());
+        if (crowded == null) {
+            return true;
+        }
+
+        if (!player.inventory.addItemStackToInventory(crowded)) {
+            if (!this.worldObj.isRemote) {
+                this.worldObj.spawnEntityInWorld((Entity)new EntityItem(this.worldObj, catched ? this.posX : this.shootingEntity.posX, catched ? this.posY : this.shootingEntity.posY, catched ? this.posZ : this.shootingEntity.posZ, crowded));
+            }
+        } else {
+            this.clearPickupStarTag(crowded);
+        }
+        return true;
+    }
+
+    private int[] snapshotInventoryCounts(EntityPlayer player) {
+        ItemStack[] inventory = player.inventory.mainInventory;
+        int[] counts = new int[inventory.length];
+        for (int i = 0; i < inventory.length; i++) {
+            counts[i] = inventory[i] == null ? 0 : inventory[i].stackSize;
+        }
+        return counts;
+    }
+
+    private void clearPickupStarFromReturnedBoomerang(EntityPlayer player, int[] beforeCounts, ItemStack returnedBoomerang) {
+        ItemStack[] inventory = player.inventory.mainInventory;
+        for (int i = 0; i < inventory.length && i < beforeCounts.length; i++) {
+            ItemStack stack = inventory[i];
+            if (stack == null || stack.stackSize <= beforeCounts[i]) {
+                continue;
+            }
+            if (stack.getItem() == returnedBoomerang.getItem() && stack.getItemDamage() == returnedBoomerang.getItemDamage()) {
+                this.clearPickupStarTag(stack);
+            }
+        }
+    }
+
+    private void clearPickupStarTag(ItemStack stack) {
+        if (stack == null || !stack.hasTagCompound()) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (!tag.getBoolean(PICKUP_STAR_TAG)) {
+            return;
+        }
+        NBTTagCompound copy = (NBTTagCompound)tag.copy();
+        copy.removeTag(PICKUP_STAR_TAG);
+        stack.setTagCompound(copy.hasNoTags() ? null : copy);
+    }
+
+    private boolean collectNearbyItems(AxisAlignedBB searchBox) {
+        if (this.worldObj.isRemote || searchBox == null || !this.canCollectItems || this.isDead || this.inventory.size() >= this.capacity) {
+            return false;
+        }
+
+        List<EntityItem> nearbyItems = this.worldObj.getEntitiesWithinAABB(EntityItem.class, searchBox);
+        if (nearbyItems == null || nearbyItems.isEmpty()) {
+            return false;
+        }
+
+        Collections.sort(nearbyItems, new Comparator<EntityItem>() {
+            @Override
+            public int compare(EntityItem left, EntityItem right) {
+                double leftDistance = EntityBoomerang.this.getDistanceSqToEntity((Entity)left);
+                double rightDistance = EntityBoomerang.this.getDistanceSqToEntity((Entity)right);
+                return Double.compare(leftDistance, rightDistance);
+            }
+        });
+
+        for (int i = 0; i < nearbyItems.size() && this.inventory.size() < this.capacity; i++) {
+            EntityItem itemEntity = nearbyItems.get(i);
+            if (!this.canCollectItemEntity(itemEntity)) {
+                continue;
+            }
+            this.inventory.add(itemEntity.getEntityItem().copy());
+            itemEntity.setDead();
+            if (this.tryInstantReturn()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean canCollectItemEntity(EntityItem itemEntity) {
+        if (itemEntity == null || itemEntity.isDead || itemEntity.getEntityItem() == null) {
+            return false;
+        }
+        return itemEntity.getEntityItem() != this.thrownBoomerang;
+    }
+
+    private boolean shouldConsumeDurability(EntityLivingBase owner) {
+        if (this.thrownBoomerang == null || owner == null || this.thrownBoomerang.getMaxDamage() <= 0) {
+            return false;
+        }
+        return this.durabilityPreservationChance <= 0.0f || owner.getRNG().nextFloat() >= this.durabilityPreservationChance;
+    }
+
+    private boolean tryInstantReturn() {
+        if (this.worldObj.isRemote || this.instantReturnChance <= 0.0f || !(this.shootingEntity instanceof EntityPlayer)) {
+            return false;
+        }
+        if (this.rand.nextFloat() >= this.instantReturnChance) {
+            return false;
+        }
+        this.returnToPlayer();
+        return this.isDead;
+    }
+}

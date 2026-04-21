@@ -1,6 +1,5 @@
 package zairus.worldexplorer.archery.entity.monster;
 
-import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.block.Block;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -13,12 +12,13 @@ import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntitySkeleton;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import zairus.worldexplorer.archery.entity.EntityPebble;
+import zairus.worldexplorer.archery.items.SlingshotAmmoHelper;
 import zairus.worldexplorer.archery.items.WEArcheryItems;
 
 public class EntitySkeletonExplorer extends EntitySkeleton {
@@ -55,10 +55,8 @@ public class EntitySkeletonExplorer extends EntitySkeleton {
     }
 
     protected Item getDropItem() {
-        if (ModConfig.riftExplorerSlingshotUsesCobblestoneAmmo) {
-            return Item.getItemFromBlock(Blocks.cobblestone);
-        }
-        return WEArcheryItems.pebble;
+        ItemStack ammoDrop = SlingshotAmmoHelper.defaultPickupStack();
+        return ammoDrop == null || ammoDrop.getItem() == null ? WEArcheryItems.pebble : ammoDrop.getItem();
     }
 
     protected void dropFewItems(boolean recentlyHit, int looting) {
@@ -71,9 +69,11 @@ public class EntitySkeletonExplorer extends EntitySkeleton {
             }
         } else {
             j = this.rand.nextInt(3 + looting);
-            Item ammoDrop = ModConfig.riftExplorerSlingshotUsesCobblestoneAmmo ? Item.getItemFromBlock(Blocks.cobblestone) : WEArcheryItems.pebble;
+            ItemStack ammoDrop = SlingshotAmmoHelper.defaultPickupStack();
             for (k = 0; k < j; ++k) {
-                this.dropItem(ammoDrop, 1);
+                if (ammoDrop != null) {
+                    this.entityDropItem(ammoDrop.copy(), 0.0F);
+                }
             }
         }
 
@@ -106,5 +106,9 @@ public class EntitySkeletonExplorer extends EntitySkeleton {
 
     protected void func_145780_a(int x, int y, int z, Block block) {
         this.playSound("mob.skeleton.step", 0.15f, 1.0f);
+    }
+
+    public String getCommandSenderName() {
+        return StatCollector.translateToLocal("entity.riftflux_slingshot_skeleton.name");
     }
 }

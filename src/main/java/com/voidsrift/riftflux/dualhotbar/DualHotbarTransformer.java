@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.dualhotbar;
 
+import com.voidsrift.riftflux.ModConfig;
 import java.util.Iterator;
 
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -58,6 +59,9 @@ public class DualHotbarTransformer implements IClassTransformer {
         }
 
         if (className.equals("net.minecraftforge.common.ForgeHooks")) {
+            if (!ModConfig.dualHotbarEnable || !ModConfig.dualHotbarEnablePickBlockImplementation) {
+                return data;
+            }
             System.out.println("********* INSIDE ForgeHooks TRANSFORMER ABOUT TO PATCH: " + className);
             return patchBipush(className, "onPickBlock", null, data);
         }

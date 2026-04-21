@@ -22,7 +22,7 @@ public class EntityPumpkinZombie extends EntityZombie {
         getEntityAttribute(SharedMonsterAttributes.maxHealth).setBaseValue(30.0D);
         getEntityAttribute(SharedMonsterAttributes.movementSpeed).setBaseValue(0.25D);
         getEntityAttribute(SharedMonsterAttributes.attackDamage).setBaseValue(2.0D);
-        getEntityAttribute(SharedMonsterAttributes.knockbackResistance).setBaseValue(0.8D);
+        getEntityAttribute(SharedMonsterAttributes.knockbackResistance).setBaseValue(0.0D);
         getEntityAttribute(SharedMonsterAttributes.followRange).setBaseValue(30.0D);
     }
 

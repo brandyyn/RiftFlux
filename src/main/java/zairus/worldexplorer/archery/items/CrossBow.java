@@ -23,7 +23,7 @@ public class CrossBow extends WEItemRanged {
     public CrossBow() {
         this.setUnlocalizedName("crossbow");
         this.setTextureName("worldexplorer:crossbow");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
         this.maxStackSize = 1;
         this.bFull3D = true;
         this.addAllowedAmmo(Items.arrow, WEArcheryItems.specialarrow);

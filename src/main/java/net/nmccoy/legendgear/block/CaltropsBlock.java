@@ -36,42 +36,85 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.nmccoy.legendgear.LegendGear2;
+import java.util.Set;
 
 public class CaltropsBlock
 extends Block {
     private static final String NBT_CALTROPS_COOLDOWN_UNTIL = "RiftFluxCaltropsCooldownUntil";
     private static final int PERSISTENT_CALTROPS_COOLDOWN_TICKS = 10;
+    public static final double HITBOX_MIN = 0.1875D;
+    public static final double HITBOX_MAX = 0.8125D;
+    public static final double HITBOX_HEIGHT = 0.1875D;
     DamageSource caltropsDamage;
     public static float steppedOnDropChance = 0.5f;
 
     public CaltropsBlock() {
         super(Material.circuits);
         this.setCreativeTab(LegendGear2.legendgearTab);
-        this.setBlockBounds(0.1875f, 0.0f, 0.1875f, 0.8125f, 0.1875f, 0.8125f);
+        this.setBlockBounds((float)HITBOX_MIN, 0.0f, (float)HITBOX_MIN, (float)HITBOX_MAX, (float)HITBOX_HEIGHT, (float)HITBOX_MAX);
         this.setHardness(0.0f);
         this.setBlockName("caltrops");
         this.setBlockTextureName("legendgear:blockCaltrops");
+        if (LegendGear2.CONFIG_CALTROPS_REQUIRE_PICKAXE_TO_DROP) {
+            this.setHarvestLevel("pickaxe", 0);
+        }
         this.caltropsDamage = new DamageSource("caltrops");
         this.caltropsDamage.setDamageBypassesArmor();
         Block.SoundType caltropsSound = new Block.SoundType("caltrops", 0.5f, 1.2f){
 
-            public String getDigResourcePath() {
+            @Override
+            public String getBreakSound() {
                 return "legendgear:caltropsland";
             }
 
-            public String getStepSound() {
-                return "legendgear:caltropstap";
+            @Override
+            public String getStepResourcePath() {
+                return "legendgear:caltropsland";
             }
 
-            public String getPlaceSound() {
-                return "legendgear:caltropstap";
+            @Override
+            public String func_150496_b() {
+                return "legendgear:caltropsland";
             }
         };
         this.setStepSound(caltropsSound);
     }
 
+    public float getBlockHardness(World world, int x, int y, int z) {
+        return LegendGear2.CONFIG_CALTROPS_IRON_BARS_MINING_SPEED ? 5.0F : super.getBlockHardness(world, x, y, z);
+    }
+
+    public boolean canHarvestBlock(EntityPlayer player, int meta) {
+        if (!LegendGear2.CONFIG_CALTROPS_REQUIRE_PICKAXE_TO_DROP) {
+            return true;
+        }
+        if (player == null) {
+            return false;
+        }
+
+        ItemStack equipped = player.getCurrentEquippedItem();
+        if (equipped == null || equipped.getItem() == null) {
+            return false;
+        }
+
+        Set<String> toolClasses = equipped.getItem().getToolClasses(equipped);
+        return toolClasses != null && toolClasses.contains("pickaxe");
+    }
+
     public AxisAlignedBB getCollisionBoundingBoxFromPool(World par1World, int par2, int par3, int par4) {
         return null;
+    }
+
+    public AxisAlignedBB getSelectedBoundingBoxFromPool(World world, int x, int y, int z) {
+        return AxisAlignedBB.getBoundingBox(x + HITBOX_MIN, y, z + HITBOX_MIN, x + HITBOX_MAX, y + HITBOX_HEIGHT, z + HITBOX_MAX);
+    }
+
+    public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
+        this.setBlockBounds((float)HITBOX_MIN, 0.0f, (float)HITBOX_MIN, (float)HITBOX_MAX, (float)HITBOX_HEIGHT, (float)HITBOX_MAX);
+    }
+
+    public void setBlockBoundsForItemRender() {
+        this.setBlockBounds((float)HITBOX_MIN, 0.0f, (float)HITBOX_MIN, (float)HITBOX_MAX, (float)HITBOX_HEIGHT, (float)HITBOX_MAX);
     }
 
     public int getRenderType() {

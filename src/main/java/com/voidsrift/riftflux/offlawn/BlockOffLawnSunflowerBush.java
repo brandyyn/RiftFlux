@@ -25,10 +25,18 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
     private IIcon bottomIcon;
     @SideOnly(Side.CLIENT)
     private IIcon topIcon;
+    private final String bottomTexture;
+    private final String topTexture;
 
     public BlockOffLawnSunflowerBush() {
+        this("offlawn_sunflower_bush", "riftflux:offlawn/sunflower_bush_bottom", "riftflux:offlawn/sunflower_bush_top");
+    }
+
+    public BlockOffLawnSunflowerBush(String blockName, String bottomTexture, String topTexture) {
         super();
-        setBlockName("offlawn_sunflower_bush");
+        this.bottomTexture = bottomTexture;
+        this.topTexture = topTexture;
+        setBlockName(blockName);
         setStepSound(soundTypeGrass);
         setHardness(0.0F);
         setCreativeTab(CreativeTabs.tabDecorations);
@@ -149,8 +157,8 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
     public void registerBlockIcons(IIconRegister register) {
         // Initialize BlockDoublePlant's internal icon arrays used by RenderBlocks.
         super.registerBlockIcons(register);
-        this.bottomIcon = register.registerIcon("riftflux:offlawn/sunflower_bush_bottom");
-        this.topIcon = register.registerIcon("riftflux:offlawn/sunflower_bush_top");
+        this.bottomIcon = register.registerIcon(this.bottomTexture);
+        this.topIcon = register.registerIcon(this.topTexture);
         this.blockIcon = this.bottomIcon;
     }
 

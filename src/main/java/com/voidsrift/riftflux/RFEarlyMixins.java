@@ -3,7 +3,6 @@ package com.voidsrift.riftflux;
 import com.voidsrift.riftflux.core.BasicTransformer;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarTransformer;
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import net.minecraft.launchwrapper.Launch;
 
@@ -93,6 +92,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.invincibleOwnedMobs ) {
             mixins.add("early.MixinEntityLivingBase_PetInvincibility");
         }
+        mixins.add("early.MixinEntityArrow_NoRandomSpread");
         mixins.add("early.MixinChunk_TeleportOwnedPetsOnUnload");
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
@@ -215,6 +215,10 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinItem_JackOLanternHelmet");
             mixins.add("early.MixinEntityLiving_JackOLanternArmorPosition");
             mixins.add("early.MixinEntityEnderman_JackOLanternNoAggro");
+        }
+        if (ModConfig.enableRiftExplorerModule) {
+            mixins.add("early.MixinEntityLiving_NoRiftChestPickup");
+            mixins.add("early.MixinEntity_RiftChestRandomMobState");
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("accessor.GuiChatAccessor");
@@ -359,12 +363,14 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (hasLegendGearClass()) {
                 mixins.add("early.legendgear.MixinGuiManaBar");
             }
-            if (ModConfig.dualHotbarEnable) {
+            if (ModConfig.dualHotbarEnable && ModConfig.dualHotbarEnablePickBlockImplementation) {
                 mixins.add("early.dualhotbar.MixinMinecraft_PickBlock");
             }
         }
-        if (ModConfig.dualHotbarEnable) {
+        if (ModConfig.dualHotbarEnable && ModConfig.dualHotbarEnablePickBlockImplementation) {
             mixins.add("early.dualhotbar.MixinForgeHooks_PickBlock");
+        }
+        if (ModConfig.dualHotbarEnable) {
             mixins.add("early.dualhotbar.MixinNetHandlerPlayServer_HeldItemChange");
         }
         if (ModConfig.enableBetaLeavesLook) {
@@ -411,12 +417,6 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     }
 
     private static boolean hasLegendGearClass() {
-        try {
-            if (Loader.isModLoaded("legendgear")) {
-                return true;
-            }
-        } catch (Throwable ignored) {
-        }
         if (!ModConfig.enableLegendGearModule) {
             return false;
         }
@@ -442,12 +442,6 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     }
 
     private static boolean hasOptimizationsAndTweaks() {
-        try {
-            if (Loader.isModLoaded("optimizationsandtweaks")) {
-                return true;
-            }
-        } catch (Throwable ignored) {
-        }
         return hasClass("fr.iamacat.optimizationsandtweaks.OptimizationsAndTweaks")
                 || hasClass("fr.iamacat.optimizationsandtweaks.OptimizationsAndTweaksMod");
     }

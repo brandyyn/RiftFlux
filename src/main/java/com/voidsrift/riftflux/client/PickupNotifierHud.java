@@ -17,6 +17,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import zairus.worldexplorer.archery.client.renderer.item.ItemSlingshotRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -299,7 +300,12 @@ public final class PickupNotifierHud {
                     GL11.glEnable(GL11.GL_DEPTH_TEST);
                     GL11.glDepthMask(true);
                 }
-                ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                ItemSlingshotRenderer.setSuppressAmmoOverlay(true);
+                try {
+                    ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), en.stack, x, yBase - ICON);
+                } finally {
+                    ItemSlingshotRenderer.setSuppressAmmoOverlay(false);
+                }
                 RenderHelper.disableStandardItemLighting();
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glDepthMask(false);

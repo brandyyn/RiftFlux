@@ -9,14 +9,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.settings.KeyBinding;
-import goki.stats.client.gui.GuiCompatibilityHelper;
 import goki.stats.client.gui.GuiStats;
 
 @SideOnly(Side.CLIENT)
 public final class GokiStatsClientHooks {
     private static final String CATEGORY = "RiftFlux";
     private static final KeyBinding STATS_MENU = new KeyBinding("Open Stats Menu", 21, CATEGORY);
-    private static final KeyBinding COMPATIBILITY_MENU = new KeyBinding("Open Stats Compatibility Helper", 35, CATEGORY);
     private static boolean registered;
 
     private GokiStatsClientHooks() {
@@ -28,7 +26,6 @@ public final class GokiStatsClientHooks {
         }
         registered = true;
         ClientRegistry.registerKeyBinding(STATS_MENU);
-        ClientRegistry.registerKeyBinding(COMPATIBILITY_MENU);
         FMLCommonHandler.instance().bus().register(new GokiStatsClientHooks());
     }
 
@@ -40,8 +37,6 @@ public final class GokiStatsClientHooks {
         }
         if (STATS_MENU.getIsKeyPressed()) {
             Minecraft.getMinecraft().displayGuiScreen(new GuiStats(player));
-        } else if (COMPATIBILITY_MENU.getIsKeyPressed()) {
-            Minecraft.getMinecraft().displayGuiScreen(new GuiCompatibilityHelper(player));
         }
     }
 }

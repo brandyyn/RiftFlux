@@ -109,6 +109,7 @@ extends Item {
         POWER("Glowstone Modifier", 3.0f),
         ENERGETIC("Redstone Modifier", 48.0f),
         ENDER("Ender Modifier", 100.0f),
+        UNBREAKING("Unbreaking Modifier", 100.0f),
         BLAZE("Fire Modifier", 3.0f);
 
         private String improvementKey;
@@ -132,4 +133,3 @@ extends Item {
         }
     }
 }
-

@@ -18,7 +18,11 @@ public class MixinForgeHooks_PickBlock {
     @Inject(method = "onPickBlock", at = @At("HEAD"), cancellable = true, remap = false)
     private static void riftflux$extendPickBlock(MovingObjectPosition target, EntityPlayer player, World world,
                                                  CallbackInfoReturnable<Boolean> cir) {
-        if (target == null || player == null || world == null) {
+        if (world == null || !world.isRemote) {
+            return;
+        }
+        DualHotbarPickBlockHelper.clearPendingPickBlock();
+        if (target == null || player == null) {
             cir.setReturnValue(false);
             return;
         }
@@ -44,24 +48,34 @@ public class MixinForgeHooks_PickBlock {
             return;
         }
 
-        int slot = DualHotbarPickBlockHelper.findMatchingHotbarSlot(player, result);
-        if (slot >= 0) {
-            player.inventory.currentItem = slot;
-            cir.setReturnValue(true);
-            return;
-        }
-
-        if (!creative) {
+        int slot = player.inventory.currentItem;
+        if (player.inventory == null || player.inventory.mainInventory == null
+                || slot < 0 || slot >= player.inventory.mainInventory.length) {
             cir.setReturnValue(false);
             return;
         }
 
-        slot = DualHotbarPickBlockHelper.findFirstEmptyHotbarSlot(player);
-        if (slot < 0 || slot >= DualHotbarPickBlockHelper.getHotbarSize(player)) {
-            slot = player.inventory.currentItem;
+        ItemStack selectedStack = player.inventory.getStackInSlot(slot);
+        if (selectedStack != null
+                && selectedStack.isItemEqual(result)
+                && ItemStack.areItemStackTagsEqual(selectedStack, result)) {
+            cir.setReturnValue(true);
+            return;
         }
-        player.inventory.setInventorySlotContents(slot, result);
-        player.inventory.currentItem = slot;
-        cir.setReturnValue(true);
+
+        int sourceSlot = DualHotbarPickBlockHelper.findMatchingInventorySlot(player, result, slot);
+        if (sourceSlot >= 0) {
+            DualHotbarPickBlockHelper.setPendingPickBlock(result, sourceSlot);
+            cir.setReturnValue(true);
+            return;
+        }
+
+        if (creative) {
+            DualHotbarPickBlockHelper.setPendingPickBlock(result, -1);
+            cir.setReturnValue(true);
+            return;
+        }
+
+        cir.setReturnValue(false);
     }
 }

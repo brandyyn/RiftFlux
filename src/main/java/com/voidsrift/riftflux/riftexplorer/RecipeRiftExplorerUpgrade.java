@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import zairus.worldexplorer.archery.items.Boomerang;
 
 import java.util.Arrays;
 
@@ -19,7 +20,7 @@ public class RecipeRiftExplorerUpgrade extends ShapelessRecipes {
     public RecipeRiftExplorerUpgrade(Item subjectItem, Item materialItem, String nbtKey, float valuePerCraft, float maxValue) {
         super(
                 new ItemStack(subjectItem),
-                Arrays.asList(new ItemStack(subjectItem), new ItemStack(materialItem))
+                Arrays.asList(new ItemStack(subjectItem, 1, 32767), new ItemStack(materialItem, 1, 32767))
         );
         this.subjectItem = subjectItem;
         this.materialItem = materialItem;
@@ -41,6 +42,12 @@ public class RecipeRiftExplorerUpgrade extends ShapelessRecipes {
         }
         ItemStack upgraded = subject.copy();
         upgraded.stackSize = 1;
+        if (upgraded.getItem() instanceof Boomerang) {
+            return ((Boomerang)upgraded.getItem()).applyImprovement(
+                    upgraded,
+                    ((Boomerang)upgraded.getItem()).getImprovementFromMaterial(this.materialItem)
+            );
+        }
         if (upgraded.getTagCompound() == null) {
             upgraded.setTagCompound(new NBTTagCompound());
         }
@@ -59,6 +66,12 @@ public class RecipeRiftExplorerUpgrade extends ShapelessRecipes {
     @Override
     public ItemStack getRecipeOutput() {
         ItemStack preview = new ItemStack(this.subjectItem);
+        if (preview.getItem() instanceof Boomerang) {
+            return ((Boomerang)preview.getItem()).applyImprovement(
+                    preview,
+                    ((Boomerang)preview.getItem()).getImprovementFromMaterial(this.materialItem)
+            );
+        }
         preview.setTagCompound(new NBTTagCompound());
         float value = this.valuePerCraft;
         if (value > this.maxValue) {

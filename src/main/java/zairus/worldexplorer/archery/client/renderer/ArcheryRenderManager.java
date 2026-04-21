@@ -25,6 +25,8 @@ import zairus.worldexplorer.archery.client.renderer.entity.RenderEntitySpecialAr
 import zairus.worldexplorer.archery.client.renderer.item.ItemBlowPipeRenderer;
 import zairus.worldexplorer.archery.client.renderer.item.ItemBoomerangRenderer;
 import zairus.worldexplorer.archery.client.renderer.item.ItemBowRenderer;
+import zairus.worldexplorer.archery.client.renderer.item.ItemCapturedEnderChestRenderer;
+import zairus.worldexplorer.archery.client.renderer.item.ItemSlingshotRenderer;
 import zairus.worldexplorer.archery.entity.EntityBoomerang;
 import zairus.worldexplorer.archery.entity.EntityDart;
 import zairus.worldexplorer.archery.entity.EntityPebble;
@@ -46,6 +48,8 @@ implements IWEAddonRenderManager {
         MinecraftForgeClient.registerItemRenderer((Item)WEArcheryItems.longbow, (IItemRenderer)new ItemBowRenderer());
         MinecraftForgeClient.registerItemRenderer((Item)WEArcheryItems.boomerang, (IItemRenderer)new ItemBoomerangRenderer());
         MinecraftForgeClient.registerItemRenderer((Item)WEArcheryItems.blowpipe, (IItemRenderer)new ItemBlowPipeRenderer());
+        MinecraftForgeClient.registerItemRenderer((Item)WEArcheryItems.slingshot, (IItemRenderer)new ItemSlingshotRenderer());
+        MinecraftForgeClient.registerItemRenderer((Item)WEArcheryItems.captured_ender_chest, (IItemRenderer)new ItemCapturedEnderChestRenderer());
         WorldExplorer.proxy.registerPlayerRenderer(new PlayerQuiverRenderer());
     }
 }

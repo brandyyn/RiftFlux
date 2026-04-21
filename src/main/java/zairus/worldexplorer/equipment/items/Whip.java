@@ -44,7 +44,7 @@ extends WEItem {
         this.setMaxStackSize(1);
         this.setUnlocalizedName("whip");
         this.setTextureName("worldexplorer:whip");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
         this.setFull3D();
         this.setMaxDamage(512);
     }

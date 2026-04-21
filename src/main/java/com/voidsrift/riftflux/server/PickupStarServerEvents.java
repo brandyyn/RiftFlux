@@ -20,6 +20,7 @@ import java.util.*;
 public final class PickupStarServerEvents {
 
     private static final String TAG_NEW  = "riftflux_new";
+    private static final String TAG_SYNTHETIC_PICKUP = "riftflux_synthetic_pickup";
     private static final int WINDOW_TICKS = 40; // ~2s
     private static final int MAX_PER_TICK_KEYS = 8;
     private static final int MAX_IDLE_TICKS = 8; // how long we wait for merges
@@ -83,26 +84,69 @@ public final class PickupStarServerEvents {
         if (!ModConfig.enablePickupNotifier && !ModConfig.enableItemPickupStar) return;
 
         final EntityPlayer player = e.entityPlayer;
+        final ItemStack pickedStack = (e.item == null) ? null : e.item.getEntityItem();
+        final boolean syntheticPickup = e.item != null
+                && e.item.getEntityData() != null
+                && e.item.getEntityData().getBoolean(TAG_SYNTHETIC_PICKUP);
 
         if (ModConfig.enablePickupNotifier) {
             State st = states.computeIfAbsent(player.getUniqueID(), k -> new State());
 
-            // establish baseline from last snapshot, not current inventory
-            st.baseTotals = (st.lastTotals != null)
-                    ? new HashMap<Key, Integer>(st.lastTotals)
-                    : totalsNow(player.openContainer, player);
+            if (syntheticPickup && pickedStack != null && pickedStack.getItem() != null) {
+                // Synthetic pickup events (boomerang-return payload, etc.) happen after inventory mutation.
+                // Use current totals minus the announced stack so unrelated changes (like boomerang return)
+                // do not get reported as "picked up".
+                Map<Key, Integer> syntheticBaseline = buildSyntheticBaseline(player, pickedStack);
+                if (st.baseTotals == null) {
+                    st.baseTotals = syntheticBaseline;
+                } else {
+                    mergeSyntheticBaseline(st.baseTotals, pickedStack);
+                }
+            } else {
+                // establish baseline from last snapshot, not current inventory
+                st.baseTotals = (st.lastTotals != null)
+                        ? new HashMap<Key, Integer>(st.lastTotals)
+                        : totalsNow(player.openContainer, player);
+            }
 
             st.pending = true;
             st.idleTicks = MAX_IDLE_TICKS;
         }
 
-        if (ModConfig.enableItemPickupStar && e.item != null && e.item.getEntityItem() != null) {
-            ItemStack stack = e.item.getEntityItem();
+        if (ModConfig.enableItemPickupStar && pickedStack != null) {
+            ItemStack stack = pickedStack;
             if (stack.getItem() != null) {
                 Deque<StarKey> q = starQueues.computeIfAbsent(player.getUniqueID(), k -> new ArrayDeque<StarKey>());
                 boolean wildcard = stack.isItemStackDamageable();
                 q.addLast(new StarKey(stack.getItem(), stack.getItemDamage(), wildcard, WINDOW_TICKS));
             }
+        }
+    }
+
+    private static Map<Key, Integer> buildSyntheticBaseline(EntityPlayer player, ItemStack pickedStack) {
+        Map<Key, Integer> baseline = totalsNow(player.openContainer, player);
+        Key key = Key.of(pickedStack);
+        int current = baseline.getOrDefault(key, 0);
+        int adjusted = current - Math.max(1, pickedStack.stackSize);
+        if (adjusted > 0) {
+            baseline.put(key, adjusted);
+        } else {
+            baseline.remove(key);
+        }
+        return baseline;
+    }
+
+    private static void mergeSyntheticBaseline(Map<Key, Integer> baseline, ItemStack pickedStack) {
+        if (baseline == null || pickedStack == null || pickedStack.getItem() == null) {
+            return;
+        }
+        Key key = Key.of(pickedStack);
+        int current = baseline.getOrDefault(key, 0);
+        int adjusted = current - Math.max(1, pickedStack.stackSize);
+        if (adjusted > 0) {
+            baseline.put(key, adjusted);
+        } else {
+            baseline.remove(key);
         }
     }
 

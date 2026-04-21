@@ -11,7 +11,7 @@ extends WEItem {
     public Quiver() {
         this.setUnlocalizedName("quiver");
         this.setTextureName("worldexplorer:quiver");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
         this.setFull3D();
         this.maxStackSize = 1;
     }
@@ -21,4 +21,3 @@ extends WEItem {
         return true;
     }
 }
-

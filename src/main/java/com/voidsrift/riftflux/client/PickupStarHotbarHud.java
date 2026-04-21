@@ -33,9 +33,6 @@ public final class PickupStarHotbarHud {
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null) return;
-        if (mc.currentScreen != null && mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer) {
-            return;
-        }
 
         ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         final int sw = sr.getScaledWidth();

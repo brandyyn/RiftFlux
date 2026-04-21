@@ -45,6 +45,9 @@ public class WitchHouseWorldGenerator implements IWorldGenerator {
     private static final int SITE_CANDIDATE_ATTEMPTS = 6;
     private static final int SITE_CHECK_PADDING = 2;
     private static final int SITE_SAMPLE_STEP = 2;
+    private static final int MIN_SITE_BIOME_EDGE_DISTANCE = 12;
+    private static final int PREFERRED_SITE_BIOME_EDGE_DISTANCE = 20;
+    private static final int WATER_EXCLUSION_RADIUS = 10;
     private static final int MAX_SITE_HEIGHT_VARIATION = 4;
     private static final int MAX_SITE_ORIGIN_OFFSET = 2;
     private static final int MAX_SITE_NEIGHBOR_STEP = 2;
@@ -192,8 +195,90 @@ public class WitchHouseWorldGenerator implements IWorldGenerator {
             return null;
         }
 
-        int score = heightVariation * 16 + originOffset * 12 + maxNeighborStep * 10 + roughness;
+        int biomeEdgeDistance = getNearestNonWheatfieldDistance(world, centerX, centerZ, PREFERRED_SITE_BIOME_EDGE_DISTANCE);
+        if (biomeEdgeDistance < MIN_SITE_BIOME_EDGE_DISTANCE) {
+            return null;
+        }
+        if (hasNearbyLiquid(world, centerX, centerZ, WATER_EXCLUSION_RADIUS)) {
+            return null;
+        }
+
+        int centerPenalty = Math.max(0, PREFERRED_SITE_BIOME_EDGE_DISTANCE - biomeEdgeDistance) * 12;
+        int score = heightVariation * 16 + originOffset * 12 + maxNeighborStep * 10 + roughness + centerPenalty;
         return new PlacementCandidate(centerX, centerZ, originY, score);
+    }
+
+    private int getNearestNonWheatfieldDistance(World world, int centerX, int centerZ, int maxDistance) {
+        int minWorldX = centerX + HOUSE_CORE_MIN_X - TEMPLATE_CENTER_X;
+        int maxWorldX = centerX + HOUSE_CORE_MAX_X - TEMPLATE_CENTER_X;
+        int minWorldZ = centerZ + HOUSE_CORE_MIN_Z - TEMPLATE_CENTER_Z;
+        int maxWorldZ = centerZ + HOUSE_CORE_MAX_Z - TEMPLATE_CENTER_Z;
+        double nearestDistance = maxDistance + 1.0D;
+
+        for (int worldX = minWorldX - maxDistance; worldX <= maxWorldX + maxDistance; worldX++) {
+            for (int worldZ = minWorldZ - maxDistance; worldZ <= maxWorldZ + maxDistance; worldZ++) {
+                if (world.getBiomeGenForCoords(worldX, worldZ) == WheatfieldContent.wheatfieldBiome) {
+                    continue;
+                }
+
+                double distance = distanceOutsideRectangle(worldX, worldZ, minWorldX, maxWorldX, minWorldZ, maxWorldZ);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    if (nearestDistance < MIN_SITE_BIOME_EDGE_DISTANCE) {
+                        return (int) Math.floor(nearestDistance);
+                    }
+                }
+            }
+        }
+
+        return nearestDistance > maxDistance ? maxDistance + 1 : (int) Math.floor(nearestDistance);
+    }
+
+    private boolean hasNearbyLiquid(World world, int centerX, int centerZ, int radius) {
+        int minWorldX = centerX + HOUSE_CORE_MIN_X - TEMPLATE_CENTER_X;
+        int maxWorldX = centerX + HOUSE_CORE_MAX_X - TEMPLATE_CENTER_X;
+        int minWorldZ = centerZ + HOUSE_CORE_MIN_Z - TEMPLATE_CENTER_Z;
+        int maxWorldZ = centerZ + HOUSE_CORE_MAX_Z - TEMPLATE_CENTER_Z;
+        int minScanX = minWorldX - radius;
+        int maxScanX = maxWorldX + radius;
+        int minScanZ = minWorldZ - radius;
+        int maxScanZ = maxWorldZ + radius;
+
+        for (int worldX = minScanX; worldX <= maxScanX; worldX++) {
+            for (int worldZ = minScanZ; worldZ <= maxScanZ; worldZ++) {
+                if (distanceOutsideRectangle(worldX, worldZ, minWorldX, maxWorldX, minWorldZ, maxWorldZ) > radius) {
+                    continue;
+                }
+                if (isLiquidColumnNearby(world, worldX, worldZ)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isLiquidColumnNearby(World world, int x, int z) {
+        int topY = Math.min(world.getHeightValue(x, z), world.getActualHeight() - 1);
+        int minY = Math.max(1, topY - 4);
+
+        for (int y = topY; y >= minY; y--) {
+            Block block = world.getBlock(x, y, z);
+            if (block == null || block.isAir(world, x, y, z)) {
+                continue;
+            }
+
+            Material material = block.getMaterial();
+            if (material != null && material.isLiquid()) {
+                return true;
+            }
+
+            if (!isBlendReplaceable(block)) {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private void clearBoundingBox(World world, int centerX, int originY, int centerZ) {

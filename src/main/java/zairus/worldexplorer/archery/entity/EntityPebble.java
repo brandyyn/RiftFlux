@@ -57,7 +57,8 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import zairus.worldexplorer.archery.items.WEArcheryItems;
+import zairus.worldexplorer.archery.items.CapturedEnderChestItem;
+import zairus.worldexplorer.archery.items.SlingshotAmmoHelper;
 
 public class EntityPebble
 extends Entity
@@ -75,6 +76,10 @@ implements IProjectile {
     private int ticksInAir;
     private double damage = 1.0;
     private int knockbackStrength;
+    private boolean fixedDamage;
+    private float specialKnockbackStrength;
+    private float explosionStrength;
+    private ItemStack pickupStack;
 
     public EntityPebble(World world) {
         super(world);
@@ -94,6 +99,8 @@ implements IProjectile {
         super(world);
         this.renderDistanceWeight = 10.0;
         this.shootingEntity = p_i1755_2_;
+        this.pickupStack = SlingshotAmmoHelper.defaultPickupStack();
+        this.syncPickupStack();
         if (p_i1755_2_ instanceof EntityPlayer) {
             this.canBePickedUp = 1;
         }
@@ -118,6 +125,8 @@ implements IProjectile {
         super(world);
         this.renderDistanceWeight = 10.0;
         this.shootingEntity = entity;
+        this.pickupStack = SlingshotAmmoHelper.defaultPickupStack();
+        this.syncPickupStack();
         if (entity instanceof EntityPlayer) {
             this.canBePickedUp = 1;
         }
@@ -136,6 +145,8 @@ implements IProjectile {
 
     protected void entityInit() {
         this.dataWatcher.addObject(16, (Object)Byte.valueOf((byte)0));
+        this.dataWatcher.addObject(17, (Object)0);
+        this.dataWatcher.addObject(18, (Object)0);
     }
 
     public void setThrowableHeading(double p_70186_1_, double p_70186_3_, double p_70186_5_, float p_70186_7_, float p_70186_8_) {
@@ -143,9 +154,10 @@ implements IProjectile {
         p_70186_1_ /= (double)f2;
         p_70186_3_ /= (double)f2;
         p_70186_5_ /= (double)f2;
-        p_70186_1_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)p_70186_8_;
-        p_70186_3_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)p_70186_8_;
-        p_70186_5_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)p_70186_8_;
+        float inaccuracy = ModConfig.riftExplorerPebbleInaccuracy;
+        p_70186_1_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)inaccuracy;
+        p_70186_3_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)inaccuracy;
+        p_70186_5_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)inaccuracy;
         this.motionX = p_70186_1_ *= (double)p_70186_7_;
         this.motionY = p_70186_3_ *= (double)p_70186_7_;
         this.motionZ = p_70186_5_ *= (double)p_70186_7_;
@@ -211,9 +223,9 @@ implements IProjectile {
             if (block == this.field_145790_g && j == this.inData) {
                 if (!this.isDead) {
                     if (!this.worldObj.isRemote) {
-                        Item pickupItem = this.getPickupItem();
+                        ItemStack pickupItem = this.getPickupStack();
                         if (pickupItem != null) {
-                            this.dropItem(pickupItem, 1);
+                            this.entityDropItem(pickupItem, 0.0f);
                         }
                     }
                     this.setDead();
@@ -261,9 +273,12 @@ implements IProjectile {
             }
             if (movingobjectposition != null) {
                 if (movingobjectposition.entityHit != null) {
+                    if (this.handleSpecialEntityHit(movingobjectposition)) {
+                        return;
+                    }
                     float f2 = MathHelper.sqrt_double((double)(this.motionX * this.motionX + this.motionY * this.motionY + this.motionZ * this.motionZ));
-                    int k = MathHelper.ceiling_double_int((double)((double)f2 * this.damage));
-                    if (this.getIsCritical()) {
+                    int k = this.fixedDamage ? MathHelper.ceiling_double_int((double)this.damage) : MathHelper.ceiling_double_int((double)((double)f2 * this.damage));
+                    if (this.getIsCritical() && !this.fixedDamage) {
                         k += this.rand.nextInt(k / 2 + 2);
                     }
                     DamageSource damagesource = null;
@@ -275,8 +290,9 @@ implements IProjectile {
                         if (movingobjectposition.entityHit instanceof EntityLivingBase) {
                             float f4;
                             EntityLivingBase entitylivingbase = (EntityLivingBase)movingobjectposition.entityHit;
-                            if (this.knockbackStrength > 0 && (f4 = MathHelper.sqrt_double((double)(this.motionX * this.motionX + this.motionZ * this.motionZ))) > 0.0f) {
-                                movingobjectposition.entityHit.addVelocity(this.motionX * (double)this.knockbackStrength * (double)0.6f / (double)f4, 0.1, this.motionZ * (double)this.knockbackStrength * (double)0.6f / (double)f4);
+                            float totalKnockback = (float)this.knockbackStrength + this.specialKnockbackStrength;
+                            if (totalKnockback > 0.0f && (f4 = MathHelper.sqrt_double((double)(this.motionX * this.motionX + this.motionZ * this.motionZ))) > 0.0f) {
+                                movingobjectposition.entityHit.addVelocity(this.motionX * (double)totalKnockback * (double)0.6f / (double)f4, 0.1, this.motionZ * (double)totalKnockback * (double)0.6f / (double)f4);
                             }
                             if (this.shootingEntity != null && this.shootingEntity instanceof EntityLivingBase) {
                                 EnchantmentHelper.func_151384_a((EntityLivingBase)entitylivingbase, (Entity)this.shootingEntity);
@@ -287,6 +303,7 @@ implements IProjectile {
                             }
                         }
                         this.playSound("worldexplorer:pebble_hit_1", 1.0f, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+                        this.explodeOnImpact(movingobjectposition.hitVec.xCoord, movingobjectposition.hitVec.yCoord, movingobjectposition.hitVec.zCoord);
                         if (!(movingobjectposition.entityHit instanceof EntityEnderman)) {
                             this.setDead();
                         }
@@ -319,6 +336,25 @@ implements IProjectile {
                             this.inData
                     );
                     this.playSound("worldexplorer:pebble_hit_1", 1.0f, 1.2f / (this.rand.nextFloat() * 0.2f + 0.9f));
+                    if (this.releaseCapturedEntity(movingobjectposition.hitVec.xCoord, movingobjectposition.hitVec.yCoord, movingobjectposition.hitVec.zCoord)) {
+                        this.setDead();
+                        return;
+                    }
+                    SlingshotAmmoHelper.SpecialAmmoBehavior blockBehavior = SlingshotAmmoHelper.getSpecialBehavior(this.getPickupStack());
+                    if (blockBehavior != null && blockBehavior.isShooterTeleport()) {
+                        this.teleportShooterTo(movingobjectposition.hitVec.xCoord, movingobjectposition.hitVec.yCoord, movingobjectposition.hitVec.zCoord);
+                        this.setDead();
+                        return;
+                    }
+                    if (blockBehavior != null && blockBehavior.isTeleport()) {
+                        this.setDead();
+                        return;
+                    }
+                    if (this.explosionStrength > 0.0f) {
+                        this.explodeOnImpact(movingobjectposition.hitVec.xCoord, movingobjectposition.hitVec.yCoord, movingobjectposition.hitVec.zCoord);
+                        this.setDead();
+                        return;
+                    }
                     this.inGround = true;
                     this.arrowShake = 0;
                     this.setIsCritical(false);
@@ -384,6 +420,14 @@ implements IProjectile {
         p_70014_1_.setByte("inGround", (byte)(this.inGround ? 1 : 0));
         p_70014_1_.setByte("pickup", (byte)this.canBePickedUp);
         p_70014_1_.setDouble("damage", this.damage);
+        p_70014_1_.setBoolean("fixedDamage", this.fixedDamage);
+        p_70014_1_.setFloat("specialKnockbackStrength", this.specialKnockbackStrength);
+        p_70014_1_.setFloat("explosionStrength", this.explosionStrength);
+        if (this.pickupStack != null && this.pickupStack.getItem() != null) {
+            NBTTagCompound pickupTag = new NBTTagCompound();
+            this.pickupStack.writeToNBT(pickupTag);
+            p_70014_1_.setTag("pickupStack", pickupTag);
+        }
     }
 
     public void readEntityFromNBT(NBTTagCompound p_70037_1_) {
@@ -398,19 +442,34 @@ implements IProjectile {
         if (p_70037_1_.hasKey("damage", 99)) {
             this.damage = p_70037_1_.getDouble("damage");
         }
+        if (p_70037_1_.hasKey("fixedDamage", 99)) {
+            this.fixedDamage = p_70037_1_.getBoolean("fixedDamage");
+        }
+        if (p_70037_1_.hasKey("specialKnockbackStrength", 99)) {
+            this.specialKnockbackStrength = Math.max(0.0f, p_70037_1_.getFloat("specialKnockbackStrength"));
+        }
+        if (p_70037_1_.hasKey("explosionStrength", 99)) {
+            this.explosionStrength = Math.max(0.0f, p_70037_1_.getFloat("explosionStrength"));
+        }
         if (p_70037_1_.hasKey("pickup", 99)) {
             this.canBePickedUp = p_70037_1_.getByte("pickup");
         } else if (p_70037_1_.hasKey("player", 99)) {
             this.canBePickedUp = p_70037_1_.getBoolean("player") ? 1 : 0;
         }
+        if (p_70037_1_.hasKey("pickupStack", 10)) {
+            this.pickupStack = ItemStack.loadItemStackFromNBT((NBTTagCompound)p_70037_1_.getCompoundTag("pickupStack"));
+        } else {
+            this.pickupStack = SlingshotAmmoHelper.defaultPickupStack();
+        }
+        this.syncPickupStack();
     }
 
     public void onCollideWithPlayer(EntityPlayer player) {
         if (!this.worldObj.isRemote && this.inGround && this.arrowShake <= 0) {
             boolean flag;
             boolean bl = flag = this.canBePickedUp == 1 || this.canBePickedUp == 2 && player.capabilities.isCreativeMode;
-            Item pickupItem = this.getPickupItem();
-            if (this.canBePickedUp == 1 && (pickupItem == null || !player.inventory.addItemStackToInventory(new ItemStack(pickupItem, 1)))) {
+            ItemStack pickupItem = this.getPickupStack();
+            if (this.canBePickedUp == 1 && (pickupItem == null || !player.inventory.addItemStackToInventory(pickupItem.copy()))) {
                 flag = false;
             }
             if (flag) {
@@ -442,6 +501,18 @@ implements IProjectile {
         this.knockbackStrength = p_70240_1_;
     }
 
+    public void setFixedDamage(boolean fixedDamage) {
+        this.fixedDamage = fixedDamage;
+    }
+
+    public void setSpecialKnockbackStrength(float strength) {
+        this.specialKnockbackStrength = Math.max(0.0f, strength);
+    }
+
+    public void setExplosionStrength(float strength) {
+        this.explosionStrength = Math.max(0.0f, strength);
+    }
+
     public boolean canAttackWithItem() {
         return false;
     }
@@ -460,11 +531,175 @@ implements IProjectile {
         return (b0 & 1) != 0;
     }
 
-    private Item getPickupItem() {
-        if (ModConfig.riftExplorerSlingshotUsesCobblestoneAmmo) {
-            return Item.getItemFromBlock(Blocks.cobblestone);
+    public void setPickupStack(ItemStack stack) {
+        if (stack == null || stack.getItem() == null) {
+            this.pickupStack = null;
+            this.syncPickupStack();
+            return;
         }
-        return WEArcheryItems.pebble;
+        this.pickupStack = stack.copy();
+        this.pickupStack.stackSize = 1;
+        this.syncPickupStack();
+    }
+
+    private ItemStack getPickupStack() {
+        if (this.pickupStack == null || this.pickupStack.getItem() == null) {
+            this.pickupStack = SlingshotAmmoHelper.defaultPickupStack();
+        }
+        if (this.pickupStack == null || this.pickupStack.getItem() == null) {
+            return null;
+        }
+        ItemStack stack = this.pickupStack.copy();
+        stack.stackSize = 1;
+        return stack;
+    }
+
+    @SideOnly(value=Side.CLIENT)
+    public ItemStack getRenderStack() {
+        int itemId = this.dataWatcher.getWatchableObjectInt(17);
+        Item item = itemId <= 0 ? null : Item.getItemById(itemId);
+        if (item == null) {
+            return this.getPickupStack();
+        }
+        return new ItemStack(item, 1, this.dataWatcher.getWatchableObjectInt(18));
+    }
+
+    private void syncPickupStack() {
+        ItemStack stack = this.getPickupStack();
+        int itemId = stack == null || stack.getItem() == null ? 0 : Item.getIdFromItem(stack.getItem());
+        int meta = stack == null ? 0 : stack.getItemDamage();
+        this.dataWatcher.updateObject(17, (Object)itemId);
+        this.dataWatcher.updateObject(18, (Object)meta);
+    }
+
+    private boolean handleSpecialEntityHit(MovingObjectPosition hit) {
+        SlingshotAmmoHelper.SpecialAmmoBehavior behavior = SlingshotAmmoHelper.getSpecialBehavior(this.getPickupStack());
+        if (behavior == null || hit == null || hit.entityHit == null) {
+            return false;
+        }
+
+        if (behavior.isRelease()) {
+            this.releaseCapturedEntity(hit.hitVec.xCoord, hit.hitVec.yCoord, hit.hitVec.zCoord);
+            this.setDead();
+            return true;
+        }
+
+        if (behavior.isShooterTeleport()) {
+            if (this.swapShooterWith(hit.entityHit)) {
+                this.playSound("mob.endermen.portal", 1.0f, 1.0f);
+            }
+            this.setDead();
+            return true;
+        }
+
+        if (behavior.isTeleport()) {
+            if (this.teleportEntityRandomly(hit.entityHit)) {
+                this.playSound("mob.endermen.portal", 1.0f, 1.0f);
+            }
+            this.setDead();
+            return true;
+        }
+
+        if (behavior.isCapture() && hit.entityHit instanceof EntityLivingBase && hit.entityHit != this.shootingEntity) {
+            ItemStack captured = CapturedEnderChestItem.captureEntity((EntityLivingBase)hit.entityHit);
+            if (captured == null) {
+                return false;
+            }
+            CapturedEnderChestItem.dropCapturedEntityItem((EntityLivingBase)hit.entityHit, captured);
+            hit.entityHit.setDead();
+            this.playSound("mob.endermen.portal", 1.0f, 1.0f);
+            this.setDead();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean releaseCapturedEntity(double x, double y, double z) {
+        ItemStack pickup = this.getPickupStack();
+        if (pickup == null || pickup.getItem() == null || !CapturedEnderChestItem.hasCapturedEntity(pickup)) {
+            return false;
+        }
+        EntityPlayer owner = this.shootingEntity instanceof EntityPlayer ? (EntityPlayer)this.shootingEntity : null;
+        return CapturedEnderChestItem.releaseCapturedEntity(pickup, this.worldObj, x, y, z, owner);
+    }
+
+    private boolean teleportShooterTo(double x, double y, double z) {
+        if (this.shootingEntity == null || this.worldObj == null || this.worldObj.isRemote) {
+            return false;
+        }
+        this.worldObj.playSoundEffect(this.shootingEntity.posX, this.shootingEntity.posY, this.shootingEntity.posZ, "mob.endermen.portal", 1.0f, 1.0f);
+        this.moveEntityInstantly(this.shootingEntity, x, y, z, this.shootingEntity.rotationYaw, this.shootingEntity.rotationPitch);
+        this.worldObj.playSoundEffect(x, y, z, "mob.endermen.portal", 1.0f, 1.0f);
+        return true;
+    }
+
+    private boolean swapShooterWith(Entity target) {
+        if (this.shootingEntity == null || target == null || target == this.shootingEntity || this.worldObj == null || this.worldObj.isRemote) {
+            return false;
+        }
+
+        double shooterX = this.shootingEntity.posX;
+        double shooterY = this.shootingEntity.posY;
+        double shooterZ = this.shootingEntity.posZ;
+        float shooterYaw = this.shootingEntity.rotationYaw;
+        float shooterPitch = this.shootingEntity.rotationPitch;
+
+        double targetX = target.posX;
+        double targetY = target.posY;
+        double targetZ = target.posZ;
+        float targetYaw = target.rotationYaw;
+        float targetPitch = target.rotationPitch;
+
+        this.worldObj.playSoundEffect(shooterX, shooterY, shooterZ, "mob.endermen.portal", 1.0f, 1.0f);
+        this.worldObj.playSoundEffect(targetX, targetY, targetZ, "mob.endermen.portal", 1.0f, 1.0f);
+        this.moveEntityInstantly(this.shootingEntity, targetX, targetY, targetZ, shooterYaw, shooterPitch);
+        this.moveEntityInstantly(target, shooterX, shooterY, shooterZ, targetYaw, targetPitch);
+        return true;
+    }
+
+    private void moveEntityInstantly(Entity entity, double x, double y, double z, float yaw, float pitch) {
+        if (entity instanceof EntityPlayerMP) {
+            ((EntityPlayerMP)entity).playerNetServerHandler.setPlayerLocation(x, y, z, yaw, pitch);
+        } else {
+            entity.setLocationAndAngles(x, y, z, yaw, pitch);
+        }
+        entity.motionX = 0.0D;
+        entity.motionY = 0.0D;
+        entity.motionZ = 0.0D;
+        entity.fallDistance = 0.0f;
+    }
+
+    private boolean teleportEntityRandomly(Entity entity) {
+        if (entity == null || this.worldObj == null || this.worldObj.isRemote) {
+            return false;
+        }
+        for (int i = 0; i < 32; i++) {
+            double targetX = entity.posX + (this.rand.nextDouble() - 0.5D) * 32.0D;
+            double targetY = entity.posY + (double)(this.rand.nextInt(33) - 16);
+            double targetZ = entity.posZ + (this.rand.nextDouble() - 0.5D) * 32.0D;
+            int blockX = MathHelper.floor_double(targetX);
+            int blockY = MathHelper.floor_double(targetY);
+            int blockZ = MathHelper.floor_double(targetZ);
+            if (blockY < 1 || blockY >= this.worldObj.getHeight() - 1) {
+                continue;
+            }
+            while (blockY > 1 && !this.worldObj.getBlock(blockX, blockY - 1, blockZ).getMaterial().blocksMovement()) {
+                --blockY;
+                targetY = (double)blockY;
+            }
+            if (this.worldObj.getBlock(blockX, blockY - 1, blockZ).getMaterial().blocksMovement()
+                    && !this.worldObj.getBlock(blockX, blockY, blockZ).getMaterial().blocksMovement()
+                    && !this.worldObj.getBlock(blockX, blockY + 1, blockZ).getMaterial().blocksMovement()) {
+                if (entity instanceof EntityPlayerMP) {
+                    ((EntityPlayerMP)entity).playerNetServerHandler.setPlayerLocation(targetX, (double)blockY, targetZ, entity.rotationYaw, entity.rotationPitch);
+                } else {
+                    entity.setPosition(targetX, (double)blockY, targetZ);
+                }
+                this.worldObj.playSoundEffect(entity.posX, entity.posY, entity.posZ, "mob.endermen.portal", 1.0f, 1.0f);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void spawnBlockImpactParticles(double x, double y, double z, int blockId, int meta) {
@@ -475,5 +710,12 @@ implements IProjectile {
             double vz = -this.motionZ * 0.2 + (this.rand.nextDouble() - 0.5) * 0.04;
             this.worldObj.spawnParticle(particle, x, y, z, vx, vy, vz);
         }
+    }
+
+    private void explodeOnImpact(double x, double y, double z) {
+        if (this.explosionStrength <= 0.0f || this.worldObj.isRemote) {
+            return;
+        }
+        this.worldObj.newExplosion((Entity)this, x, y, z, this.explosionStrength, false, true);
     }
 }

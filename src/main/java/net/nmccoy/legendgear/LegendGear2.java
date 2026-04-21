@@ -188,6 +188,8 @@ public class LegendGear2 {
     public static boolean CONFIG_CALTROPS_TRIGGER_DROP_ENABLED = true;
     public static float CONFIG_CALTROPS_MOB_DAMAGE = 3.0f;
     public static float CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT = 20.0f;
+    public static boolean CONFIG_CALTROPS_IRON_BARS_MINING_SPEED = true;
+    public static boolean CONFIG_CALTROPS_REQUIRE_PICKAXE_TO_DROP = true;
     public static boolean CONFIG_CALTROPS_UNDERGROUND_GEN_ENABLED = true;
     public static int CONFIG_CALTROPS_UNDERGROUND_SPAWN_CHANCE = 3;
     public static int CONFIG_CALTROPS_UNDERGROUND_MIN_Y = 12;
@@ -413,6 +415,8 @@ public class LegendGear2 {
         CONFIG_CALTROPS_TRIGGER_DROP_ENABLED = config.getBoolean("caltropsTriggerDropEnabled", "general", true, "If true, caltrops have their normal random chance to drop as an item when triggered");
         CONFIG_CALTROPS_MOB_DAMAGE = config.getFloat("caltropsMobDamageHearts", "general", 1.5f, 0.0f, 1024.0f, "Damage dealt by caltrops to non-player living entities, measured in hearts") * 2.0f;
         CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT = config.getFloat("caltropsPlayerDamagePercent", "general", 20.0f, 0.0f, 1000.0f, "Percent of a player's max health dealt by caltrops");
+        CONFIG_CALTROPS_IRON_BARS_MINING_SPEED = config.getBoolean("caltropsIronBarsMiningSpeed", "general", true, "If true, caltrops take about as long to mine as iron bars. If false, they use their original instant-break speed");
+        CONFIG_CALTROPS_REQUIRE_PICKAXE_TO_DROP = config.getBoolean("caltropsRequirePickaxeToDrop", "general", true, "If true, placed caltrops require a pickaxe to drop as an item when mined");
         CONFIG_CALTROPS_UNDERGROUND_GEN_ENABLED = config.getBoolean("caltropsUndergroundGenEnabled", "general", true, "If true, caltrops may generate underground in caves");
         CONFIG_CALTROPS_UNDERGROUND_SPAWN_CHANCE = config.getInt("caltropsUndergroundSpawnChance", "general", 3, 0, 256, "Underground caltrops spawn attempts per chunk when enabled");
         CONFIG_CALTROPS_UNDERGROUND_MIN_Y = config.getInt("caltropsUndergroundMinY", "general", 12, 1, 255, "Minimum Y level for underground caltrops generation");
@@ -463,6 +467,12 @@ public class LegendGear2 {
             CONFIG_GROUNDED_POTION_ID = ModConfig.legendGearGroundedPotionId;
             CONFIG_MANA_REGEN_POTION_PER_SECOND = ModConfig.legendGearManaRegenPotionManaPerSecond;
             CONFIG_STONESKIN_RESISTANCE_POTION_ID = ModConfig.legendGearStoneskinResistancePotionId;
+            CONFIG_CALTROPS_BREAK_ON_TRIGGER = ModConfig.legendGearCaltropsBreakOnTrigger;
+            CONFIG_CALTROPS_TRIGGER_DROP_ENABLED = ModConfig.legendGearCaltropsTriggerDropEnabled;
+            CONFIG_CALTROPS_MOB_DAMAGE = ModConfig.legendGearCaltropsMobDamageHearts * 2.0F;
+            CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT = ModConfig.legendGearCaltropsPlayerDamagePercent;
+            CONFIG_CALTROPS_IRON_BARS_MINING_SPEED = ModConfig.legendGearCaltropsIronBarsMiningSpeed;
+            CONFIG_CALTROPS_REQUIRE_PICKAXE_TO_DROP = ModConfig.legendGearCaltropsRequirePickaxeToDrop;
             CONFIG_CALTROPS_SLOWNESS_POTION_ID = ModConfig.legendGearCaltropsSlownessPotionId;
             CONFIG_EXIT_CONFUSION_POTION_ID = ModConfig.legendGearExitConfusionPotionId;
             CONFIG_ICE_SPELL_SLOWNESS_POTION_ID = ModConfig.legendGearIceSpellSlownessPotionId;

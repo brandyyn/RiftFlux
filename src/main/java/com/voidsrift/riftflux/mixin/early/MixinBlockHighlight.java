@@ -1,13 +1,16 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import net.nmccoy.legendgear.block.CaltropsBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
@@ -53,11 +56,8 @@ public abstract class MixinBlockHighlight {
         double py = player.prevPosY + (player.posY - player.prevPosY) * pt;
         double pz = player.prevPosZ + (player.posZ - player.prevPosZ) * pt;
 
-        AxisAlignedBB a = b.getSelectedBoundingBoxFromPool(w, bx, by, bz);
-        if (a == null) return;
-
-        // View-space box
-        a = a.getOffsetBoundingBox(-px, -py, -pz);
+        AxisAlignedBB box = b.getSelectedBoundingBoxFromPool(w, bx, by, bz);
+        if (box == null) return;
 
         // Pulse (alpha only)
         float alpha = ModConfig.ALPHA_BASE;
@@ -87,7 +87,7 @@ public abstract class MixinBlockHighlight {
         GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
         GL11.glPolygonOffset(POLY_FACTOR, POLY_UNITS);
 
-        drawEdgeBeamsContinuous(a, ModConfig.THICKNESS);
+        drawEdgeBeamsContinuous(box.getOffsetBoundingBox(-px, -py, -pz), ModConfig.THICKNESS);
 
         // PASS 2: shade only the frontmost fragments we just wrote
         GL11.glColorMask(true, true, true, true);
@@ -101,7 +101,7 @@ public abstract class MixinBlockHighlight {
         GL11.glColor4f(1F, 1F, 1F, alpha);
 
         GL11.glPolygonOffset(POLY_FACTOR, POLY_UNITS);
-        drawEdgeBeamsContinuous(a, ModConfig.THICKNESS);
+        drawEdgeBeamsContinuous(box.getOffsetBoundingBox(-px, -py, -pz), ModConfig.THICKNESS);
 
         // Restore
         GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
@@ -114,7 +114,6 @@ public abstract class MixinBlockHighlight {
         GL11.glColor4f(1F, 1F, 1F, 1F);
 
     }
-
     /**
      * Prevent vanilla from drawing its thin outlined AABB (we draw our own style instead).
      * Keeping the rest of {@code drawSelectionBox} running is important for Angelica/Iris outline pass balance.
@@ -129,6 +128,33 @@ public abstract class MixinBlockHighlight {
     )
     private void rf$skipVanillaOutlinedAabb(AxisAlignedBB aabb, int color) {
         // no-op
+    }
+
+    @Redirect(
+            method = "drawBlockDamageTexture(Lnet/minecraft/client/renderer/Tessellator;Lnet/minecraft/entity/EntityLivingBase;F)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/RenderBlocks;renderBlockUsingTexture(Lnet/minecraft/block/Block;IIILnet/minecraft/util/IIcon;)V"
+            )
+    )
+    private void rf$renderCaltropsDamageBox(RenderBlocks renderer, Block block, int x, int y, int z, IIcon icon) {
+        if (!(block instanceof CaltropsBlock)) {
+            renderer.renderBlockUsingTexture(block, x, y, z, icon);
+            return;
+        }
+
+        renderer.setOverrideBlockTexture(icon);
+        renderer.setRenderBounds(
+                CaltropsBlock.HITBOX_MIN,
+                0.0D,
+                CaltropsBlock.HITBOX_MIN,
+                CaltropsBlock.HITBOX_MAX,
+                CaltropsBlock.HITBOX_HEIGHT,
+                CaltropsBlock.HITBOX_MAX
+        );
+        renderer.renderStandardBlock(block, x, y, z);
+        renderer.clearOverrideBlockTexture();
+        block.setBlockBoundsForItemRender();
     }
 
     /** 12 rectangular prisms centered on original edges, EXTENDED through corners → no seams. */

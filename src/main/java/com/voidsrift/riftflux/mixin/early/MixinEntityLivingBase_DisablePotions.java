@@ -1,8 +1,10 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.blessings.BlessingEvents;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,6 +43,9 @@ public abstract class MixinEntityLivingBase_DisablePotions {
         }
 
         int id = effect.getPotionID();
+        if (id == Potion.invisibility.id && BlessingEvents.isApplyingNinjaInvisibility()) {
+            return;
+        }
         if (ModConfig.isPotionIdDisabled(id)) {
             // Cancel: this potion effect will never be applied to the player
             ci.cancel();

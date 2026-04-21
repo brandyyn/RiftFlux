@@ -1,53 +1,76 @@
 package com.voidsrift.riftflux.mixin.early.dualhotbar;
 
 import com.voidsrift.riftflux.dualhotbar.DualHotbarPickBlockHelper;
+import com.voidsrift.riftflux.mixin.accessor.PlayerControllerMPAccessor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.multiplayer.PlayerControllerMP;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.common.ForgeHooks;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft_PickBlock {
-    @Shadow
-    public MovingObjectPosition objectMouseOver;
-
-    @Shadow
-    public EntityClientPlayerMP thePlayer;
-
-    @Shadow
-    public WorldClient theWorld;
-
-    @Shadow
-    public PlayerControllerMP playerController;
-
     @Inject(method = "func_147112_ai", at = @At("HEAD"), cancellable = true)
     private void riftflux$extendPickBlock(CallbackInfo ci) {
-        if (this.objectMouseOver == null || this.thePlayer == null || this.theWorld == null || this.playerController == null) {
+        Minecraft mc = (Minecraft) (Object) this;
+        DualHotbarPickBlockHelper.clearPendingPickBlock();
+        if (mc.objectMouseOver == null || mc.thePlayer == null || mc.theWorld == null || mc.playerController == null) {
             ci.cancel();
             return;
         }
 
-        boolean creative = this.thePlayer.capabilities.isCreativeMode;
-        if (!ForgeHooks.onPickBlock(this.objectMouseOver, this.thePlayer, this.theWorld)) {
+        boolean creative = mc.thePlayer.capabilities.isCreativeMode;
+        if (!ForgeHooks.onPickBlock(mc.objectMouseOver, mc.thePlayer, mc.theWorld)) {
             ci.cancel();
             return;
         }
 
-        if (creative) {
-            int hotbarSlot = this.thePlayer.inventory.currentItem;
-            int containerSlot = DualHotbarPickBlockHelper.getCreativeContainerSlot(this.thePlayer, hotbarSlot);
-            ItemStack stack = this.thePlayer.inventory.getStackInSlot(hotbarSlot);
-            this.playerController.sendSlotPacket(stack, containerSlot);
+        ItemStack result = DualHotbarPickBlockHelper.getPendingPickBlockResult();
+        int sourceSlot = DualHotbarPickBlockHelper.getPendingPickBlockSourceSlot();
+        int selectedSlot = mc.thePlayer.inventory.currentItem;
+
+        if (result != null) {
+            if (sourceSlot >= 0 && creative) {
+                int sourceContainerSlot = DualHotbarPickBlockHelper.getInventoryContainerSlot(mc.thePlayer, sourceSlot);
+                int selectedContainerSlot = DualHotbarPickBlockHelper.getInventoryContainerSlot(mc.thePlayer, selectedSlot);
+                ItemStack sourceStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
+                ItemStack selectedStack = mc.thePlayer.inventory.getStackInSlot(selectedSlot);
+                if (sourceStack != null && sourceContainerSlot >= 0 && selectedContainerSlot >= 0
+                        && sourceContainerSlot != selectedContainerSlot) {
+                    ItemStack sourceCopy = sourceStack.copy();
+                    ItemStack selectedCopy = selectedStack == null ? null : selectedStack.copy();
+                    mc.thePlayer.inventory.setInventorySlotContents(selectedSlot, sourceCopy.copy());
+                    mc.thePlayer.inventory.setInventorySlotContents(sourceSlot, selectedCopy == null ? null : selectedCopy.copy());
+                    mc.playerController.sendSlotPacket(sourceCopy, selectedContainerSlot);
+                    mc.playerController.sendSlotPacket(selectedCopy, sourceContainerSlot);
+                    mc.thePlayer.inventory.markDirty();
+                }
+            } else if (sourceSlot >= 0) {
+                int sourceContainerSlot = DualHotbarPickBlockHelper.getInventoryContainerSlot(mc.thePlayer, sourceSlot);
+                int selectedContainerSlot = DualHotbarPickBlockHelper.getInventoryContainerSlot(mc.thePlayer, selectedSlot);
+                if (sourceContainerSlot >= 0 && selectedContainerSlot >= 0 && sourceContainerSlot != selectedContainerSlot) {
+                    int windowId = mc.thePlayer.inventoryContainer.windowId;
+                    mc.playerController.windowClick(windowId, sourceContainerSlot, 0, 0, mc.thePlayer);
+                    mc.playerController.windowClick(windowId, selectedContainerSlot, 0, 0, mc.thePlayer);
+                    mc.playerController.windowClick(windowId, sourceContainerSlot, 0, 0, mc.thePlayer);
+                }
+            } else if (creative) {
+                int selectedContainerSlot = DualHotbarPickBlockHelper.getInventoryContainerSlot(mc.thePlayer, selectedSlot);
+                ItemStack resultCopy = result.copy();
+                mc.thePlayer.inventory.setInventorySlotContents(selectedSlot, resultCopy.copy());
+                mc.thePlayer.inventory.markDirty();
+                if (selectedContainerSlot >= 0) {
+                    mc.playerController.sendSlotPacket(resultCopy, selectedContainerSlot);
+                }
+            }
         }
 
+        if (mc.playerController instanceof PlayerControllerMPAccessor) {
+            ((PlayerControllerMPAccessor)mc.playerController).riftflux$syncCurrentPlayItem();
+        }
+        DualHotbarPickBlockHelper.clearPendingPickBlock();
         ci.cancel();
     }
 }

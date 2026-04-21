@@ -20,6 +20,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.common.MinecraftForge;
+import zairus.worldexplorer.archery.items.Boomerang;
 import zairus.worldexplorer.core.items.WEItem;
 
 public final class RiftExplorerContent {
@@ -113,6 +114,7 @@ public final class RiftExplorerContent {
         FMLCommonHandler.instance().bus().register(eventHandler);
         MinecraftForge.EVENT_BUS.register(eventHandler);
         MinecraftForge.TERRAIN_GEN_BUS.register(eventHandler);
+        MinecraftForge.EVENT_BUS.register(new RiftChestRandomMobStateTracker());
     }
 
     private static void applyRiftFluxAdjustments() throws Exception {
@@ -128,7 +130,6 @@ public final class RiftExplorerContent {
             removeRecipesByOutputItem(Item.getItemFromBlock(studyDesk));
         }
 
-        removeRiftExplorerCreativeTab();
         registerVanillaUpgradeRecipes();
     }
 
@@ -137,32 +138,6 @@ public final class RiftExplorerContent {
         Item needle = getStaticItem("zairus.worldexplorer.core.items.WorldExplorerItems", "needle");
         if (needle != null) {
             GameRegistry.addShapelessRecipe(new ItemStack(needle, 6), Blocks.cactus);
-        }
-    }
-
-    private static void removeRiftExplorerCreativeTab() throws Exception {
-        setStaticField(Class.forName("zairus.worldexplorer.core.WorldExplorer"), "tabWorldExplorer", null);
-        removeCreativeTabFromItems("zairus.worldexplorer.core.items.WorldExplorerItems");
-        removeCreativeTabFromItems("zairus.worldexplorer.archery.items.WEArcheryItems");
-        removeCreativeTabFromItems("zairus.worldexplorer.equipment.items.WEEquipmentItems");
-    }
-
-    private static void removeCreativeTabFromItems(String ownerClassName) throws Exception {
-        Class<?> owner = Class.forName(ownerClassName);
-        Field[] fields = owner.getDeclaredFields();
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            if (!Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
-            if (!Item.class.isAssignableFrom(field.getType())) {
-                continue;
-            }
-            field.setAccessible(true);
-            Object value = field.get(null);
-            if (value instanceof Item) {
-                ((Item) value).setCreativeTab(null);
-            }
         }
     }
 
@@ -196,6 +171,9 @@ public final class RiftExplorerContent {
                         imp.valuePerUnit,
                         imp.improvementType.getMaxValue()
                 ));
+            }
+            if (weItem instanceof Boomerang) {
+                GameRegistry.addRecipe(new RecipeRiftExplorerBoomerangNetherStar((Boomerang)weItem));
             }
         }
     }

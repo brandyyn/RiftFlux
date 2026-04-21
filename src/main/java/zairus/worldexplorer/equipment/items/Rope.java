@@ -11,8 +11,7 @@ extends WEItem {
     public Rope() {
         this.setUnlocalizedName("rope");
         this.setTextureName("worldexplorer:rope");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabTools);
         this.maxStackSize = 1;
     }
 }
-

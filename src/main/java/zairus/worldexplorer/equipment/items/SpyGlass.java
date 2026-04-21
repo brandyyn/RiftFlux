@@ -29,7 +29,7 @@ extends WEItem {
     public SpyGlass() {
         this.setUnlocalizedName("spyglass");
         this.setTextureName("worldexplorer:spyglass");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabTools);
         this.setFull3D();
         this.setMaxDamage(3000);
         this.maxStackSize = 1;
@@ -86,4 +86,3 @@ extends WEItem {
         return 1;
     }
 }
-

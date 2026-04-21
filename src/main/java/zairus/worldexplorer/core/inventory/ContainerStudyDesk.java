@@ -39,6 +39,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import zairus.worldexplorer.archery.items.Boomerang;
 import zairus.worldexplorer.core.inventory.ContainerBase;
 import zairus.worldexplorer.core.items.WEItem;
 import zairus.worldexplorer.core.tileentity.TileEntityDesk;
@@ -122,7 +123,7 @@ extends ContainerBase {
             improved = subject.copy();
             WEItem.Improvement imp = ((WEItem)subjectItem).getImprovementFromMaterial(material.getItem());
             if (imp != null) {
-                this.addImprovement(improved, imp.improvementType.getKey(), imp.valuePerUnit, imp.improvementType.getMaxValue());
+                improved = subjectItem instanceof Boomerang ? ((Boomerang)subjectItem).applyImprovement(improved, imp) : this.addImprovement(improved, imp.improvementType.getKey(), imp.valuePerUnit, imp.improvementType.getMaxValue());
             }
         }
         return improved;
@@ -246,4 +247,3 @@ extends ContainerBase {
         }
     }
 }
-

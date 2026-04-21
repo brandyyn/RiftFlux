@@ -23,10 +23,8 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
-import zairus.worldexplorer.core.WorldExplorer;
 import zairus.worldexplorer.core.items.WEItem;
 
 public class Dart
@@ -40,7 +38,7 @@ extends WEItem {
     public Dart() {
         this.setUnlocalizedName("dart");
         this.setTextureName("worldexplorer:dart");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
         this.setHasSubtypes(true);
         this.maxStackSize = 64;
     }
@@ -53,11 +51,7 @@ extends WEItem {
 
     @SideOnly(value=Side.CLIENT)
     public boolean hasEffect(ItemStack stack, int pass) {
-        boolean hasEffect = super.hasEffect(stack, pass);
-        if (stack.hasTagCompound() && stack.getTagCompound().hasKey(KEY_HASEFFECT)) {
-            hasEffect = stack.getTagCompound().getBoolean(KEY_HASEFFECT);
-        }
-        return hasEffect;
+        return super.hasEffect(stack, pass) || DartEffectHelper.hasInfusion(stack);
     }
 
     public String getUnlocalizedName(ItemStack stack) {
@@ -82,15 +76,6 @@ extends WEItem {
 
     @SideOnly(value=Side.CLIENT)
     public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_) {
-        if (stack.hasTagCompound()) {
-            NBTTagCompound tag = stack.getTagCompound();
-            if (tag.hasKey(KEY_EFFECTNAME)) {
-                list.add("Effect: " + tag.getString(KEY_EFFECTNAME));
-            }
-            if (tag.hasKey(KEY_EFFECTID)) {
-                list.add("Id: " + tag.getString(KEY_EFFECTID));
-            }
-        }
+        list.add(DartEffectHelper.getTooltipText(stack));
     }
 }
-

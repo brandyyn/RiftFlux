@@ -198,6 +198,7 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new LegendGearManaTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodDurabilityTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new RiftExplorerDurabilityTooltipHandler());
+        MinecraftForge.EVENT_BUS.register(new RiftExplorerSlingshotAmmoTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodPlacementPreviewRenderer());
         FMLCommonHandler.instance().bus().register(new EyeOfCthulhuMusicHandler());
 

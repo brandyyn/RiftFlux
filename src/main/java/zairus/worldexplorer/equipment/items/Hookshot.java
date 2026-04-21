@@ -11,9 +11,8 @@ extends WEItem {
     public Hookshot() {
         this.setUnlocalizedName("hookshot");
         this.setTextureName("worldexplorer:hookshot");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabTools);
         this.maxStackSize = 1;
         this.bFull3D = true;
     }
 }
-

@@ -110,6 +110,8 @@ public final class LegendGearContent {
         LegendGear2.CONFIG_CALTROPS_TRIGGER_DROP_ENABLED = ModConfig.legendGearCaltropsTriggerDropEnabled;
         LegendGear2.CONFIG_CALTROPS_MOB_DAMAGE = ModConfig.legendGearCaltropsMobDamageHearts * 2.0F;
         LegendGear2.CONFIG_CALTROPS_PLAYER_DAMAGE_PERCENT = ModConfig.legendGearCaltropsPlayerDamagePercent;
+        LegendGear2.CONFIG_CALTROPS_IRON_BARS_MINING_SPEED = ModConfig.legendGearCaltropsIronBarsMiningSpeed;
+        LegendGear2.CONFIG_CALTROPS_REQUIRE_PICKAXE_TO_DROP = ModConfig.legendGearCaltropsRequirePickaxeToDrop;
         LegendGear2.CONFIG_CALTROPS_UNDERGROUND_GEN_ENABLED = ModConfig.legendGearCaltropsUndergroundGenEnabled;
         LegendGear2.CONFIG_CALTROPS_UNDERGROUND_SPAWN_CHANCE = ModConfig.legendGearCaltropsUndergroundSpawnChance;
         LegendGear2.CONFIG_CALTROPS_UNDERGROUND_MIN_Y = ModConfig.legendGearCaltropsUndergroundMinY;

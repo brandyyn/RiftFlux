@@ -15,6 +15,8 @@ public class TerraPlantWorldGenerator implements IWorldGenerator {
     private static final int CHUNK_SAFE_SPAN = 16 - CHUNK_BORDER * 2;
     private static final int UNDERGROUND_MIN_Y = 6;
     private static final int UNDERGROUND_SPAN = 50;
+    private static final int SURFACE_RARITY_MULTIPLIER = 8;
+    private static final int UNDERGROUND_RARITY_MULTIPLIER = 8;
 
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world,
@@ -36,30 +38,30 @@ public class TerraPlantWorldGenerator implements IWorldGenerator {
         final int originX = chunkX * 16;
         final int originZ = chunkZ * 16;
 
-        if (shouldAttemptChunk(random, ModConfig.daybloomSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.daybloomSpawnAttempts, SURFACE_RARITY_MULTIPLIER)) {
             generateSurfacePlants(world, random, originX, originZ, TerrariaContent.daybloomBlock, 1);
         }
-        if (shouldAttemptChunk(random, ModConfig.terraMushroomSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.terraMushroomSpawnAttempts, SURFACE_RARITY_MULTIPLIER)) {
             generateSurfacePlants(world, random, originX, originZ, TerrariaContent.terraMushroomBlock, 1);
         }
 
-        if (shouldAttemptChunk(random, ModConfig.blinkrootSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.blinkrootSpawnAttempts, UNDERGROUND_RARITY_MULTIPLIER)) {
             generateUndergroundPlants(world, random, originX, originZ, TerrariaContent.blinkrootBlock, 1, false);
         }
-        if (shouldAttemptChunk(random, ModConfig.waterleafSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.waterleafSpawnAttempts, UNDERGROUND_RARITY_MULTIPLIER)) {
             generateUndergroundPlants(world, random, originX, originZ, TerrariaContent.waterleafBlock, 1, false);
         }
-        if (shouldAttemptChunk(random, ModConfig.deathweedSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.deathweedSpawnAttempts, UNDERGROUND_RARITY_MULTIPLIER)) {
             generateUndergroundPlants(world, random, originX, originZ, TerrariaContent.deathweedBlock, 1, false);
         }
-        if (shouldAttemptChunk(random, ModConfig.fireblossomSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.fireblossomSpawnAttempts, UNDERGROUND_RARITY_MULTIPLIER)) {
             generateUndergroundPlants(world, random, originX, originZ, TerrariaContent.fireblossomBlock, 1, false);
         }
 
-        if (shouldAttemptChunk(random, ModConfig.jungleSporeSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.jungleSporeSpawnAttempts, UNDERGROUND_RARITY_MULTIPLIER)) {
             generateUndergroundPlants(world, random, originX, originZ, TerrariaContent.jungleSporeBlock, 1, true);
         }
-        if (shouldAttemptChunk(random, ModConfig.moonglowSpawnAttempts)) {
+        if (shouldAttemptChunk(random, ModConfig.moonglowSpawnAttempts, UNDERGROUND_RARITY_MULTIPLIER)) {
             generateUndergroundPlants(world, random, originX, originZ, TerrariaContent.moonglowBlock, 1, true);
         }
     }
@@ -130,13 +132,14 @@ public class TerraPlantWorldGenerator implements IWorldGenerator {
         return name.contains("jungle");
     }
 
-    private static boolean shouldAttemptChunk(Random random, int oneInN) {
+    private static boolean shouldAttemptChunk(Random random, int oneInN, int multiplier) {
         if (oneInN <= 0) {
             return false;
         }
-        if (oneInN == 1) {
+        int effectiveOneInN = Math.max(1, oneInN * Math.max(1, multiplier));
+        if (effectiveOneInN == 1) {
             return true;
         }
-        return random.nextInt(oneInN) == 0;
+        return random.nextInt(effectiveOneInN) == 0;
     }
 }

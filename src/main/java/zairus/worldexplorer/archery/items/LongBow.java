@@ -34,7 +34,7 @@ public class LongBow extends WEItemRanged {
     public LongBow() {
         this.setUnlocalizedName("longbow");
         this.setTextureName("worldexplorer:longbow_handle");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
         this.setFull3D();
         this.setMaxStackSize(1);
         this.setMaxDamage(Math.max(0, ModConfig.riftExplorerLongbowDurability));
@@ -67,7 +67,8 @@ public class LongBow extends WEItemRanged {
                 || EnchantmentHelper.getEnchantmentLevel(Enchantment.infinity.effectId, stack) > 0;
         ItemStack ammo = this.findPreferredAmmo(player);
         if (ammo == null && infiniteAmmo) {
-            ammo = new ItemStack(WEArcheryItems.specialarrow, 1, 1);
+            int fallbackArrowType = SpecialArrow.getFirstEnabledArrowType();
+            ammo = fallbackArrowType >= 0 ? new ItemStack(WEArcheryItems.specialarrow, 1, fallbackArrowType) : new ItemStack(Items.arrow);
         }
         if (ammo == null) {
             return;
@@ -180,7 +181,10 @@ public class LongBow extends WEItemRanged {
             }
             Item item = slot.getItem();
             if (item == WEArcheryItems.specialarrow) {
-                return slot;
+                if (SpecialArrow.isArrowTypeEnabled(slot.getItemDamage())) {
+                    return slot;
+                }
+                continue;
             }
             if (item == Items.arrow && vanillaArrow == null) {
                 vanillaArrow = slot;

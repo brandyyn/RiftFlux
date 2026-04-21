@@ -33,7 +33,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -56,7 +55,6 @@ public class WorldExplorer {
     public static PacketPipeline packetPipeline;
     public static CommonProxy proxy;
     public static WorldExplorer instance;
-    public static CreativeTabs tabWorldExplorer;
 
     public void preInit(FMLPreInitializationEvent event) {
         proxy.preInit(event);
@@ -107,11 +105,5 @@ public class WorldExplorer {
 
     static {
         packetPipeline = new PacketPipeline();
-        tabWorldExplorer = new CreativeTabs("tabWorldExplorer"){
-
-            public Item getTabIconItem() {
-                return WorldExplorerItems.journal;
-            }
-        };
     }
 }

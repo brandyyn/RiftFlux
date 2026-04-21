@@ -4,8 +4,12 @@ import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
 
 public final class GenLayerWheatfieldRound extends GenLayer {
-    private static final int DENSITY_RADIUS = 2;
-    private static final float EDGE_NOISE_RANGE = 0.14F;
+    private static final int DENSITY_RADIUS = 5;
+    private static final int CARDINAL_ARM_LENGTH = 5;
+    private static final int DIAGONAL_ARM_LENGTH = 4;
+    private static final float EDGE_NOISE_RANGE = 0.08F;
+    private static final int[] DIR_X = new int[] { 1, -1, 0, 0, 1, -1, 1, -1 };
+    private static final int[] DIR_Y = new int[] { 0, 0, 1, -1, 1, -1, -1, 1 };
     private final int wheatfieldBiomeId;
 
     public GenLayerWheatfieldRound(long seed, GenLayer parent, int wheatfieldBiomeId) {
@@ -40,6 +44,21 @@ public final class GenLayerWheatfieldRound extends GenLayer {
                 int wheatfieldDiagonal = 0;
                 int dominantNonWheatfield = center;
                 int dominantNonWheatfieldCount = 0;
+                int[] directionalSupport = new int[DIR_X.length];
+                int strongestArm = 0;
+                int armCount = 0;
+                int totalDirectionalSupport = 0;
+                for (int dir = 0; dir < DIR_X.length; dir++) {
+                    directionalSupport[dir] = countDirectionalSupport(parentInts, parentWidth, centerX, centerY, DIR_X[dir], DIR_Y[dir]);
+                    strongestArm = Math.max(strongestArm, directionalSupport[dir]);
+                    totalDirectionalSupport += directionalSupport[dir];
+                    if (directionalSupport[dir] >= 5) {
+                        armCount++;
+                    }
+                }
+                int strongestPair = Math.max(
+                        Math.max(directionalSupport[0] + directionalSupport[1], directionalSupport[2] + directionalSupport[3]),
+                        Math.max(directionalSupport[4] + directionalSupport[5], directionalSupport[6] + directionalSupport[7]));
 
                 for (int offsetY = -1; offsetY <= 1; offsetY++) {
                     for (int offsetX = -1; offsetX <= 1; offsetX++) {
@@ -71,23 +90,34 @@ public final class GenLayerWheatfieldRound extends GenLayer {
 
                 if (center == wheatfieldBiomeId) {
                     float keepScore = localWheatfieldDensity
-                            + wheatfieldCardinal * 0.09F
-                            + wheatfieldDiagonal * 0.06F
+                            + wheatfieldCardinal * 0.07F
+                            + wheatfieldDiagonal * 0.05F
+                            + strongestArm * 0.028F
+                            + strongestPair * 0.012F
                             + edgeNoise;
-                    boolean erode = (wheatfieldCardinal <= 1 && wheatfieldDiagonal <= 1)
-                            || keepScore < 0.53F;
+                    boolean anchoredLine = strongestPair >= 10;
+                    boolean anchoredTendril = strongestArm >= 7 || totalDirectionalSupport >= 16;
+                    boolean erode = (!anchoredLine && !anchoredTendril && keepScore < 0.44F)
+                            || (wheatfieldCardinal == 0 && wheatfieldDiagonal == 0 && strongestArm < 5);
                     out[localX + localY * areaWidth] = erode ? dominantNonWheatfield : center;
                 } else {
                     float growScore = localWheatfieldDensity
-                            + wheatfieldCardinal * 0.11F
-                            + wheatfieldDiagonal * 0.08F
+                            + wheatfieldCardinal * 0.09F
+                            + wheatfieldDiagonal * 0.06F
+                            + strongestArm * 0.03F
+                            + strongestPair * 0.015F
                             + edgeNoise;
-                    boolean growCore = growScore >= 0.70F;
-                    boolean growTendril = localWheatfieldDensity >= 0.34F
-                            && wheatfieldCardinal >= 1
-                            && wheatfieldDiagonal >= 1
-                            && this.nextInt(6) == 0;
-                    boolean expand = growCore || growTendril;
+                    boolean growCore = growScore >= 0.78F;
+                    boolean growTendril = strongestArm >= 7
+                            && localWheatfieldDensity >= 0.12F
+                            && this.nextInt(strongestArm >= 9 ? 2 : 3) == 0;
+                    boolean growBridge = strongestPair >= 10
+                            && localWheatfieldDensity >= 0.18F
+                            && this.nextInt(4) != 0;
+                    boolean growBranch = armCount >= 2
+                            && localWheatfieldDensity >= 0.16F
+                            && this.nextInt(5) == 0;
+                    boolean expand = growCore || growTendril || growBridge || growBranch;
                     out[localX + localY * areaWidth] = expand ? wheatfieldBiomeId : center;
                 }
             }
@@ -107,6 +137,31 @@ public final class GenLayerWheatfieldRound extends GenLayer {
             }
         }
         return count;
+    }
+
+    private int countDirectionalSupport(int[] parentInts, int parentWidth, int centerX, int centerY, int dirX, int dirY) {
+        int maxSteps = dirX == 0 || dirY == 0 ? CARDINAL_ARM_LENGTH : DIAGONAL_ARM_LENGTH;
+        int straight = 0;
+        int lateral = 0;
+        for (int step = 1; step <= maxSteps; step++) {
+            int sampleX = centerX + dirX * step;
+            int sampleY = centerY + dirY * step;
+            int sample = parentInts[sampleX + sampleY * parentWidth];
+            if (sample != wheatfieldBiomeId) {
+                break;
+            }
+            straight++;
+
+            int sideX = dirY;
+            int sideY = -dirX;
+            if (parentInts[sampleX + sideX + (sampleY + sideY) * parentWidth] == wheatfieldBiomeId) {
+                lateral++;
+            }
+            if (parentInts[sampleX - sideX + (sampleY - sideY) * parentWidth] == wheatfieldBiomeId) {
+                lateral++;
+            }
+        }
+        return straight * 2 + lateral;
     }
 
     private static int countBiomeInRadius(int[] parentInts, int parentWidth, int centerX, int centerY, int biomeId, int radius) {

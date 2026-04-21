@@ -29,6 +29,7 @@
  */
 package zairus.worldexplorer.archery.entity;
 
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.registry.IThrowableEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -55,6 +56,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import zairus.worldexplorer.archery.items.SpecialArrow;
 import zairus.worldexplorer.archery.items.WEArcheryItems;
 
 public class EntitySpecialArrow
@@ -115,7 +117,7 @@ implements IProjectile, IThrowableEntity {
             this.setLocationAndAngles(shooter.posX + d4, this.posY, shooter.posZ + d5, f2, f3);
             this.yOffset = 0.0f;
             float f4 = (float)d3 * 0.2f;
-            this.setThrowableHeading(d0, d1 + (double)f4, d2, p_i1755_4_, p_i1755_5_);
+            this.setThrowableHeading(d0, d1 + (double)f4, d2, p_i1755_4_ * SpecialArrow.getSpeedMultiplier(this.arrowStack.getItemDamage()), p_i1755_5_);
         }
     }
 
@@ -137,7 +139,7 @@ implements IProjectile, IThrowableEntity {
         this.motionX = -MathHelper.sin((float)(this.rotationYaw / 180.0f * (float)Math.PI)) * MathHelper.cos((float)(this.rotationPitch / 180.0f * (float)Math.PI));
         this.motionZ = MathHelper.cos((float)(this.rotationYaw / 180.0f * (float)Math.PI)) * MathHelper.cos((float)(this.rotationPitch / 180.0f * (float)Math.PI));
         this.motionY = -MathHelper.sin((float)(this.rotationPitch / 180.0f * (float)Math.PI));
-        this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, power * 1.5f, 1.0f);
+        this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, power * 1.5f * SpecialArrow.getSpeedMultiplier(this.arrowStack.getItemDamage()), 1.0f);
     }
 
     protected void entityInit() {
@@ -153,9 +155,10 @@ implements IProjectile, IThrowableEntity {
         p_70186_1_ /= (double)f2;
         p_70186_3_ /= (double)f2;
         p_70186_5_ /= (double)f2;
-        p_70186_1_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)p_70186_8_;
-        p_70186_3_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)p_70186_8_;
-        p_70186_5_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)p_70186_8_;
+        float inaccuracy = ModConfig.riftExplorerSpecialArrowInaccuracy;
+        p_70186_1_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)inaccuracy;
+        p_70186_3_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)inaccuracy;
+        p_70186_5_ += this.rand.nextGaussian() * (double)(this.rand.nextBoolean() ? -1 : 1) * (double)0.0075f * (double)inaccuracy;
         this.motionX = p_70186_1_ *= (double)p_70186_7_;
         this.motionY = p_70186_3_ *= (double)p_70186_7_;
         this.motionZ = p_70186_5_ *= (double)p_70186_7_;
@@ -263,7 +266,7 @@ implements IProjectile, IThrowableEntity {
                     if (this.isBurning() && !(movingobjectposition.entityHit instanceof EntityEnderman)) {
                         movingobjectposition.entityHit.setFire(5);
                     }
-                    if (movingobjectposition.entityHit.attackEntityFrom(damagesource, (float)(k = (int)((float)k + (float)this.arrowStack.getItemDamage())))) {
+                    if (movingobjectposition.entityHit.attackEntityFrom(damagesource, (float)(k = k + SpecialArrow.getDamageBonus(this.arrowStack.getItemDamage())))) {
                         if (movingobjectposition.entityHit instanceof EntityLivingBase) {
                             float f4;
                             EntityLivingBase entitylivingbase = (EntityLivingBase)movingobjectposition.entityHit;
@@ -468,7 +471,7 @@ implements IProjectile, IThrowableEntity {
     }
 
     private int normalizeArrowType(int type) {
-        return MathHelper.clamp_int(type, 0, 5);
+        return SpecialArrow.normalizeArrowType(type);
     }
 
     @Override

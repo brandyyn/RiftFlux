@@ -29,7 +29,7 @@ public class BlockStudyDesk extends BlockContainer {
     protected BlockStudyDesk(String unlocalizedName) {
         super(Material.wood);
         this.setBlockName(unlocalizedName);
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabDecorations);
         this.setBlockTextureName("worldexplorer:studydesk");
         this.setBlockName("studydesk");
         this.setStepSound(soundTypeWood);

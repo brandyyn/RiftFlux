@@ -3,14 +3,9 @@ package zairus.worldexplorer.archery.items;
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.block.Block;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -25,25 +20,20 @@ public class Slingshot extends WEItemRanged {
     public Slingshot() {
         this.setUnlocalizedName("slingshot");
         this.setTextureName("worldexplorer:slingshot");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
         this.setFull3D();
         this.setMaxStackSize(1);
         this.setMaxDamage(Math.max(0, ModConfig.riftExplorerSlingshotDurability));
-    }
-
-    private static Item getAmmoItem() {
-        return ModConfig.riftExplorerSlingshotUsesCobblestoneAmmo ? Item.getItemFromBlock(Blocks.cobblestone) : WEArcheryItems.pebble;
     }
 
     public void onPlayerStoppedUsing(ItemStack stack, World world, EntityPlayer player, int useCount) {
         int charge = this.getMaxItemUseDuration(stack) - useCount;
         boolean infiniteAmmo = player.capabilities.isCreativeMode
                 || EnchantmentHelper.getEnchantmentLevel(Enchantment.infinity.effectId, stack) > 0;
-        Item ammoItem = getAmmoItem();
-        if (ammoItem == null) {
-            return;
-        }
-        if (!infiniteAmmo && !player.inventory.hasItem(ammoItem)) {
+        SlingshotAmmoHelper.AmmoSelection ammoSelection = infiniteAmmo
+                ? SlingshotAmmoHelper.peekAmmo(player)
+                : SlingshotAmmoHelper.consumeOneAmmo(player);
+        if (!infiniteAmmo && ammoSelection == null) {
             return;
         }
 
@@ -57,6 +47,16 @@ public class Slingshot extends WEItemRanged {
         }
 
         EntityPebble entityPebble = new EntityPebble(world, player, pull * 1.0F);
+        entityPebble.setDamage(Math.max(0.0F, ModConfig.riftExplorerSlingshotBaseDamage));
+        ItemStack ammoStack = ammoSelection != null ? ammoSelection.getAmmoStack() : SlingshotAmmoHelper.defaultPickupStack();
+        entityPebble.setPickupStack(ammoStack);
+        SlingshotAmmoHelper.SpecialAmmoBehavior behavior = ammoSelection == null ? null : ammoSelection.getBehavior();
+        if (behavior != null) {
+            entityPebble.setDamage(behavior.getDamage());
+            entityPebble.setFixedDamage(true);
+            entityPebble.setSpecialKnockbackStrength(behavior.getKnockbackStrength());
+            entityPebble.setExplosionStrength(behavior.getExplosionStrength());
+        }
         if (pull == 1.0F) {
             entityPebble.setIsCritical(true);
         }
@@ -68,14 +68,14 @@ public class Slingshot extends WEItemRanged {
         if (punch > 0) {
             entityPebble.setKnockbackStrength(punch);
         }
+        if (behavior != null && behavior.isConsumedOnUse()) {
+            entityPebble.canBePickedUp = 0;
+        } else if (infiniteAmmo) {
+            entityPebble.canBePickedUp = 2;
+        }
         stack.damageItem(1, player);
         if (!world.isRemote) {
             world.playSoundAtEntity(player, "worldexplorer:slingshot_release_1", 1.0F, 1.0F / (itemRand.nextFloat() * 0.4F + 1.2F) + pull * 0.5F);
-        }
-        if (infiniteAmmo) {
-            entityPebble.canBePickedUp = 2;
-        } else {
-            player.inventory.consumeInventoryItem(ammoItem);
         }
         if (!world.isRemote) {
             world.spawnEntityInWorld(entityPebble);
@@ -83,8 +83,7 @@ public class Slingshot extends WEItemRanged {
     }
 
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
-        Item ammoItem = getAmmoItem();
-        if (ammoItem != null && (player.capabilities.isCreativeMode || player.inventory.hasItem(ammoItem))) {
+        if (player.capabilities.isCreativeMode || SlingshotAmmoHelper.hasAmmo(player)) {
             world.playSoundAtEntity(player, "worldexplorer:slingshot_pull_1", 1.0F, 1.0F / (itemRand.nextFloat() * 0.4F + 1.2F) + 0.5F);
             player.setItemInUse(stack, this.getMaxItemUseDuration(stack));
         }

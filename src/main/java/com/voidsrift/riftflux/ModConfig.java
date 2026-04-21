@@ -73,6 +73,10 @@ public class ModConfig {
     public static float fistDamageAmount;
     public static boolean enableStickDamageBonus;
     public static float stickDamageBonus;
+    public static float vanillaArrowInaccuracy;
+    public static float riftExplorerSpecialArrowInaccuracy;
+    public static float riftExplorerDartInaccuracy;
+    public static float riftExplorerPebbleInaccuracy;
     public static boolean enableToroHealthModule;
     public static boolean toroHealthShowDamageParticles;
     public static boolean toroHealthShowThroughWalls;
@@ -323,6 +327,21 @@ public class ModConfig {
     public static boolean offLawnEnableSunflowerWorldgen;
     public static int offLawnSunflowerPatchChance;
     public static int offLawnSunflowerAttemptsPerChunk;
+    public static int offLawnSunflowerPatchRadiusBlocks;
+    public static String[] offLawnSunflowerBiomeTypes;
+    public static String[] offLawnSunflowerBiomeList;
+    public static boolean offLawnEnableBrightSunflowerWorldgen;
+    public static int offLawnBrightSunflowerPatchChance;
+    public static int offLawnBrightSunflowerAttemptsPerChunk;
+    public static int offLawnBrightSunflowerPatchRadiusBlocks;
+    public static String[] offLawnBrightSunflowerBiomeTypes;
+    public static String[] offLawnBrightSunflowerBiomeList;
+    public static boolean offLawnEnableMixedSunflowerWorldgen;
+    public static int offLawnMixedSunflowerPatchChance;
+    public static int offLawnMixedSunflowerAttemptsPerChunk;
+    public static int offLawnMixedSunflowerPatchRadiusBlocks;
+    public static String[] offLawnMixedSunflowerBiomeTypes;
+    public static String[] offLawnMixedSunflowerBiomeList;
     public static int offLawnBeanstalkMaxGrowthLevel;
 
     // Pumpkin Pastures ports
@@ -331,6 +350,10 @@ public class ModConfig {
     public static int pumpkinPasturesZombieSpawnWeight;
     public static int pumpkinPasturesSkeletonSpawnWeight;
     public static int pumpkinPasturesCreeperSpawnWeight;
+    public static float pumpkinPasturesCreeperExplosionStrength;
+    public static float pumpkinPasturesCreeperDamageMultiplier;
+    public static float pumpkinPasturesCreeperKnockbackMultiplier;
+    public static boolean pumpkinPasturesCreeperExplosionDamagesEnvironment;
     public static float pumpkinPasturesEnderflameSwordDamage;
     public static int pumpkinPasturesEnderflameSwordDurability;
     public static int pumpkinPasturesEnderflamePickaxeDurability;
@@ -348,11 +371,41 @@ public class ModConfig {
     public static boolean enableGokiStatsModule;
     public static boolean enableRiftExplorerModule;
     public static boolean enableMoreBowsModule;
-    public static boolean riftExplorerSlingshotUsesCobblestoneAmmo;
+    public static boolean riftExplorerEnablePebbleRecipes;
+    public static String[] riftExplorerSlingshotAmmoItems;
+    public static boolean riftExplorerSlingshotEnableOreDictionaryAmmo;
+    public static String[] riftExplorerSlingshotAmmoOreDictionary;
+    public static String[] riftExplorerSlingshotSpecialAmmoEntries;
+    public static String[] riftExplorerSlingshotDisabledAmmoItems;
+    public static String riftExplorerSlingshotAmmoIconCorner;
+    public static boolean riftExplorerSlingshotBlockBossCapture;
+    public static String[] riftExplorerSlingshotCaptureMobBlacklist;
+    public static float riftExplorerSlingshotBaseDamage;
+    public static String[] riftExplorerDisabledLongbowArrows;
     public static int riftExplorerLongbowDurability;
     public static int riftExplorerSlingshotDurability;
     public static int riftExplorerBoomerangDurability;
+    public static String[] riftExplorerBoomerangImpactModifierItems;
+    public static String[] riftExplorerBoomerangCapacityModifierItems;
+    public static String[] riftExplorerBoomerangPowerModifierItems;
+    public static String[] riftExplorerBoomerangReachModifierItems;
+    public static String[] riftExplorerBoomerangEnderModifierItems;
+    public static String[] riftExplorerBoomerangUnbreakingModifierItems;
+    public static float riftExplorerBoomerangImpactModifierMaxPercent;
+    public static int riftExplorerBoomerangCapacityModifierMaxStacks;
+    public static float riftExplorerBoomerangPowerModifierMaxPercent;
+    public static float riftExplorerBoomerangReachModifierMaxPercent;
+    public static float riftExplorerBoomerangEnderModifierMaxPercent;
+    public static float riftExplorerBoomerangUnbreakingModifierMaxPercent;
+    public static int riftExplorerBoomerangMaxModifierTypes;
+    public static String[] riftExplorerBoomerangStarInfusedItems;
+    public static int riftExplorerBoomerangStarInfusedBonusModifierTypes;
+    public static float riftExplorerBoomerangStarInfusedBonusPercent;
+    public static float riftExplorerBoomerangMaxCombinedModifierPercent;
     public static int riftExplorerBlowpipeDurability;
+    public static float riftExplorerDartDamage;
+    public static int riftExplorerDartMaxPotionModifiers;
+    public static float riftExplorerDartPotionDurationSeconds;
 
     // Palaria mob ports
     public static boolean enablePalariaModule;
@@ -654,6 +707,8 @@ public class ModConfig {
     public static boolean legendGearCaltropsTriggerDropEnabled;
     public static float legendGearCaltropsMobDamageHearts;
     public static float legendGearCaltropsPlayerDamagePercent;
+    public static boolean legendGearCaltropsIronBarsMiningSpeed;
+    public static boolean legendGearCaltropsRequirePickaxeToDrop;
     public static boolean legendGearCaltropsUndergroundGenEnabled;
     public static int legendGearCaltropsUndergroundSpawnChance;
     public static int legendGearCaltropsUndergroundMinY;
@@ -744,6 +799,7 @@ public class ModConfig {
 
     // Dual Hotbar
     public static boolean dualHotbarEnable;
+    public static boolean dualHotbarEnablePickBlockImplementation;
     public static boolean dualHotbarLongHotbar;
     public static boolean dualHotbarDoubleTap;
     public static boolean dualHotbarKeyCombo;
@@ -1083,6 +1139,42 @@ public class ModConfig {
                 "combat", "StickDamageBonus", 1.0D,
                 "Additional damage added to stick melee hits when EnableStickDamageBonus is true. (no bounds)"
         ).getDouble(1.0D);
+
+        vanillaArrowInaccuracy = config.getFloat(
+                "VanillaArrowInaccuracy",
+                "combat",
+                0.0F,
+                0.0F,
+                100.0F,
+                "Inaccuracy passed to vanilla EntityArrow.setThrowableHeading. Vanilla bow default is 1.0; 0.0 removes random spread."
+        );
+
+        riftExplorerSpecialArrowInaccuracy = config.getFloat(
+                "RiftExplorerSpecialArrowInaccuracy",
+                "combat",
+                0.0F,
+                0.0F,
+                100.0F,
+                "Inaccuracy for Rift Explorer EntitySpecialArrow. Original value is 1.0; 0.0 removes random spread."
+        );
+
+        riftExplorerDartInaccuracy = config.getFloat(
+                "RiftExplorerDartInaccuracy",
+                "combat",
+                1.0F,
+                0.0F,
+                100.0F,
+                "Inaccuracy for Rift Explorer EntityDart. Original value is 1.0; 0.0 removes random spread."
+        );
+
+        riftExplorerPebbleInaccuracy = config.getFloat(
+                "RiftExplorerPebbleInaccuracy",
+                "combat",
+                1.0F,
+                0.0F,
+                100.0F,
+                "Inaccuracy for Rift Explorer EntityPebble. Original value is 1.0; 0.0 removes random spread."
+        );
 
         enableToroHealthModule = config.getBoolean(
                 "EnableToroHealthModule",
@@ -2948,7 +3040,7 @@ public class ModConfig {
         legendGearMagicBoomerangBreakPlants = config.getBoolean(
                 "magicBoomerangBreakPlants",
                 "legendgear",
-                true,
+                false,
                 "If true, a thrown Magic Boomerang breaks plant/vine blocks it hits."
         );
 
@@ -3170,6 +3262,18 @@ public class ModConfig {
                 1000.0F,
                 "Percent of a player's max health dealt by caltrops."
         );
+        legendGearCaltropsIronBarsMiningSpeed = config.getBoolean(
+                "caltropsIronBarsMiningSpeed",
+                "legendgear",
+                true,
+                "If true, caltrops take about as long to mine as iron bars. If false, they use their original instant-break speed."
+        );
+        legendGearCaltropsRequirePickaxeToDrop = config.getBoolean(
+                "caltropsRequirePickaxeToDrop",
+                "legendgear",
+                true,
+                "If true, placed caltrops require a pickaxe to drop as an item when mined."
+        );
         legendGearCaltropsUndergroundGenEnabled = config.getBoolean(
                 "caltropsUndergroundGenEnabled",
                 "legendgear",
@@ -3179,7 +3283,7 @@ public class ModConfig {
         legendGearCaltropsUndergroundSpawnChance = config.getInt(
                 "caltropsUndergroundSpawnChance",
                 "legendgear",
-                3,
+                6,
                 0,
                 256,
                 "Underground caltrops spawn attempts per chunk when enabled. Higher values try more random cave-floor placements and can place multiple caltrops in one chunk."
@@ -3959,25 +4063,150 @@ public class ModConfig {
                 "EnableSunflowerWorldgen",
                 "offlawn",
                 true,
-                "If true, sunflower bushes naturally generate in windswept/extreme-hills style biomes."
+                "If true, sunflower bushes naturally generate in forest/plains style biomes."
         );
 
         offLawnSunflowerPatchChance = config.getInt(
                 "SunflowerPatchChance",
                 "offlawn",
-                3,
+                1,
                 1,
                 1000,
-                "One-in-N chunk chance to attempt OffLawn sunflower patch generation."
+                "Base one-in-N chance for a large OffLawn sunflower patch cell to spawn a patch. Higher values make patches rarer."
         );
 
         offLawnSunflowerAttemptsPerChunk = config.getInt(
                 "SunflowerAttemptsPerChunk",
                 "offlawn",
-                8,
+                1,
                 0,
                 128,
-                "Placement attempts per successful OffLawn sunflower generation chunk."
+                "Target sunflower placements per full OffLawn sunflower patch. The generator clamps this to a sane patch size to avoid carpet coverage."
+        );
+
+        offLawnSunflowerPatchRadiusBlocks = config.getInt(
+                "SunflowerPatchRadiusBlocks",
+                "offlawn",
+                12,
+                4,
+                128,
+                "Approximate radius in blocks for a full OffLawn sunflower spiral patch. Larger values spread patches across multiple chunks."
+        );
+
+        offLawnSunflowerBiomeTypes = config.getStringList(
+                "SunflowerBiomeTypes",
+                "offlawn",
+                new String[] { "PLAINS", "FOREST" },
+                "Biome dictionary types that OffLawn sunflower patches may spawn in.\n"
+                        + "Examples: PLAINS, FOREST. Leave empty to only use SunflowerBiomeList."
+        );
+
+        offLawnSunflowerBiomeList = config.getStringList(
+                "SunflowerBiomeList",
+                "offlawn",
+                new String[] { "Wheatfield" },
+                "Specific biomes where OffLawn sunflower patches may spawn.\n"
+                        + "Accepted entries: biome id (4), biome name (Wheatfield), name:Wheatfield, or biome dictionary tag (type:PLAINS)."
+        );
+
+        offLawnEnableBrightSunflowerWorldgen = config.getBoolean(
+                "EnableBrightSunflowerWorldgen",
+                "offlawn",
+                true,
+                "If true, Bright Sunflower patches naturally generate using their own OffLawn worldgen settings."
+        );
+
+        offLawnBrightSunflowerPatchChance = config.getInt(
+                "BrightSunflowerPatchChance",
+                "offlawn",
+                1,
+                1,
+                1000,
+                "Base one-in-N chance for a large Bright Sunflower patch cell to spawn a patch. Higher values make patches rarer."
+        );
+
+        offLawnBrightSunflowerAttemptsPerChunk = config.getInt(
+                "BrightSunflowerAttemptsPerChunk",
+                "offlawn",
+                1,
+                0,
+                128,
+                "Target Bright Sunflower placements per full patch. The generator clamps this to a sane patch size to avoid carpet coverage."
+        );
+
+        offLawnBrightSunflowerPatchRadiusBlocks = config.getInt(
+                "BrightSunflowerPatchRadiusBlocks",
+                "offlawn",
+                12,
+                4,
+                128,
+                "Approximate radius in blocks for a full Bright Sunflower spiral patch. Larger values spread patches across multiple chunks."
+        );
+
+        offLawnBrightSunflowerBiomeTypes = config.getStringList(
+                "BrightSunflowerBiomeTypes",
+                "offlawn",
+                new String[] { "PLAINS", "FOREST" },
+                "Biome dictionary types that Bright Sunflower patches may spawn in.\n"
+                        + "Examples: PLAINS, FOREST. Leave empty to only use BrightSunflowerBiomeList."
+        );
+
+        offLawnBrightSunflowerBiomeList = config.getStringList(
+                "BrightSunflowerBiomeList",
+                "offlawn",
+                new String[] { "Wheatfield" },
+                "Specific biomes where Bright Sunflower patches may spawn.\n"
+                        + "Accepted entries: biome id (4), biome name (Wheatfield), name:Wheatfield, or biome dictionary tag (type:PLAINS)."
+        );
+
+        offLawnEnableMixedSunflowerWorldgen = config.getBoolean(
+                "EnableMixedSunflowerWorldgen",
+                "offlawn",
+                true,
+                "If true, mixed OffLawn sunflower patches naturally generate with both sunflower types in the same patch."
+        );
+
+        offLawnMixedSunflowerPatchChance = config.getInt(
+                "MixedSunflowerPatchChance",
+                "offlawn",
+                4,
+                1,
+                1000,
+                "Base one-in-N chance for a large mixed sunflower patch cell to spawn. Higher values make the mixed patches rarer."
+        );
+
+        offLawnMixedSunflowerAttemptsPerChunk = config.getInt(
+                "MixedSunflowerAttemptsPerChunk",
+                "offlawn",
+                1,
+                0,
+                128,
+                "Target sunflower placements per full mixed patch. The generator clamps this to a sane patch size to avoid carpet coverage."
+        );
+
+        offLawnMixedSunflowerPatchRadiusBlocks = config.getInt(
+                "MixedSunflowerPatchRadiusBlocks",
+                "offlawn",
+                12,
+                4,
+                128,
+                "Approximate radius in blocks for a full mixed sunflower spiral patch. Larger values spread patches across multiple chunks."
+        );
+
+        offLawnMixedSunflowerBiomeTypes = config.getStringList(
+                "MixedSunflowerBiomeTypes",
+                "offlawn",
+                new String[] { "PLAINS", "FOREST" },
+                "Biome dictionary types that mixed sunflower patches may spawn in.\n"
+                        + "Examples: PLAINS, FOREST. Leave empty to only use MixedSunflowerBiomeList."
+        );
+
+        offLawnMixedSunflowerBiomeList = config.getStringList(
+                "MixedSunflowerBiomeList",
+                "offlawn",
+                new String[] { "Wheatfield" },
+                "Specific biomes where mixed sunflower patches may spawn.\n"
+                        + "Accepted entries: biome id (4), biome name (Wheatfield), name:Wheatfield, or biome dictionary tag (type:PLAINS)."
         );
 
         offLawnBeanstalkMaxGrowthLevel = config.getInt(
@@ -4030,6 +4259,40 @@ public class ModConfig {
                 "Natural spawn weight for Pumpkin Creepers."
         );
 
+        pumpkinPasturesCreeperExplosionStrength = config.getFloat(
+                "PumpkinCreeperExplosionStrength",
+                "pumpkinpastures",
+                3.0F,
+                0.0F,
+                1024.0F,
+                "Explosion strength for Pumpkin Creepers. Vanilla creepers use 3.0; powered Pumpkin Creepers double this value."
+        );
+
+        pumpkinPasturesCreeperDamageMultiplier = config.getFloat(
+                "PumpkinCreeperDamageMultiplier",
+                "pumpkinpastures",
+                1.0F,
+                0.0F,
+                1024.0F,
+                "Multiplier applied to Pumpkin Creeper explosion damage compared to normal explosion damage."
+        );
+
+        pumpkinPasturesCreeperKnockbackMultiplier = config.getFloat(
+                "PumpkinCreeperKnockbackMultiplier",
+                "pumpkinpastures",
+                1.0F,
+                0.0F,
+                1024.0F,
+                "Multiplier applied to Pumpkin Creeper explosion knockback compared to normal explosion knockback."
+        );
+
+        pumpkinPasturesCreeperExplosionDamagesEnvironment = config.getBoolean(
+                "PumpkinCreeperExplosionDamagesEnvironment",
+                "pumpkinpastures",
+                false,
+                "If false, Pumpkin Creeper explosions still damage living entities but do not destroy blocks or non-living entities such as item frames."
+        );
+
         enableGokiStatsModule = config.getBoolean(
                 "EnableGokiStatsModule",
                 "gokistats",
@@ -4043,11 +4306,81 @@ public class ModConfig {
                 true,
                 "Master switch for integrated Rift Explorer content."
         );
-        riftExplorerSlingshotUsesCobblestoneAmmo = config.getBoolean(
-                "SlingshotUsesCobblestoneAmmo",
+        riftExplorerEnablePebbleRecipes = config.getBoolean(
+                "EnablePebbleRecipes",
                 "riftexplorer",
                 true,
-                "If true, slingshots consume vanilla cobblestone as ammo, pebble ammo usage is disabled, and pebble conversion recipes are disabled."
+                "If true, enables pebble to cobblestone and cobblestone to pebble conversion recipes."
+        );
+        riftExplorerSlingshotAmmoItems = config.getStringList(
+                "SlingshotAmmoItems",
+                "riftexplorer",
+                new String[]{"minecraft:cobblestone:0", "riftflux:pebble"},
+                "Exact item stacks accepted as slingshot ammo. Format: modid:item or modid:item:meta. Use minecraft:cobblestone:0 for normal cobblestone only."
+        );
+        riftExplorerSlingshotEnableOreDictionaryAmmo = config.getBoolean(
+                "SlingshotEnableOreDictionaryAmmo",
+                "riftexplorer",
+                true,
+                "If true, slingshot ammo also matches SlingshotAmmoOreDictionary entries in addition to SlingshotAmmoItems."
+        );
+        riftExplorerSlingshotAmmoOreDictionary = config.getStringList(
+                "SlingshotAmmoOreDictionary",
+                "riftexplorer",
+                new String[]{"cobblestone", "stone"},
+                "OreDictionary names accepted as additional slingshot ammo when SlingshotEnableOreDictionaryAmmo is true."
+        );
+        riftExplorerSlingshotSpecialAmmoEntries = config.getStringList(
+                "SlingshotSpecialAmmoEntries",
+                "riftexplorer",
+                new String[]{
+                        "minecraft:obsidian|8",
+                        "minecraft:tnt|12|0|4",
+                        "ore:blockIron|12",
+                        "minecraft:hay_block|1|3",
+                        "minecraft:ender_chest|0|0|0|capture",
+                        "minecraft:ender_pearl|6|0|0|enderpearl",
+                        "minecraft:ender_eye|9|0|0|teleport"
+                },
+                "Special slingshot ammo behavior entries. Format: match|damage|knockback|explosionStrength|action, or use \"ore:name : damage\" for damage-only ore dictionary entries. Damage is exact for special ammo before enchantment and ranged blessing bonuses. Actions: capture, teleport, enderpearl. teleport randomly teleports hit mobs; enderpearl teleports the shooter to block hits and swaps the shooter with hit mobs. A positive explosionStrength makes the ammo explode on impact and damage terrain."
+        );
+        riftExplorerSlingshotDisabledAmmoItems = config.getStringList(
+                "SlingshotDisabledAmmoItems",
+                "riftexplorer",
+                new String[0],
+                "Ammo entries that are blocked even if they appear in SlingshotAmmoItems, SlingshotAmmoOreDictionary, or SlingshotSpecialAmmoEntries. Format: modid:item, modid:item:meta, or ore:name."
+        );
+        riftExplorerSlingshotAmmoIconCorner = config.getString(
+                "SlingshotAmmoIconCorner",
+                "riftexplorer",
+                "top_right",
+                "Corner used for the slingshot's selected-ammo icon in the inventory. Accepted values: top_right, bottom_right, top_left, bottom_left. Spaces and hyphens are also accepted."
+        );
+        riftExplorerSlingshotBlockBossCapture = config.getBoolean(
+                "SlingshotBlockBossCapture",
+                "riftexplorer",
+                true,
+                "If true, slingshot capture ammo cannot capture boss entities."
+        );
+        riftExplorerSlingshotCaptureMobBlacklist = config.getStringList(
+                "SlingshotCaptureMobBlacklist",
+                "riftexplorer",
+                new String[0],
+                "Entities that slingshot capture ammo cannot capture. Accepts entity ids, display names, simple class names, or full class names. Examples: Zombie, minecraft:zombie, net.minecraft.entity.monster.EntityZombie."
+        );
+        riftExplorerSlingshotBaseDamage = config.getFloat(
+                "SlingshotBaseDamage",
+                "riftexplorer",
+                3.0F,
+                0.0F,
+                1000.0F,
+                "Base damage for normal slingshot ammo before projectile speed, Power enchantment, and ranged blessing bonuses. Special ammo with configured damage uses its own damage value."
+        );
+        riftExplorerDisabledLongbowArrows = config.getStringList(
+                "DisabledLongbowArrows",
+                "riftexplorer",
+                new String[] {"obsidian_arrow"},
+                "Longbow special arrow tiers disabled from creative listing, crafting recipes, and longbow ammo use. Accepts names like obsidian_arrow or metadata numbers like 5."
         );
         riftExplorerLongbowDurability = config.getInt(
                 "LongbowDurability",
@@ -4073,6 +4406,128 @@ public class ModConfig {
                 32767,
                 "Durability for the Rift Explorer Boomerang. Set to 0 for unlimited durability."
         );
+        riftExplorerBoomerangImpactModifierItems = config.getStringList(
+                "BoomerangImpactModifierItems",
+                "riftexplorer",
+                new String[]{"minecraft:gunpowder|5"},
+                "Items that add Impact Modifier to the Rift Explorer Boomerang. Format per entry: modid:item|percent"
+        );
+        riftExplorerBoomerangCapacityModifierItems = config.getStringList(
+                "BoomerangCapacityModifierItems",
+                "riftexplorer",
+                new String[]{"minecraft:slime_ball|1"},
+                "Items that add Capacity Modifier to the Rift Explorer Boomerang. Format per entry: modid:item|stacks"
+        );
+        riftExplorerBoomerangPowerModifierItems = config.getStringList(
+                "BoomerangPowerModifierItems",
+                "riftexplorer",
+                new String[]{"minecraft:glowstone_dust|2", "minecraft:glowstone|18"},
+                "Items that add Power Modifier to the Rift Explorer Boomerang. Format per entry: modid:item|percent"
+        );
+        riftExplorerBoomerangReachModifierItems = config.getStringList(
+                "BoomerangReachModifierItems",
+                "riftexplorer",
+                new String[]{"minecraft:redstone|0.25", "minecraft:redstone_block|2.25"},
+                "Items that add Reach Modifier to the Rift Explorer Boomerang. Format per entry: modid:item|blocks"
+        );
+        riftExplorerBoomerangEnderModifierItems = config.getStringList(
+                "BoomerangEnderModifierItems",
+                "riftexplorer",
+                new String[]{"minecraft:ender_pearl|5", "minecraft:ender_eye|15"},
+                "Items that add Ender Modifier to the Rift Explorer Boomerang. Format per entry: modid:item|percent"
+        );
+        riftExplorerBoomerangUnbreakingModifierItems = config.getStringList(
+                "BoomerangUnbreakingModifierItems",
+                "riftexplorer",
+                new String[]{"minecraft:obsidian|10"},
+                "Items that add Unbreaking Modifier to the Rift Explorer Boomerang. Format per entry: modid:item|percent"
+        );
+        riftExplorerBoomerangImpactModifierMaxPercent = config.getFloat(
+                "BoomerangImpactModifierMaxPercent",
+                "riftexplorer",
+                300.0F,
+                0.0F,
+                100000.0F,
+                "Maximum total Impact Modifier percent on a Rift Explorer Boomerang. Set to 0 for no cap."
+        );
+        riftExplorerBoomerangCapacityModifierMaxStacks = config.getInt(
+                "BoomerangCapacityModifierMaxStacks",
+                "riftexplorer",
+                8,
+                0,
+                32767,
+                "Maximum extra stacks from Capacity Modifier on a Rift Explorer Boomerang. Set to 0 for no cap."
+        );
+        riftExplorerBoomerangPowerModifierMaxPercent = config.getFloat(
+                "BoomerangPowerModifierMaxPercent",
+                "riftexplorer",
+                120.0F,
+                0.0F,
+                100000.0F,
+                "Maximum total Power Modifier percent on a Rift Explorer Boomerang. Set to 0 for no cap."
+        );
+        riftExplorerBoomerangReachModifierMaxPercent = config.getFloat(
+                "BoomerangReachModifierMaxPercent",
+                "riftexplorer",
+                300.0F,
+                0.0F,
+                100000.0F,
+                "Maximum total Reach Modifier percent on a Rift Explorer Boomerang. Set to 0 for no cap."
+        );
+        riftExplorerBoomerangEnderModifierMaxPercent = config.getFloat(
+                "BoomerangEnderModifierMaxPercent",
+                "riftexplorer",
+                100.0F,
+                0.0F,
+                100000.0F,
+                "Maximum total Ender Modifier percent on a Rift Explorer Boomerang. Set to 0 to use the hard 100 percent cap."
+        );
+        riftExplorerBoomerangUnbreakingModifierMaxPercent = config.getFloat(
+                "BoomerangUnbreakingModifierMaxPercent",
+                "riftexplorer",
+                100.0F,
+                0.0F,
+                100000.0F,
+                "Maximum total Unbreaking Modifier percent on a Rift Explorer Boomerang. Set to 0 to use the hard 100 percent cap."
+        );
+        riftExplorerBoomerangMaxModifierTypes = config.getInt(
+                "BoomerangMaxModifierTypes",
+                "riftexplorer",
+                5,
+                0,
+                64,
+                "Maximum number of distinct modifier types allowed on a Rift Explorer Boomerang. Set to 0 for no cap."
+        );
+        riftExplorerBoomerangStarInfusedItems = config.getStringList(
+                "BoomerangStarInfusedItems",
+                "riftexplorer",
+                new String[]{"minecraft:nether_star", "worldexplorer:raregem"},
+                "Items that can Star-Infuse a Rift Explorer Boomerang once. Format per entry: modid:item or modid:item:meta"
+        );
+        riftExplorerBoomerangStarInfusedBonusModifierTypes = config.getInt(
+                "BoomerangStarInfusedBonusModifierTypes",
+                "riftexplorer",
+                1,
+                0,
+                64,
+                "Additional distinct modifier types allowed after Star-Infusing a Rift Explorer Boomerang once. Set to 0 to disable the bonus."
+        );
+        riftExplorerBoomerangStarInfusedBonusPercent = config.getFloat(
+                "BoomerangStarInfusedBonusPercent",
+                "riftexplorer",
+                50.0F,
+                0.0F,
+                100000.0F,
+                "Percent increase to Rift Explorer Boomerang modifier caps after Star-Infusing it once. This applies to modifier caps and the combined modifier percent cap. Ender and Unbreaking are still hard-capped at 100 percent. Set to 0 to disable the bonus."
+        );
+        riftExplorerBoomerangMaxCombinedModifierPercent = config.getFloat(
+                "BoomerangMaxCombinedModifierPercent",
+                "riftexplorer",
+                450.0F,
+                0.0F,
+                100000.0F,
+                "Maximum combined percent from Impact, Power, Reach, Ender, and Unbreaking Modifier on a Rift Explorer Boomerang. Capacity Modifier does not count toward this cap. Set to 0 for no cap."
+        );
         riftExplorerBlowpipeDurability = config.getInt(
                 "BlowpipeDurability",
                 "riftexplorer",
@@ -4080,6 +4535,30 @@ public class ModConfig {
                 0,
                 32767,
                 "Durability for the Rift Explorer Blowpipe. Set to 0 for unlimited durability."
+        );
+        riftExplorerDartDamage = config.getFloat(
+                "DartDamage",
+                "riftexplorer",
+                1.0F,
+                0.0F,
+                1000.0F,
+                "Base damage dealt by Rift Explorer darts before enchantment bonuses."
+        );
+        riftExplorerDartMaxPotionModifiers = config.getInt(
+                "DartMaxPotionModifiers",
+                "riftexplorer",
+                4,
+                0,
+                64,
+                "Maximum number of extra non-poison potion modifiers a dart stack can hold. The built-in poison effect does not count toward this cap. Set to 0 to allow poison-only darts."
+        );
+        riftExplorerDartPotionDurationSeconds = config.getFloat(
+                "DartPotionDurationSeconds",
+                "riftexplorer",
+                3.0F,
+                0.1F,
+                3600.0F,
+                "Duration, in seconds, for all potion effects applied by Rift Explorer darts. Potion item durations are normalized to this value."
         );
 
         enableMoreBowsModule = config.getBoolean(
@@ -4882,6 +5361,13 @@ public class ModConfig {
                 "Enable DualHotbar."
         );
 
+        dualHotbarEnablePickBlockImplementation = config.getBoolean(
+                "Enable Pick Block Implementation",
+                "dualhotbar",
+                true,
+                "If true, RiftFlux replaces vanilla pick block behavior to support DualHotbar slot swapping. Disable this to leave pick block behavior vanilla."
+        );
+
         dualHotbarLongHotbar = config.getBoolean(
                 "Long Hotbar",
                 "dualhotbar",
@@ -5490,7 +5976,7 @@ public class ModConfig {
         enableHangingLadders = config.getBoolean(
                 "enableHangingLadders",
                 "tweaks",
-                true,
+                false,
                 "Enables Hanging Ladders, extend a ladder downward by right-clicking an existing ladder with another ladder also enables holding jump to climb ladders. [WIP]"
         );
 

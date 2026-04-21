@@ -12,7 +12,7 @@ public class WorldExplorerItems {
 
     public static void init() {
         journal = new BookJournal().setCreativeTab(null);
-        needle = new WEItem().setUnlocalizedName("needle").setTextureName("worldexplorer:needle").setCreativeTab(WorldExplorer.tabWorldExplorer);
+        needle = new WEItem().setUnlocalizedName("needle").setTextureName("worldexplorer:needle").setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabMaterials);
         raregem = new WERareGem();
         explorerbag = new WEItem().setUnlocalizedName("bag").setTextureName("worldexplorer:bag").setCreativeTab(null);
     }

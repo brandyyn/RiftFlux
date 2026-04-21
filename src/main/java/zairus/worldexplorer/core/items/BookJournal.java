@@ -27,7 +27,7 @@ extends WEItem {
     public BookJournal() {
         this.setUnlocalizedName("journal");
         this.setTextureName("worldexplorer:journal");
-        this.setCreativeTab(WorldExplorer.tabWorldExplorer);
+        this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabTools);
         this.maxStackSize = 1;
     }
 
@@ -45,4 +45,3 @@ extends WEItem {
         }
     }
 }
-

@@ -1,5 +1,7 @@
 package com.voidsrift.riftflux.wheatfield.world;
 
+import com.voidsrift.riftflux.wheatfield.BiomeGenWheatfield;
+import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.world.gen.layer.GenLayer;
@@ -42,4 +44,16 @@ public final class WheatfieldTerrainHandler {
             event.setResult(Event.Result.DENY);
         }
     }
+
+    @SubscribeEvent
+    public void onPopulatePost(PopulateChunkEvent.Post event) {
+        if (event.world == null || event.world.isRemote || !WheatfieldTerrainUtil.chunkHasWheatfield(event.world, event.chunkX, event.chunkZ)) {
+            return;
+        }
+
+        if (WheatfieldContent.wheatfieldBiome instanceof BiomeGenWheatfield) {
+            ((BiomeGenWheatfield) WheatfieldContent.wheatfieldBiome).populateBarleyForChunk(event.world, event.chunkX << 4, event.chunkZ << 4);
+        }
+    }
+
 }
