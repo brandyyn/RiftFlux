@@ -286,7 +286,6 @@ public class ModConfig {
     public static int wheatfieldBiomeId;
     public static int wheatfieldBiomeWeight;
     public static boolean wheatfieldAllowVillage;
-    public static int wheatfieldBarleyPerChunk;
     public static int wheatfieldBarleyFistDropChancePercent;
     public static boolean wheatfieldBarleyOnlyDropsWhenSheared;
     public static boolean wheatfieldRestrictHostileSpawns;
@@ -3735,15 +3734,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "wheatfield",
                 false,
                 "If true, villages may generate in the Wheatfield biome."
-        );
-
-        wheatfieldBarleyPerChunk = config.getInt(
-                "BarleyPerChunk",
-                "wheatfield",
-                999,
-                0,
-                4096,
-                "Pasture-style barley attempts per chunk in Wheatfield."
         );
 
         wheatfieldBarleyFistDropChancePercent = config.getInt(

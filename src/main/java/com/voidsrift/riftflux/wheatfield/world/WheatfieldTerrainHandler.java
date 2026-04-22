@@ -2,7 +2,6 @@ package com.voidsrift.riftflux.wheatfield.world;
 
 import com.voidsrift.riftflux.wheatfield.BiomeGenWheatfield;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
-import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.GenLayerVoronoiZoom;
@@ -18,9 +17,7 @@ public final class WheatfieldTerrainHandler {
 
         GenLayer smoothed = event.newBiomeGens[0];
         int wheatfieldBiomeId = WheatfieldTerrainUtil.getWheatfieldBiomeId();
-        for (long seed = 6100L; seed <= 6106L; seed++) {
-            smoothed = new GenLayerWheatfieldRound(seed, smoothed, wheatfieldBiomeId);
-        }
+        smoothed = new GenLayerWheatfieldRoundStacked(smoothed, wheatfieldBiomeId);
         smoothed.initWorldGenSeed(event.seed);
 
         GenLayerVoronoiZoom voronoi = new GenLayerVoronoiZoom(10L, smoothed);
@@ -34,25 +31,29 @@ public final class WheatfieldTerrainHandler {
     }
 
     @SubscribeEvent
-    public void onPopulate(PopulateChunkEvent.Populate event) {
-        if (!WheatfieldTerrainUtil.chunkIsPredominantlyWheatfield(event.world, event.chunkX, event.chunkZ)) {
-            return;
-        }
-
-        if (event.type == PopulateChunkEvent.Populate.EventType.LAKE
-                || event.type == PopulateChunkEvent.Populate.EventType.LAVA) {
-            event.setResult(Event.Result.DENY);
-        }
-    }
-
-    @SubscribeEvent
     public void onPopulatePost(PopulateChunkEvent.Post event) {
-        if (event.world == null || event.world.isRemote || !WheatfieldTerrainUtil.chunkHasWheatfield(event.world, event.chunkX, event.chunkZ)) {
+        if (event.world == null || event.world.isRemote || !WheatfieldTerrainUtil.isOverworld(event.world)) {
             return;
         }
 
         if (WheatfieldContent.wheatfieldBiome instanceof BiomeGenWheatfield) {
-            ((BiomeGenWheatfield) WheatfieldContent.wheatfieldBiome).populateBarleyForChunk(event.world, event.chunkX << 4, event.chunkZ << 4);
+            BiomeGenWheatfield wheatfieldBiome = (BiomeGenWheatfield) WheatfieldContent.wheatfieldBiome;
+            int chunkBlockX = event.chunkX << 4;
+            int chunkBlockZ = event.chunkZ << 4;
+            if (!WheatfieldTerrainUtil.chunkHasWheatfield(event.world, event.chunkX, event.chunkZ)) {
+                return;
+            }
+
+            WheatfieldBiomeSampler sampler = WheatfieldBiomeSampler.forChunk(
+                    event.world,
+                    event.chunkX,
+                    event.chunkZ,
+                    BiomeGenWheatfield.getBiomeScanRadius());
+            if (sampler == null) {
+                return;
+            }
+
+            wheatfieldBiome.populateBarleyForChunk(event.world, chunkBlockX, chunkBlockZ, sampler);
         }
     }
 

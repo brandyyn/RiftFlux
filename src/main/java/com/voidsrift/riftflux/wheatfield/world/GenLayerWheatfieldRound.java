@@ -21,14 +21,42 @@ public final class GenLayerWheatfieldRound extends GenLayer {
     @Override
     public int[] getInts(int areaX, int areaY, int areaWidth, int areaHeight) {
         int border = DENSITY_RADIUS < 1 ? 1 : DENSITY_RADIUS;
+        int densityWindow = DENSITY_RADIUS * 2 + 1;
         int parentX = areaX - border;
         int parentY = areaY - border;
         int parentWidth = areaWidth + border * 2;
         int parentHeight = areaHeight + border * 2;
         int[] parentInts = parent.getInts(parentX, parentY, parentWidth, parentHeight);
         int[] out = IntCache.getIntCache(areaWidth * areaHeight);
+        if (!containsWheatfield(parentInts)) {
+            copyCenter(parentInts, parentWidth, out, areaWidth, areaHeight, border);
+            return out;
+        }
+
+        int[] directionalSupport = new int[DIR_X.length];
+        int[] wheatfieldColumnCounts = new int[parentWidth];
+        int[] landColumnCounts = new int[parentWidth];
+
+        initDensityColumns(parentInts, parentWidth, wheatfieldColumnCounts, landColumnCounts, densityWindow);
 
         for (int localY = 0; localY < areaHeight; localY++) {
+            if (localY > 0) {
+                updateDensityColumns(
+                        parentInts,
+                        parentWidth,
+                        wheatfieldColumnCounts,
+                        landColumnCounts,
+                        localY - 1,
+                        localY + densityWindow - 1);
+            }
+
+            int wheatfieldNear = 0;
+            int landNear = 0;
+            for (int sampleX = 0; sampleX < densityWindow; sampleX++) {
+                wheatfieldNear += wheatfieldColumnCounts[sampleX];
+                landNear += landColumnCounts[sampleX];
+            }
+
             for (int localX = 0; localX < areaWidth; localX++) {
                 int centerX = localX + border;
                 int centerY = localY + border;
@@ -44,7 +72,6 @@ public final class GenLayerWheatfieldRound extends GenLayer {
                 int wheatfieldDiagonal = 0;
                 int dominantNonWheatfield = center;
                 int dominantNonWheatfieldCount = 0;
-                int[] directionalSupport = new int[DIR_X.length];
                 int strongestArm = 0;
                 int armCount = 0;
                 int totalDirectionalSupport = 0;
@@ -72,7 +99,7 @@ public final class GenLayerWheatfieldRound extends GenLayer {
                             } else {
                                 wheatfieldDiagonal++;
                             }
-                        } else if (!GenLayer.isBiomeOceanic(sample) && !WheatfieldTerrainUtil.isRiverBiome(sample)) {
+                        } else if (isLand(sample)) {
                             int sampleCount = countBiomeInNeighborhood(parentInts, parentWidth, centerX, centerY, sample);
                             if (sampleCount > dominantNonWheatfieldCount) {
                                 dominantNonWheatfieldCount = sampleCount;
@@ -83,8 +110,6 @@ public final class GenLayerWheatfieldRound extends GenLayer {
                 }
 
                 this.initChunkSeed(areaX + localX, areaY + localY);
-                int wheatfieldNear = countBiomeInRadius(parentInts, parentWidth, centerX, centerY, wheatfieldBiomeId, DENSITY_RADIUS);
-                int landNear = countLandInRadius(parentInts, parentWidth, centerX, centerY, DENSITY_RADIUS);
                 float localWheatfieldDensity = landNear <= 0 ? 0.0F : (float) wheatfieldNear / (float) landNear;
                 float edgeNoise = ((float) this.nextInt(1000) / 999.0F - 0.5F) * EDGE_NOISE_RANGE;
 
@@ -119,6 +144,11 @@ public final class GenLayerWheatfieldRound extends GenLayer {
                             && this.nextInt(5) == 0;
                     boolean expand = growCore || growTendril || growBridge || growBranch;
                     out[localX + localY * areaWidth] = expand ? wheatfieldBiomeId : center;
+                }
+
+                if (localX < areaWidth - 1) {
+                    wheatfieldNear += wheatfieldColumnCounts[localX + densityWindow] - wheatfieldColumnCounts[localX];
+                    landNear += landColumnCounts[localX + densityWindow] - landColumnCounts[localX];
                 }
             }
         }
@@ -164,29 +194,74 @@ public final class GenLayerWheatfieldRound extends GenLayer {
         return straight * 2 + lateral;
     }
 
-    private static int countBiomeInRadius(int[] parentInts, int parentWidth, int centerX, int centerY, int biomeId, int radius) {
-        int count = 0;
-        for (int offsetY = -radius; offsetY <= radius; offsetY++) {
-            for (int offsetX = -radius; offsetX <= radius; offsetX++) {
-                int sample = parentInts[centerX + offsetX + (centerY + offsetY) * parentWidth];
-                if (sample == biomeId) {
-                    count++;
+    private void initDensityColumns(int[] parentInts, int parentWidth, int[] wheatfieldColumnCounts, int[] landColumnCounts, int densityWindow) {
+        for (int x = 0; x < parentWidth; x++) {
+            int wheatfieldCount = 0;
+            int landCount = 0;
+            int index = x;
+            for (int sampleY = 0; sampleY < densityWindow; sampleY++) {
+                int sample = parentInts[index];
+                if (sample == wheatfieldBiomeId) {
+                    wheatfieldCount++;
                 }
+                if (isLand(sample)) {
+                    landCount++;
+                }
+                index += parentWidth;
             }
+
+            wheatfieldColumnCounts[x] = wheatfieldCount;
+            landColumnCounts[x] = landCount;
         }
-        return count;
     }
 
-    private static int countLandInRadius(int[] parentInts, int parentWidth, int centerX, int centerY, int radius) {
-        int count = 0;
-        for (int offsetY = -radius; offsetY <= radius; offsetY++) {
-            for (int offsetX = -radius; offsetX <= radius; offsetX++) {
-                int sample = parentInts[centerX + offsetX + (centerY + offsetY) * parentWidth];
-                if (!GenLayer.isBiomeOceanic(sample) && !WheatfieldTerrainUtil.isRiverBiome(sample)) {
-                    count++;
-                }
+    private void updateDensityColumns(
+            int[] parentInts,
+            int parentWidth,
+            int[] wheatfieldColumnCounts,
+            int[] landColumnCounts,
+            int leavingRow,
+            int enteringRow) {
+        int leavingBase = leavingRow * parentWidth;
+        int enteringBase = enteringRow * parentWidth;
+
+        for (int x = 0; x < parentWidth; x++) {
+            int leavingSample = parentInts[leavingBase + x];
+            if (leavingSample == wheatfieldBiomeId) {
+                wheatfieldColumnCounts[x]--;
+            }
+            if (isLand(leavingSample)) {
+                landColumnCounts[x]--;
+            }
+
+            int enteringSample = parentInts[enteringBase + x];
+            if (enteringSample == wheatfieldBiomeId) {
+                wheatfieldColumnCounts[x]++;
+            }
+            if (isLand(enteringSample)) {
+                landColumnCounts[x]++;
             }
         }
-        return count;
+    }
+
+    private static boolean isLand(int biomeId) {
+        return !GenLayer.isBiomeOceanic(biomeId) && !WheatfieldTerrainUtil.isRiverBiome(biomeId);
+    }
+
+    private boolean containsWheatfield(int[] parentInts) {
+        for (int biomeId : parentInts) {
+            if (biomeId == wheatfieldBiomeId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void copyCenter(int[] parentInts, int parentWidth, int[] out, int areaWidth, int areaHeight, int border) {
+        for (int localY = 0; localY < areaHeight; localY++) {
+            int srcIndex = (localY + border) * parentWidth + border;
+            int dstIndex = localY * areaWidth;
+            System.arraycopy(parentInts, srcIndex, out, dstIndex, areaWidth);
+        }
     }
 }

@@ -1,7 +1,7 @@
 package com.voidsrift.riftflux.wheatfield;
 
-import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.offlawn.OffLawnContent;
+import com.voidsrift.riftflux.wheatfield.world.WheatfieldBiomeSampler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -13,6 +13,7 @@ import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 import net.minecraft.world.gen.feature.WorldGenTallGrass;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class BiomeGenWheatfield extends BiomeGenBase {
@@ -30,9 +31,41 @@ public class BiomeGenWheatfield extends BiomeGenBase {
     private static final int EDGE_TENDRIL_MIN_LENGTH = 8;
     private static final int EDGE_TENDRIL_MAX_LENGTH = 24;
     private static final int EDGE_TENDRIL_BOUNDARY_RADIUS = 5;
+    private static final int BIOME_SCAN_RADIUS = Math.max(
+            EDGE_SAMPLE_RADIUS,
+            Math.max(EDGE_DITHER_DEPTH, EDGE_TENDRIL_BOUNDARY_RADIUS));
+    private static final short SURFACE_CACHE_UNSET = Short.MIN_VALUE;
+    private static final int[] INFLUENCE_OFFSET_X;
+    private static final int[] INFLUENCE_OFFSET_Z;
+    private static final float[] INFLUENCE_WEIGHT;
+    private static final float INFLUENCE_TOTAL_WEIGHT;
+    private static final int[] BORDER_OFFSET_X;
+    private static final int[] BORDER_OFFSET_Z;
+    private static final float[] BORDER_DISTANCE;
+    private static final int[] BOUNDARY_OFFSET_X;
+    private static final int[] BOUNDARY_OFFSET_Z;
+    private static final double[] BOUNDARY_WEIGHT;
 
     private final WorldGenerator barleyGen;
     private final BlockWheatfieldBarley barleyBlock;
+
+    static {
+        OffsetKernel influenceKernel = buildInfluenceKernel(EDGE_SAMPLE_RADIUS);
+        INFLUENCE_OFFSET_X = influenceKernel.offsetX;
+        INFLUENCE_OFFSET_Z = influenceKernel.offsetZ;
+        INFLUENCE_WEIGHT = influenceKernel.weight;
+        INFLUENCE_TOTAL_WEIGHT = influenceKernel.totalWeight;
+
+        DistanceKernel borderKernel = buildDistanceKernel(EDGE_DITHER_DEPTH);
+        BORDER_OFFSET_X = borderKernel.offsetX;
+        BORDER_OFFSET_Z = borderKernel.offsetZ;
+        BORDER_DISTANCE = borderKernel.distance;
+
+        BoundaryKernel boundaryKernel = buildBoundaryKernel(EDGE_TENDRIL_BOUNDARY_RADIUS);
+        BOUNDARY_OFFSET_X = boundaryKernel.offsetX;
+        BOUNDARY_OFFSET_Z = boundaryKernel.offsetZ;
+        BOUNDARY_WEIGHT = boundaryKernel.weight;
+    }
 
     public BiomeGenWheatfield(int biomeId, BlockWheatfieldBarley barleyBlock) {
         super(biomeId);
@@ -73,8 +106,33 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         if (world == null) {
             return;
         }
-        populateBarleyArea(world, chunkX, chunkZ);
-        populateBoundaryTendrils(world, chunkX, chunkZ);
+
+        WheatfieldBiomeSampler sampler = WheatfieldBiomeSampler.forChunk(world, chunkX >> 4, chunkZ >> 4, BIOME_SCAN_RADIUS);
+        populateBarleyForChunk(world, chunkX, chunkZ, sampler);
+    }
+
+    public void populateBarleyForChunk(World world, int chunkX, int chunkZ, WheatfieldBiomeSampler sampler) {
+        if (world == null) {
+            return;
+        }
+
+        if (sampler == null) {
+            return;
+        }
+
+        if (!sampler.hasWheatfieldInRegion(chunkX, chunkZ, chunkX + 16, chunkZ + 16)) {
+            return;
+        }
+
+        short[] surfaceCache = new short[256];
+        Arrays.fill(surfaceCache, SURFACE_CACHE_UNSET);
+
+        populateBarleyArea(world, chunkX, chunkZ, sampler, surfaceCache);
+        populateBoundaryTendrils(world, chunkX, chunkZ, sampler, surfaceCache);
+    }
+
+    public static int getBiomeScanRadius() {
+        return BIOME_SCAN_RADIUS;
     }
 
     @Override
@@ -89,21 +147,15 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         return PASTURE_GRASS_COLOR;
     }
 
-    private void populateBarleyArea(World world, int chunkX, int chunkZ) {
-        int configured = Math.max(0, ModConfig.wheatfieldBarleyPerChunk);
-        if (configured <= 0) {
-            return;
-        }
-
-        float configuredDensity = clamp01(configured / 999.0F);
+    private void populateBarleyArea(World world, int chunkX, int chunkZ, WheatfieldBiomeSampler sampler, short[] surfaceCache) {
         for (int x = chunkX; x < chunkX + 16; x++) {
             for (int z = chunkZ; z < chunkZ + 16; z++) {
-                float wheatfieldInfluence = computeWheatfieldInfluence(world, x, z);
+                float wheatfieldInfluence = computeWheatfieldInfluence(sampler, x, z);
                 if (wheatfieldInfluence <= EDGE_BLEND_START) {
                     continue;
                 }
 
-                float coverage = computeBarleyCoverage(world, x, z, wheatfieldInfluence, configuredDensity);
+                float coverage = computeBarleyCoverage(sampler, world, x, z, wheatfieldInfluence);
                 if (coverage <= 0.0F) {
                     continue;
                 }
@@ -111,7 +163,7 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                     continue;
                 }
 
-                int y = findSurfaceSoilY(world, x, z);
+                int y = findSurfaceSoilY(world, x, z, chunkX, chunkZ, surfaceCache);
                 if (y < 0) {
                     continue;
                 }
@@ -119,10 +171,25 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                 tryPlaceBarley(world, x, y + 1, z);
             }
         }
-
     }
 
-    private int findSurfaceSoilY(World world, int x, int z) {
+    private int findSurfaceSoilY(World world, int x, int z, int chunkX, int chunkZ, short[] surfaceCache) {
+        if (x >= chunkX && x < chunkX + 16 && z >= chunkZ && z < chunkZ + 16 && surfaceCache != null) {
+            int index = (x - chunkX) * 16 + (z - chunkZ);
+            short cached = surfaceCache[index];
+            if (cached != SURFACE_CACHE_UNSET) {
+                return cached;
+            }
+
+            int computed = findSurfaceSoilYUncached(world, x, z);
+            surfaceCache[index] = (short) computed;
+            return computed;
+        }
+
+        return findSurfaceSoilYUncached(world, x, z);
+    }
+
+    private int findSurfaceSoilYUncached(World world, int x, int z) {
         int topY = Math.min(world.getHeightValue(x, z), world.getActualHeight() - 2);
         for (int y = topY; y >= Math.max(1, topY - 8); y--) {
             Block ground = world.getBlock(x, y, z);
@@ -133,42 +200,26 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         return -1;
     }
 
-    private float computeWheatfieldInfluence(World world, int x, int z) {
-        float totalWeight = 0.0F;
+    private float computeWheatfieldInfluence(WheatfieldBiomeSampler sampler, int x, int z) {
         float wheatfieldWeight = 0.0F;
-        for (int dx = -EDGE_SAMPLE_RADIUS; dx <= EDGE_SAMPLE_RADIUS; dx++) {
-            for (int dz = -EDGE_SAMPLE_RADIUS; dz <= EDGE_SAMPLE_RADIUS; dz++) {
-                int distanceSq = dx * dx + dz * dz;
-                if (distanceSq > EDGE_SAMPLE_RADIUS * EDGE_SAMPLE_RADIUS) {
-                    continue;
-                }
-
-                float distance = (float) Math.sqrt(distanceSq);
-                float weight = 1.0F - distance / ((float) EDGE_SAMPLE_RADIUS + 0.5F);
-                if (weight <= 0.0F) {
-                    continue;
-                }
-
-                totalWeight += weight;
-                if (world.getBiomeGenForCoords(x + dx, z + dz) == this) {
-                    wheatfieldWeight += weight;
-                }
+        for (int i = 0; i < INFLUENCE_WEIGHT.length; i++) {
+            if (sampler.isWheatfield(x + INFLUENCE_OFFSET_X[i], z + INFLUENCE_OFFSET_Z[i])) {
+                wheatfieldWeight += INFLUENCE_WEIGHT[i];
             }
         }
 
-        if (totalWeight <= 0.0F) {
+        if (INFLUENCE_TOTAL_WEIGHT <= 0.0F) {
             return 0.0F;
         }
-        return wheatfieldWeight / totalWeight;
+        return wheatfieldWeight / INFLUENCE_TOTAL_WEIGHT;
     }
 
-    private float computeBarleyCoverage(World world, int x, int z, float wheatfieldInfluence, float configuredDensity) {
-        if (world.getBiomeGenForCoords(x, z) != this) {
+    private float computeBarleyCoverage(WheatfieldBiomeSampler sampler, World world, int x, int z, float wheatfieldInfluence) {
+        if (!sampler.isWheatfield(x, z)) {
             return 0.0F;
         }
 
-        float clampedDensity = clamp01(configuredDensity);
-        float coreCoverage = smoothstep(FULL_BARLEY_COVERAGE_START, 1.0F, wheatfieldInfluence) * clampedDensity;
+        float coreCoverage = smoothstep(FULL_BARLEY_COVERAGE_START, 1.0F, wheatfieldInfluence);
         if (coreCoverage >= 0.999F) {
             coreCoverage = 1.0F;
         }
@@ -179,8 +230,8 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         }
 
         float tendrilMask = computeTendrilMask(world.getSeed(), x, z);
-        float coverage = edgeCoverage * tendrilMask * clampedDensity;
-        float borderProximity = computeInteriorBorderProximity(world, x, z);
+        float coverage = edgeCoverage * tendrilMask;
+        float borderProximity = computeInteriorBorderProximity(sampler, x, z);
         if (borderProximity > 0.0F) {
             float borderCap = lerp(1.0F, clamp01(0.48F + tendrilMask * 0.52F), borderProximity);
             coreCoverage = Math.min(coreCoverage, borderCap);
@@ -189,29 +240,16 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         return Math.max(coreCoverage, clamp01(coverage));
     }
 
-    private float computeInteriorBorderProximity(World world, int x, int z) {
-        if (world.getBiomeGenForCoords(x, z) != this) {
+    private float computeInteriorBorderProximity(WheatfieldBiomeSampler sampler, int x, int z) {
+        if (!sampler.isWheatfield(x, z)) {
             return 0.0F;
         }
 
         float nearest = EDGE_DITHER_DEPTH + 1.0F;
-        for (int dx = -EDGE_DITHER_DEPTH; dx <= EDGE_DITHER_DEPTH; dx++) {
-            for (int dz = -EDGE_DITHER_DEPTH; dz <= EDGE_DITHER_DEPTH; dz++) {
-                if (dx == 0 && dz == 0) {
-                    continue;
-                }
-                int distanceSq = dx * dx + dz * dz;
-                if (distanceSq > EDGE_DITHER_DEPTH * EDGE_DITHER_DEPTH) {
-                    continue;
-                }
-                if (world.getBiomeGenForCoords(x + dx, z + dz) == this) {
-                    continue;
-                }
-
-                float distance = (float) Math.sqrt(distanceSq);
-                if (distance < nearest) {
-                    nearest = distance;
-                }
+        for (int i = 0; i < BORDER_DISTANCE.length; i++) {
+            if (!sampler.isWheatfield(x + BORDER_OFFSET_X[i], z + BORDER_OFFSET_Z[i])) {
+                nearest = BORDER_DISTANCE[i];
+                break;
             }
         }
 
@@ -240,25 +278,25 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         }
     }
 
-    private void populateBoundaryTendrils(World world, int chunkX, int chunkZ) {
-        for (int x = chunkX - EDGE_BOUNDARY_SCAN_HALO; x < chunkX + 16 + EDGE_BOUNDARY_SCAN_HALO; x++) {
-            for (int z = chunkZ - EDGE_BOUNDARY_SCAN_HALO; z < chunkZ + 16 + EDGE_BOUNDARY_SCAN_HALO; z++) {
-                if (!isImmediateBoundaryCell(world, x, z)) {
+    private void populateBoundaryTendrils(World world, int chunkX, int chunkZ, WheatfieldBiomeSampler sampler, short[] surfaceCache) {
+        for (int x = chunkX; x < chunkX + 16; x++) {
+            for (int z = chunkZ; z < chunkZ + 16; z++) {
+                if (!isImmediateBoundaryCell(sampler, x, z)) {
                     continue;
                 }
-                double[] direction = resolveOutwardBoundaryDirection(world, x, z);
+                double[] direction = resolveOutwardBoundaryDirection(sampler, x, z);
                 if (direction == null) {
                     continue;
                 }
 
                 long seed = world.getSeed() ^ (long) x * 341873128712L ^ (long) z * 132897987541L ^ 0x7A4C2D91B8F3L;
-                placeBoundaryFringe(world, x, z, direction[0], direction[1], seed);
+                placeBoundaryFringe(world, chunkX, chunkZ, x, z, direction[0], direction[1], seed, surfaceCache);
 
                 if (((x ^ z) & 1) != 0) {
                     continue;
                 }
 
-                float ribbon = computeRidge(sampleBarleyNoise(seed ^ 0x6C8E9CF5L, x + (int)(direction[0] * 23.0D), z + (int)(direction[1] * 23.0D), 18));
+                float ribbon = computeRidge(sampleBarleyNoise(seed ^ 0x6C8E9CF5L, x + (int) (direction[0] * 23.0D), z + (int) (direction[1] * 23.0D), 18));
                 float anchorNoise = sampleBarleyNoise(seed ^ 0x2B992DDFA232L, x - z, z + x, 7);
                 if (ribbon * 0.72F + anchorNoise * 0.28F < 0.42F) {
                     continue;
@@ -266,13 +304,13 @@ public class BiomeGenWheatfield extends BiomeGenBase {
 
                 int length = EDGE_TENDRIL_MIN_LENGTH + Math.round(sampleBarleyNoise(seed ^ 0x55AA55AAL, x, z, 9)
                         * (EDGE_TENDRIL_MAX_LENGTH - EDGE_TENDRIL_MIN_LENGTH));
-                emitBoundaryTendril(world, x, z, direction[0], direction[1], length, seed);
+                emitBoundaryTendril(world, chunkX, chunkZ, x, z, direction[0], direction[1], length, seed, surfaceCache);
             }
         }
     }
 
-    private boolean isImmediateBoundaryCell(World world, int x, int z) {
-        if (world.getBiomeGenForCoords(x, z) != this) {
+    private boolean isImmediateBoundaryCell(WheatfieldBiomeSampler sampler, int x, int z) {
+        if (!sampler.isWheatfield(x, z)) {
             return false;
         }
 
@@ -281,7 +319,7 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                 if (dx == 0 && dz == 0) {
                     continue;
                 }
-                if (world.getBiomeGenForCoords(x + dx, z + dz) != this) {
+                if (!sampler.isWheatfield(x + dx, z + dz)) {
                     return true;
                 }
             }
@@ -289,31 +327,21 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         return false;
     }
 
-    private double[] resolveOutwardBoundaryDirection(World world, int x, int z) {
-        if (world.getBiomeGenForCoords(x, z) != this) {
+    private double[] resolveOutwardBoundaryDirection(WheatfieldBiomeSampler sampler, int x, int z) {
+        if (!sampler.isWheatfield(x, z)) {
             return null;
         }
 
         double sumX = 0.0D;
         double sumZ = 0.0D;
-        for (int dx = -EDGE_TENDRIL_BOUNDARY_RADIUS; dx <= EDGE_TENDRIL_BOUNDARY_RADIUS; dx++) {
-            for (int dz = -EDGE_TENDRIL_BOUNDARY_RADIUS; dz <= EDGE_TENDRIL_BOUNDARY_RADIUS; dz++) {
-                if (dx == 0 && dz == 0) {
-                    continue;
-                }
-                int distanceSq = dx * dx + dz * dz;
-                if (distanceSq > EDGE_TENDRIL_BOUNDARY_RADIUS * EDGE_TENDRIL_BOUNDARY_RADIUS) {
-                    continue;
-                }
-                if (world.getBiomeGenForCoords(x + dx, z + dz) == this) {
-                    continue;
-                }
-
-                double distance = Math.sqrt(distanceSq);
-                double weight = 1.0D / (distance + 0.35D);
-                sumX += dx * weight;
-                sumZ += dz * weight;
+        for (int i = 0; i < BOUNDARY_WEIGHT.length; i++) {
+            if (sampler.isWheatfield(x + BOUNDARY_OFFSET_X[i], z + BOUNDARY_OFFSET_Z[i])) {
+                continue;
             }
+
+            double weight = BOUNDARY_WEIGHT[i];
+            sumX += BOUNDARY_OFFSET_X[i] * weight;
+            sumZ += BOUNDARY_OFFSET_Z[i] * weight;
         }
 
         double length = Math.sqrt(sumX * sumX + sumZ * sumZ);
@@ -323,7 +351,7 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         return new double[] { sumX / length, sumZ / length };
     }
 
-    private void placeBoundaryFringe(World world, int anchorX, int anchorZ, double dirX, double dirZ, long seed) {
+    private void placeBoundaryFringe(World world, int chunkX, int chunkZ, int anchorX, int anchorZ, double dirX, double dirZ, long seed, short[] surfaceCache) {
         double sideX = -dirZ;
         double sideZ = dirX;
 
@@ -334,11 +362,11 @@ public class BiomeGenWheatfield extends BiomeGenBase {
             int centerX = MathHelper.floor_double(anchorX + dirX * (step + 1) + sideX * lateral + 0.5D);
             int centerZ = MathHelper.floor_double(anchorZ + dirZ * (step + 1) + sideZ * lateral + 0.5D);
             float radius = 1.05F + (1.0F - progress) * 1.65F;
-            int blockRadius = Math.max(1, (int)Math.ceil(radius));
+            int blockRadius = Math.max(1, (int) Math.ceil(radius));
 
             for (int dx = -blockRadius; dx <= blockRadius; dx++) {
                 for (int dz = -blockRadius; dz <= blockRadius; dz++) {
-                    float distance = (float)Math.sqrt(dx * dx + dz * dz);
+                    float distance = (float) Math.sqrt(dx * dx + dz * dz);
                     if (distance > radius) {
                         continue;
                     }
@@ -350,14 +378,14 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                     float ragged = sampleBarleyNoise(seed ^ 0x1234ABCDL, x + 19, z - 31, 7);
                     float density = body * (0.78F - progress * 0.34F) + ragged * 0.14F;
                     if (dither <= density) {
-                        placeBarleyAtSurface(world, x, z);
+                        placeBarleyAtSurface(world, chunkX, chunkZ, x, z, surfaceCache);
                     }
                 }
             }
         }
     }
 
-    private void emitBoundaryTendril(World world, int anchorX, int anchorZ, double dirX, double dirZ, int length, long seed) {
+    private void emitBoundaryTendril(World world, int chunkX, int chunkZ, int anchorX, int anchorZ, double dirX, double dirZ, int length, long seed, short[] surfaceCache) {
         double sideX = -dirZ;
         double sideZ = dirX;
         double drift = 0.0D;
@@ -369,7 +397,7 @@ public class BiomeGenWheatfield extends BiomeGenBase {
 
             int centerX = MathHelper.floor_double(anchorX + dirX * step + sideX * drift + 0.5D);
             int centerZ = MathHelper.floor_double(anchorZ + dirZ * step + sideZ * drift + 0.5D);
-            placeBoundaryTendrilCluster(world, centerX, centerZ, progress, seed ^ step * 341873128712L);
+            placeBoundaryTendrilCluster(world, chunkX, chunkZ, centerX, centerZ, progress, seed ^ step * 341873128712L, surfaceCache);
 
             if (progress > 0.22F && progress < 0.78F) {
                 float branchNoise = sampleBarleyNoise(seed ^ 0x41C64E6DL, centerX + step, centerZ - step, 6);
@@ -377,20 +405,20 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                     int branchSide = branchNoise > 0.91F ? 1 : -1;
                     int branchX = MathHelper.floor_double(centerX + sideX * branchSide * (2.0D + branchNoise * 4.0D) + 0.5D);
                     int branchZ = MathHelper.floor_double(centerZ + sideZ * branchSide * (2.0D + branchNoise * 4.0D) + 0.5D);
-                    placeBoundaryTendrilCluster(world, branchX, branchZ, progress + 0.08F, seed ^ 0x1B56C4E9L ^ step);
+                    placeBoundaryTendrilCluster(world, chunkX, chunkZ, branchX, branchZ, progress + 0.08F, seed ^ 0x1B56C4E9L ^ step, surfaceCache);
                 }
             }
         }
     }
 
-    private void placeBoundaryTendrilCluster(World world, int centerX, int centerZ, float progress, long seed) {
+    private void placeBoundaryTendrilCluster(World world, int chunkX, int chunkZ, int centerX, int centerZ, float progress, long seed, short[] surfaceCache) {
         float taper = clamp01(1.0F - progress);
         float radius = 0.75F + taper * 2.65F;
-        int blockRadius = Math.max(1, (int)Math.ceil(radius));
+        int blockRadius = Math.max(1, (int) Math.ceil(radius));
 
         for (int dx = -blockRadius; dx <= blockRadius; dx++) {
             for (int dz = -blockRadius; dz <= blockRadius; dz++) {
-                float distance = (float)Math.sqrt(dx * dx + dz * dz);
+                float distance = (float) Math.sqrt(dx * dx + dz * dz);
                 if (distance > radius) {
                     continue;
                 }
@@ -402,14 +430,18 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                 float raggedEdge = sampleBarleyNoise(seed ^ 0xA54FF53AL, x + 41, z - 29, 9);
                 float density = body * (0.95F - progress * 0.62F) + raggedEdge * 0.16F;
                 if (dither <= density) {
-                    placeBarleyAtSurface(world, x, z);
+                    placeBarleyAtSurface(world, chunkX, chunkZ, x, z, surfaceCache);
                 }
             }
         }
     }
 
-    private void placeBarleyAtSurface(World world, int x, int z) {
-        int y = findSurfaceSoilY(world, x, z);
+    private void placeBarleyAtSurface(World world, int chunkX, int chunkZ, int x, int z, short[] surfaceCache) {
+        if ((x < chunkX || x >= chunkX + 16 || z < chunkZ || z >= chunkZ + 16) && !world.blockExists(x, 0, z)) {
+            return;
+        }
+
+        int y = findSurfaceSoilY(world, x, z, chunkX, chunkZ, surfaceCache);
         if (y < 0) {
             return;
         }
@@ -505,5 +537,170 @@ public class BiomeGenWheatfield extends BiomeGenBase {
     private static int positiveMod(int value, int divisor) {
         int mod = value % divisor;
         return mod < 0 ? mod + divisor : mod;
+    }
+
+    private static OffsetKernel buildInfluenceKernel(int radius) {
+        int diameter = radius * 2 + 1;
+        int capacity = diameter * diameter;
+        int[] offsetX = new int[capacity];
+        int[] offsetZ = new int[capacity];
+        float[] weight = new float[capacity];
+        int count = 0;
+        float totalWeight = 0.0F;
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                int distanceSq = dx * dx + dz * dz;
+                if (distanceSq > radius * radius) {
+                    continue;
+                }
+
+                float distance = (float) Math.sqrt(distanceSq);
+                float sampleWeight = 1.0F - distance / ((float) radius + 0.5F);
+                if (sampleWeight <= 0.0F) {
+                    continue;
+                }
+
+                offsetX[count] = dx;
+                offsetZ[count] = dz;
+                weight[count] = sampleWeight;
+                totalWeight += sampleWeight;
+                count++;
+            }
+        }
+
+        return new OffsetKernel(trim(offsetX, count), trim(offsetZ, count), trim(weight, count), totalWeight);
+    }
+
+    private static DistanceKernel buildDistanceKernel(int radius) {
+        int diameter = radius * 2 + 1;
+        int capacity = diameter * diameter - 1;
+        int[] offsetX = new int[capacity];
+        int[] offsetZ = new int[capacity];
+        float[] distance = new float[capacity];
+        int count = 0;
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                int distanceSq = dx * dx + dz * dz;
+                if (distanceSq > radius * radius) {
+                    continue;
+                }
+
+                offsetX[count] = dx;
+                offsetZ[count] = dz;
+                distance[count] = (float) Math.sqrt(distanceSq);
+                count++;
+            }
+        }
+
+        sortByDistance(offsetX, offsetZ, distance, count);
+        return new DistanceKernel(trim(offsetX, count), trim(offsetZ, count), trim(distance, count));
+    }
+
+    private static BoundaryKernel buildBoundaryKernel(int radius) {
+        int diameter = radius * 2 + 1;
+        int capacity = diameter * diameter - 1;
+        int[] offsetX = new int[capacity];
+        int[] offsetZ = new int[capacity];
+        double[] weight = new double[capacity];
+        int count = 0;
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                int distanceSq = dx * dx + dz * dz;
+                if (distanceSq > radius * radius) {
+                    continue;
+                }
+
+                double distance = Math.sqrt(distanceSq);
+                offsetX[count] = dx;
+                offsetZ[count] = dz;
+                weight[count] = 1.0D / (distance + 0.35D);
+                count++;
+            }
+        }
+
+        return new BoundaryKernel(trim(offsetX, count), trim(offsetZ, count), trim(weight, count));
+    }
+
+    private static void sortByDistance(int[] offsetX, int[] offsetZ, float[] distance, int count) {
+        for (int i = 1; i < count; i++) {
+            float currentDistance = distance[i];
+            int currentX = offsetX[i];
+            int currentZ = offsetZ[i];
+            int j = i - 1;
+            while (j >= 0 && distance[j] > currentDistance) {
+                distance[j + 1] = distance[j];
+                offsetX[j + 1] = offsetX[j];
+                offsetZ[j + 1] = offsetZ[j];
+                j--;
+            }
+            distance[j + 1] = currentDistance;
+            offsetX[j + 1] = currentX;
+            offsetZ[j + 1] = currentZ;
+        }
+    }
+
+    private static int[] trim(int[] data, int size) {
+        int[] out = new int[size];
+        System.arraycopy(data, 0, out, 0, size);
+        return out;
+    }
+
+    private static float[] trim(float[] data, int size) {
+        float[] out = new float[size];
+        System.arraycopy(data, 0, out, 0, size);
+        return out;
+    }
+
+    private static double[] trim(double[] data, int size) {
+        double[] out = new double[size];
+        System.arraycopy(data, 0, out, 0, size);
+        return out;
+    }
+
+    private static final class OffsetKernel {
+        private final int[] offsetX;
+        private final int[] offsetZ;
+        private final float[] weight;
+        private final float totalWeight;
+
+        private OffsetKernel(int[] offsetX, int[] offsetZ, float[] weight, float totalWeight) {
+            this.offsetX = offsetX;
+            this.offsetZ = offsetZ;
+            this.weight = weight;
+            this.totalWeight = totalWeight;
+        }
+    }
+
+    private static final class DistanceKernel {
+        private final int[] offsetX;
+        private final int[] offsetZ;
+        private final float[] distance;
+
+        private DistanceKernel(int[] offsetX, int[] offsetZ, float[] distance) {
+            this.offsetX = offsetX;
+            this.offsetZ = offsetZ;
+            this.distance = distance;
+        }
+    }
+
+    private static final class BoundaryKernel {
+        private final int[] offsetX;
+        private final int[] offsetZ;
+        private final double[] weight;
+
+        private BoundaryKernel(int[] offsetX, int[] offsetZ, double[] weight) {
+            this.offsetX = offsetX;
+            this.offsetZ = offsetZ;
+            this.weight = weight;
+        }
     }
 }

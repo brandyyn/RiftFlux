@@ -126,6 +126,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.chromaticraft.MixinCaveIndicatorGenerator_SkipIrrelevantChunks");
             }
         }
+        if (ModConfig.enableWheatfieldBiome) {
+            mixins.add("early.MixinWorldGenLakes_SkipWheatfield");
+        }
         if (ModConfig.enableArmorMixin) {
             mixins.add("early.MixinArmorProperties");
         }
