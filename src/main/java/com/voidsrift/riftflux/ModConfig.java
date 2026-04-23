@@ -693,6 +693,38 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int legendGearSpellReachId;
     public static int legendGearSpellSpreadId;
     public static int legendGearSpellArmoredId;
+    public static boolean legendGearEnableLegacyLegendGear;
+    public static int legendGearLegacyFocusEnchantmentId;
+    public static int legendGearLegacySoulTetherEnchantmentId;
+    public static int legendGearLegacyBombBagCapacity;
+    public static int legendGearLegacyBombDamage;
+    public static String[] legendGearLegacyBombableBlocks;
+    public static double legendGearLegacyMysticShrubArrowChance;
+    public static double legendGearLegacyMysticShrubGenStarChance;
+    public static double legendGearLegacyMysticShrubHeartChance;
+    public static double legendGearLegacyMysticShrubJackpotChance;
+    public static int legendGearLegacyMysticShrubRarity;
+    public static double legendGearLegacyMysticShrubShardChance;
+    public static int legendGearLegacyQuiverMaxCapacity;
+    public static int[] legendGearLegacyShrubDisabledBiomes;
+    public static boolean legendGearLegacyAllowCandy;
+    public static boolean legendGearLegacyBombsAllowed;
+    public static boolean legendGearLegacyEmeraldShardsAllowed;
+    public static boolean legendGearLegacyHeartsAllowed;
+    public static boolean legendGearLegacyMagicMirrorAllowed;
+    public static boolean legendGearLegacyMedallionsAllowed;
+    public static boolean legendGearLegacyMysticShrubAllowed;
+    public static boolean legendGearLegacyMysticShrubSuperPrizes;
+    public static boolean legendGearLegacyQuiverAllowed;
+    public static boolean legendGearLegacyHookshotAnyBlock;
+    public static boolean legendGearLegacyAmuletsWorkFromInventory;
+    public static boolean legendGearLegacyAmuletsUseBaublesSlot;
+    public static boolean legendGearLegacyMedallionEffectsAffectPlayer;
+    public static boolean legendGearLegacyWhirlwindBootsDashSound;
+    public static double legendGearLegacyStarbeamRailLaunchStrength;
+    public static int legendGearLegacyStarbeamRailConnectionRange;
+    public static boolean legendGearLegacyStarbeamRailNoSlowdown;
+    public static boolean legendGearLegacyStarbeamRailRightClickTravel;
     public static boolean legendGearAllowEmeraldDrops;
     public static boolean legendGearAllowHeartDrops;
     public static float legendGearItemSoundVolume;
@@ -2914,6 +2946,264 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legendgear",
                 true,
                 "Master switch for integrated LegendGear content (items, blocks, entities, rituals, mana, and worldgen)."
+        );
+
+        legendGearEnableLegacyLegendGear = config.getBoolean(
+                "EnableLegacyLegendGear",
+                "legendgear",
+                true,
+                "If true, restores the missing 1.5.2 LegendGear legacy items and blocks inside the integrated LegendGear module."
+        );
+
+        legendGearLegacyFocusEnchantmentId = config.getInt(
+                "legacyFocusEnchantmentId",
+                "legendgear",
+                246,
+                0,
+                255,
+                "Enchantment ID for the legacy LegendGear Focus enchantment."
+        );
+
+        legendGearLegacySoulTetherEnchantmentId = config.getInt(
+                "legacySoulTetherEnchantmentId",
+                "legendgear",
+                247,
+                0,
+                255,
+                "Enchantment ID for the legacy LegendGear Soul Tether enchantment."
+        );
+
+        legendGearLegacyBombBagCapacity = clampInt(
+                config.getInt(
+                        "legacyBombBagCapacity",
+                        "legendgear",
+                        50,
+                        0,
+                        999,
+                        "Maximum bomb capacity for the legacy Bomb Bag."
+                ),
+                0,
+                999
+        );
+
+        legendGearLegacyBombDamage = config.getInt(
+                "legacyBombDamage",
+                "legendgear",
+                5,
+                0,
+                1024,
+                "Damage dealt by legacy bombs and bomb flowers."
+        );
+
+        legendGearLegacyBombableBlocks = config.getStringList(
+                "legacyBombableBlocks",
+                "legendgear",
+                new String[]{"minecraft:cobblestone", "minecraft:tnt"},
+                "Block registry names that legacy bombs can break, for example minecraft:cobblestone."
+        );
+
+        legendGearLegacyMysticShrubArrowChance = config.getFloat(
+                "legacyMysticShrubArrowChance",
+                "legendgear",
+                0.2F,
+                0.0F,
+                1.0F,
+                "Chance for a normal legacy Mystic Shrub to drop an arrow."
+        );
+
+        legendGearLegacyMysticShrubGenStarChance = config.getFloat(
+                "legacyMysticShrubGenStarChance",
+                "legendgear",
+                0.3F,
+                0.0F,
+                1.0F,
+                "Chance for a legacy Mystic Shrub cluster to generate in a star shape."
+        );
+
+        legendGearLegacyMysticShrubHeartChance = config.getFloat(
+                "legacyMysticShrubHeartChance",
+                "legendgear",
+                0.2F,
+                0.0F,
+                1.0F,
+                "Chance for a normal legacy Mystic Shrub to drop a heart."
+        );
+
+        legendGearLegacyMysticShrubJackpotChance = config.getFloat(
+                "legacyMysticShrubJackpotChance",
+                "legendgear",
+                0.05F,
+                0.0F,
+                1.0F,
+                "Chance for a charged legacy Mystic Shrub to trigger a jackpot prize."
+        );
+
+        legendGearLegacyMysticShrubRarity = config.getInt(
+                "legacyMysticShrubRarity",
+                "legendgear",
+                8,
+                1,
+                1024,
+                "Average chunk rarity for legacy Mystic Shrub generation. 1 means every chunk."
+        );
+
+        legendGearLegacyMysticShrubShardChance = config.getFloat(
+                "legacyMysticShrubShardChance",
+                "legendgear",
+                0.2F,
+                0.0F,
+                1.0F,
+                "Chance for a normal legacy Mystic Shrub to drop an emerald shard."
+        );
+
+        legendGearLegacyQuiverMaxCapacity = clampInt(
+                config.getInt(
+                        "legacyQuiverMaxCapacity",
+                        "legendgear",
+                        200,
+                        0,
+                        999,
+                        "Maximum arrow capacity for the legacy Quiver."
+                ),
+                0,
+                999
+        );
+
+        legendGearLegacyShrubDisabledBiomes = config.get(
+                "legendgear",
+                "legacyShrubDisabledBiomes",
+                new int[]{2, 5, 8, 9, 10, 11, 12, 13, 17, 19},
+                "Biome IDs where legacy Mystic Shrubs will not generate."
+        ).getIntList();
+
+        legendGearLegacyAllowCandy = config.getBoolean(
+                "legacyAllowCandy",
+                "legendgear",
+                true,
+                "If true, legacy Rock Candy items and recipes are enabled."
+        );
+
+        legendGearLegacyBombsAllowed = config.getBoolean(
+                "legacyBombsAllowed",
+                "legendgear",
+                true,
+                "If true, legacy bombs, bomb bags, and bomb flowers remain active."
+        );
+
+        legendGearLegacyEmeraldShardsAllowed = config.getBoolean(
+                "legacyEmeraldShardsAllowed",
+                "legendgear",
+                true,
+                "If true, legacy emerald shard drops and Mystic Shrub shard rewards remain active."
+        );
+
+        legendGearLegacyHeartsAllowed = config.getBoolean(
+                "legacyHeartsAllowed",
+                "legendgear",
+                true,
+                "If true, legacy hearts can drop from monsters and Mystic Shrubs."
+        );
+
+        legendGearLegacyMagicMirrorAllowed = config.getBoolean(
+                "legacyMagicMirrorAllowed",
+                "legendgear",
+                true,
+                "If true, the legacy Magic Mirror recipe and behavior remain enabled."
+        );
+
+        legendGearLegacyMedallionsAllowed = config.getBoolean(
+                "legacyMedallionsAllowed",
+                "legendgear",
+                true,
+                "If true, legacy medallions, amulets, and related recipes remain enabled."
+        );
+
+        legendGearLegacyMysticShrubAllowed = config.getBoolean(
+                "legacyMysticShrubAllowed",
+                "legendgear",
+                true,
+                "If true, legacy Mystic Shrubs remain enabled and can generate in the world."
+        );
+
+        legendGearLegacyMysticShrubSuperPrizes = config.getBoolean(
+                "legacyMysticShrubSuperPrizes",
+                "legendgear",
+                true,
+                "If true, charged legacy Mystic Shrubs can drop their stronger storm prizes."
+        );
+
+        legendGearLegacyQuiverAllowed = config.getBoolean(
+                "legacyQuiverAllowed",
+                "legendgear",
+                true,
+                "If true, the legacy Quiver and its loading behavior remain enabled."
+        );
+
+        legendGearLegacyHookshotAnyBlock = config.getBoolean(
+                "legacyHookshotAnyBlock",
+                "legendgear",
+                true,
+                "If true, the legacy Hookshot can attach to any solid block instead of only wood plus the compatibility list."
+        );
+
+        legendGearLegacyAmuletsWorkFromInventory = config.getBoolean(
+                "legacyAmuletsWorkFromInventory",
+                "legendgear",
+                true,
+                "If true, legacy amulets work passively from the main inventory instead of only while being actively used."
+        );
+
+        legendGearLegacyAmuletsUseBaublesSlot = config.getBoolean(
+                "legacyAmuletsUseBaublesSlot",
+                "legendgear",
+                true,
+                "If true and Baubles is installed, legacy amulets work from the Baubles amulet slot."
+        );
+
+        legendGearLegacyMedallionEffectsAffectPlayer = config.getBoolean(
+                "legacyMedallionEffectsAffectPlayer",
+                "legendgear",
+                true,
+                "If true, legacy medallion effect entities can also affect the player who cast them."
+        );
+
+        legendGearLegacyWhirlwindBootsDashSound = config.getBoolean(
+                "legacyWhirlwindBootsDashSound",
+                "legendgear",
+                false,
+                "If true, Whirlwind Boots play their legacy dash sound while sprinting."
+        );
+
+        legendGearLegacyStarbeamRailLaunchStrength = config.getFloat(
+                "legacyStarbeamRailLaunchStrength",
+                "legendgear",
+                1.2F,
+                0.0F,
+                10.0F,
+                "Velocity applied when jumping off a legacy Starbeam Rail."
+        );
+
+        legendGearLegacyStarbeamRailConnectionRange = config.getInt(
+                "legacyStarbeamRailConnectionRange",
+                "legendgear",
+                64,
+                1,
+                256,
+                "Maximum block distance for legacy Starbeam Rails to connect to each other."
+        );
+
+        legendGearLegacyStarbeamRailNoSlowdown = config.getBoolean(
+                "legacyStarbeamRailNoSlowdown",
+                "legendgear",
+                true,
+                "If true, legacy Starbeam Rails do not reduce rider speed from drag or uphill travel."
+        );
+
+        legendGearLegacyStarbeamRailRightClickTravel = config.getBoolean(
+                "legacyStarbeamRailRightClickTravel",
+                "legendgear",
+                true,
+                "If true, right-clicking a legacy Starbeam Rail starts rail travel without needing to jump onto it."
         );
 
         legendGearMagicProtectionId = config.getInt(

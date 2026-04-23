@@ -45,6 +45,7 @@ public final class LegendGearContent {
         module = LegendGear2.instance;
         module.preInit(event);
         LegendGearAdditionsContent.preInit(event);
+        LegendGearLegacyContent.preInit(event);
         activated = true;
     }
 
@@ -55,6 +56,7 @@ public final class LegendGearContent {
         initialized = true;
         module.init(event);
         LegendGearAdditionsContent.init(event);
+        LegendGearLegacyContent.init(event);
     }
 
     public static void postInit(FMLPostInitializationEvent event) {
@@ -63,6 +65,7 @@ public final class LegendGearContent {
         }
         postInited = true;
         module.postInit(event);
+        LegendGearLegacyContent.postInit(event);
     }
 
     public static boolean isEnabled() {
@@ -98,6 +101,7 @@ public final class LegendGearContent {
         LegendGear2.CONFIG_MAGIC_BOOMERANG_INFINITE_DURABILITY = ModConfig.legendGearMagicBoomerangInfiniteDurability;
         LegendGear2.CONFIG_MAGIC_BOOMERANG_DAMAGE = ModConfig.legendGearMagicBoomerangDamage;
         LegendGear2.CONFIG_ENABLE_BAD_BOW = ModConfig.legendGearEnableBadBow;
+        LegendGear2.CONFIG_ENABLE_LEGACY_LEGENDGEAR = ModConfig.legendGearEnableLegacyLegendGear;
         LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS = ModConfig.legendGearDashRingMaxAirJumps;
         LegendGear2.CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = ModConfig.legendGearDashRingUseOriginalBehavior;
         LegendGear2.CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = ModConfig.legendGearSprinkleStardustRequireSneak;

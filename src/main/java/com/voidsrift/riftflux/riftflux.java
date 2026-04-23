@@ -10,6 +10,7 @@ import com.voidsrift.riftflux.duckling.DucklingContent;
 import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
 import com.voidsrift.riftflux.legendgear.LegendGearAdditionsContent;
 import com.voidsrift.riftflux.legendgear.LegendGearContent;
+import com.voidsrift.riftflux.legendgear.LegendGearLegacyContent;
 import com.voidsrift.riftflux.net.sync.SyncEventHandler;
 import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
@@ -620,6 +621,7 @@ public class riftflux {
             }
         }
         LegendGearAdditionsContent.registerLegacyAliases();
+        LegendGearLegacyContent.registerLegacyAliases();
     }
 
     private static void registerSatchelsLegacyAliases() {

@@ -176,6 +176,7 @@ public class LegendGear2 {
     public static boolean CONFIG_MAGIC_BOOMERANG_INFINITE_DURABILITY = false;
     public static float CONFIG_MAGIC_BOOMERANG_DAMAGE = 6.0f;
     public static boolean CONFIG_ENABLE_BAD_BOW = true;
+    public static boolean CONFIG_ENABLE_LEGACY_LEGENDGEAR = false;
     public static int CONFIG_DASH_RING_MAX_AIR_JUMPS = 2;
     public static boolean CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = false;
     public static boolean CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = false;
