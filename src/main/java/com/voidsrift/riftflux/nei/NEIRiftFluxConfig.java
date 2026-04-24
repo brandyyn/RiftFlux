@@ -17,6 +17,7 @@ import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.placeditem.PlacedItemContent;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
+import net.nmccoy.legendgear.LegendGear2;
 
 import java.util.List;
 
@@ -133,6 +134,20 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 API.hideItem(new ItemStack(TerrariaContent.iceRodBlock));
             } catch (Throwable t) {
                 FMLLog.severe("[RiftFlux] Failed to hide temporary magic ice block in NEI: %s", t);
+            }
+        }
+        if (LegendGear2.starPieceBlock != null) {
+            try {
+                API.hideItem(new ItemStack(LegendGear2.starPieceBlock));
+            } catch (Throwable t) {
+                FMLLog.severe("[RiftFlux] Failed to hide placed star piece block in NEI: %s", t);
+            }
+        }
+        if (LegendGear2.infusedStarPieceBlock != null) {
+            try {
+                API.hideItem(new ItemStack(LegendGear2.infusedStarPieceBlock));
+            } catch (Throwable t) {
+                FMLLog.severe("[RiftFlux] Failed to hide infused placed star piece block in NEI: %s", t);
             }
         }
     }

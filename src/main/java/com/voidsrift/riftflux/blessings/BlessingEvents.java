@@ -77,6 +77,9 @@ public class BlessingEvents {
                 BlessingHelper.setBlessing(player, blessing);
                 BlessingHelper.resetBlessingState(player);
                 BlessingHelper.clearBlessingSource(player);
+                if (ModConfig.blessingsAnnounceFirstJoinBlessing) {
+                    BlockBlessingPillar.sendGrantedBlessingMessage(player, blessing);
+                }
             }
         }
         String existing = BlessingHelper.getBlessing(player);

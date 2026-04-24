@@ -214,8 +214,14 @@ public class PlayerEventHandler {
         }
         if (item == LegendGear2.starDust) {
             if (meta == 1) {
+                this.addUseLine(event, "Placeable Star Piece block.");
             } else if (meta == 2) {
                 this.addUseLine(event, "Placeable Starstone block.");
+            } else if (meta == 4) {
+                this.addUseLine(event, "Placeable Infused Star Piece.");
+                if (ModConfig.legendGearInfusedStarPiecesActAsStarbeamRails) {
+                    this.addUseLine(event, "Grind at Star Speed!");
+                }
             } else if (meta == 3) {
                 if (LegendGear2.CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK) {
                     this.addUseLine(event, "Crouch right-click to cast Sprinkle Stardust.");

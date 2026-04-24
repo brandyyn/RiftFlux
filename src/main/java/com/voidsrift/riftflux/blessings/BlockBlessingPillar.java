@@ -333,14 +333,7 @@ public class BlockBlessingPillar extends BlockContainer {
                 1.0F,
                 1.0F
         );
-        sendYellow(player, "blessing.riftflux.granted");
-        String title = BlessingHelper.getLocalizedTitle(blessing);
-        String desc = BlessingHelper.getDescription(blessing);
-        if (desc != null && !desc.isEmpty()) {
-            sendYellow(player, "blessing.riftflux.granted.with_desc", title, desc);
-        } else {
-            sendYellow(player, "blessing.riftflux.granted.without_desc", title);
-        }
+        sendGrantedBlessingMessage(player, blessing);
         if (player instanceof EntityPlayerMP && RFNetwork.CH != null) {
             RFNetwork.CH.sendTo(new MsgSyncBlessing(player), (EntityPlayerMP) player);
         }
@@ -358,6 +351,20 @@ public class BlockBlessingPillar extends BlockContainer {
             }
         }
         return true;
+    }
+
+    public static void sendGrantedBlessingMessage(EntityPlayer player, String blessing) {
+        if (player == null || blessing == null || blessing.isEmpty()) {
+            return;
+        }
+        sendYellow(player, "blessing.riftflux.granted");
+        String title = BlessingHelper.getLocalizedTitle(blessing);
+        String desc = BlessingHelper.getDescription(blessing);
+        if (desc != null && !desc.isEmpty()) {
+            sendYellow(player, "blessing.riftflux.granted.with_desc", title, desc);
+        } else {
+            sendYellow(player, "blessing.riftflux.granted.without_desc", title);
+        }
     }
 
     private static void sendYellow(EntityPlayer player, String key, Object... args) {

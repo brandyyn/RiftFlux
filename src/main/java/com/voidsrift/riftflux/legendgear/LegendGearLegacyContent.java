@@ -301,6 +301,12 @@ public final class LegendGearLegacyContent {
         LegendGear.starbeamRailConnectionRange = ModConfig.legendGearLegacyStarbeamRailConnectionRange;
         LegendGear.starbeamRailNoSlowdown = ModConfig.legendGearLegacyStarbeamRailNoSlowdown;
         LegendGear.starbeamRailNoFallDamage = ModConfig.legendGearLegacyStarbeamRailNoFallDamage;
+        LegendGear.starbeamRailRightClickAnyDirection = ModConfig.legendGearLegacyStarbeamRailRightClickAnyDirection;
+        LegendGear.infusedStarPiecesActAsStarbeamRails = ModConfig.legendGearInfusedStarPiecesActAsStarbeamRails;
+        LegendGear.titanBandBlockBossPickup = ModConfig.legendGearLegacyTitanBandBlockBossPickup;
+        LegendGear.titanBandPickupBlacklist = ModConfig.legendGearLegacyTitanBandPickupBlacklist == null
+                ? new String[0]
+                : ModConfig.legendGearLegacyTitanBandPickupBlacklist.clone();
         LegendGear.starbeamRailRightClickTravel = ModConfig.legendGearLegacyStarbeamRailRightClickTravel;
         LegendGear.maxBombBagCapacity = ModConfig.legendGearLegacyBombBagCapacity;
         LegendGear.maxQuiverCapacity = ModConfig.legendGearLegacyQuiverMaxCapacity;

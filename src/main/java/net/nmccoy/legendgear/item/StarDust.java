@@ -185,6 +185,17 @@ extends LGItem {
                     }
                 }
             }
+        } else if (meta == 4 && ModConfig.legendGearPlaceableStarPieces) {
+            if (par2EntityPlayer.capabilities.allowEdit) {
+                Block placeBlock = LegendGear2.infusedStarPieceBlock;
+                ItemBlock ib = (ItemBlock)ItemBlock.getItemFromBlock((Block)placeBlock);
+                if (ib != null) {
+                    boolean canPlace = this.canPlaceKludge(par3World, par4, par5, par6, par7, par2EntityPlayer, par1ItemStack, placeBlock);
+                    if (canPlace) {
+                        return ib.onItemUse(par1ItemStack, par2EntityPlayer, par3World, par4, par5, par6, par7, par8, par9, par10);
+                    }
+                }
+            }
         } else if (meta == 2) {
             if (par2EntityPlayer.capabilities.allowEdit) {
                 ItemBlock ib = (ItemBlock)ItemBlock.getItemFromBlock((Block)LegendGear2.starstoneBlock);

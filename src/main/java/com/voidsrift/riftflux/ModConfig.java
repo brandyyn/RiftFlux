@@ -64,6 +64,7 @@ public class ModConfig {
     public static boolean explosionsIgnoreThinPlantsForExposure;
 
     public static boolean enableMeleeDamageTooltip;
+    public static boolean enableUniversalDurabilityTooltip;
 
     // Combat tweaks
     public static boolean enableFistDamageBoost;
@@ -207,6 +208,7 @@ public class ModConfig {
     // Blessings
     public static boolean blessingsEnabled;
     public static boolean blessingsGrantOnFirstJoin;
+    public static boolean blessingsAnnounceFirstJoinBlessing;
     public static boolean blessingsAllowInfernoOnFirstJoin;
     public static boolean blessingsPillarGenEnabled;
     public static int blessingsPillarGenChance;
@@ -725,6 +727,9 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int legendGearLegacyStarbeamRailConnectionRange;
     public static boolean legendGearLegacyStarbeamRailNoSlowdown;
     public static boolean legendGearLegacyStarbeamRailNoFallDamage;
+    public static boolean legendGearLegacyStarbeamRailRightClickAnyDirection;
+    public static boolean legendGearLegacyTitanBandBlockBossPickup;
+    public static String[] legendGearLegacyTitanBandPickupBlacklist;
     public static boolean legendGearLegacyStarbeamRailRightClickTravel;
     public static boolean legendGearAllowEmeraldDrops;
     public static boolean legendGearAllowHeartDrops;
@@ -755,6 +760,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static float legendGearIceStaffManaCost;
     public static int legendGearStarPieceInfuseLevels;
     public static boolean legendGearPlaceableStarPieces;
+    public static boolean legendGearInfusedStarPiecesActAsStarbeamRails;
     public static int legendGearStarInJarLightLevel;
     public static int legendGearPlacedStarPiecesLightLevel;
     public static boolean legendGearFulguriteRequiresSilkTouch;
@@ -1171,6 +1177,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         enableMeleeDamageTooltip = config.getBoolean(
                 "EnableMeleeDamageTooltip", "general", true,
                 "Replace '+X Attack Damage' with a single gray 'X.X Melee Damage' line (includes +1 base and Sharpness)."
+        );
+
+        enableUniversalDurabilityTooltip = config.getBoolean(
+                "EnableUniversalDurabilityTooltip", "general", true,
+                "If true, any item with durability shows a gray 'Durability: current/max' tooltip line."
         );
 
         enableFistDamageBoost = config.getBoolean(
@@ -2375,6 +2386,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, players receive a random blessing when they first join a world."
         );
 
+        blessingsAnnounceFirstJoinBlessing = config.getBoolean(
+                "BlessingsAnnounceFirstJoinBlessing",
+                "Blessings",
+                true,
+                "If true, players are told their random blessing in chat when BlessingsGrantOnFirstJoin grants one."
+        );
+
         blessingsAllowInfernoOnFirstJoin = config.getBoolean(
                 "BlessingsAllowInfernoOnFirstJoin",
                 "Blessings",
@@ -3207,6 +3225,27 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, jumping off a legacy Starbeam Rail prevents the fall damage from that launch."
         );
 
+        legendGearLegacyStarbeamRailRightClickAnyDirection = config.getBoolean(
+                "legacyStarbeamRailRightClickAnyDirection",
+                "legendgear",
+                true,
+                "If true, right-clicking a legacy Starbeam Rail or Infused Star Piece can start travel even when you are not facing one of its connected rail nodes."
+        );
+
+        legendGearLegacyTitanBandBlockBossPickup = config.getBoolean(
+                "legacyTitanBandBlockBossPickup",
+                "legendgear",
+                false,
+                "If true, the legacy Titan Band cannot pick up boss entities."
+        );
+
+        legendGearLegacyTitanBandPickupBlacklist = config.getStringList(
+                "legacyTitanBandPickupBlacklist",
+                "legendgear",
+                new String[0],
+                "Entities the legacy Titan Band cannot pick up. Accepts entity ids, display names, simple class names, or full class names. Examples: Zombie, minecraft:zombie, net.minecraft.entity.monster.EntityZombie."
+        );
+
         legendGearLegacyStarbeamRailRightClickTravel = config.getBoolean(
                 "legacyStarbeamRailRightClickTravel",
                 "legendgear",
@@ -3467,6 +3506,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legendgear",
                 true,
                 "If true, Star Piece and Infused Star Piece can be placed as decorative star blocks."
+        );
+        legendGearInfusedStarPiecesActAsStarbeamRails = config.getBoolean(
+                "infusedStarPiecesActAsStarbeamRails",
+                "legendgear",
+                true,
+                "If true, placed Infused Star Pieces act as Starbeam Rails and connect to legacy Starbeam Rail paths."
         );
         legendGearStarInJarLightLevel = config.getInt(
                 "starInJarLightLevel",

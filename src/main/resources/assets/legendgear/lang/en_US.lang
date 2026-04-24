@@ -133,6 +133,8 @@ potion.legendgearJumpPenalty=Grounded
 
 tile.starstoneBlock.name=Starstone Block
 tile.infusedStarstoneBlock.name=Infused Starstone Block
+tile.starPieceBlock.name=Star Piece
+tile.infusedStarPieceBlock.name=Infused Star Piece
 tile.starSand.name=Starry Sand
 tile.starGlass.name=Starglass
 tile.caltrops.name=Caltrops
