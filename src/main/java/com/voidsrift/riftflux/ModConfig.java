@@ -724,6 +724,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static double legendGearLegacyStarbeamRailLaunchStrength;
     public static int legendGearLegacyStarbeamRailConnectionRange;
     public static boolean legendGearLegacyStarbeamRailNoSlowdown;
+    public static boolean legendGearLegacyStarbeamRailNoFallDamage;
     public static boolean legendGearLegacyStarbeamRailRightClickTravel;
     public static boolean legendGearAllowEmeraldDrops;
     public static boolean legendGearAllowHeartDrops;
@@ -3197,6 +3198,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legendgear",
                 true,
                 "If true, legacy Starbeam Rails do not reduce rider speed from drag or uphill travel."
+        );
+
+        legendGearLegacyStarbeamRailNoFallDamage = config.getBoolean(
+                "legacyStarbeamRailNoFallDamage",
+                "legendgear",
+                true,
+                "If true, jumping off a legacy Starbeam Rail prevents the fall damage from that launch."
         );
 
         legendGearLegacyStarbeamRailRightClickTravel = config.getBoolean(

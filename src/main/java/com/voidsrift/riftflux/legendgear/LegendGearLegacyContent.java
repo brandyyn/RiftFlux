@@ -300,6 +300,7 @@ public final class LegendGearLegacyContent {
         LegendGear.starbeamRailLaunchStrength = ModConfig.legendGearLegacyStarbeamRailLaunchStrength;
         LegendGear.starbeamRailConnectionRange = ModConfig.legendGearLegacyStarbeamRailConnectionRange;
         LegendGear.starbeamRailNoSlowdown = ModConfig.legendGearLegacyStarbeamRailNoSlowdown;
+        LegendGear.starbeamRailNoFallDamage = ModConfig.legendGearLegacyStarbeamRailNoFallDamage;
         LegendGear.starbeamRailRightClickTravel = ModConfig.legendGearLegacyStarbeamRailRightClickTravel;
         LegendGear.maxBombBagCapacity = ModConfig.legendGearLegacyBombBagCapacity;
         LegendGear.maxQuiverCapacity = ModConfig.legendGearLegacyQuiverMaxCapacity;

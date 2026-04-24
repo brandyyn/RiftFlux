@@ -95,5 +95,8 @@ public final class RFNetwork {
         // Generic entity/player sync (IDs 22-23)
         CH.registerMessage(MsgSyncEntityData.Handler.class, MsgSyncEntityData.class, 22, Side.CLIENT);
         CH.registerMessage(MsgSyncPlayerData.Handler.class, MsgSyncPlayerData.class, 23, Side.CLIENT);
+
+        // Starbeam rail jump notice (ID 24)
+        CH.registerMessage(MsgStarbeamRailJump.Handler.class, MsgStarbeamRailJump.class, 24, Side.SERVER);
     }
 }

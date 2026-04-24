@@ -228,7 +228,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntity_RiftChestRandomMobState");
         }
         if (ModConfig.legendGearEnableLegacyLegendGear) {
-            mixins.add("early.legendgear.MixinNetHandlerPlayServer_StarbeamRailJump");
+            mixins.add("early.legendgear.MixinEntityLivingBase_StarbeamJumpAccessor");
             mixins.add("early.legendgear.MixinBlockRedstoneComparator_LegacyPedestal");
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
