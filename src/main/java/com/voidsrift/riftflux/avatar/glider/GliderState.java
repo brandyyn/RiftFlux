@@ -7,6 +7,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -65,6 +66,15 @@ public final class GliderState {
         } else {
             HOVERING_PLAYERS.remove(name);
         }
+    }
+
+    public static void clearAll() {
+        GLIDING_PLAYERS.clear();
+        HOVERING_PLAYERS.clear();
+    }
+
+    public static Set<String> getGlidingPlayerNamesSnapshot() {
+        return new HashSet<String>(GLIDING_PLAYERS);
     }
 
     private static void syncGliding(boolean gliding, String name) {

@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import com.voidsrift.riftflux.chatbubbles.ChatBubbleColorManager;
 import com.voidsrift.riftflux.command.CommandRiftFlux;
 import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
+import com.voidsrift.riftflux.compat.waila.RiftFluxWailaCompat;
 import com.voidsrift.riftflux.combat.torohealth.ToroHealthContent;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.duckling.DucklingContent;
@@ -113,6 +114,9 @@ public class riftflux {
     @EventHandler
     public void init(FMLInitializationEvent event) {
         com.voidsrift.riftflux.net.RFNetwork.init();
+        if (Loader.isModLoaded("Waila")) {
+            RiftFluxWailaCompat.register();
+        }
         ToroHealthContent.init(event);
         BlessingContent.init();
         FurnitureContent.init();
@@ -145,7 +149,10 @@ public class riftflux {
         }
 
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.tweaks.ladder.FloatingLadderEvents());
-        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.avatar.glider.GliderEvents());
+        final com.voidsrift.riftflux.avatar.glider.GliderEvents gliderEvents =
+                new com.voidsrift.riftflux.avatar.glider.GliderEvents();
+        MinecraftForge.EVENT_BUS.register(gliderEvents);
+        FMLCommonHandler.instance().bus().register(gliderEvents);
 
         MinecraftForge.EVENT_BUS.register(new StickTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new PaintingTooltipHandler());

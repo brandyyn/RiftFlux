@@ -96,6 +96,11 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.extrautilities.MixinEnderConstructorRecipesHandler");
         }
 
+        if (loadedMods.contains("NotEnoughItems") && FMLLaunchHandler.side() == Side.CLIENT) {
+            mixins.add("late.nei.MixinShapedRecipeHandler_DartInfusionOutputCycle");
+            mixins.add("late.nei.MixinTemplateRecipeHandler_CycleDartResult");
+        }
+
         if (loadedMods.contains("modtweaker2") && loadedMods.contains("TConstruct")) {
             mixins.add("late.modtweaker.MixinSmelteryMeltingRecipe_SafeRenderer");
         }

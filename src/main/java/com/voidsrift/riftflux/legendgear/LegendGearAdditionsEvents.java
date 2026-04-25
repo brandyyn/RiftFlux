@@ -14,7 +14,9 @@ import net.nmccoy.legendgear.entity.EntitySpellEffect;
 public class LegendGearAdditionsEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void phoenixFeatherRevive(LivingDeathEvent event) {
-        if (!(event.entityLiving instanceof EntityPlayer) || event.entityLiving.worldObj.isRemote) {
+        if (!LegendGear2.CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED
+                || !(event.entityLiving instanceof EntityPlayer)
+                || event.entityLiving.worldObj.isRemote) {
             return;
         }
 

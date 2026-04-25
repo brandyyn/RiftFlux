@@ -20,8 +20,13 @@ public final class PickupStarHotbarHud {
     private static final String TAG_NEW = "riftflux_new";
     private static final ResourceLocation TEX =
             new ResourceLocation(Constants.MODID, "textures/gui/pickup_star.png"); // 16x16
+    private static boolean bootstrapped;
 
     public static void bootstrap() {
+        if (bootstrapped) {
+            return;
+        }
+        bootstrapped = true;
         MinecraftForge.EVENT_BUS.register(INSTANCE);
     }
 

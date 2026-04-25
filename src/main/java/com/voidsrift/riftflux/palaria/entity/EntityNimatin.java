@@ -13,7 +13,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackOnCollide;
-import net.minecraft.entity.ai.EntityAIFollowOwner;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAILeapAtTarget;
 import net.minecraft.entity.ai.EntityAILookIdle;
@@ -78,7 +77,7 @@ public class EntityNimatin extends EntityTameable implements IEntitySyncData {
         tasks.addTask(1, aiSit);
         tasks.addTask(2, new EntityAILeapAtTarget(this, 0.4F));
         tasks.addTask(3, new EntityAIAttackOnCollide(this, 0.4D, true));
-        tasks.addTask(4, new EntityAIFollowOwner(this, 0.4D, 10.0F, 4.0F));
+        tasks.addTask(4, new EntityAINimatinFollowOwner(this, 0.4D, 10.0F, 4.0F));
         tasks.addTask(5, new EntityAIMate(this, 0.4D));
         tasks.addTask(6, new EntityAIWander(this, 0.4D));
         tasks.addTask(7, new EntityAINimatinBeg(this, 8.0F));

@@ -19,6 +19,7 @@ import net.minecraftforge.common.MinecraftForge;
 public final class NimatinJumpHud extends Gui {
     private static final NimatinJumpHud INSTANCE = new NimatinJumpHud();
     private static final ResourceLocation GUI_ICONS = new ResourceLocation("textures/gui/icons.png");
+    private static boolean bootstrapped;
 
     private boolean jumpHeld;
     private int jumpPowerCounter = -1;
@@ -32,6 +33,10 @@ public final class NimatinJumpHud extends Gui {
     }
 
     public static void bootstrap() {
+        if (bootstrapped) {
+            return;
+        }
+        bootstrapped = true;
         MinecraftForge.EVENT_BUS.register(INSTANCE);
         FMLCommonHandler.instance().bus().register(INSTANCE);
     }

@@ -20,6 +20,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 import net.nmccoy.legendgear.item.LGItem;
+import net.nmccoy.legendgear.LegendGear2;
 
 import java.util.List;
 
@@ -36,16 +37,22 @@ extends LGItem {
     }
 
     public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advanced) {
+        if (!LegendGear2.CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED) {
+            return;
+        }
         list.add(EnumChatFormatting.GOLD + StatCollector.translateToLocal("tooltip.legendgear.phoenix_feather.revive"));
         list.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("tooltip.legendgear.phoenix_feather.consume"));
     }
 
     @Override
     public boolean hasEffect(ItemStack stack, int pass) {
-        return stack.getItemDamage() == 0;
+        return LegendGear2.CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED && stack.getItemDamage() == 0;
     }
 
     public boolean onLeftClickEntity(ItemStack stack, EntityPlayer player, Entity entity) {
+        if (!LegendGear2.CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED) {
+            return false;
+        }
         EntityLivingBase elb;
         if (entity instanceof EntityLivingBase && (elb = (EntityLivingBase)entity).isEntityUndead()) {
             elb.setFire(30);

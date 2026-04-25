@@ -237,85 +237,85 @@ public class PlayerEventHandler {
         }
         if (item == LegendGear2.emptyOrb) {
             if (meta == StarglassOrb.OrbTypes.empty.ordinal()) {
-                this.addUseLine(event, "Use: Base orb for crafting other orb types.");
+                this.addUseLine(event, "Base orb for crafting other orb types.");
             } else if (meta == StarglassOrb.OrbTypes.water.ordinal()) {
-                this.addUseLine(event, "Use: Right-click to throw. Effect: creates flowing water in its spell area.");
+                this.addUseLine(event, "Right-click to throw; creates flowing water in its spell area.");
             } else if (meta == StarglassOrb.OrbTypes.lava.ordinal()) {
-                this.addUseLine(event, "Use: Right-click to throw. Effect: creates flowing lava in its spell area.");
+                this.addUseLine(event, "Right-click to throw; creates flowing lava in its spell area.");
             } else if (meta == StarglassOrb.OrbTypes.blast.ordinal()) {
-                this.addUseLine(event, "Use: Right-click to throw. Effect: explosion spell that damages entities and breaks fragile/cobble blocks.");
+                this.addUseLine(event, "Right-click to throw; explosion spell that damages entities and breaks fragile/cobble blocks.");
             } else if (meta == StarglassOrb.OrbTypes.twinkle.ordinal()) {
-                this.addUseLine(event, "Use: Right-click to throw a Twinkle spell orb.");
+                this.addUseLine(event, "Right-click to throw a Twinkle spell orb.");
             } else if (meta == StarglassOrb.OrbTypes.fire.ordinal()) {
-                this.addUseLine(event, "Use: Right-click to throw a Fire spell orb.");
+                this.addUseLine(event, "Right-click to throw a Fire spell orb.");
             } else if (meta == StarglassOrb.OrbTypes.ice.ordinal()) {
-                this.addUseLine(event, "Use: Right-click to throw an Ice spell orb.");
+                this.addUseLine(event, "Right-click to throw an Ice spell orb.");
             } else if (meta == StarglassOrb.OrbTypes.zap.ordinal()) {
-                this.addUseLine(event, "Use: Right-click to throw a Lightning spell orb.");
+                this.addUseLine(event, "Right-click to throw a Lightning spell orb.");
             } else {
-                this.addUseLine(event, "Use: Throwable utility orb.");
+                this.addUseLine(event, "Throwable utility orb.");
             }
             return;
         }
         if (item == LegendGear2.tuningFork) {
-            this.addUseLine(event, "Use: Right-click a Ritual Block to cycle/tune its ritual state.");
-            this.addUseLine(event, "Use: Right-click elsewhere to play a tuning ping.");
+            this.addUseLine(event, "Right-click a Ritual Block to cycle/tune its ritual state.");
+            this.addUseLine(event, "Right-click elsewhere to play a tuning ping.");
             return;
         }
         if (item == LegendGear2.dimensionalCatalyst) {
-            this.addUseLine(event, "Use: Right-click compatible blocks to translocate them to nearby air.");
+            this.addUseLine(event, "Right-click compatible blocks to translocate them to nearby air.");
             this.addUseLine(event, "Special: Right-click Azurite Ore to convert it to stone and drop 3 azurite.");
             this.addUseLine(event, "Cost: Consumes 1 catalyst on successful transform.");
             return;
         }
         if (item == LegendGear2.reedPipes) {
-            this.addUseLine(event, "Use: Hold right-click to play; look up/down to change note.");
-            this.addUseLine(event, "Use: Sneak while playing for the alternate note scale.");
+            this.addUseLine(event, "Hold right-click to play; look up/down to change note.");
+            this.addUseLine(event, "Sneak while playing for the alternate note scale.");
             return;
         }
         if (item == LegendGear2.emeraldShard) {
             if (meta == 0) {
-                this.addUseLine(event, "Use: Right-click with at least " + LegendGear2.emeraldExchangeRate + " shards to combine into 1 emerald piece.");
+                this.addUseLine(event, "Right-click with at least " + LegendGear2.emeraldExchangeRate + " shards to combine into 1 emerald piece.");
             } else {
-                this.addUseLine(event, "Use: Right-click with at least " + LegendGear2.emeraldExchangeRate + " pieces to combine into 1 emerald.");
+                this.addUseLine(event, "Right-click with at least " + LegendGear2.emeraldExchangeRate + " pieces to combine into 1 emerald.");
             }
             return;
         }
         if (item == LegendGear2.azureFeather) {
-            this.addUseLine(event, "Use: Midair right-click while wearing Azure/Phoenix Mantle to start/extend glide and gain forward boost.");
+            this.addUseLine(event, "Midair right-click while wearing Azure/Phoenix Mantle to start/extend glide and gain forward boost.");
             this.addUseLine(event, "Cost: Consumes 1 feather and 12 mana.");
             return;
         }
         if (item == LegendGear2.spiritEmblem) {
             if (meta == 1) {
-                this.addUseLine(event, "Use: Hold right-click to channel Phoenix intervention.");
-                this.addUseLine(event, "Effect: Every 10 ticks spends 1 mana and can fully heal low HP, refill low hunger, or burn nearby undead in emergencies.");
+                this.addUseLine(event, "Hold right-click to channel Phoenix intervention.");
+                this.addUseLine(event, "Every 10 ticks spends 1 mana and can fully heal low HP, refill low hunger, or burn nearby undead in emergencies.");
             } else {
-                this.addUseLine(event, "Use: Blank emblem (crafting/ritual progression item).");
+                this.addUseLine(event, "Blank emblem (crafting/ritual progression item).");
             }
             return;
         }
         if (item == LegendGear2.fortuneCookie) {
-            this.addUseLine(event, "Use: Eat to receive a random fortune message.");
+            this.addUseLine(event, "Eat to receive a random fortune message.");
             return;
         }
         if (item == Item.getItemFromBlock((Block)LegendGear2.caltropsBlock)) {
-            this.addUseLine(event, "Use: Right-click to toss a caltrops item.");
-            this.addUseLine(event, "Effect: The dropped item auto-settles into a placed caltrops block when it lands.");
+            this.addUseLine(event, "Right-click to toss a caltrops item.");
+            this.addUseLine(event, "The dropped item auto-settles into a placed caltrops block when it lands.");
             return;
         }
         if (item == LegendGear2.magicRing) {
-            this.addUseLine(event, "Use: Equip in a Baubles ring slot.");
+            this.addUseLine(event, "Equip in a Baubles ring slot.");
             this.addMagicRingUseInfo(event, meta);
             return;
         }
         if (item == LegendGear2.charmPendant) {
-            this.addUseLine(event, "Use: Equip in the Baubles amulet slot.");
+            this.addUseLine(event, "Equip in the Baubles amulet slot.");
             this.addCharmPendantUseInfo(event, meta);
             return;
         }
         if (item instanceof SpellItem) {
-            this.addUseLine(event, "Use: Hold right-click to charge, then release to cast.");
+            this.addUseLine(event, "Hold right-click to charge, then release to cast.");
             this.addSpellUseInfo(event, (SpellItem)item, stack);
         }
     }
@@ -327,29 +327,29 @@ public class PlayerEventHandler {
         }
         switch (spell) {
             case Twinkle:
-                this.addUseLine(event, "Effect: Star-element spell damage; also transforms sand into Star Sand.");
+                this.addUseLine(event, "Star-element spell damage; also transforms sand into Star Sand.");
                 break;
             case Fire1:
-                this.addUseLine(event, "Effect: Fire-element spell damage that ignites targets.");
+                this.addUseLine(event, "Fire-element spell damage that ignites targets.");
                 break;
             case Ice1:
-                this.addUseLine(event, "Effect: Ice-element spell damage; freezes source water and can heavily slow on crit casts.");
+                this.addUseLine(event, "Ice-element spell damage; freezes source water and can heavily slow on crit casts.");
                 break;
             case Lightning1:
-                this.addUseLine(event, "Effect: Lightning-element spell damage with strong knockback on critical casts.");
+                this.addUseLine(event, "Lightning-element spell damage with strong knockback on critical casts.");
                 break;
             case ScytheWind:
-                this.addUseLine(event, "Effect: Wind spell that shears entities/plants and pulls dropped items inward.");
+                this.addUseLine(event, "Wind spell that shears entities/plants and pulls dropped items inward.");
                 break;
             case Rayfire:
-                this.addUseLine(event, "Effect: Radiant fire burst, extra effective against undead.");
+                this.addUseLine(event, "Radiant fire burst, extra effective against undead.");
                 break;
             case Exit:
-                this.addUseLine(event, "Effect: Teleports you to the first open surface space above your current position in the Overworld.");
+                this.addUseLine(event, "Teleports you to the first open surface space above your current position in the Overworld.");
                 this.addUseLine(event, "Fails if bedrock is above you. Non-critical casts also cause confusion.");
                 break;
             default:
-                this.addUseLine(event, "Effect: Casts this item's bound spell.");
+                this.addUseLine(event, "Casts this item's bound spell.");
                 break;
         }
     }
@@ -364,51 +364,54 @@ public class PlayerEventHandler {
         switch (type) {
             case SPEED_RING:
                 if (LegendGear2.CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR) {
-                    this.addUseLine(event, "Effect: Sprinting spends mana for +50% speed and enables original unlimited midair dash chaining.");
+                    this.addUseLine(event, "Grants +50% speed while sprinting and enables original unlimited midair dash chaining.");
                 } else if (LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS <= 0) {
-                    this.addUseLine(event, "Effect: Sprinting spends mana for +50% speed; midair dash chaining is disabled by config.");
+                    this.addUseLine(event, "Grants +50% speed while sprinting; midair dash chaining is disabled by config.");
                 } else {
-                    this.addUseLine(event, "Effect: Sprinting spends mana for +50% speed and allows up to " + LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS + " extra midair dash jumps.");
+                    this.addUseLine(event, "Grants +50% speed while sprinting and allows up to " + LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS + " extra midair dash jumps.");
+                }
+                if (LegendGear2.CONFIG_DASH_RING_AIR_JUMP_MANA_COST > 0.0F) {
+                    this.addUseLine(event, "Each midair dash jump costs " + LegendGear2.CONFIG_DASH_RING_AIR_JUMP_MANA_COST + " mana (" + (LegendGear2.CONFIG_DASH_RING_AIR_JUMP_MANA_COST / 2.0F) + " stars before ring discounts).");
                 }
                 break;
             case CONVECTION_RING:
-                this.addUseLine(event, "Effect: In lava, grants buoyant lift and reduced falling while consuming mana.");
+                this.addUseLine(event, "In lava, grants buoyant lift and reduced falling while consuming mana.");
                 break;
             case SOFT_FALL_RING:
-                this.addUseLine(event, "Effect: Caps effective fall distance to 3 blocks while consuming mana.");
+                this.addUseLine(event, "Caps effective fall distance to 3 blocks while consuming mana.");
                 break;
             case COLDFEET_RING:
-                this.addUseLine(event, "Effect: Freezes source water underfoot into thawing ice while consuming mana.");
+                this.addUseLine(event, "Freezes source water underfoot into thawing ice while consuming mana.");
                 break;
             case THIEF_RING:
-                this.addUseLine(event, "Effect: While sneaking, grants continuous invisibility while consuming mana.");
+                this.addUseLine(event, "While sneaking, grants continuous invisibility while consuming mana.");
                 break;
             case MAGE_RING:
-                this.addUseLine(event, "Effect: Reduces staff/tome/scroll mana cost to 66% (or 50% when also wearing Resonance Ring).");
+                this.addUseLine(event, "Reduces staff/tome/scroll mana cost to 66% (or 50% when also wearing Resonance Ring).");
                 break;
             case WARRIOR_RING:
-                this.addUseLine(event, "Effect: Adds +4 melee damage per hit while consuming mana.");
+                this.addUseLine(event, "Adds +4 melee damage per hit while consuming mana.");
                 break;
             case FORTUNE_RING:
-                this.addUseLine(event, "Effect: Increases emerald drop payout from kills (can double drops).");
+                this.addUseLine(event, "Increases emerald drop payout from kills (can double drops).");
                 break;
             case ARROWFIND_RING:
-                this.addUseLine(event, "Effect: Some emerald drops are converted into arrows.");
+                this.addUseLine(event, "Some emerald drops are converted into arrows.");
                 break;
             case AZUREFIND_RING:
-                this.addUseLine(event, "Effect: Some emerald drops are converted into azurite.");
+                this.addUseLine(event, "Some emerald drops are converted into azurite.");
                 break;
             case WISH_RING:
-                this.addUseLine(event, "Effect: In darkness under open sky, increases star-charge gain for falling stars.");
+                this.addUseLine(event, "In darkness under open sky, increases star-charge gain for falling stars.");
                 break;
             case RESONANCE_RING:
-                this.addUseLine(event, "Effect: Halves ring mana costs and boosts compatible ring conversion/proc chances.");
+                this.addUseLine(event, "Halves ring mana costs and boosts compatible ring conversion/proc chances.");
                 break;
             case PHOENIX_RING:
-                this.addUseLine(event, "Effect: Converts incoming fire damage into healing while consuming mana.");
+                this.addUseLine(event, "Converts incoming fire damage into healing while consuming mana.");
                 break;
             case PLAIN_RING:
-                this.addUseLine(event, "Effect: Base ring with no passive bonus.");
+                this.addUseLine(event, "Base ring with no passive bonus.");
                 break;
             default:
                 break;
@@ -417,23 +420,30 @@ public class PlayerEventHandler {
 
     private void addCharmPendantUseInfo(ItemTooltipEvent event, int meta) {
         if (meta == 0) {
-            this.addUseLine(event, "Effect: Phoenix Charm - consumed to revive you on death.");
+            this.addUseLine(event, "Phoenix Charm - consumed to revive you on death.");
         } else if (meta == 1) {
-            this.addUseLine(event, "Effect: Azure Mantle - enables/maintains glide mechanics and Azure Feather boosts.");
+            this.addUseLine(event, "Azure Mantle - enables/maintains glide mechanics and Azure Feather boosts.");
         } else if (meta == 2) {
-            this.addUseLine(event, "Effect: Phoenix Mantle - grants fire immunity and enables advanced glide behavior.");
+            this.addUseLine(event, "Phoenix Mantle - grants fire immunity and enables advanced glide behavior.");
         } else if (meta == 3) {
-            this.addUseLine(event, "Effect: Blast Charm - consumed to negate a lethal explosion hit.");
+            this.addUseLine(event, "Blast Charm - consumed to negate a lethal explosion hit.");
         } else if (meta == 4) {
-            this.addUseLine(event, "Effect: Feather Charm - consumed to negate lethal fall damage.");
+            this.addUseLine(event, "Feather Charm - consumed to negate lethal fall damage.");
         }
     }
 
     private void addUseLine(ItemTooltipEvent event, String line) {
-        String formatted = EnumChatFormatting.GRAY + line;
+        String formatted = EnumChatFormatting.GRAY + this.normalizeTooltipLine(line);
         if (!event.toolTip.contains(formatted)) {
             event.toolTip.add(formatted);
         }
+    }
+
+    private String normalizeTooltipLine(String line) {
+        if (line == null) {
+            return "";
+        }
+        return line.trim();
     }
 
     private String formatTooltipNumber(float value) {
@@ -564,15 +574,16 @@ public class PlayerEventHandler {
         if (lhe.entityLiving instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)lhe.entityLiving;
             if (Loader.isModLoaded((String)"Baubles")) {
-                ItemStack stack = BaublesApi.getBaubles((EntityPlayer)player).getStackInSlot(0);
-                if (stack != null && stack.getItem() == LegendGear2.charmPendant && stack.getItemDamage() == 3 && lhe.source.isExplosion() && lhe.ammount >= player.getHealth()) {
+                if (lhe.source.isExplosion()
+                        && lhe.ammount >= player.getHealth()
+                        && LegendGearBaublesHelper.consumeFirstMatching(player, LegendGear2.charmPendant, 3)) {
                     lhe.setCanceled(true);
-                    BaublesApi.getBaubles((EntityPlayer)player).setInventorySlotContents(0, null);
                     player.worldObj.playSoundAtEntity((Entity)player, "random.break", 1.0f, 1.0f);
                 }
-                if (stack != null && stack.getItem() == LegendGear2.charmPendant && stack.getItemDamage() == 4 && lhe.source == DamageSource.fall && lhe.ammount >= player.getHealth()) {
+                if (lhe.source == DamageSource.fall
+                        && lhe.ammount >= player.getHealth()
+                        && LegendGearBaublesHelper.consumeFirstMatching(player, LegendGear2.charmPendant, 4)) {
                     lhe.setCanceled(true);
-                    BaublesApi.getBaubles((EntityPlayer)player).setInventorySlotContents(0, null);
                     player.worldObj.playSoundAtEntity((Entity)player, "random.break", 1.0f, 1.0f);
                 }
             }
@@ -600,7 +611,6 @@ public class PlayerEventHandler {
     @SubscribeEvent
     public void phoenixRingAbsorb(LivingAttackEvent lhe) {
         if (lhe.entityLiving instanceof EntityPlayer && lhe.source.isFireDamage()) {
-            ItemStack neckStack;
             EntityPlayer player = (EntityPlayer)lhe.entityLiving;
             if (MagicRing.PlayerWears(player, MagicRing.RingType.PHOENIX_RING) && PlayerStarstatsExtension.availableMana(player) > 0.0f) {
                 if ((float)player.hurtResistantTime > (float)player.maxHurtResistantTime / 2.0f) {
@@ -614,7 +624,8 @@ public class PlayerEventHandler {
                 player.worldObj.playSoundAtEntity((Entity)player, "legendgear:heart", LegendGear2.CONFIG_PICKUP_SOUND_VOLUME, 1.0f);
                 lhe.setCanceled(true);
             }
-            if (Loader.isModLoaded((String)"Baubles") && (neckStack = BaublesApi.getBaubles((EntityPlayer)player).getStackInSlot(0)) != null && neckStack.getItem() == LegendGear2.charmPendant && neckStack.getItemDamage() == 2) {
+            if (Loader.isModLoaded((String)"Baubles")
+                    && LegendGearBaublesHelper.findFirstMatchingSlot(player, LegendGear2.charmPendant, 2) >= 0) {
                 lhe.setCanceled(true);
             }
         }
@@ -784,12 +795,11 @@ public class PlayerEventHandler {
     public void phoenixReviveTrigger(LivingDeathEvent lde) {
         if (lde.entityLiving instanceof EntityPlayer) {
             boolean intervened;
-            ItemStack stack;
             EntityPlayer player = (EntityPlayer)lde.entityLiving;
-            if (Loader.isModLoaded((String)"Baubles") && (stack = BaublesApi.getBaubles((EntityPlayer)player).getStackInSlot(0)) != null && stack.getItem() == LegendGear2.charmPendant && stack.getItemDamage() == 0) {
+            if (Loader.isModLoaded((String)"Baubles")
+                    && LegendGearBaublesHelper.consumeFirstMatching(player, LegendGear2.charmPendant, 0)) {
                 lde.setCanceled(true);
                 this.revivePlayer(player);
-                BaublesApi.getBaubles((EntityPlayer)player).setInventorySlotContents(0, null);
                 return;
             }
             if (StarSpirit.isCarryingEmblem(0, player) && (intervened = StarSpirit.attemptIntervention(0, player, 300))) {
@@ -855,7 +865,6 @@ public class PlayerEventHandler {
         if (lue.entityLiving instanceof EntityPlayer) {
             Vec3 realVelocity;
             double energy;
-            ItemStack neckStack;
             EntityPlayer player = (EntityPlayer)lue.entityLiving;
             PlayerStarstatsExtension pse = PlayerStarstatsExtension.get(player);
             if (pse.skylensTagCharge > 0) {
@@ -866,7 +875,10 @@ public class PlayerEventHandler {
             }
             boolean equipped = false;
             int damage = 0;
-            if (Loader.isModLoaded((String)"Baubles") && (neckStack = BaublesApi.getBaubles((EntityPlayer)player).getStackInSlot(0)) != null) {
+            ItemStack neckStack = Loader.isModLoaded((String)"Baubles")
+                    ? LegendGearBaublesHelper.findFirstMatchingStack(player, LegendGear2.charmPendant, 1, 2)
+                    : null;
+            if (neckStack != null) {
                 damage = neckStack.getItemDamage();
                 if (neckStack.getItem() == LegendGear2.charmPendant && (damage == 1 || damage == 2)) {
                     equipped = true;

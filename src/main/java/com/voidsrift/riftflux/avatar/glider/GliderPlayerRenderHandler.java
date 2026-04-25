@@ -1,16 +1,19 @@
 package com.voidsrift.riftflux.avatar.glider;
 
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import org.lwjgl.opengl.GL11;
 
-import java.util.IdentityHashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class GliderPlayerRenderHandler {
-    private final Map<EntityPlayer, float[]> limbSwingBackup = new IdentityHashMap<EntityPlayer, float[]>();
+    private final Map<EntityPlayer, float[]> limbSwingBackup =
+            Collections.synchronizedMap(new WeakHashMap<EntityPlayer, float[]>());
 
     @SubscribeEvent
     public void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
@@ -56,5 +59,18 @@ public class GliderPlayerRenderHandler {
         event.entityPlayer.prevLimbSwingAmount = backup[1];
         event.entityPlayer.limbSwingAmount = backup[2];
         GL11.glPopMatrix();
+    }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload event) {
+        if (event == null || event.world == null || !event.world.isRemote) {
+            return;
+        }
+        limbSwingBackup.clear();
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        limbSwingBackup.clear();
     }
 }

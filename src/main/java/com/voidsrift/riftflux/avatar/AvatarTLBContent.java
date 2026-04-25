@@ -73,6 +73,10 @@ public final class AvatarTLBContent {
     };
 
     private static boolean initialized;
+    private static boolean clientInitialized;
+    private static final GliderClientEvents GLIDER_CLIENT_EVENTS = new GliderClientEvents();
+    private static final GliderPlayerRenderHandler GLIDER_PLAYER_RENDER_HANDLER = new GliderPlayerRenderHandler();
+    private static final AppaClientEvents APPA_CLIENT_EVENTS = new AppaClientEvents();
 
     private AvatarTLBContent() {
     }
@@ -89,9 +93,10 @@ public final class AvatarTLBContent {
     }
 
     public static void initClient() {
-        if (FMLCommonHandler.instance().getSide() != Side.CLIENT) {
+        if (FMLCommonHandler.instance().getSide() != Side.CLIENT || clientInitialized) {
             return;
         }
+        clientInitialized = true;
 
         RenderingRegistry.registerEntityRenderingHandler(EntityGlider.class, new RenderGliderActive());
         RenderingRegistry.registerEntityRenderingHandler(EntityBison.class, new RenderBison(new ModelSkyBison(), 1.5f));
@@ -104,10 +109,10 @@ public final class AvatarTLBContent {
             }
         }
 
-        MinecraftForge.EVENT_BUS.register(new GliderClientEvents());
-        FMLCommonHandler.instance().bus().register(new GliderClientEvents());
-        MinecraftForge.EVENT_BUS.register(new GliderPlayerRenderHandler());
-        FMLCommonHandler.instance().bus().register(new AppaClientEvents());
+        MinecraftForge.EVENT_BUS.register(GLIDER_CLIENT_EVENTS);
+        FMLCommonHandler.instance().bus().register(GLIDER_CLIENT_EVENTS);
+        MinecraftForge.EVENT_BUS.register(GLIDER_PLAYER_RENDER_HANDLER);
+        FMLCommonHandler.instance().bus().register(APPA_CLIENT_EVENTS);
     }
 
     private static void registerItems() {

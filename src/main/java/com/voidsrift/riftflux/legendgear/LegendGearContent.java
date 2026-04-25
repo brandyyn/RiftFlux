@@ -104,6 +104,9 @@ public final class LegendGearContent {
         LegendGear2.CONFIG_ENABLE_LEGACY_LEGENDGEAR = ModConfig.legendGearEnableLegacyLegendGear;
         LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS = ModConfig.legendGearDashRingMaxAirJumps;
         LegendGear2.CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = ModConfig.legendGearDashRingUseOriginalBehavior;
+        LegendGear2.CONFIG_DASH_RING_AIR_JUMPS_REQUIRE_SPRINTING = ModConfig.legendGearDashRingAirJumpsRequireSprinting;
+        LegendGear2.CONFIG_DASH_RING_AIR_JUMP_MANA_COST = ModConfig.legendGearDashRingAirJumpManaCost;
+        LegendGear2.CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED = ModConfig.legendGearPhoenixFeatherReviveEnabled;
         LegendGear2.CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = ModConfig.legendGearSprinkleStardustRequireSneak;
         LegendGear2.CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = ModConfig.legendGearSpottingScopeConsumesMana;
         LegendGear2.CONFIG_MANA_REGEN_POTION_ID = ModConfig.legendGearManaRegenPotionId;

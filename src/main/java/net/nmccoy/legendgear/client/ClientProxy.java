@@ -75,6 +75,7 @@ extends CommonProxy {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPlacedStar.class, (TileEntitySpecialRenderer)new TileEntityPlacedStarRender());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityStarwell.class, (TileEntitySpecialRenderer)new TileEntityStarwellRender());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityRitual.class, (TileEntitySpecialRenderer)new TileEntityRitualRender());
+        DashRingClientHandler.bootstrap();
     }
 
     @Override

@@ -48,7 +48,7 @@ public class IceRodPlacementPreviewRenderer {
         }
 
         ItemIceRod iceRod = (ItemIceRod) activeStack.getItem();
-        int[] placePos = iceRod.findPlacementForPlayer(mc.theWorld, player, event.partialTicks);
+        int[] placePos = iceRod.findPlacementForPlayer(mc.theWorld, player);
         if (placePos == null) {
             return;
         }

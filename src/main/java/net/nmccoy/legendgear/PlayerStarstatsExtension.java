@@ -186,8 +186,8 @@ implements IExtendedEntityProperties, IPlayerSyncData {
         this.lastSkyWorld = data.getInteger("lastSkyWorld");
         this.applyLocalMana(data.getFloat("magicFatigue"));
         this.rechargeDelay = data.getFloat("rechargeDelay");
-        this.glideValue = data.getFloat("glideEnergy");
-        this.lastGlideCharge = this.glideValue;
+        this.applyLocalGlide(data.getFloat("glideEnergy"));
+        this.lastGlideCharge = this.getGlide();
         this.lastStarwellDrink = data.getLong("lastStarwellDrink");
         this.starwellCharge = data.getInteger("starwellCharge");
     }
@@ -208,17 +208,15 @@ implements IExtendedEntityProperties, IPlayerSyncData {
     }
 
     public void setGlide(float glide) {
-        float previous = this.glideValue;
+        float previous = this.getGlide();
         if (Float.compare(previous, glide) == 0) {
             return;
         }
         this.lastGlideCharge = previous;
-        if (this.player.worldObj.isRemote) {
-            this.glideValue = glide;
-            return;
+        this.applyLocalGlide(glide);
+        if (this.player.worldObj != null && !this.player.worldObj.isRemote) {
+            PlayerSyncHelper.sync(this.player, this);
         }
-        this.glideValue = glide;
-        PlayerSyncHelper.sync(this.player, this);
         if (this.getGlide() == 0.0f) {
             this.lastGlideCharge = 0.0f;
         } else {
@@ -240,8 +238,7 @@ implements IExtendedEntityProperties, IPlayerSyncData {
         if (this.manaWhole == intAmount && Float.compare(this.fractionalMana, fracAmount) == 0) {
             return;
         }
-        this.manaWhole = intAmount;
-        this.fractionalMana = fracAmount;
+        this.applyLocalMana(amount);
         if (this.player.worldObj != null && !this.player.worldObj.isRemote) {
             PlayerSyncHelper.sync(this.player, this);
         }
@@ -251,6 +248,10 @@ implements IExtendedEntityProperties, IPlayerSyncData {
         int intAmount = (int)Math.floor(amount);
         this.manaWhole = intAmount;
         this.fractionalMana = amount - (float)intAmount;
+    }
+
+    private void applyLocalGlide(float glide) {
+        this.glideValue = glide;
     }
 
     @Override

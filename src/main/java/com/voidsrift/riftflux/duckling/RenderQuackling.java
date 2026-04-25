@@ -98,15 +98,23 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
         GL11.glTranslatef(0.0F, 0.45F, -0.3375F);
         GL11.glRotatef(-45.0F, 0.0F, 1.0F, 0.0F);
         GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
-        this.applyEntityLight(quackling, partialTicks);
+        this.applyEntityLight(quackling, partialTicks, false);
         RenderManager.instance.itemRenderer.renderItem(quackling, rod, 0, IItemRenderer.ItemRenderType.EQUIPPED);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glPopMatrix();
     }
 
     private void applyEntityLight(EntityQuackling quackling, float partialTicks) {
+        this.applyEntityLight(quackling, partialTicks, true);
+    }
+
+    private void applyEntityLight(EntityQuackling quackling, float partialTicks, boolean applyHurtTint) {
         int brightness = quackling.getBrightnessForRender(partialTicks);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)(brightness & 65535), (float)(brightness >> 16));
+        if (applyHurtTint && (quackling.hurtTime > 0 || quackling.deathTime > 0)) {
+            GL11.glColor4f(1.0F, 0.35F, 0.35F, 1.0F);
+            return;
+        }
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
     }
 

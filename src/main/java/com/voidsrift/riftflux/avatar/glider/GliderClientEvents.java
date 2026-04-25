@@ -6,6 +6,7 @@ import com.voidsrift.riftflux.net.MsgGliderHover;
 import com.voidsrift.riftflux.net.RFNetwork;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -103,6 +104,26 @@ public class GliderClientEvents {
             lastHovering = hovering;
             lastGliding = shouldRenderGlider;
         }
+    }
+
+    @SubscribeEvent
+    public void onClientConnected(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        lastHovering = false;
+        lastGliding = false;
+        GliderState.clearAll();
+        ItemGlider.clearAllToggles();
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null && mc.thePlayer != null && mc.thePlayer.riddenByEntity instanceof EntityGlider) {
+            detachGlider(mc.thePlayer);
+        }
+        lastHovering = false;
+        lastGliding = false;
+        GliderState.clearAll();
+        ItemGlider.clearAllToggles();
     }
 
     private void ensureGlider(EntityPlayer player, ItemStack held) {

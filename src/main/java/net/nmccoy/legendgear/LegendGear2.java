@@ -179,6 +179,10 @@ public class LegendGear2 {
     public static boolean CONFIG_ENABLE_LEGACY_LEGENDGEAR = false;
     public static int CONFIG_DASH_RING_MAX_AIR_JUMPS = 2;
     public static boolean CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = false;
+    public static boolean CONFIG_DASH_RING_AIR_JUMPS_REQUIRE_SPRINTING = false;
+    public static float CONFIG_DASH_RING_AIR_JUMP_MANA_COST = 4.0f;
+    public static float CONFIG_DESCENT_RING_MANA_COST = 1.5f;
+    public static boolean CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED = true;
     public static boolean CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = false;
     public static boolean CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = true;
     public static int CONFIG_MANA_REGEN_POTION_ID = 24;
@@ -396,6 +400,9 @@ public class LegendGear2 {
         CONFIG_ENABLE_BAD_BOW = config.getBoolean("enableBadBow", "general", true, "If false, legendgear:badBow is not registered");
         CONFIG_DASH_RING_MAX_AIR_JUMPS = config.getInt("dashRingMaxAirJumps", "general", 2, 0, 8, "Maximum extra air jumps granted by dash ring behavior");
         CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = config.getBoolean("dashRingUseOriginalBehavior", "general", false, "If true, restores original unlimited dash ring mid-air behavior and ignores dashRingMaxAirJumps");
+        CONFIG_DASH_RING_AIR_JUMPS_REQUIRE_SPRINTING = config.getBoolean("dashRingAirJumpsRequireSprinting", "general", false, "If true, dash ring mid-air jumps only trigger while sprinting");
+        CONFIG_DASH_RING_AIR_JUMP_MANA_COST = config.getFloat("dashRingAirJumpManaCost", "general", 4.0f, 0.0f, 1024.0f, "Mana fatigue cost for each Dash Ring mid-air jump. 4.0 equals 2 full mana stars on the HUD");
+        CONFIG_DESCENT_RING_MANA_COST = config.getFloat("descentRingManaCost", "general", 1.5f, 0.0f, 1024.0f, "Mana cost per excess fall block prevented by the Descent Ring");
         CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = config.getBoolean("sprinkleStardustRequireSneak", "general", false, "If true, infused stardust requires sneaking to sprinkle");
         CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = config.getBoolean("spottingScopeConsumesMana", "general", true, "If false, spotting scope pings do not consume mana");
         CONFIG_MANA_REGEN_POTION_ID = config.getInt("manaRegenPotionId", "general", 24, 0, 255, "Potion ID reserved for the LegendGear mana regeneration effect");
@@ -418,8 +425,10 @@ public class LegendGear2 {
         CONFIG_PHOENIX_REVIVE_RESISTANCE_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixReviveResistancePotionIds", "phoenixReviveResistancePotionId", VANILLA_POTION_ID_RESISTANCE, "Potion IDs considered by phoenix revival effects for resistance. The first ID in the list is used."), VANILLA_POTION_ID_RESISTANCE);
         CONFIG_PHOENIX_REVIVE_REGENERATION_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixReviveRegenerationPotionIds", "phoenixReviveRegenerationPotionId", VANILLA_POTION_ID_REGENERATION, "Potion IDs considered by phoenix revival effects for regeneration. The first ID in the list is used."), VANILLA_POTION_ID_REGENERATION);
         CONFIG_PHOENIX_REVIVE_FIRE_RESISTANCE_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixReviveFireResistancePotionIds", "phoenixReviveFireResistancePotionId", VANILLA_POTION_ID_FIRE_RESISTANCE, "Potion IDs considered by phoenix revival effects for fire resistance. The first ID in the list is used."), VANILLA_POTION_ID_FIRE_RESISTANCE);
+        CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED = config.getBoolean("phoenixFeatherReviveEnabled", "general", true, "If true, Phoenix Feathers revive the player on death. If false, they behave as crafting materials again.");
         CONFIG_THIEF_RING_INVISIBILITY_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("thiefRingInvisibilityPotionIds", "thiefRingInvisibilityPotionId", VANILLA_POTION_ID_INVISIBILITY, "Potion IDs considered while the Thief Ring is active. The first ID in the list is used."), VANILLA_POTION_ID_INVISIBILITY);
         CONFIG_PHOENIX_EMBLEM_FIRE_RESISTANCE_POTION_ID = resolveConfiguredPotionIdList(getConfiguredPotionIdList("phoenixEmblemFireResistancePotionIds", "phoenixEmblemFireResistancePotionId", VANILLA_POTION_ID_FIRE_RESISTANCE, "Potion IDs considered by Phoenix Emblem interventions for fire resistance. The first ID in the list is used."), VANILLA_POTION_ID_FIRE_RESISTANCE);
+        MagicRing.FALL_RING_COST = CONFIG_DESCENT_RING_MANA_COST;
         EntityMagicBoomerang.BOOMERANG_DAMAGE = CONFIG_MAGIC_BOOMERANG_DAMAGE;
         if (config.hasChanged()) {
             config.save();
@@ -450,6 +459,9 @@ public class LegendGear2 {
             CONFIG_ENABLE_BAD_BOW = ModConfig.legendGearEnableBadBow;
             CONFIG_DASH_RING_MAX_AIR_JUMPS = ModConfig.legendGearDashRingMaxAirJumps;
             CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR = ModConfig.legendGearDashRingUseOriginalBehavior;
+            CONFIG_DASH_RING_AIR_JUMPS_REQUIRE_SPRINTING = ModConfig.legendGearDashRingAirJumpsRequireSprinting;
+            CONFIG_DASH_RING_AIR_JUMP_MANA_COST = ModConfig.legendGearDashRingAirJumpManaCost;
+            CONFIG_DESCENT_RING_MANA_COST = ModConfig.legendGearDescentRingManaCost;
             CONFIG_SPRINKLE_STARDUST_REQUIRE_SNEAK = ModConfig.legendGearSprinkleStardustRequireSneak;
             CONFIG_SPOTTING_SCOPE_CONSUMES_MANA = ModConfig.legendGearSpottingScopeConsumesMana;
             CONFIG_MANA_REGEN_POTION_ID = ModConfig.legendGearManaRegenPotionId;
@@ -468,6 +480,7 @@ public class LegendGear2 {
             CONFIG_PHOENIX_REVIVE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixReviveResistancePotionId;
             CONFIG_PHOENIX_REVIVE_REGENERATION_POTION_ID = ModConfig.legendGearPhoenixReviveRegenerationPotionId;
             CONFIG_PHOENIX_REVIVE_FIRE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixReviveFireResistancePotionId;
+            CONFIG_PHOENIX_FEATHER_REVIVE_ENABLED = ModConfig.legendGearPhoenixFeatherReviveEnabled;
             CONFIG_THIEF_RING_INVISIBILITY_POTION_ID = ModConfig.legendGearThiefRingInvisibilityPotionId;
             CONFIG_PHOENIX_EMBLEM_FIRE_RESISTANCE_POTION_ID = ModConfig.legendGearPhoenixEmblemFireResistancePotionId;
         }
@@ -476,6 +489,7 @@ public class LegendGear2 {
             config = new Configuration(event.getSuggestedConfigurationFile());
             LegendGear2.syncConfig();
         }
+        MagicRing.FALL_RING_COST = CONFIG_DESCENT_RING_MANA_COST;
         LegendGearPotions.init();
         EntityMagicBoomerang.BOOMERANG_DAMAGE = CONFIG_MAGIC_BOOMERANG_DAMAGE;
         snw = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);

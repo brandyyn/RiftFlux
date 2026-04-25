@@ -101,7 +101,7 @@ public class EntityCreeptile extends EntityMob implements IEntitySyncData {
             lastActiveTime = timeSinceIgnited;
             int state = getCreeptileState();
             if (state > 0 && timeSinceIgnited == 0) {
-                playSound("random.fuse", 1.0F, 0.5F);
+                playSound("game.tnt.primed", 1.0F, 0.5F);
             }
             timeSinceIgnited += state;
             if (timeSinceIgnited < 0) {

@@ -249,6 +249,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.directionalCrossedPlantRenderingByPlacement) {
                 mixins.add("early.MixinRenderBlocks_DirectionalCrossedPlants");
             }
+            mixins.add("early.MixinRenderBlocks_TorchAllFaces");
             if (ModConfig.enableJackOLanternHelmet) {
                 mixins.add("early.MixinGuiIngame_JackOLanternBlur");
             }
@@ -258,6 +259,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinWorld_BetaStyleCloudColor");
             if (hasClass("com.gtnewhorizons.angelica.glsm.AngelicaFogService")) {
                 mixins.add("early.angelica.MixinAngelicaFogService_BetaStyleFog");
+            }
+            if (ModConfig.saveWorldBeforeWindowClose) {
+                mixins.add("early.MixinMinecraft_SaveBeforeWindowClose");
+            }
+            if (ModConfig.asyncWorldSelection) {
+                mixins.add("early.MixinGuiSelectWorld_AsyncLoad");
             }
             if (ModConfig.enableIsometricPhotoMode) {
                 mixins.add("early.MixinEntityRenderer_IsometricPhotoMode");
@@ -363,6 +370,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             boolean hasBackhand = loadedCoreMods.contains("xonin.backhand.coremod.BackhandLoadingPlugin")
                     || hasBackhandClass();
             if (hasBackhand) {
+                mixins.add("early.backhand.MixinBackhandUtils_IceRodGliderMainhandOnly");
                 mixins.add("early.backhand.MixinGuiInventory_BackhandSlot");
                 mixins.add("early.backhand.MixinGuiInventoryBackpack_BackhandSlot");
                 mixins.add("early.backhand.MixinGuiSatchelsInventory_BackhandSlot");

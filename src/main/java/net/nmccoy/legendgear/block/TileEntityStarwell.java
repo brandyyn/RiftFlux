@@ -36,6 +36,7 @@ import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
+import net.nmccoy.legendgear.LegendGearBaublesHelper;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.PlayerStarstatsExtension;
 
@@ -183,7 +184,9 @@ extends TileEntity {
                 if (!entity.worldObj.isRemote && height < ceiling + 2.0f && height > ceiling - 7.0f) {
                     ItemStack neckslot;
                     pse.skylensTagCharge = 3;
-                    if (Loader.isModLoaded((String)"Baubles") && this.flightCharge > 0 && (neckslot = BaublesApi.getBaubles((EntityPlayer)entity).getStackInSlot(0)) != null && neckslot.getItem() == LegendGear2.charmPendant && (neckslot.getItemDamage() == 1 || neckslot.getItemDamage() == 2)) {
+                    if (Loader.isModLoaded((String)"Baubles")
+                            && this.flightCharge > 0
+                            && (neckslot = LegendGearBaublesHelper.findFirstMatchingStack((EntityPlayer) entity, LegendGear2.charmPendant, 1, 2)) != null) {
                         should_launch = true;
                     }
                 }
@@ -227,4 +230,3 @@ extends TileEntity {
         }
     }
 }
-

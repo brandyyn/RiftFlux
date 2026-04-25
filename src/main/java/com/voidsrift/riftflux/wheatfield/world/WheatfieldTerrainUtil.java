@@ -5,6 +5,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
 public final class WheatfieldTerrainUtil {
+    private static final float PREDOMINANT_WHEATFIELD_THRESHOLD = 0.6F;
+
     private WheatfieldTerrainUtil() {
     }
 
@@ -57,6 +59,25 @@ public final class WheatfieldTerrainUtil {
 
     public static boolean chunkHasWheatfield(World world, int chunkX, int chunkZ) {
         return chunkHasWheatfield(loadChunkBiomes(world, chunkX, chunkZ));
+    }
+
+    public static boolean chunkIsPredominantlyWheatfield(BiomeGenBase[] biomeArray) {
+        if (!isActive() || biomeArray == null || biomeArray.length == 0) {
+            return false;
+        }
+
+        int wheatfieldColumns = 0;
+        for (BiomeGenBase biome : biomeArray) {
+            if (isWheatfieldBiome(biome)) {
+                wheatfieldColumns++;
+            }
+        }
+
+        return wheatfieldColumns >= Math.max(1, Math.round(biomeArray.length * PREDOMINANT_WHEATFIELD_THRESHOLD));
+    }
+
+    public static boolean chunkIsPredominantlyWheatfield(World world, int chunkX, int chunkZ) {
+        return chunkIsPredominantlyWheatfield(loadChunkBiomes(world, chunkX, chunkZ));
     }
 
     public static BiomeGenBase[] loadChunkBiomes(World world, int chunkX, int chunkZ) {

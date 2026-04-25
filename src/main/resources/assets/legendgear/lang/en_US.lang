@@ -279,7 +279,11 @@ tooltip.legendgear.starbeam_rail=Grind at Star Speed!
 tile.blockSkybeam.name=Skybeam Block
 
 entity.throwableBomb.name=Bomb
+entity.legendgear.throwableBomb.name=Bomb
+entity.riftflux.throwableBomb.name=Bomb
 entity.bombExplosion.name=Bomb Blast
+entity.legendgear.bombExplosion.name=Bomb Blast
+entity.riftflux.bombExplosion.name=Bomb Blast
 entity.earthMedallion.name=Earth Medallion
 entity.earthMedallionQuake.name=Quake
 entity.windMedallion.name=Wind Medallion

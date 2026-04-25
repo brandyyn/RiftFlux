@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.legendgear;
 
+import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -19,8 +20,10 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.oredict.OreDictionary;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.legacy.BombFlowerGenerator;
+import net.nmccoy.legendgear.legacy.ClayJarUndergroundGenerator;
 import net.nmccoy.legendgear.legacy.CommonProxy;
 import net.nmccoy.legendgear.legacy.LegendGear;
 import net.nmccoy.legendgear.legacy.ShrubGenerator;
@@ -301,16 +304,39 @@ public final class LegendGearLegacyContent {
         LegendGear.starbeamRailConnectionRange = ModConfig.legendGearLegacyStarbeamRailConnectionRange;
         LegendGear.starbeamRailNoSlowdown = ModConfig.legendGearLegacyStarbeamRailNoSlowdown;
         LegendGear.starbeamRailNoFallDamage = ModConfig.legendGearLegacyStarbeamRailNoFallDamage;
+        LegendGear.starbeamRailConnectAcrossTypes = ModConfig.legendGearLegacyStarbeamRailConnectAcrossTypes;
         LegendGear.starbeamRailRightClickAnyDirection = ModConfig.legendGearLegacyStarbeamRailRightClickAnyDirection;
         LegendGear.infusedStarPiecesActAsStarbeamRails = ModConfig.legendGearInfusedStarPiecesActAsStarbeamRails;
         LegendGear.titanBandBlockBossPickup = ModConfig.legendGearLegacyTitanBandBlockBossPickup;
         LegendGear.titanBandPickupBlacklist = ModConfig.legendGearLegacyTitanBandPickupBlacklist == null
                 ? new String[0]
                 : ModConfig.legendGearLegacyTitanBandPickupBlacklist.clone();
+        LegendGear.titanBandKeepPassengerOnCarrierHurt = ModConfig.legendGearLegacyTitanBandKeepPassengerOnCarrierHurt;
+        LegendGear.titanBandDurability = ModConfig.legendGearLegacyTitanBandDurability;
+        LegendGear.headbandOfValorDamageBonusWithArmor = ModConfig.legendGearLegacyHeadbandOfValorDamageBonusWithArmor;
+        LegendGear.headbandOfValorHeadBaubleDamageBonus = ModConfig.legendGearLegacyHeadbandOfValorHeadBaubleDamageBonus;
+        LegendGear.headbandOfValorDurability = ModConfig.legendGearLegacyHeadbandOfValorDurability;
+        LegendGear.headbandOfValorBonusDamage = ModConfig.legendGearLegacyHeadbandOfValorBonusDamage;
         LegendGear.starbeamRailRightClickTravel = ModConfig.legendGearLegacyStarbeamRailRightClickTravel;
         LegendGear.maxBombBagCapacity = ModConfig.legendGearLegacyBombBagCapacity;
         LegendGear.maxQuiverCapacity = ModConfig.legendGearLegacyQuiverMaxCapacity;
         LegendGear.bombDamage = ModConfig.legendGearLegacyBombDamage;
+        LegendGear.bombFuseTime = ModConfig.legendGearLegacyBombFuseTimeTicks;
+        LegendGear.bombExplosionStrength = ModConfig.legendGearLegacyBombExplosionStrength;
+        LegendGear.bombFlowerPlaceAnywhere = ModConfig.legendGearLegacyBombFlowerPlaceAnywhere;
+        LegendGear.bombFlowerPlaceOnAnyBlockNearLava = ModConfig.legendGearLegacyBombFlowerPlaceOnAnyBlockNearLava;
+        LegendGear.bombFlowerPickupWithShears = ModConfig.legendGearLegacyBombFlowerPickupWithShears;
+        LegendGear.bombFlowerPickupWithSilkTouch = ModConfig.legendGearLegacyBombFlowerPickupWithSilkTouch;
+        LegendGear.bombFlowerMobTrigger = ModConfig.legendGearLegacyBombFlowerMobTrigger;
+        LegendGear.clayJarItemCapacity = ModConfig.legendGearLegacyClayJarItemCapacity;
+        LegendGear.clayJarSneakPickupEnabled = ModConfig.legendGearLegacyClayJarSneakPickupEnabled;
+        LegendGear.clayJarUndergroundGenEnabled = ModConfig.legendGearLegacyClayJarUndergroundGenEnabled;
+        LegendGear.clayJarUndergroundSpawnChance = ModConfig.legendGearLegacyClayJarUndergroundSpawnChance;
+        LegendGear.clayJarUndergroundMinY = ModConfig.legendGearLegacyClayJarUndergroundMinY;
+        LegendGear.clayJarUndergroundMaxY = ModConfig.legendGearLegacyClayJarUndergroundMaxY;
+        LegendGear.clayJarNaturalLootEntries = ModConfig.legendGearLegacyClayJarNaturalLootEntries == null
+                ? new String[0]
+                : ModConfig.legendGearLegacyClayJarNaturalLootEntries.clone();
         LegendGear.magicBoomerangDamage = 6;
         LegendGear.emeraldShardExchangeRate = 8;
         LegendGear.emeraldDropMinMult = 0.4D;
@@ -328,6 +354,7 @@ public final class LegendGearLegacyContent {
         LegendGear.fallenStarLifetime = 440;
         LegendGear.shrubDisabledBiomes = ModConfig.legendGearLegacyShrubDisabledBiomes;
         LegendGear.bombableBlocks = resolveLegacyBombableBlockIds(ModConfig.legendGearLegacyBombableBlocks);
+        LegendGear.bombableBlockOreIds = resolveLegacyBombableOreIds(ModConfig.legendGearLegacyBombableBlocks);
         LegendGear.quiverLeakBows = new int[0];
         LegendGear.alsoCountAsSwords = new int[0];
         LegendGear.extraHookshotBlocks = new int[0];
@@ -396,9 +423,9 @@ public final class LegendGearLegacyContent {
         LegendGear.blockGrindNode = registerBlock(new BlockGrindNode(0), ItemBlock.class, "starRail");
         LegendGear.blockSkybeam = registerBlock(new BlockSkybeam(0), ItemBlock.class, "blockSkybeam");
 
-        GameRegistry.registerTileEntity(TileEntityJar.class, "tileEntityJar");
-        GameRegistry.registerTileEntity(TileEntityPedestal.class, "tileEntityPedestal");
-        GameRegistry.registerTileEntity(TileEntitySkybeam.class, "tileEntitySkybeam");
+        GameRegistry.registerTileEntity(TileEntityJar.class, Constants.MODID + ":tileEntityJar");
+        GameRegistry.registerTileEntity(TileEntityPedestal.class, Constants.MODID + ":tileEntityPedestal");
+        GameRegistry.registerTileEntity(TileEntitySkybeam.class, Constants.MODID + ":tileEntitySkybeam");
 
         LegendGear.bombableBlocks = withAdditionalIds(
                 LegendGear.bombableBlocks,
@@ -657,7 +684,7 @@ public final class LegendGearLegacyContent {
         EntityRegistry.registerModEntity(EntityQuake.class, "earthMedallionQuake", id++, owner, 64, 10, true);
         EntityRegistry.registerModEntity(EntityWindMedallion.class, "windMedallion", id++, owner, 64, 10, true);
         EntityRegistry.registerModEntity(EntityArrowStorm.class, "windMedallionStorm", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityBomb.class, "throwableBomb", id++, owner, 64, 60, true);
+        EntityRegistry.registerModEntity(EntityBomb.class, "throwableBomb", id++, owner, 64, 1, true);
         EntityRegistry.registerModEntity(EntityBombBlast.class, "bombExplosion", id++, owner, 64, 10, true);
         EntityRegistry.registerModEntity(EntityFireMedallion.class, "fireMedallion", id++, owner, 64, 10, true);
         EntityRegistry.registerModEntity(EntityFireblast.class, "fireMedallionBlast", id++, owner, 64, 10, true);
@@ -674,6 +701,9 @@ public final class LegendGearLegacyContent {
         }
         if (LegendGear.allowBombs) {
             GameRegistry.registerWorldGenerator((IWorldGenerator) new BombFlowerGenerator(), 0);
+        }
+        if (LegendGear.jarBlock != null && LegendGear.clayJarUndergroundGenEnabled) {
+            GameRegistry.registerWorldGenerator((IWorldGenerator) new ClayJarUndergroundGenerator(), 0);
         }
     }
 
@@ -774,7 +804,55 @@ public final class LegendGearLegacyContent {
         return ids;
     }
 
+    private static int[] resolveLegacyBombableOreIds(String[] configuredEntries) {
+        Set<Integer> resolved = new LinkedHashSet<Integer>();
+        if (configuredEntries == null) {
+            return new int[0];
+        }
+
+        for (String entry : configuredEntries) {
+            if (entry == null) {
+                continue;
+            }
+
+            String trimmed = entry.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+
+            String[] tokens = trimmed.split("[,; ]+");
+            for (String token : tokens) {
+                int oreId = resolveLegacyBombableOreId(token);
+                if (oreId >= 0) {
+                    resolved.add(oreId);
+                }
+            }
+        }
+
+        int[] ids = new int[resolved.size()];
+        int index = 0;
+        for (Integer value : resolved) {
+            ids[index++] = value.intValue();
+        }
+        return ids;
+    }
+
     private static int resolveLegacyBombableBlockId(String rawToken) {
+        if (rawToken == null) {
+            return -1;
+        }
+
+        String token = rawToken.trim();
+        if (token.isEmpty() || token.regionMatches(true, 0, "ore:", 0, 4) || token.regionMatches(true, 0, "oredict:", 0, 8)) {
+            return -1;
+        }
+
+        String registryName = token.indexOf(':') >= 0 ? token : "minecraft:" + token;
+        Object rawBlock = Block.blockRegistry.getObject(registryName);
+        return rawBlock instanceof Block ? Block.getIdFromBlock((Block) rawBlock) : -1;
+    }
+
+    private static int resolveLegacyBombableOreId(String rawToken) {
         if (rawToken == null) {
             return -1;
         }
@@ -784,8 +862,18 @@ public final class LegendGearLegacyContent {
             return -1;
         }
 
-        String registryName = token.indexOf(':') >= 0 ? token : "minecraft:" + token;
-        Object rawBlock = Block.blockRegistry.getObject(registryName);
-        return rawBlock instanceof Block ? Block.getIdFromBlock((Block) rawBlock) : -1;
+        String oreName;
+        if (token.regionMatches(true, 0, "ore:", 0, 4)) {
+            oreName = token.substring(4).trim();
+        } else if (token.regionMatches(true, 0, "oredict:", 0, 8)) {
+            oreName = token.substring(8).trim();
+        } else {
+            return -1;
+        }
+
+        if (oreName.isEmpty() || OreDictionary.getOres(oreName).isEmpty()) {
+            return -1;
+        }
+        return OreDictionary.getOreID(oreName);
     }
 }

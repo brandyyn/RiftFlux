@@ -59,14 +59,7 @@ public final class vortexContent {
 
         // Client-only
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
-            FMLCommonHandler.instance().bus().register(new KeyEventHandler());
-            KeyEventHandler.registerKeyBindings();
-            com.voidsrift.riftflux.vortex.client.render.ModRenderers.init();
-            com.voidsrift.riftflux.vortex.event.GuiEventHandler guiEventHandler =
-                    new com.voidsrift.riftflux.vortex.event.GuiEventHandler();
-            MinecraftForge.EVENT_BUS.register(guiEventHandler);
-            FMLCommonHandler.instance().bus().register(guiEventHandler);
-            MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.vortex.event.RenderEventHandler());
+            initClient();
         }
     }
 

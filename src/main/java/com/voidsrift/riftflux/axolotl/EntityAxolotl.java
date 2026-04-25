@@ -3,6 +3,8 @@ package com.voidsrift.riftflux.axolotl;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
 import com.voidsrift.riftflux.net.sync.IEntitySyncData;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
@@ -37,7 +39,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-public class EntityAxolotl extends EntityTameable implements IEntitySyncData {
+public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IEntityAdditionalSpawnData {
     private static final int TOTAL_AIR_SUPPLY = 6000;
     private static final float AXOLOTL_WIDTH = 0.75F;
     private static final float AXOLOTL_HEIGHT = 0.42F + 0.0625F;
@@ -437,6 +439,28 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData {
         this.setPlayingDead(this.playingDeadTicks > 0);
     }
 
+    @Override
+    public void writeSpawnData(ByteBuf data) {
+        data.writeInt(this.packedState);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf data) {
+        this.packedState = data.readInt();
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("PackedState", this.packedState);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        if (tag.hasKey("PackedState")) {
+            this.packedState = tag.getInteger("PackedState");
+        }
+    }
+
     public AxolotlVariant getVariant() {
         return AxolotlVariant.byId(this.getPackedState() & VARIANT_MASK);
     }
@@ -480,21 +504,13 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData {
     }
 
     private void setPackedState(int state) {
-        if (this.packedState == state) {
+        if (this.getPackedState() == state) {
             return;
         }
         this.packedState = state;
-        EntitySyncHelper.sync(this);
-    }
-
-    @Override
-    public void rf$writeSyncData(NBTTagCompound tag) {
-        tag.setInteger("PackedState", this.packedState);
-    }
-
-    @Override
-    public void rf$readSyncData(NBTTagCompound tag) {
-        this.packedState = tag.getInteger("PackedState");
+        if (this.worldObj != null && !this.worldObj.isRemote) {
+            EntitySyncHelper.sync(this);
+        }
     }
 
     private void updateWaterSwimming() {

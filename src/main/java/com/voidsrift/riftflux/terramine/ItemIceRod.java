@@ -281,6 +281,10 @@ public class ItemIceRod extends Item {
         if (player == null || stack == null || !BackhandCompat.isAvailable()) {
             return false;
         }
+        ItemStack mainhand = BackhandCompat.getMainhandItem(player);
+        if (isIceRodOrGlider(mainhand) && mainhand.getItem() != stack.getItem()) {
+            return true;
+        }
         if (!BackhandCompat.isOffhandStack(player, stack)) {
             return false;
         }
@@ -319,9 +323,12 @@ public class ItemIceRod extends Item {
             return null;
         }
         for (int radius = 0; radius <= AIR_SEARCH_RADIUS; radius++) {
-            for (int dy = -radius; dy <= radius; dy++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    for (int dx = -radius; dx <= radius; dx++) {
+            int[] yOffsets = orderedOffsets(radius, look == null ? 0.0D : look.yCoord);
+            int[] zOffsets = orderedOffsets(radius, look == null ? 0.0D : look.zCoord);
+            int[] xOffsets = orderedOffsets(radius, look == null ? 0.0D : look.xCoord);
+            for (int dy : yOffsets) {
+                for (int dz : zOffsets) {
+                    for (int dx : xOffsets) {
                         int r = Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
                         if (r != radius) {
                             continue;
@@ -338,6 +345,26 @@ public class ItemIceRod extends Item {
         }
 
         return null;
+    }
+
+    private static int[] orderedOffsets(int radius, double direction) {
+        if (radius <= 0) {
+            return new int[] {0};
+        }
+        int[] offsets = new int[radius * 2 + 1];
+        offsets[0] = 0;
+        int index = 1;
+        boolean positiveFirst = direction >= 0.0D;
+        for (int step = 1; step <= radius; step++) {
+            if (positiveFirst) {
+                offsets[index++] = step;
+                offsets[index++] = -step;
+            } else {
+                offsets[index++] = -step;
+                offsets[index++] = step;
+            }
+        }
+        return offsets;
     }
 
     private static boolean canPlaceAt(World world, int x, int y, int z) {
@@ -388,7 +415,7 @@ public class ItemIceRod extends Item {
             return new AimContext(hit, look, eyeX, eyeY, eyeZ, interpX, interpY, interpZ);
         }
 
-        Vec3 look = player.getLookVec();
+        Vec3 look = getLookVector(player.rotationYaw, player.rotationPitch);
         if (look == null) {
             return null;
         }
@@ -396,7 +423,10 @@ public class ItemIceRod extends Item {
         double baseY = player.posY;
         double baseZ = player.posZ;
         double eyeY = baseY + player.getEyeHeight();
-        MovingObjectPosition hit = this.getMovingObjectPositionFromPlayer(world, player, false);
+        Vec3 start = Vec3.createVectorHelper(baseX, eyeY, baseZ);
+        double distance = getConfiguredSpawnDistance();
+        Vec3 end = start.addVector(look.xCoord * distance, look.yCoord * distance, look.zCoord * distance);
+        MovingObjectPosition hit = world.rayTraceBlocks(start, end, false);
         return new AimContext(hit, look, baseX, eyeY, baseZ, baseX, baseY, baseZ);
     }
 

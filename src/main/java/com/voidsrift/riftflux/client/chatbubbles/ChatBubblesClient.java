@@ -8,6 +8,7 @@ import com.voidsrift.riftflux.net.RFNetwork;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.entity.player.EntityPlayer;
@@ -130,6 +131,14 @@ public final class ChatBubblesClient {
         );
     }
 
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        clearTransientClientState();
+        serverName = "";
+        customChatParseLine = null;
+        worldIdentity = 0;
+    }
+
     static String scrubCodes(String string) {
         if (string == null) {
             return "";
@@ -148,11 +157,7 @@ public final class ChatBubblesClient {
         if (!serverName.equals(newServerName)) {
             serverName = newServerName;
             customChatParseLine = customParseLines.get(serverName);
-            ChatBubbleColorManager.clearClientColors();
-            advertisedConfiguredColor = false;
-            advertisedConfiguredTextColor = false;
-            lastAdvertisedConfiguredColor = Integer.MIN_VALUE;
-            lastAdvertisedConfiguredTextColor = Integer.MIN_VALUE;
+            clearTransientClientState();
         }
     }
 
@@ -160,11 +165,7 @@ public final class ChatBubblesClient {
         int newWorldIdentity = mc.theWorld == null ? 0 : System.identityHashCode(mc.theWorld);
         if (newWorldIdentity != worldIdentity) {
             worldIdentity = newWorldIdentity;
-            ChatBubbleColorManager.clearClientColors();
-            advertisedConfiguredColor = false;
-            advertisedConfiguredTextColor = false;
-            lastAdvertisedConfiguredColor = Integer.MIN_VALUE;
-            lastAdvertisedConfiguredTextColor = Integer.MIN_VALUE;
+            clearTransientClientState();
         }
     }
 
@@ -220,6 +221,15 @@ public final class ChatBubblesClient {
             }
         }
         return relevantMessages;
+    }
+
+    private void clearTransientClientState() {
+        messages.clear();
+        ChatBubbleColorManager.clearClientColors();
+        advertisedConfiguredColor = false;
+        advertisedConfiguredTextColor = false;
+        lastAdvertisedConfiguredColor = Integer.MIN_VALUE;
+        lastAdvertisedConfiguredTextColor = Integer.MIN_VALUE;
     }
 
     private void loadCustomParseLines() {

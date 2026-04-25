@@ -1,6 +1,7 @@
 package zairus.worldexplorer.archery.items;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.ConfigResolver;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,7 +53,10 @@ public final class DartEffectHelper {
             if (tag.hasKey(Dart.KEY_EFFECTID, 99)) {
                 int effectId = tag.getInteger(Dart.KEY_EFFECTID);
                 if (effectId > 0 && effectId != Potion.poison.id) {
-                    effects.add(normalizeEffect(new PotionEffect(effectId, getConfiguredDurationTicks(), 0)));
+                    PotionEffect effect = normalizeEffect(new PotionEffect(effectId, getConfiguredDurationTicks(), 0));
+                    if (isEffectAllowed(effect)) {
+                        effects.add(effect);
+                    }
                 }
             }
             return effects;
@@ -61,7 +65,10 @@ public final class DartEffectHelper {
         for (int i = 0; i < effectList.tagCount(); i++) {
             PotionEffect effect = PotionEffect.readCustomPotionEffectFromNBT(effectList.getCompoundTagAt(i));
             if (effect != null && effect.getPotionID() > 0) {
-                effects.add(normalizeEffect(effect));
+                PotionEffect normalized = normalizeEffect(effect);
+                if (isEffectAllowed(normalized)) {
+                    effects.add(normalized);
+                }
             }
         }
         return effects;
@@ -91,10 +98,14 @@ public final class DartEffectHelper {
             if (rawEffect == null || rawEffect.getPotionID() <= 0) {
                 continue;
             }
+            if (!isEffectAllowed(rawEffect)) {
+                continue;
+            }
 
             if (rawEffect.getPotionID() == Potion.poison.id) {
-                if (poisonLevel < MAX_POISON_LEVEL) {
-                    poisonLevel++;
+                int incomingPoisonLevel = clampPoisonLevel(rawEffect.getAmplifier() + 1);
+                if (incomingPoisonLevel > poisonLevel) {
+                    poisonLevel = incomingPoisonLevel;
                     changed = true;
                 }
                 continue;
@@ -163,7 +174,16 @@ public final class DartEffectHelper {
         target.addPotionEffect(new PotionEffect(Potion.poison.id, getConfiguredDurationTicks(), getPoisonLevel(dartStack) - 1));
         List<PotionEffect> extraEffects = getExtraEffects(dartStack);
         for (int i = 0; i < extraEffects.size(); i++) {
-            target.addPotionEffect(normalizeEffect(extraEffects.get(i)));
+            PotionEffect effect = normalizeEffect(extraEffects.get(i));
+            Potion potion = getPotion(effect.getPotionID());
+            if (potion == null) {
+                continue;
+            }
+            if (potion.isInstant()) {
+                potion.affectEntity(shooter instanceof EntityLivingBase ? (EntityLivingBase) shooter : null, target, effect.getAmplifier(), 1.0D);
+            } else {
+                target.addPotionEffect(effect);
+            }
         }
     }
 
@@ -202,7 +222,9 @@ public final class DartEffectHelper {
     }
 
     private static PotionEffect normalizeEffect(PotionEffect effect) {
-        return new PotionEffect(effect.getPotionID(), getConfiguredDurationTicks(), effect.getAmplifier(), effect.getIsAmbient());
+        Potion potion = getPotion(effect.getPotionID());
+        int duration = potion != null && potion.isInstant() ? 1 : getConfiguredDurationTicks();
+        return new PotionEffect(effect.getPotionID(), duration, clampAmplifier(effect.getAmplifier()), effect.getIsAmbient());
     }
 
     private static String getEffectDisplayName(PotionEffect effect) {
@@ -215,6 +237,82 @@ public final class DartEffectHelper {
 
     private static int getMaxExtraEffects() {
         return Math.max(0, ModConfig.riftExplorerDartMaxPotionModifiers);
+    }
+
+    private static boolean isEffectAllowed(PotionEffect effect) {
+        if (effect == null) {
+            return false;
+        }
+        Potion potion = getPotion(effect.getPotionID());
+        if (potion == null) {
+            return false;
+        }
+        String[] filter = ModConfig.riftExplorerDartPotionEffectFilter;
+        boolean whitelistMode = ModConfig.riftExplorerDartPotionEffectFilterWhitelistMode;
+        if (filter == null || filter.length == 0) {
+            return !whitelistMode;
+        }
+
+        boolean matched = false;
+        for (int i = 0; i < filter.length; i++) {
+            if (matchesConfiguredPotion(effect.getPotionID(), potion, filter[i])) {
+                matched = true;
+                break;
+            }
+        }
+        return whitelistMode ? matched : !matched;
+    }
+
+    private static boolean matchesConfiguredPotion(int potionId, Potion potion, String entry) {
+        if (entry == null) {
+            return false;
+        }
+        String trimmed = entry.trim();
+        if (trimmed.isEmpty()) {
+            return false;
+        }
+        if (trimmed.startsWith("id:")) {
+            return potionId == ConfigResolver.parseIntSafe(trimmed.substring(3).trim(), Integer.MIN_VALUE);
+        }
+        if (ConfigResolver.isInteger(trimmed)) {
+            return potionId == ConfigResolver.parseIntSafe(trimmed, Integer.MIN_VALUE);
+        }
+        if (trimmed.startsWith("name:")) {
+            trimmed = trimmed.substring(5).trim();
+        }
+
+        String normalizedEntry = normalizePotionToken(trimmed);
+        if (normalizedEntry.isEmpty()) {
+            return false;
+        }
+
+        if (normalizedEntry.equals(normalizePotionToken(potion.getName()))) {
+            return true;
+        }
+        return normalizedEntry.equals(normalizePotionToken(StatCollector.translateToLocal(potion.getName())));
+    }
+
+    private static String normalizePotionToken(String value) {
+        String normalized = ConfigResolver.normalizeToken(value);
+        if (normalized.startsWith("potion")) {
+            normalized = normalized.substring("potion".length());
+        }
+        return normalized;
+    }
+
+    private static Potion getPotion(int potionId) {
+        return potionId > 0 && potionId < Potion.potionTypes.length ? Potion.potionTypes[potionId] : null;
+    }
+
+    private static int clampAmplifier(int amplifier) {
+        if (amplifier < 0) {
+            return 0;
+        }
+        int levelCap = ModConfig.riftExplorerDartPotionLevelCap;
+        if (levelCap <= 0) {
+            return amplifier;
+        }
+        return Math.min(amplifier, levelCap - 1);
     }
 
     private static int getConfiguredDurationTicks() {

@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.terramine;
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
@@ -42,24 +43,18 @@ public class EyeOfCthulhuMusicHandler {
 
         Minecraft mc = Minecraft.getMinecraft();
         if (!ModConfig.enableTerraModule || !ModConfig.eyeOfCthulhuMusicEnabled) {
-            stopCurrent(mc);
-            stopAllGrowls(mc);
-            restoreBackgroundMusic(mc);
+            resetClientAudio(mc);
             return;
         }
         if (mc == null || mc.thePlayer == null || mc.theWorld == null || mc.getSoundHandler() == null) {
-            stopCurrent(mc);
-            stopAllGrowls(mc);
-            restoreBackgroundMusic(mc);
+            resetClientAudio(mc);
             return;
         }
         pruneGrowls();
 
         EntityEyeOfCthulhu eye = findBestEye(mc.theWorld, mc.thePlayer, mc);
         if (eye == null) {
-            stopCurrent(mc);
-            stopAllGrowls(mc);
-            restoreBackgroundMusic(mc);
+            resetClientAudio(mc);
             return;
         }
         suppressBackgroundMusic(mc);
@@ -81,6 +76,11 @@ public class EyeOfCthulhuMusicHandler {
         } else {
             activeSound.setTarget(eye);
         }
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        resetClientAudio(Minecraft.getMinecraft());
     }
 
     public static void playGrowl(EntityEyeOfCthulhu eye, float volume, float pitch) {
@@ -148,6 +148,12 @@ public class EyeOfCthulhuMusicHandler {
             mc.getSoundHandler().stopSound(activeSound);
         }
         activeSound = null;
+    }
+
+    private void resetClientAudio(Minecraft mc) {
+        stopCurrent(mc);
+        stopAllGrowls(mc);
+        restoreBackgroundMusic(mc);
     }
 
     private void suppressBackgroundMusic(Minecraft mc) {

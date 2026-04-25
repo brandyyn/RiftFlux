@@ -15,6 +15,8 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.EntityDragon;
+import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -134,7 +136,19 @@ public class CapturedEnderChestItem extends WEItem {
     }
 
     private static boolean isBoss(EntityLivingBase entity) {
-        return entity instanceof IBossDisplayData;
+        if (entity == null) {
+            return false;
+        }
+        if (entity instanceof IBossDisplayData || entity instanceof EntityDragon || entity instanceof EntityWither) {
+            return true;
+        }
+
+        String fullClassName = entity.getClass().getName().toLowerCase(Locale.ROOT);
+        String simpleClassName = entity.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+        return fullClassName.contains(".boss.")
+                || fullClassName.contains(".bosses.")
+                || simpleClassName.contains("boss")
+                || "entityslider".equals(simpleClassName);
     }
 
     private static boolean isCaptureBlacklisted(EntityLivingBase entity) {

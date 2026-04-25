@@ -105,9 +105,17 @@ public class ItemGlider extends Item {
         }
     }
 
+    public static void clearAllToggles() {
+        LAST_TOGGLE_TICK.clear();
+    }
+
     private static boolean shouldIgnoreOffhandActivation(ItemStack stack, EntityPlayer player) {
         if (!BackhandCompat.isAvailable() || stack == null || player == null) {
             return false;
+        }
+        ItemStack mainhand = BackhandCompat.getMainhandItem(player);
+        if (isIceRodOrGlider(mainhand) && mainhand.getItem() != stack.getItem()) {
+            return true;
         }
         if (!BackhandCompat.isOffhandStack(player, stack)) {
             return false;

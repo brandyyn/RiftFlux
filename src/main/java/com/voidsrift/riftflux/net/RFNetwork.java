@@ -98,5 +98,11 @@ public final class RFNetwork {
 
         // Starbeam rail jump notice (ID 24)
         CH.registerMessage(MsgStarbeamRailJump.Handler.class, MsgStarbeamRailJump.class, 24, Side.SERVER);
+
+        // Bomb carry air-use throw (ID 25)
+        CH.registerMessage(MsgBombCarryUse.Handler.class, MsgBombCarryUse.class, 25, Side.SERVER);
+
+        // Dash ring air jump (ID 26)
+        CH.registerMessage(MsgDashRingJump.Handler.class, MsgDashRingJump.class, 26, Side.SERVER);
     }
 }

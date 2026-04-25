@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.vortex.event;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 import java.util.Random;
@@ -45,8 +46,10 @@ public class EntityEventHandler {
     private static final float bandTrigger = 8.0F;
     private static final float bandSave = 1.0F;
     private static final String TAG_DROPPED_ON_BREAK = "rf_bp_dropped";
+    private static final String TAG_RUNE_LAST_SAVE_TICK = "rf_thanatos_last_save_tick";
+    private static final String TAG_RUNE_PROTECTED_UNTIL = "rf_thanatos_protected_until";
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onLivingHurt(LivingHurtEvent event) {
         if (!event.entity.worldObj.isRemote) {
             Entity target = event.entity;
@@ -55,6 +58,11 @@ public class EntityEventHandler {
 
             if (target instanceof EntityPlayer) {
                 EntityPlayer player = (EntityPlayer) target;
+                if (isRuneThanatosProtected(player)) {
+                    event.setCanceled(true);
+                    player.fallDistance = 0.0F;
+                    return;
+                }
                 float currentHealth = player.getHealth();
                 if (ItemHelper.hasBauble(player, ModItems.focusBand)
                         && currentHealth >= bandTrigger
@@ -69,9 +77,26 @@ public class EntityEventHandler {
     public void onLivingDeath(LivingDeathEvent event) {
         if (!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.entityLiving;
+            long worldTime = player.worldObj.getTotalWorldTime();
+            if (isRuneThanatosProtected(player)) {
+                event.setCanceled(true);
+                if (player.getHealth() <= 0.0F) {
+                    player.setHealth(1.0F);
+                }
+                return;
+            }
+            if (player.getEntityData().getLong(TAG_RUNE_LAST_SAVE_TICK) == worldTime) {
+                event.setCanceled(true);
+                if (player.getHealth() <= 0.0F) {
+                    player.setHealth(1.0F);
+                }
+                return;
+            }
             boolean consumed = player.inventory.consumeInventoryItem(ModItems.runeThanatos)
                     || ItemHelper.consumeBauble(player, ModItems.runeThanatos);
             if (consumed) {
+                player.getEntityData().setLong(TAG_RUNE_LAST_SAVE_TICK, worldTime);
+                player.getEntityData().setLong(TAG_RUNE_PROTECTED_UNTIL, worldTime + 60L);
                 if (player.worldObj.getWorldInfo().isHardcoreModeEnabled()) {
                     WorldHelper.setPlayerHCRevive(player, true);
                     ModPackets.instance.sendTo(
@@ -84,13 +109,19 @@ public class EntityEventHandler {
                 player.setHealth(Math.max(1.0F, player.getMaxHealth() * 0.25F));
                 player.extinguish();
                 player.fallDistance = 0.0F;
-                player.hurtResistantTime = 40;
+                player.hurtResistantTime = 60;
 
                 EntityDeathRune rune = new EntityDeathRune(player);
                 rune.setPosition(player.posX, player.posY + 1.6D, player.posZ);
                 player.worldObj.spawnEntityInWorld(rune);
             }
         }
+    }
+
+    private boolean isRuneThanatosProtected(EntityPlayer player) {
+        return player != null
+                && player.worldObj != null
+                && player.getEntityData().getLong(TAG_RUNE_PROTECTED_UNTIL) > player.worldObj.getTotalWorldTime();
     }
 
     @SubscribeEvent

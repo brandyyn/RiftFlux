@@ -32,6 +32,7 @@ public final class PickupStarClientTracker {
 
     // recent pickups queue (item+meta, wildcard for damageables)
     private static final Deque<PickupKey> queue = new ArrayDeque<PickupKey>();
+    private static boolean bootstrapped;
 
     private static final class PickupKey {
         final Item item; final int meta; final boolean wildcardMeta; int ttl;
@@ -66,6 +67,10 @@ public final class PickupStarClientTracker {
     }
 
     public static void bootstrap(){
+        if (bootstrapped) {
+            return;
+        }
+        bootstrapped = true;
         cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(new PickupStarClientTracker());
     }
 

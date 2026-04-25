@@ -45,6 +45,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ClientProxy extends CommonProxy {
+    private static boolean clientFeaturesInitialized;
 
     @Override
     public boolean isJumpKeyDown() {
@@ -134,6 +135,11 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void initClientFeatures() {
+        if (clientFeaturesInitialized) {
+            return;
+        }
+        clientFeaturesInitialized = true;
+
         // Register NEI handler tab icon
         com.voidsrift.riftflux.nei.GTNHNeiHandlerInfo.register();
 
@@ -158,6 +164,7 @@ public class ClientProxy extends CommonProxy {
             WorldTooltipClient.bootstrap();
         }
         CelestialFogEventClientState.bootstrap();
+        BombCarryClientHandler.bootstrap();
         // Stars (tag new items so the GUI mixin can draw)
         if (ModConfig.enableItemPickupStar) {
             PickupStarClientTracker.bootstrap();
@@ -198,6 +205,7 @@ public class ClientProxy extends CommonProxy {
             MinecraftForge.EVENT_BUS.register(new FogDistanceGradientRenderer());
         }
         MinecraftForge.EVENT_BUS.register(new LegendGearManaTooltipHandler());
+        MinecraftForge.EVENT_BUS.register(new MovementSpeedFovLimitHandler());
         MinecraftForge.EVENT_BUS.register(new UniversalDurabilityTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new RiftExplorerSlingshotAmmoTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodPlacementPreviewRenderer());

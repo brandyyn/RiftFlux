@@ -1,6 +1,10 @@
 package com.voidsrift.riftflux.duckling;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -27,10 +31,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-public class EntityDuck extends EntityAnimal implements IAnimatable {
-    private static final int VARIANT_WATCHER = 20;
-
+public class EntityDuck extends EntityAnimal implements IAnimatable, IEntitySyncData, IEntityAdditionalSpawnData {
     private final AnimationFactory animationFactory = new AnimationFactory(this);
+    private int variantId = DuckVariant.PEKIN.getId();
 
     public int eggLayTime;
 
@@ -52,7 +55,6 @@ public class EntityDuck extends EntityAnimal implements IAnimatable {
     @Override
     protected void entityInit() {
         super.entityInit();
-        this.dataWatcher.addObject(VARIANT_WATCHER, Byte.valueOf((byte)DuckVariant.PEKIN.getId()));
     }
 
     @Override
@@ -192,12 +194,41 @@ public class EntityDuck extends EntityAnimal implements IAnimatable {
         }
     }
 
+    @Override
+    public void writeSpawnData(ByteBuf data) {
+        data.writeByte(this.variantId);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf data) {
+        this.variantId = data.readUnsignedByte();
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("VariantId", this.variantId);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        if (tag.hasKey("VariantId")) {
+            this.variantId = tag.getInteger("VariantId");
+        }
+    }
+
     public DuckVariant getVariant() {
-        return DuckVariant.byId(this.dataWatcher.getWatchableObjectByte(VARIANT_WATCHER));
+        return DuckVariant.byId(this.variantId);
     }
 
     public void setVariant(DuckVariant variant) {
-        this.dataWatcher.updateObject(VARIANT_WATCHER, Byte.valueOf((byte)(variant == null ? DuckVariant.PEKIN.getId() : variant.getId())));
+        int nextVariantId = variant == null ? DuckVariant.PEKIN.getId() : variant.getId();
+        if (this.variantId == nextVariantId) {
+            return;
+        }
+        this.variantId = nextVariantId;
+        if (this.worldObj != null && !this.worldObj.isRemote) {
+            EntitySyncHelper.sync(this);
+        }
     }
 
     public DuckVariant getTextureVariant() {

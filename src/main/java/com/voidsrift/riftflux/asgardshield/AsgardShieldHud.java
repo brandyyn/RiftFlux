@@ -35,11 +35,16 @@ public final class AsgardShieldHud extends Gui {
     private static String vanguardAnimationPlayerKey;
     private static int vanguardAnimationDirection;
     private static boolean vanguardAnimationInitialized;
+    private static boolean bootstrapped;
 
     private AsgardShieldHud() {
     }
 
     public static void bootstrap() {
+        if (bootstrapped) {
+            return;
+        }
+        bootstrapped = true;
         MinecraftForge.EVENT_BUS.register(INSTANCE);
     }
 

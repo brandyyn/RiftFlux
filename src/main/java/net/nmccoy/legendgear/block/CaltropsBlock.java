@@ -129,8 +129,20 @@ extends Block {
         return false;
     }
 
+    private boolean hasSupportForCaltrops(World world, int x, int y, int z) {
+        Block support = world.getBlock(x, y, z);
+        if (support == null
+                || support.isAir((IBlockAccess) world, x, y, z)
+                || support.getMaterial().isLiquid()
+                || support.isReplaceable((IBlockAccess) world, x, y, z)) {
+            return false;
+        }
+        return World.doesBlockHaveSolidTopSurface((IBlockAccess) world, x, y, z)
+                || support.getCollisionBoundingBoxFromPool(world, x, y, z) != null;
+    }
+
     public boolean canBlockStay(World par1World, int par2, int par3, int par4) {
-        return World.doesBlockHaveSolidTopSurface((IBlockAccess)par1World, (int)par2, (int)(par3 - 1), (int)par4);
+        return this.hasSupportForCaltrops(par1World, par2, par3 - 1, par4);
     }
 
     public boolean canPlaceBlockAt(World par1World, int par2, int par3, int par4) {
@@ -185,6 +197,20 @@ extends Block {
         target.getEntityData().setLong(NBT_CALTROPS_COOLDOWN_UNTIL, world.getTotalWorldTime() + PERSISTENT_CALTROPS_COOLDOWN_TICKS);
     }
 
+    private void playTriggerSound(World world, int x, int y, int z) {
+        if (world == null || world.isRemote) {
+            return;
+        }
+        world.playSoundEffect(
+                (double)x + 0.5D,
+                (double)y + 0.5D,
+                (double)z + 0.5D,
+                "legendgear:caltropsland",
+                0.5F,
+                world.rand.nextFloat() * 0.4F + 0.9F
+        );
+    }
+
     public void onEntityCollidedWithBlock(World par1World, int par2, int par3, int par4, Entity par5Entity) {
         if (par1World == null || par1World.isRemote || !(par5Entity instanceof EntityLivingBase) || par5Entity.isSneaking()) {
             return;
@@ -197,6 +223,8 @@ extends Block {
         if (this.isOnPersistentTriggerCooldown(par1World, living)) {
             return;
         }
+
+        this.playTriggerSound(par1World, par2, par3, par4);
 
         float damage = this.getConfiguredDamage(living);
         if (damage <= 0.0f || !living.attackEntityFrom(this.caltropsDamage, damage)) {

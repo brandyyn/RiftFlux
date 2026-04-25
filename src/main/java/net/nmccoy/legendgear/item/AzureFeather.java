@@ -21,6 +21,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.nmccoy.legendgear.LegendGearBaublesHelper;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.PlayerStarstatsExtension;
 import net.nmccoy.legendgear.item.LGItem;
@@ -45,7 +46,7 @@ implements IMana {
         PlayerStarstatsExtension pse = PlayerStarstatsExtension.get(player);
         boolean used = false;
         if (Loader.isModLoaded((String)"Baubles")) {
-            ItemStack neckStack = BaublesApi.getBaubles((EntityPlayer)player).getStackInSlot(0);
+            ItemStack neckStack = LegendGearBaublesHelper.findFirstMatchingStack(player, LegendGear2.charmPendant, 1, 2);
             if (neckStack == null) {
                 return stack;
             }
@@ -79,4 +80,3 @@ implements IMana {
         return 12.0f;
     }
 }
-

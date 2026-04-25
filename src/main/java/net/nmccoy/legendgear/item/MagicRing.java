@@ -56,7 +56,10 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.MathHelper;
+import net.minecraftforge.common.ForgeHooks;
 import net.nmccoy.legendgear.LGUtil;
+import net.nmccoy.legendgear.LegendGearBaublesHelper;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.PlayerStarstatsExtension;
 import net.nmccoy.legendgear.item.ItemNucleus;
@@ -89,7 +92,8 @@ implements IBauble {
     private static final UUID ringSpeedBoostModifierUUID = UUID.fromString("9e93209c-4f07-4e26-a150-659bfc44feb1");
     private static final AttributeModifier ringSpeedBoostModifier = new AttributeModifier(ringSpeedBoostModifierUUID, "Sprinting ring speed boost", 0.5, 1).setSaved(false);
     private static final String DASH_AIR_JUMPS_KEY = "riftfluxDashAirJumps";
-    private static final String DASH_LAST_GROUNDED_KEY = "riftfluxDashLastGrounded";
+    private static final String DASH_WAS_JUMPING_KEY = "riftfluxDashWasJumping";
+    private static final String DASH_WAS_GROUNDED_KEY = "riftfluxDashWasGrounded";
     private static final String DASH_PREV_MOTION_Y_KEY = "riftfluxDashPrevMotionY";
 
     public MagicRing() {
@@ -100,17 +104,8 @@ implements IBauble {
     }
 
     public static boolean PlayerWears(EntityPlayer player, RingType type) {
-        if (Loader.isModLoaded((String)"Baubles")) {
-            ItemStack stack1 = BaublesApi.getBaubles((EntityPlayer)player).getStackInSlot(1);
-            ItemStack stack2 = BaublesApi.getBaubles((EntityPlayer)player).getStackInSlot(2);
-            if (stack1 != null && stack1.getItem() == LegendGear2.magicRing && stack1.getItemDamage() == type.ordinal()) {
-                return true;
-            }
-            if (stack2 != null && stack2.getItem() == LegendGear2.magicRing && stack2.getItemDamage() == type.ordinal()) {
-                return true;
-            }
-        }
-        return false;
+        return Loader.isModLoaded((String)"Baubles")
+                && LegendGearBaublesHelper.findFirstMatchingSlot(player, LegendGear2.magicRing, type.ordinal()) >= 0;
     }
 
     public void registerIcons(IIconRegister ireg) {
@@ -161,29 +156,28 @@ implements IBauble {
                     iattributeinstance.removeModifier(ringSpeedBoostModifier);
                 }
                 boolean physicallyGrounded = player.onGround || player.isOnLadder() || player.isInWater();
+                boolean wasGrounded = player.getEntityData().getBoolean(DASH_WAS_GROUNDED_KEY);
+                double prevMotionY = player.getEntityData().getDouble(DASH_PREV_MOTION_Y_KEY);
                 boolean useOriginalDashBehavior = LegendGear2.CONFIG_DASH_RING_USE_ORIGINAL_BEHAVIOR;
-                if (!useOriginalDashBehavior) {
-                    boolean wasGrounded = this.wasDashGrounded(player);
-                    if (physicallyGrounded) {
-                        this.setDashAirJumps(player, 0);
-                    } else if (!wasGrounded && this.getDashAirJumps(player) < LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS && this.getDashPrevMotionY(player) <= 0.0 && player.motionY > 0.2) {
-                        this.setDashAirJumps(player, this.getDashAirJumps(player) + 1);
-                    }
+                if (physicallyGrounded) {
+                    MagicRing.setDashAirJumps(player, 0);
                 }
-                if (player.isSprinting() && PlayerStarstatsExtension.get(player).getMana() < 20.0f) {
+                if (player.isSprinting() && PlayerStarstatsExtension.availableMana(player) > 0.0f) {
                     iattributeinstance.applyModifier(ringSpeedBoostModifier);
                     MagicRing.spendRingMana(player, SPRINT_RING_COST);
-                    if (useOriginalDashBehavior) {
-                        player.onGround = true;
-                    } else if (!physicallyGrounded && LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS > 0 && this.getDashAirJumps(player) < LegendGear2.CONFIG_DASH_RING_MAX_AIR_JUMPS) {
-                        player.onGround = true;
+                    if (!player.worldObj.isRemote
+                            && !physicallyGrounded
+                            && !wasGrounded
+                            && player.motionY > 0.0D
+                            && prevMotionY <= 0.0D) {
+                        player.fallDistance = 0.0F;
                     }
                 }
                 if (useOriginalDashBehavior) {
-                    this.setDashAirJumps(player, 0);
+                    MagicRing.setDashAirJumps(player, 0);
                 }
-                this.setDashGrounded(player, physicallyGrounded);
-                this.setDashPrevMotionY(player, player.motionY);
+                player.getEntityData().setBoolean(DASH_WAS_GROUNDED_KEY, physicallyGrounded);
+                player.getEntityData().setDouble(DASH_PREV_MOTION_Y_KEY, player.motionY);
             }
             if (type == RingType.SOFT_FALL_RING && player.fallDistance > 3.0f && PlayerStarstatsExtension.get(player).getMana() < 20.0f) {
                 float excess = player.fallDistance - 3.0f;
@@ -357,28 +351,62 @@ implements IBauble {
         return STARGLASS;
     }
 
-    private int getDashAirJumps(EntityPlayer player) {
+    public static int getDashAirJumps(EntityPlayer player) {
         return player.getEntityData().getInteger(DASH_AIR_JUMPS_KEY);
     }
 
-    private void setDashAirJumps(EntityPlayer player, int jumps) {
+    public static void setDashAirJumps(EntityPlayer player, int jumps) {
         player.getEntityData().setInteger(DASH_AIR_JUMPS_KEY, Math.max(0, jumps));
     }
 
-    private boolean wasDashGrounded(EntityPlayer player) {
-        return player.getEntityData().getBoolean(DASH_LAST_GROUNDED_KEY);
+    public static boolean wasDashJumpPressed(EntityPlayer player) {
+        return player.getEntityData().getBoolean(DASH_WAS_JUMPING_KEY);
     }
 
-    private void setDashGrounded(EntityPlayer player, boolean grounded) {
-        player.getEntityData().setBoolean(DASH_LAST_GROUNDED_KEY, grounded);
+    public static void setDashJumpPressed(EntityPlayer player, boolean jumping) {
+        player.getEntityData().setBoolean(DASH_WAS_JUMPING_KEY, jumping);
     }
 
-    private double getDashPrevMotionY(EntityPlayer player) {
-        return player.getEntityData().getDouble(DASH_PREV_MOTION_Y_KEY);
+    public static void performDashJump(EntityPlayer player) {
+        performDashJump(player, player.isSprinting());
     }
 
-    private void setDashPrevMotionY(EntityPlayer player, double motionY) {
-        player.getEntityData().setDouble(DASH_PREV_MOTION_Y_KEY, motionY);
+    public static void performDashJump(EntityPlayer player, boolean preserveSprintState) {
+        boolean wasSprinting = preserveSprintState || player.isSprinting();
+        double previousMotionX = player.motionX;
+        double previousMotionZ = player.motionZ;
+        double previousHorizontalSpeedSq = previousMotionX * previousMotionX + previousMotionZ * previousMotionZ;
+        player.motionY = 0.42D;
+        if (player.isPotionActive(Potion.jump)) {
+            player.motionY += (double)((player.getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F);
+        }
+        if (wasSprinting) {
+            float yawRadians = player.rotationYaw * 0.017453292F;
+            player.motionX -= MathHelper.sin(yawRadians) * 0.2F;
+            player.motionZ += MathHelper.cos(yawRadians) * 0.2F;
+            double currentHorizontalSpeedSq = player.motionX * player.motionX + player.motionZ * player.motionZ;
+            if (currentHorizontalSpeedSq > 0.0D && currentHorizontalSpeedSq < previousHorizontalSpeedSq) {
+                double scale = Math.sqrt(previousHorizontalSpeedSq / currentHorizontalSpeedSq);
+                player.motionX *= scale;
+                player.motionZ *= scale;
+            }
+            player.setSprinting(true);
+        } else if (previousHorizontalSpeedSq > 0.0D) {
+            double currentHorizontalSpeedSq = player.motionX * player.motionX + player.motionZ * player.motionZ;
+            if (currentHorizontalSpeedSq <= 0.0D) {
+                player.motionX = previousMotionX;
+                player.motionZ = previousMotionZ;
+            } else if (currentHorizontalSpeedSq < previousHorizontalSpeedSq) {
+                double scale = Math.sqrt(previousHorizontalSpeedSq / currentHorizontalSpeedSq);
+                player.motionX *= scale;
+                player.motionZ *= scale;
+            }
+        }
+        player.onGround = false;
+        player.isAirBorne = true;
+        player.fallDistance = 0.0F;
+        player.velocityChanged = true;
+        ForgeHooks.onLivingJump(player);
     }
 
     public static enum RingType {

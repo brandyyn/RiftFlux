@@ -26,6 +26,7 @@ public final class PickupNotifierHud {
 
     private static final PickupNotifierHud INSTANCE = new PickupNotifierHud();
     private static final List<Entry> entries = new ArrayList<Entry>();
+    private static boolean bootstrapped;
 
     private static final int ICON = 16, PAD = 2, TEXT_Y = 5, ROW = ICON + 2;
 
@@ -134,22 +135,34 @@ public final class PickupNotifierHud {
             // Move to top
             entries.remove(idx);
             entries.add(e);
+            enforceEntryCap(cap);
             return;
         }
 
-        if (entries.size() >= cap) {
-            for (int i = 1; i < entries.size(); i++) {
-                entries.get(i).ttl = 0;
-            }
-        }
+        enforceEntryCap(cap - 1);
 
         entries.add(new Entry(display.copy(), add, total, slide));
+        enforceEntryCap(cap);
         if (wasEmpty) firstDelayTicks = FIRST_DELAY_TICKS;
     }
 
     public static void bootstrap(){
+        if (bootstrapped) {
+            return;
+        }
+        bootstrapped = true;
         MinecraftForge.EVENT_BUS.register(INSTANCE);
         FMLCommonHandler.instance().bus().register(INSTANCE);
+    }
+
+    private static void enforceEntryCap(int cap) {
+        if (cap <= 0) {
+            entries.clear();
+            return;
+        }
+        while (entries.size() > cap) {
+            entries.remove(entries.size() > 1 ? 1 : 0);
+        }
     }
 
     @SubscribeEvent

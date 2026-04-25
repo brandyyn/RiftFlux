@@ -1,6 +1,10 @@
 package com.voidsrift.riftflux.duckling;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
+import com.voidsrift.riftflux.net.sync.IEntitySyncData;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.IMerchant;
@@ -31,10 +35,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimatable {
+public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimatable, IEntitySyncData, IEntityAdditionalSpawnData {
     private static final float ADULT_WIDTH = 0.7F;
     private static final float ADULT_HEIGHT = 1.45F;
-    private static final int FLAGS_WATCHER = 21;
     private static final int DRIPPED_FLAG = 1;
     private static final int ACTIVE_FISHING_FLAG = 4;
     private static final int FISHING_START_CHECK_MIN_TICKS = 600;
@@ -60,6 +63,7 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     private int fishingSessionTargetCatches;
     private int fishingSessionCatchesThisSession;
     private int fishingSessionLostTargetTicks;
+    private int ducklingFlags;
 
     public EntityQuackling(World world) {
         super(world);
@@ -84,7 +88,6 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     @Override
     protected void entityInit() {
         super.entityInit();
-        this.dataWatcher.addObject(FLAGS_WATCHER, Byte.valueOf((byte)0));
     }
 
     @Override
@@ -280,8 +283,30 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
         }
     }
 
+    @Override
+    public void writeSpawnData(ByteBuf data) {
+        data.writeByte(this.ducklingFlags);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf data) {
+        this.ducklingFlags = data.readUnsignedByte();
+    }
+
+    @Override
+    public void rf$writeSyncData(NBTTagCompound tag) {
+        tag.setInteger("DucklingFlags", this.ducklingFlags);
+    }
+
+    @Override
+    public void rf$readSyncData(NBTTagCompound tag) {
+        if (tag.hasKey("DucklingFlags")) {
+            this.ducklingFlags = tag.getInteger("DucklingFlags");
+        }
+    }
+
     public boolean isDripped() {
-        return (this.dataWatcher.getWatchableObjectByte(FLAGS_WATCHER) & DRIPPED_FLAG) != 0;
+        return (this.ducklingFlags & DRIPPED_FLAG) != 0;
     }
 
     public void setDripped(boolean dripped) {
@@ -289,7 +314,7 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     }
 
     public boolean isFishing() {
-        return (this.dataWatcher.getWatchableObjectByte(FLAGS_WATCHER) & ACTIVE_FISHING_FLAG) != 0;
+        return (this.ducklingFlags & ACTIVE_FISHING_FLAG) != 0;
     }
 
     public void setFishingActive(boolean fishing) {
@@ -439,7 +464,7 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     }
 
     private void setDucklingFlag(int flag, boolean enabled) {
-        int flags = this.dataWatcher.getWatchableObjectByte(FLAGS_WATCHER) & 255;
+        int flags = this.ducklingFlags & 255;
         int updated = flags;
         if (enabled) {
             updated |= flag;
@@ -447,7 +472,10 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
             updated &= ~flag;
         }
         if (updated != flags) {
-            this.dataWatcher.updateObject(FLAGS_WATCHER, Byte.valueOf((byte)updated));
+            this.ducklingFlags = updated;
+            if (this.worldObj != null && !this.worldObj.isRemote) {
+                EntitySyncHelper.sync(this);
+            }
         }
     }
 

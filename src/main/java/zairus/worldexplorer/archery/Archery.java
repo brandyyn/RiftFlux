@@ -1,6 +1,7 @@
 package zairus.worldexplorer.archery;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.riftexplorer.DartInfusionDisplayRecipe;
 import com.voidsrift.riftflux.riftexplorer.RecipeRiftExplorerDartInfusion;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -66,6 +67,7 @@ public class Archery implements IWEAddonMod {
         GameRegistry.addShapedRecipe(new ItemStack(WEArcheryItems.blowpipe), " h ", "scs", "scs", 'h', new ItemStack(WEArcheryItems.specialarrow, 1, 0), 's', Items.string, 'c', Items.reeds);
         GameRegistry.addShapedRecipe(new ItemStack(WEArcheryItems.dart, 6, 0), " n ", " h ", " f ", 'n', WorldExplorerItems.needle, 'h', new ItemStack(WEArcheryItems.specialarrow, 1, 0), 'f', Items.feather);
         GameRegistry.addRecipe(new RecipeRiftExplorerDartInfusion());
+        GameRegistry.addRecipe(new DartInfusionDisplayRecipe());
         GameRegistry.addShapedRecipe(new ItemStack(WEArcheryItems.longbow_handle), "stt", "tl ", "stt", 's', Items.string, 't', Items.stick, 'l', Items.leather);
         GameRegistry.addShapedRecipe(new ItemStack(WEArcheryItems.longbow_string), " ss", " ss", " ss", 's', Items.string);
         GameRegistry.addShapedRecipe(new ItemStack(WEArcheryItems.longbow), "hs", 'h', WEArcheryItems.longbow_handle, 's', WEArcheryItems.longbow_string);

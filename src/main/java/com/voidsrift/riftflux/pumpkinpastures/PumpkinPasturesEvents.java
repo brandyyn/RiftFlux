@@ -37,6 +37,9 @@ public class PumpkinPasturesEvents {
         if (!isPumpkinTool(held)) {
             return;
         }
+        if (held.getItem() == PumpkinPasturesContent.pumpkinPickaxe) {
+            return;
+        }
 
         Item blockItem = Item.getItemFromBlock(event.block);
         if (blockItem == null) {
