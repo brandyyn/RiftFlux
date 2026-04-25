@@ -23,6 +23,17 @@ public class ItemIceRod extends Item {
         this.setMaxDamage(Math.max(0, ModConfig.iceRodDurability));
         this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
         this.setTextureName("riftflux:ice_rod");
+        this.setFull3D();
+    }
+
+    @Override
+    public boolean isFull3D() {
+        return true;
+    }
+
+    @Override
+    public boolean shouldRotateAroundWhenRendering() {
+        return false;
     }
 
     @Override

@@ -8,7 +8,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
@@ -53,9 +53,10 @@ public class IceRodPlacementPreviewRenderer {
             return;
         }
 
-        double px = RenderManager.renderPosX;
-        double py = RenderManager.renderPosY;
-        double pz = RenderManager.renderPosZ;
+        Entity camera = mc.renderViewEntity == null ? player : mc.renderViewEntity;
+        double px = camera.lastTickPosX + (camera.posX - camera.lastTickPosX) * event.partialTicks;
+        double py = camera.lastTickPosY + (camera.posY - camera.lastTickPosY) * event.partialTicks;
+        double pz = camera.lastTickPosZ + (camera.posZ - camera.lastTickPosZ) * event.partialTicks;
 
         AxisAlignedBB box = AxisAlignedBB.getBoundingBox(
                 placePos[0],

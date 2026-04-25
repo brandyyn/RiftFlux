@@ -13,6 +13,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
@@ -36,6 +37,14 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
     @Override
     public ResourceLocation getTextureLocation(EntityQuackling quackling) {
         return this.quacklingModel.getTextureLocation(quackling);
+    }
+
+    @Override
+    public Color getRenderColor(EntityQuackling quackling, float partialTicks) {
+        if (quackling != null && (quackling.hurtTime > 0 || quackling.deathTime > 0)) {
+            return Color.ofRGBA(255, 150, 150, 255);
+        }
+        return Color.WHITE;
     }
 
     @Override

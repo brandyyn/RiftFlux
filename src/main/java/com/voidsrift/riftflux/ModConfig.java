@@ -737,6 +737,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean legendGearLegacyMysticShrubSuperPrizes;
     public static boolean legendGearLegacyQuiverAllowed;
     public static boolean legendGearLegacyHookshotAnyBlock;
+    public static int legendGearLegacyHookshotDurability;
     public static boolean legendGearLegacyAmuletsWorkFromInventory;
     public static boolean legendGearLegacyAmuletsUseBaublesSlot;
     public static boolean legendGearLegacyMedallionEffectsAffectPlayer;
@@ -3316,6 +3317,15 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legendgear",
                 true,
                 "If true, the legacy Hookshot can attach to any solid block instead of only wood plus the compatibility list."
+        );
+
+        legendGearLegacyHookshotDurability = config.getInt(
+                "legacyHookshotDurability",
+                "legendgear",
+                256,
+                0,
+                65535,
+                "Durability for the legacy Hookshot. Set to 0 for infinite durability."
         );
 
         legendGearLegacyAmuletsWorkFromInventory = config.getBoolean(

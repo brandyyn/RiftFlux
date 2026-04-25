@@ -60,7 +60,7 @@ public class EntityAINimatinBeg extends EntityAIBase {
         if (held == null) {
             return false;
         }
-        return (ModConfig.palariaNimatinTameable && !nimatin.isTamed() && PalariaMobDrops.matchesConfiguredItem(held, ModConfig.palariaNimatinTameItems))
+        return (ModConfig.palariaNimatinTameable && PalariaMobDrops.matchesConfiguredItem(held, ModConfig.palariaNimatinTameItems))
                 || held.getItem() instanceof ItemFood && ((ItemFood) held.getItem()).isWolfsFavoriteMeat();
     }
 }
