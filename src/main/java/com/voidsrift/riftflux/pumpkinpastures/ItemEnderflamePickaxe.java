@@ -7,11 +7,11 @@ import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
-public class ItemPumpkinPickaxe extends ItemPickaxe {
-    public ItemPumpkinPickaxe(ToolMaterial material) {
+public class ItemEnderflamePickaxe extends ItemPickaxe {
+    public ItemEnderflamePickaxe(ToolMaterial material) {
         super(material);
-        setUnlocalizedName("pumpkin_pickaxe");
-        setTextureName("riftflux:pumpkinpastures/pumpkin_pickaxe");
+        setUnlocalizedName("enderflame_pickaxe");
+        setTextureName("riftflux:pumpkinpastures/enderflame_pickaxe");
         setCreativeTab(CreativeTabs.tabTools);
         setMaxDamage(Math.max(0, ModConfig.pumpkinPasturesEnderflamePickaxeDurability));
     }

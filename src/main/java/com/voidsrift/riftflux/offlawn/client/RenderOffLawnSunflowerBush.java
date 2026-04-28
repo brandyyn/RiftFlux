@@ -1,9 +1,8 @@
 package com.voidsrift.riftflux.offlawn.client;
 
 import com.voidsrift.riftflux.ModConfig;
-import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
-import com.voidsrift.riftflux.mixin.accessor.angelica.WorldSliceAccessor;
 import com.voidsrift.riftflux.offlawn.OffLawnRenderIds;
+import com.voidsrift.riftflux.util.RFBlockAccessWorldResolver;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
 import net.minecraft.block.Block;
@@ -11,7 +10,6 @@ import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.ChunkCache;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -64,20 +62,7 @@ public class RenderOffLawnSunflowerBush implements ISimpleBlockRenderingHandler 
     }
 
     private static World resolveWorld(IBlockAccess access) {
-        if (access instanceof World) {
-            return (World) access;
-        }
-        if (access instanceof WorldSliceAccessor) {
-            return ((WorldSliceAccessor) access).riftflux$getWorld();
-        }
-        if (access instanceof ChunkCache) {
-            try {
-                return ((ChunkCacheAccessor) access).riftflux$getWorldObj();
-            } catch (Throwable ignored) {
-                return null;
-            }
-        }
-        return null;
+        return RFBlockAccessWorldResolver.resolve(access);
     }
 
     private static void renderFixedCross(Tessellator tessellator, int x, int y, int z, IIcon icon) {

@@ -3,7 +3,6 @@ package com.voidsrift.riftflux.duckling;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
@@ -13,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
@@ -50,23 +48,21 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
 
     @Override
     public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
-        int previousMatrixMode = DucklingRenderState.captureMatrixMode();
-        float previousBrightnessX = OpenGlHelper.lastBrightnessX;
-        float previousBrightnessY = OpenGlHelper.lastBrightnessY;
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        DucklingRenderState.Snapshot snapshot = DucklingRenderState.capture();
+        DucklingRenderState.pushRenderAttribs();
+        DucklingRenderState.pushRenderClientAttribs();
+        DucklingRenderState.pushRenderMatrices();
+        DucklingRenderState.prepareForEntityRender(entity, partialTicks);
         try {
             super.doRender(entity, x, y, z, yaw, partialTicks);
             if (entity instanceof EntityLiving) {
                 GeoLeashRenderer.renderLeash((EntityLiving) entity, x, y, z, partialTicks);
             }
         } finally {
-            GL11.glPopAttrib();
-            DucklingRenderState.restoreAfterRender(previousMatrixMode);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, previousBrightnessX, previousBrightnessY);
-            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            DucklingRenderState.popRenderMatrices();
+            DucklingRenderState.popRenderClientAttribs();
+            DucklingRenderState.popRenderAttribs();
+            DucklingRenderState.restoreAfterRender(snapshot);
         }
     }
 
@@ -97,15 +93,11 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
     }
 
     private void renderFishingRod(EntityQuackling quackling, GeoBone rodBone, ItemStack rod, float partialTicks) {
-        int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
-        float previousBrightnessX = OpenGlHelper.lastBrightnessX;
-        float previousBrightnessY = OpenGlHelper.lastBrightnessY;
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        GL11.glMatrixMode(GL11.GL_TEXTURE);
-        GL11.glPushMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
+        DucklingRenderState.Snapshot snapshot = DucklingRenderState.capture();
+        DucklingRenderState.pushRenderAttribs();
+        DucklingRenderState.pushRenderClientAttribs();
+        DucklingRenderState.pushRenderMatrices();
+        DucklingRenderState.prepareForRender();
         try {
             GeoBone[] path = this.getPathFromRoot(rodBone);
             for (int i = 0; i < path.length; i++) {
@@ -126,24 +118,15 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
             GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
             int brightness = quackling.getBrightnessForRender(partialTicks);
             DucklingRenderState.prepareTexturedLightmap((float)(brightness & 65535), (float)(brightness >> 16));
-            GL11.glEnable(GL11.GL_LIGHTING);
-            GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-            GL11.glDisable(GL11.GL_BLEND);
+            DucklingRenderState.prepareForRender();
             RenderHelper.enableStandardItemLighting();
             RenderManager.instance.itemRenderer.renderItem(quackling, rod, 0, IItemRenderer.ItemRenderType.EQUIPPED);
             RenderHelper.disableStandardItemLighting();
         } finally {
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            GL11.glPopMatrix();
-            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-            GL11.glMatrixMode(GL11.GL_TEXTURE);
-            GL11.glPopMatrix();
-            GL11.glPopAttrib();
-            DucklingRenderState.restoreAfterRender(previousMatrixMode);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, previousBrightnessX, previousBrightnessY);
-            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            DucklingRenderState.popRenderMatrices();
+            DucklingRenderState.popRenderClientAttribs();
+            DucklingRenderState.popRenderAttribs();
+            DucklingRenderState.restoreAfterRender(snapshot);
         }
     }
 

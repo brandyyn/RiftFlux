@@ -1,6 +1,6 @@
 package com.voidsrift.riftflux.duckling;
 
-import net.minecraft.client.renderer.OpenGlHelper;
+import net.geckominecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityHanging;
@@ -20,12 +20,11 @@ final class GeoLeashRenderer {
             return;
         }
 
-        int previousMatrixMode = DucklingRenderState.captureMatrixMode();
-        float previousBrightnessX = OpenGlHelper.lastBrightnessX;
-        float previousBrightnessY = OpenGlHelper.lastBrightnessY;
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        DucklingRenderState.Snapshot snapshot = DucklingRenderState.capture();
+        DucklingRenderState.pushRenderAttribs();
+        DucklingRenderState.pushRenderClientAttribs();
+        DucklingRenderState.pushRenderMatrices();
+        DucklingRenderState.prepareForRender();
 
         try {
             y -= (1.6D - (double) entity.height) * 0.5D;
@@ -73,8 +72,11 @@ final class GeoLeashRenderer {
             double deltaZ = (double) ((float) (holderZ - entityZ));
 
             GL11.glDisable(GL11.GL_TEXTURE_2D);
+            GlStateManager.disableTexture2D();
             GL11.glDisable(GL11.GL_LIGHTING);
+            GlStateManager.disableLighting();
             GL11.glDisable(GL11.GL_CULL_FACE);
+            GlStateManager.disableCull();
 
             tessellator.startDrawing(5);
             for (int i = 0; i <= 24; ++i) {
@@ -129,15 +131,16 @@ final class GeoLeashRenderer {
             tessellator.draw();
 
             GL11.glEnable(GL11.GL_LIGHTING);
+            GlStateManager.enableLighting();
             GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GlStateManager.enableTexture2D();
             GL11.glEnable(GL11.GL_CULL_FACE);
+            GlStateManager.enableCull();
         } finally {
-            GL11.glPopAttrib();
-            DucklingRenderState.restoreAfterRender(previousMatrixMode);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, previousBrightnessX, previousBrightnessY);
-            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            DucklingRenderState.popRenderMatrices();
+            DucklingRenderState.popRenderClientAttribs();
+            DucklingRenderState.popRenderAttribs();
+            DucklingRenderState.restoreAfterRender(snapshot);
         }
     }
 

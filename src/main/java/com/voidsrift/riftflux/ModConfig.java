@@ -46,6 +46,7 @@ public class ModConfig {
     public static boolean optimizeDragonAPIParticleRenderFastPaths;
     public static boolean optimizeChromatiCraftRenderEventFastPaths;
     public static boolean optimizeChromatiCraftCliffsChunkGeneration;
+    public static boolean disableChromatiCraftItemFabricator;
     public static boolean disableThermalDynamicsFacades;
     public static boolean fixChocolateQuestDivideByZero;
     public static boolean hideChocolateQuestGeneratingStructureOverlay;
@@ -72,6 +73,7 @@ public class ModConfig {
     public static float fistDamageAmount;
     public static boolean enableStickDamageBonus;
     public static float stickDamageBonus;
+    public static boolean enableThornsArmorTweaks;
     public static float vanillaArrowInaccuracy;
     public static float riftExplorerSpecialArrowInaccuracy;
     public static float riftExplorerDartInaccuracy;
@@ -361,6 +363,8 @@ public class ModConfig {
     public static int pumpkinPasturesEnderflamePickaxeDurability;
     public static int pumpkinPasturesEnderflameShaxDurability;
     public static float pumpkinPasturesEnderflameToolEfficiency;
+    public static boolean pumpkinPasturesEnderflamePickaxeAutoSmelt;
+    public static boolean pumpkinPasturesEnderflameShaxAutoSmelt;
     public static String[] pumpkinPasturesCorruptedSoulDropEntries;
     public static String[] pumpkinPasturesPumpkinSoulDropEntries;
     public static boolean pumpkinPasturesEnderflameStaffCastsSpell;
@@ -481,6 +485,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
 
     public static boolean enableInventoryPetsModule;
+    public static String[] inventoryPetsEnabledEntries;
     public static String[] inventoryPetsDungeonLootEntries;
     public static int inventoryPetsDungeonLootWeight;
     public static float inventoryPetsBananaDamage;
@@ -622,7 +627,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "riftflux:petCheetahVariant|0.05",
             "riftflux:petOcelot|0.05",
             "riftflux:petOcelotVariant|0.05",
-            "legendgear:charmPendant@4|0.15",
+            "riftflux:charmPendant@4|0.15",
             "riftflux:highlandspirit|0.15",
             "minecraft:beef*1-6|1.0",
             "minecraft:leather*1-6|1.0",
@@ -645,7 +650,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "riftflux:petCreeper|0.05",
             "riftflux:petCreeperVariant|0.05",
             "riftflux:creeptile_eye|0.05",
-            "legendgear:charmPendant@3|0.05",
+            "riftflux:charmPendant@3|0.05",
             "riftflux:as_shield_iron_gilded|0.05",
             "minecraft:gunpowder*1-12|1.0"
     };
@@ -662,8 +667,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     private static final String[] DEFAULT_DUCKLING_QUACKLING_TRADES = new String[]{
             "minecraft:emerald*1-6 -> minecraft:fish*1-6",
-            "minecraft:emerald*1-6 -> ghibli:duck_egg*1-6",
-            "minecraft:emerald*1-6 -> legendgear:reedPipes*1; chance=50",
+            "minecraft:emerald*1-6 -> riftflux:duck_egg*1-6",
+            "minecraft:emerald*1-6 -> riftflux:reedPipes*1; chance=50",
             "minecraft:emerald*1-6 -> riftflux:creeptile_eye*1; chance=1",
             "minecraft:emerald*1-6 -> riftflux:glider_yellow*1; chance=5",
             "minecraft:emerald*1-6 -> riftflux:poptart*1-6; chance=15",
@@ -674,13 +679,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "minecraft:emerald*1-6 -> riftflux:bright_sunflower*16-32; chance=20",
             "minecraft:emerald*1-6 -> riftflux:sunflower_bush*16-32; chance=20",
             "minecraft:emerald*1-6 -> riftflux:beanstalk*16-32; chance=20",
-            "minecraft:emerald*1-6 -> legendgear:blockBombFlower*1-3; chance=5",
+            "minecraft:emerald*1-6 -> riftflux:blockBombFlower*1-3; chance=5",
             "minecraft:emerald*1-6 -> riftflux:furniture_curtain_yellow*1-3; chance=7",
-            "minecraft:emerald*1-6 -> zelda:heartContainer*1; chance=2",
+            "minecraft:emerald*1-6 -> riftflux:heartContainer*1; chance=2",
             "minecraft:emerald*1-6 -> riftflux:petBanana*1; chance=2",
-            "minecraft:emerald*1-6 -> ghibli:soot_jar*1; chance=7",
-            "minecraft:emerald*1-6 -> worldexplorer:blowpipe*1; chance=25",
-            "minecraft:emerald*1-6 -> ghibli:star_candy*1; chance=25",
+            "minecraft:emerald*1-6 -> riftflux:soot_jar*1; chance=7",
+            "minecraft:emerald*1-6 -> riftflux:blowpipe*1; chance=25",
+            "minecraft:emerald*1-6 -> riftflux:star_candy*1; chance=25",
             "minecraft:emerald*1-6 -> riftflux:toolbelt*1; chance=7",
             "minecraft:emerald*1-6 -> riftflux:pet_pixie*1; chance=1"
     };
@@ -698,22 +703,22 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     private static final String[] DEFAULT_SOOT_SPRITE_HEALING_ITEMS = new String[]{
             "minecraft:coal@0",
             "minecraft:coal@1",
-            "ghibli:star_candy"
+            "riftflux:star_candy"
     };
 
     private static final String[] DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES = new String[]{
             "heartPickup*1|0.2",
             "emeraldShard*1|0.2",
             "minecraft:arrow*1|0.2",
-            "starCandy*1|0.01"
+            "riftflux:star_candy*1|0.01"
     };
 
     private static final String[] DEFAULT_LEGACY_MYSTIC_SHRUB_CHARGED_PRIZE_ENTRIES = new String[]{
             "minecraft:gold_nugget*1|20",
-            "heartPickup*3|20",
+            "riftflux:heartPickup*3|20",
             "minecraft:arrow*5|20",
-            "emeraldShard*1@1|20",
-            "itemBomb*3|20"
+            "riftflux:emeraldShard*1@1|20",
+            "riftflux:itemBomb*3|20"
     };
 
     // Axolotl module
@@ -766,6 +771,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int legendGearLegacyBombDamage;
     public static int legendGearLegacyBombFuseTimeTicks;
     public static float legendGearLegacyBombExplosionStrength;
+    public static boolean legendGearLegacyBombsIgniteExplosiveBlocks;
     public static boolean legendGearLegacyBombFlowerPlaceAnywhere;
     public static boolean legendGearLegacyBombFlowerPlaceOnAnyBlockNearLava;
     public static boolean legendGearLegacyBombFlowerPickupWithShears;
@@ -801,7 +807,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean legendGearLegacyHookshotAnyBlock;
     public static String[] legendGearLegacyHookshotBlocks;
     public static int legendGearLegacyHookshotDurability;
-    public static boolean legendGearLegacyAmuletsWorkFromInventory;
+    public static int legendGearLegacyAeroAmuletDurability;
+    public static int legendGearLegacyGeoAmuletDurability;
+    public static float legendGearLegacyGeoAmuletQuakeDamageMultiplier;
+    public static int legendGearLegacyPyroAmuletDurability;
     public static boolean legendGearLegacyAmuletsUseBaublesSlot;
     public static boolean legendGearLegacyMedallionEffectsAffectPlayer;
     public static boolean legendGearLegacyWhirlwindBootsDashSound;
@@ -1233,6 +1242,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, skips ChromatiCraft's Glowing Cliffs auxiliary generation and cave-indicator passes on chunks that do not actually contain any Glowing Cliffs biome cells. This does not change generated content in relevant chunks; it only avoids wasted work in unrelated chunks. Requires restart."
         );
 
+        disableChromatiCraftItemFabricator = config.getBoolean(
+                "DisableChromatiCraftItemFabricator",
+                "chromaticraft",
+                true,
+                "If true, prevents ChromatiCraft from registering the Item Fabricator casting recipe and its NEI recipe handler. Requires restart."
+        );
+
         disableThermalDynamicsFacades = config.getBoolean(
                 "DisableThermalDynamicsFacades",
                 "general",
@@ -1314,6 +1330,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "combat", "StickDamageBonus", 1.0D,
                 "Additional damage added to stick melee hits when EnableStickDamageBonus is true. (no bounds)"
         ).getDouble(1.0D);
+
+        enableThornsArmorTweaks = config.getBoolean(
+                "EnableThornsArmorTweaks",
+                "combat",
+                true,
+                "If true, Thorns can be applied to any armor at the enchanting table and does not consume extra armor durability when it triggers. Requires restart."
+        );
 
         vanillaArrowInaccuracy = config.getFloat(
                 "VanillaArrowInaccuracy",
@@ -3168,6 +3191,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Explosion strength used for legacy bomb blast radius, knockback, and bombable block reach."
         );
 
+        legendGearLegacyBombsIgniteExplosiveBlocks = config.getBoolean(
+                "legacyBombsIgniteExplosiveBlocks",
+                "legendgear",
+                true,
+                "If true, legacy bomb blasts ignite TNT and compatible explosive blocks in their blast radius. If false, explosive blocks are not triggered by legacy bomb blasts."
+        );
+
         legendGearLegacyBombFlowerPlaceAnywhere = config.getBoolean(
                 "legacyBombFlowerPlaceAnywhere",
                 "legendgear",
@@ -3277,7 +3307,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Independent normal legacy Mystic Shrub drop rolls.\n" +
                         "Syntax: item_or_alias[*count or *min-max][@meta]|chance\n" +
                         "Chance accepts 0.05 or 5 for 5%.\n" +
-                        "Examples: legendgear:heartPickup*1|20  or  minecraft:arrow*1-3|0.5."
+                        "Examples: riftflux:heartPickup*1|20  or  minecraft:arrow*1-3|0.5."
         );
 
         legendGearLegacyMysticShrubChargedPrizeEntries = config.getStringList(
@@ -3455,11 +3485,40 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Durability for the legacy Hookshot. Set to 0 for infinite durability."
         );
 
-        legendGearLegacyAmuletsWorkFromInventory = config.getBoolean(
-                "legacyAmuletsWorkFromInventory",
+        legendGearLegacyAeroAmuletDurability = config.getInt(
+                "legacyAeroAmuletDurability",
                 "legendgear",
-                true,
-                "If true, legacy amulets work passively from the main inventory instead of only while being actively used."
+                500,
+                0,
+                65535,
+                "Durability for the legacy Aero Amulet. Set to 0 for infinite durability."
+        );
+
+        legendGearLegacyGeoAmuletDurability = config.getInt(
+                "legacyGeoAmuletDurability",
+                "legendgear",
+                500,
+                0,
+                65535,
+                "Durability for the legacy Geo Amulet. Set to 0 for infinite durability."
+        );
+
+        legendGearLegacyGeoAmuletQuakeDamageMultiplier = config.getFloat(
+                "legacyGeoAmuletQuakeDamageMultiplier",
+                "legendgear",
+                1.2F,
+                0.0F,
+                1024.0F,
+                "Multiplier applied to the fall damage the legacy Geo Amulet prevented when calculating quake damage. Examples: 0.5 halves quake damage, 2.0 doubles it."
+        );
+
+        legendGearLegacyPyroAmuletDurability = config.getInt(
+                "legacyPyroAmuletDurability",
+                "legendgear",
+                500,
+                0,
+                65535,
+                "Durability for the legacy Pyro Amulet. Set to 0 for infinite durability."
         );
 
         legendGearLegacyAmuletsUseBaublesSlot = config.getBoolean(
@@ -3730,7 +3789,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "enableBadBow",
                 "legendgear",
                 true,
-                "If false, disables registration and recipes for legendgear:badBow."
+                "If false, disables registration and recipes for riftflux:badBow."
         );
 
         legendGearDashRingMaxAirJumps = config.getInt(
@@ -5250,6 +5309,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 1000.0F,
                 "Mining speed (efficiency) for Enderflame tools. Diamond is 8.0, so 10.64 is ~33% faster."
         );
+        pumpkinPasturesEnderflamePickaxeAutoSmelt = config.getBoolean(
+                "EnderflamePickaxeAutoSmelt",
+                "pumpkinpastures",
+                true,
+                "If true, Enderflame Pickaxe smelts harvested drops after fortune is applied."
+        );
+        pumpkinPasturesEnderflameShaxAutoSmelt = config.getBoolean(
+                "EnderflameShaxAutoSmelt",
+                "pumpkinpastures",
+                true,
+                "If true, Enderflame Shax smelts harvested drops after fortune is applied."
+        );
         pumpkinPasturesCorruptedSoulDropEntries = config.getStringList(
                 "CorruptedSoulDropEntries",
                 "pumpkinpastures",
@@ -5764,12 +5835,21 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Master switch for integrated Inventory Pets content."
         );
 
+        inventoryPetsEnabledEntries = config.getStringList(
+                "EnabledPets",
+                "inventorypets",
+                DEFAULT_INVENTORY_PET_DUNGEON_LOOT,
+                "Inventory Pets that will register in the game.\n" +
+                        "Remove names from this list to stop those pets from registering at all.\n" +
+                        "Valid names: " + INVENTORY_PET_DUNGEON_LOOT_COMMENT
+        );
+
         inventoryPetsDungeonLootEntries = config.getStringList(
                 "DungeonLootPets",
                 "inventorypets",
                 DEFAULT_INVENTORY_PET_DUNGEON_LOOT,
                 "Inventory Pets that may appear in dungeon chests.\n" +
-                        "Remove names from this list to stop those pets from spawning.\n" +
+                        "Remove names from this list to stop those pets from spawning in dungeon loot.\n" +
                         "Valid names: " + INVENTORY_PET_DUNGEON_LOOT_COMMENT
         );
 
@@ -5848,7 +5928,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         ghibliStarCandyRecipeEnabled = config.getBoolean(
                 "EnableStarCandyRecipe",
                 "ghibli",
-                true,
+                false,
                 "If true, the Star Candy crafting recipe is registered."
         );
 
@@ -5978,7 +6058,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "QuacklingTrades",
                 "ghibli",
                 DEFAULT_DUCKLING_QUACKLING_TRADES,
-                "Trades Quacklings can offer. Leave this list empty to disable Quackling trading. Syntax: buy_item[*count or *min-max][@meta][ + second_buy_item[*count or *min-max][@meta]] -> sell_item[*count or *min-max][@meta][; chance=percent]. Examples: minecraft:emerald*1-4 -> minecraft:fish*1-4, minecraft:emerald*1 + minecraft:fish*2 -> ghibli:duck_egg*1, or minecraft:emerald*4 -> ghibli:duck_egg*1; chance=35. Meta defaults to 0; use 32767 for wildcard input meta. If no trades pass their chance rolls, one valid trade is still guaranteed."
+                "Trades Quacklings can offer. Leave this list empty to disable Quackling trading. Syntax: buy_item[*count or *min-max][@meta][ + second_buy_item[*count or *min-max][@meta]] -> sell_item[*count or *min-max][@meta][; chance=percent]. Examples: minecraft:emerald*1-4 -> minecraft:fish*1-4, minecraft:emerald*1 + minecraft:fish*2 -> riftflux:duck_egg*1, or minecraft:emerald*4 -> riftflux:duck_egg*1; chance=35. Meta defaults to 0; use 32767 for wildcard input meta. If no trades pass their chance rolls, one valid trade is still guaranteed."
         );
 
         ducklingQuacklingRefreshTradesDaily = config.getBoolean(

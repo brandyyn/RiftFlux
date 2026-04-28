@@ -16,11 +16,11 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-public class ItemPumpkinSword extends ItemSword {
-    public ItemPumpkinSword(ToolMaterial material) {
+public class ItemEnderflameSword extends ItemSword {
+    public ItemEnderflameSword(ToolMaterial material) {
         super(material);
-        setUnlocalizedName("pumpkin_sword");
-        setTextureName("riftflux:pumpkinpastures/pumpkin_sword");
+        setUnlocalizedName("enderflame_sword");
+        setTextureName("riftflux:pumpkinpastures/enderflame_sword");
         setCreativeTab(CreativeTabs.tabCombat);
         setMaxDamage(Math.max(0, ModConfig.pumpkinPasturesEnderflameSwordDurability));
     }

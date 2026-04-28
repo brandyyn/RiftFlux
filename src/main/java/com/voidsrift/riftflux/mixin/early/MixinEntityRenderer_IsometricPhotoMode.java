@@ -42,28 +42,25 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
     @Shadow
     public abstract void setupOverlayRendering();
 
-    @Inject(
+    @Redirect(
             method = "setupCameraTransform(FI)V",
             at = @At(
                     value = "INVOKE",
                     target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V",
-                    shift = At.Shift.AFTER,
                     remap = false
             )
     )
-    private void riftflux$injectOrthoAfterPerspective(float partialTicks, int pass, CallbackInfo ci) {
+    private void riftflux$useOrthographicProjection(float fov, float aspect, float zNear, float zFar, float partialTicks, int pass) {
         IsometricPhotoModeController controller = IsometricPhotoModeController.instance();
-
-        if (!controller.isActive()) return;
-
-        double aspect = (float)this.mc.displayWidth / (float)this.mc.displayHeight;
-        double zFar = this.farPlaneDistance * 2F;
+        if (!controller.isActive()) {
+            Project.gluPerspective(fov, aspect, zNear, zFar);
+            return;
+        }
 
         double halfHeight = controller.getOrthographicViewHeight(partialTicks) * 0.5D;
-        double halfWidth = halfHeight * aspect;
-        double depthRange = Math.max(zFar * 4.0D, halfHeight * 16.0D);
+        double halfWidth = halfHeight * (double) aspect;
+        double depthRange = Math.max((double) zFar * 4.0D, halfHeight * 16.0D);
         depthRange = Math.max(depthRange, 4096.0D);
-        GL11.glLoadIdentity();
         GL11.glOrtho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depthRange, depthRange);
     }
 

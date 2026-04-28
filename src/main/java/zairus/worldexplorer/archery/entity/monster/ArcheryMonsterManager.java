@@ -12,7 +12,7 @@ public class ArcheryMonsterManager implements IWEAddonMonsterManager {
     public void registerMobs() {
         WEEntityRegistry.registerEntity(
                 EntitySkeletonExplorer.class,
-                "riftflux_slingshot_skeleton",
+                "slingshot_skeleton",
                 Archery.instance,
                 64,
                 1,

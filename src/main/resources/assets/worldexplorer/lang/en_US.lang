@@ -1,5 +1,5 @@
 entity.RiftExplorerArchery.entity_skeleton_explorer.name=Slingshot Skeleton
-entity.riftflux_slingshot_skeleton.name=Slingshot Skeleton
+entity.slingshot_skeleton.name=Slingshot Skeleton
 entity.RiftExplorerArchery.entity_pebble.name=Shooting Pebble
 entity.RiftExplorerArchery.entity_boomerang.name=Gliding Boomerang
 item.slingshot.name=Slingshot

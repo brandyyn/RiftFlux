@@ -105,10 +105,10 @@ public final class PumpkinPasturesContent {
                 .setUnlocalizedName("pumpkin_soul")
                 .setTextureName("riftflux:pumpkinpastures/pumpkin_soul")
                 .setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabMaterials);
-        pumpkinSword = new ItemPumpkinSword(pumpkinToolMaterial);
-        pumpkinPickaxe = new ItemPumpkinPickaxe(pumpkinToolMaterial);
-        pumpkinAxe = new ItemPumpkinAxe(pumpkinToolMaterial);
-        pumpkinShovel = new ItemPumpkinShovel();
+        pumpkinSword = new ItemEnderflameSword(pumpkinToolMaterial);
+        pumpkinPickaxe = new ItemEnderflamePickaxe(pumpkinToolMaterial);
+        pumpkinAxe = new ItemEnderflameShax(pumpkinToolMaterial);
+        pumpkinShovel = new ItemEnderflameStaff();
         pumpkinZombieSpawnEgg = new ItemPumpkinSpawnEgg("pumpkin_zombie", 16344349, 5576727).setUnlocalizedName("pumpkin_zombie_spawn_egg");
         pumpkinSkeletonSpawnEgg = new ItemPumpkinSpawnEgg("pumpkin_skeleton", 16344349, 272420).setUnlocalizedName("pumpkin_skeleton_spawn_egg");
         pumpkinCreeperSpawnEgg = new ItemPumpkinSpawnEgg("pumpkin_creeper", 16344349, 7165457).setUnlocalizedName("pumpkin_creeper_spawn_egg");
@@ -121,10 +121,10 @@ public final class PumpkinPasturesContent {
         GameRegistry.registerItem(pumpkinPotage, "pumpkin_potage");
         GameRegistry.registerItem(corruptedSoul, "corrupted_soul");
         GameRegistry.registerItem(pumpkinSoul, "pumpkin_soul");
-        GameRegistry.registerItem(pumpkinSword, "pumpkin_sword");
-        GameRegistry.registerItem(pumpkinPickaxe, "pumpkin_pickaxe");
-        GameRegistry.registerItem(pumpkinAxe, "pumpkin_axe");
-        GameRegistry.registerItem(pumpkinShovel, "pumpkin_shovel");
+        GameRegistry.registerItem(pumpkinSword, "enderflame_sword");
+        GameRegistry.registerItem(pumpkinPickaxe, "enderflame_pickaxe");
+        GameRegistry.registerItem(pumpkinAxe, "enderflame_shax");
+        GameRegistry.registerItem(pumpkinShovel, "enderflame_staff");
         GameRegistry.registerItem(pumpkinZombieSpawnEgg, "pumpkin_zombie_spawn_egg");
         GameRegistry.registerItem(pumpkinSkeletonSpawnEgg, "pumpkin_skeleton_spawn_egg");
         GameRegistry.registerItem(pumpkinCreeperSpawnEgg, "pumpkin_creeper_spawn_egg");

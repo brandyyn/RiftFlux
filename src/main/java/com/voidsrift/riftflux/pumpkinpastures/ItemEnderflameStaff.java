@@ -11,10 +11,10 @@ import net.minecraft.world.World;
 import net.nmccoy.legendgear.entity.EntitySpellEffect;
 import net.nmccoy.legendgear.item.spell.StaffFire;
 
-public class ItemPumpkinShovel extends StaffFire {
-    public ItemPumpkinShovel() {
-        setUnlocalizedName("pumpkin_shovel");
-        setTextureName("riftflux:pumpkinpastures/pumpkin_shovel");
+public class ItemEnderflameStaff extends StaffFire {
+    public ItemEnderflameStaff() {
+        setUnlocalizedName("enderflame_staff");
+        setTextureName("riftflux:pumpkinpastures/enderflame_staff");
         setCreativeTab(CreativeTabs.tabCombat);
         setMaxDamage(Math.max(0, ModConfig.pumpkinPasturesEnderflameStaffDurability));
         this.baseArcanePower = Math.max(0.0F, ModConfig.pumpkinPasturesEnderflameStaffSpellDamage);

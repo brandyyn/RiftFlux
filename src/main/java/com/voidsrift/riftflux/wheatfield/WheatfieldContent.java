@@ -52,7 +52,7 @@ public final class WheatfieldContent {
         }
 
         wheatfieldBarley = new BlockWheatfieldBarley();
-        GameRegistry.registerBlock(wheatfieldBarley, ItemBlockWheatfieldBarley.class, "wheatfield_foliage");
+        GameRegistry.registerBlock(wheatfieldBarley, ItemBlockWheatfieldBarley.class, "barley");
 
         int biomeId = resolveBiomeId(ModConfig.wheatfieldBiomeId);
         if (biomeId >= 0) {

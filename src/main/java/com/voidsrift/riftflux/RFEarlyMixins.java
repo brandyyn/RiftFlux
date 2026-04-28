@@ -93,6 +93,10 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityLivingBase_PetInvincibility");
         }
         mixins.add("early.MixinEntityArrow_NoRandomSpread");
+        if (ModConfig.enableThornsArmorTweaks) {
+            mixins.add("early.MixinEnchantmentThorns_NoExtraDurability");
+            mixins.add("early.MixinEnchantment_ThornsAnyArmorTable");
+        }
         mixins.add("early.MixinChunk_TeleportOwnedPetsOnUnload");
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
@@ -116,6 +120,16 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (hasClass("Reika.ChromatiCraft.ChromaClientEventController")
                     && ModConfig.optimizeChromatiCraftRenderEventFastPaths) {
                 mixins.add("early.chromaticraft.MixinChromaClientEventController_OptimizeClientRenderHooks");
+            }
+        }
+        if (ModConfig.disableChromatiCraftItemFabricator
+                && hasClass("Reika.ChromatiCraft.Auxiliary.RecipeManagers.RecipesCastingTable")
+                && hasClass("Reika.ChromatiCraft.Auxiliary.RecipeManagers.CastingRecipes.Tiles.FabricatorRecipe")) {
+            mixins.add("early.chromaticraft.MixinRecipesCastingTable_DisableFabricatorRecipe");
+            if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT
+                    && hasClass("codechicken.nei.api.API")
+                    && hasClass("Reika.ChromatiCraft.ModInterface.NEI.NEIChromaConfig")) {
+                mixins.add("early.chromaticraft.MixinNEIChromaConfig_DisableFabricatorHandler");
             }
         }
         if (ModConfig.optimizeChromatiCraftCliffsChunkGeneration) {

@@ -300,8 +300,11 @@ public final class LegendGearLegacyContent {
         LegendGear.hookshotAnyBlock = ModConfig.legendGearLegacyHookshotAnyBlock;
         LegendGear.extraHookshotBlocks = resolveLegacyBlockIds(ModConfig.legendGearLegacyHookshotBlocks);
         LegendGear.hookshotDurability = ModConfig.legendGearLegacyHookshotDurability;
-        LegendGear.amuletsWorkFromInventory = ModConfig.legendGearLegacyAmuletsWorkFromInventory;
         LegendGear.amuletsUseBaublesSlot = ModConfig.legendGearLegacyAmuletsUseBaublesSlot;
+        LegendGear.geoAmuletQuakeDamageMultiplier = ModConfig.legendGearLegacyGeoAmuletQuakeDamageMultiplier;
+        applyConfiguredItemDurability(LegendGear.aeroAmulet, ModConfig.legendGearLegacyAeroAmuletDurability);
+        applyConfiguredItemDurability(LegendGear.geoAmulet, ModConfig.legendGearLegacyGeoAmuletDurability);
+        applyConfiguredItemDurability(LegendGear.pyroAmulet, ModConfig.legendGearLegacyPyroAmuletDurability);
         LegendGear.medallionEffectsAffectPlayer = ModConfig.legendGearLegacyMedallionEffectsAffectPlayer;
         LegendGear.whirlwindBootsDashSound = ModConfig.legendGearLegacyWhirlwindBootsDashSound;
         LegendGear.starbeamRailLaunchStrength = ModConfig.legendGearLegacyStarbeamRailLaunchStrength;
@@ -328,6 +331,7 @@ public final class LegendGearLegacyContent {
         LegendGear.bombDamage = ModConfig.legendGearLegacyBombDamage;
         LegendGear.bombFuseTime = ModConfig.legendGearLegacyBombFuseTimeTicks;
         LegendGear.bombExplosionStrength = ModConfig.legendGearLegacyBombExplosionStrength;
+        LegendGear.bombsIgniteExplosiveBlocks = ModConfig.legendGearLegacyBombsIgniteExplosiveBlocks;
         LegendGear.bombFlowerPlaceAnywhere = ModConfig.legendGearLegacyBombFlowerPlaceAnywhere;
         LegendGear.bombFlowerPlaceOnAnyBlockNearLava = ModConfig.legendGearLegacyBombFlowerPlaceOnAnyBlockNearLava;
         LegendGear.bombFlowerPickupWithShears = ModConfig.legendGearLegacyBombFlowerPickupWithShears;
@@ -973,6 +977,12 @@ public final class LegendGearLegacyContent {
             return -1;
         }
         return OreDictionary.getOreID(oreName);
+    }
+
+    private static void applyConfiguredItemDurability(Item item, int durability) {
+        if (item != null) {
+            item.setMaxDamage(Math.max(0, durability));
+        }
     }
 
     private static final class LegacyBlockReference {

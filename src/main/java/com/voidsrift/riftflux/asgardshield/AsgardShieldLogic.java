@@ -3,7 +3,7 @@ package com.voidsrift.riftflux.asgardshield;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.compat.BackhandCompat;
 import com.voidsrift.riftflux.inventorypets.ItemInventoryShieldPet;
-import com.voidsrift.riftflux.pumpkinpastures.ItemPumpkinSword;
+import com.voidsrift.riftflux.pumpkinpastures.ItemEnderflameSword;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -43,7 +43,7 @@ public final class AsgardShieldLogic {
         return item instanceof ItemAsgardShield
                 || item instanceof ItemAsgardGreatsword
                 || item instanceof ItemInventoryShieldPet
-                || item instanceof ItemPumpkinSword;
+                || item instanceof ItemEnderflameSword;
     }
 
     public static boolean isAsgardShield(ItemStack stack) {
@@ -55,7 +55,7 @@ public final class AsgardShieldLogic {
     }
 
     public static boolean isEnderflameSword(ItemStack stack) {
-        return stack != null && stack.getItem() instanceof ItemPumpkinSword;
+        return stack != null && stack.getItem() instanceof ItemEnderflameSword;
     }
 
     public static boolean isBlockingWithAsgardItem(EntityPlayer player) {
@@ -153,7 +153,7 @@ public final class AsgardShieldLogic {
         if (held.getItem() instanceof ItemAsgardGreatsword) {
             return ((ItemAsgardGreatsword) held.getItem()).getDamageMultiplier();
         }
-        if (held.getItem() instanceof ItemPumpkinSword) {
+        if (held.getItem() instanceof ItemEnderflameSword) {
             return 0.80F;
         }
         return 1.0F;
@@ -176,7 +176,7 @@ public final class AsgardShieldLogic {
             result = handleShieldGuard(player, (ItemAsgardShield) held.getItem(), held, source, incoming);
         } else if (held.getItem() instanceof ItemInventoryShieldPet) {
             result = handleShieldPetGuard(player, (ItemInventoryShieldPet) held.getItem(), held, source, incoming);
-        } else if (held.getItem() instanceof ItemPumpkinSword) {
+        } else if (held.getItem() instanceof ItemEnderflameSword) {
             result = handleEnderflameSwordGuard(player, held, source, incoming);
         } else {
             result = handleGreatswordGuard(player, (ItemAsgardGreatsword) held.getItem(), held, source, incoming);

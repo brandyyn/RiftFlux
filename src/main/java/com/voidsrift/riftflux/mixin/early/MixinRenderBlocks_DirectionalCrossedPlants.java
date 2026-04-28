@@ -1,15 +1,13 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
-import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
-import com.voidsrift.riftflux.mixin.accessor.angelica.WorldSliceAccessor;
 import com.voidsrift.riftflux.util.RFPlantContext;
+import com.voidsrift.riftflux.util.RFBlockAccessWorldResolver;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.ChunkCache;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,16 +50,7 @@ public abstract class MixinRenderBlocks_DirectionalCrossedPlants {
 
     @Unique
     private World riftflux$getWorldFromBlockAccess(IBlockAccess access) {
-        if (access instanceof World) {
-            return (World) access;
-        }
-        if (access instanceof WorldSliceAccessor) {
-            return ((WorldSliceAccessor) access).riftflux$getWorld();
-        }
-        if (access instanceof ChunkCache) {
-            return ((ChunkCacheAccessor) access).riftflux$getWorldObj();
-        }
-        return null;
+        return RFBlockAccessWorldResolver.resolve(access);
     }
 
     @Unique

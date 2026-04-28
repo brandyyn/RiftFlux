@@ -157,7 +157,7 @@ public class EntitySkeletonExplorer extends EntitySkeleton {
     }
 
     public String getCommandSenderName() {
-        return StatCollector.translateToLocal("entity.riftflux_slingshot_skeleton.name");
+        return StatCollector.translateToLocal("entity.slingshot_skeleton.name");
     }
 
     @Override

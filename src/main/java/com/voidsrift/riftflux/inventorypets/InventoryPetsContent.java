@@ -173,8 +173,12 @@ public final class InventoryPetsContent {
             return;
         }
         preInited = true;
+        Set<String> enabled = getConfiguredPetKeys(ModConfig.inventoryPetsEnabledEntries);
 
         for (PetDefinition definition : PETS) {
+            if (!isPetEnabled(definition, enabled)) {
+                continue;
+            }
             String texturePath = "riftflux:inventorypets/" + definition.textureName;
             Item item = definition.banana ? new ItemBananaPet()
                     : isShieldPet(definition) ? new ItemInventoryShieldPet(definition.registryName, definition.displayName, texturePath, definition.key.endsWith("_variant"))
@@ -192,18 +196,7 @@ public final class InventoryPetsContent {
         }
         initialized = true;
 
-        Set<String> enabled = new LinkedHashSet<String>();
-        if (ModConfig.inventoryPetsDungeonLootEntries != null) {
-            for (String raw : ModConfig.inventoryPetsDungeonLootEntries) {
-                if (raw == null) {
-                    continue;
-                }
-                String key = normalizeKey(raw);
-                if (!key.isEmpty()) {
-                    enabled.add(key);
-                }
-            }
-        }
+        Set<String> enabled = getConfiguredPetKeys(ModConfig.inventoryPetsDungeonLootEntries);
 
         int weight = Math.max(0, ModConfig.inventoryPetsDungeonLootWeight);
         if (weight <= 0 || enabled.isEmpty()) {
@@ -214,7 +207,7 @@ public final class InventoryPetsContent {
             if (definition.item == null) {
                 continue;
             }
-            if (!enabled.contains(definition.key) && !enabled.contains(normalizeKey(definition.registryName))) {
+            if (!isPetEnabled(definition, enabled)) {
                 continue;
             }
             ChestGenHooks.addItem(
@@ -297,6 +290,31 @@ public final class InventoryPetsContent {
             return normalized.substring(0, normalized.length() - "_flux".length()) + "_variant";
         }
         return normalized;
+    }
+
+    private static Set<String> getConfiguredPetKeys(String[] configuredEntries) {
+        Set<String> enabled = new LinkedHashSet<String>();
+        if (configuredEntries == null) {
+            return enabled;
+        }
+        for (String raw : configuredEntries) {
+            if (raw == null) {
+                continue;
+            }
+            String key = normalizeKey(raw);
+            if (!key.isEmpty()) {
+                enabled.add(key);
+            }
+        }
+        return enabled;
+    }
+
+    private static boolean isPetEnabled(PetDefinition definition, Set<String> enabled) {
+        if (definition == null || enabled == null || enabled.isEmpty()) {
+            return false;
+        }
+        return enabled.contains(definition.key)
+                || enabled.contains(normalizeKey(definition.registryName));
     }
 
     private static PetDefinition pet(String key, String registryName, String displayName, String textureName) {

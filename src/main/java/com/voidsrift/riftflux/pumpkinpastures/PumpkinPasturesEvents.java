@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.pumpkinpastures;
 
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.projectile.EntityArrow;
@@ -10,6 +11,11 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.oredict.OreDictionary;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class PumpkinPasturesEvents {
     @SubscribeEvent
@@ -34,29 +40,38 @@ public class PumpkinPasturesEvents {
             return;
         }
         ItemStack held = event.harvester.getCurrentEquippedItem();
-        if (!isPumpkinTool(held)) {
-            return;
-        }
-        if (held.getItem() == PumpkinPasturesContent.pumpkinPickaxe) {
+        if (!shouldAutoSmeltDrops(held)) {
             return;
         }
 
-        Item blockItem = Item.getItemFromBlock(event.block);
-        if (blockItem == null) {
-            return;
+        List<ItemStack> smeltedDrops = new ArrayList<ItemStack>(event.drops.size());
+        int fortuneMultiplier = this.shouldApplyFortuneAfterAutoSmelt(event)
+                ? this.getFortuneMultiplier(event.fortuneLevel, event.world.rand)
+                : 1;
+        boolean changed = false;
+        for (ItemStack drop : event.drops) {
+            if (drop == null || drop.getItem() == null) {
+                continue;
+            }
+
+            ItemStack smelted = FurnaceRecipes.smelting().getSmeltingResult(drop);
+            if (smelted == null) {
+                smeltedDrops.add(drop);
+                continue;
+            }
+
+            ItemStack output = smelted.copy();
+            output.stackSize = Math.max(1, output.stackSize) * Math.max(1, drop.stackSize) * fortuneMultiplier;
+            smeltedDrops.add(output);
+            changed = true;
         }
-        ItemStack smeltInput = new ItemStack(blockItem, 1, event.blockMetadata);
-        ItemStack smeltResult = FurnaceRecipes.smelting().getSmeltingResult(smeltInput);
-        if (smeltResult == null) {
+
+        if (!changed) {
             return;
         }
 
         event.drops.clear();
-        ItemStack output = smeltResult.copy();
-        if (output.stackSize <= 0) {
-            output.stackSize = 1;
-        }
-        event.drops.add(output);
+        event.drops.addAll(smeltedDrops);
 
         for (int i = 0; i < 10; i++) {
             event.world.spawnParticle(
@@ -71,14 +86,48 @@ public class PumpkinPasturesEvents {
         }
     }
 
-    private static boolean isPumpkinTool(ItemStack stack) {
+    private static boolean shouldAutoSmeltDrops(ItemStack stack) {
         if (stack == null || stack.getItem() == null) {
             return false;
         }
-        Item item = stack.getItem();
-        return item == PumpkinPasturesContent.pumpkinSword
-                || item == PumpkinPasturesContent.pumpkinPickaxe
-                || item == PumpkinPasturesContent.pumpkinAxe
-                || item == PumpkinPasturesContent.pumpkinShovel;
+        if (stack.getItem() == PumpkinPasturesContent.pumpkinPickaxe) {
+            return ModConfig.pumpkinPasturesEnderflamePickaxeAutoSmelt;
+        }
+        if (stack.getItem() == PumpkinPasturesContent.pumpkinAxe) {
+            return ModConfig.pumpkinPasturesEnderflameShaxAutoSmelt;
+        }
+        return false;
+    }
+
+    private boolean shouldApplyFortuneAfterAutoSmelt(BlockEvent.HarvestDropsEvent event) {
+        if (event == null || event.fortuneLevel <= 0 || event.block == null) {
+            return false;
+        }
+
+        Item blockItem = Item.getItemFromBlock(event.block);
+        if (blockItem == null) {
+            return false;
+        }
+
+        int[] oreIds = OreDictionary.getOreIDs(new ItemStack(blockItem, 1, event.blockMetadata));
+        for (int oreId : oreIds) {
+            String oreName = OreDictionary.getOreName(oreId);
+            if (oreName != null && oreName.startsWith("ore") && oreName.length() > 3) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int getFortuneMultiplier(int fortuneLevel, Random random) {
+        if (fortuneLevel <= 0) {
+            return 1;
+        }
+
+        int multiplier = random.nextInt(fortuneLevel + 2) - 1;
+        if (multiplier < 0) {
+            multiplier = 0;
+        }
+        return multiplier + 1;
     }
 }

@@ -5,6 +5,7 @@ import com.voidsrift.riftflux.CommonProxy;
 import com.voidsrift.riftflux.combat.torohealth.client.particle.DamageParticles;
 import com.voidsrift.riftflux.combat.torohealth.mixins.EntityLivingBaseExt;
 import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
+import com.voidsrift.riftflux.compat.chromaticraft.ChromatiCraftItemFabricatorTooltipHandler;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
 import com.voidsrift.riftflux.duckling.DucklingContent;
 import com.voidsrift.riftflux.fence.FenceOverrideClientState;
@@ -207,6 +208,9 @@ public class ClientProxy extends CommonProxy {
             MinecraftForge.EVENT_BUS.register(new FogDistanceGradientRenderer());
         }
         MinecraftForge.EVENT_BUS.register(new LegendGearManaTooltipHandler());
+        if (ModConfig.disableChromatiCraftItemFabricator && Loader.isModLoaded("ChromatiCraft")) {
+            MinecraftForge.EVENT_BUS.register(new ChromatiCraftItemFabricatorTooltipHandler());
+        }
         MinecraftForge.EVENT_BUS.register(new MovementSpeedFovLimitHandler());
         MinecraftForge.EVENT_BUS.register(new UniversalDurabilityTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new RiftExplorerSlingshotAmmoTooltipHandler());

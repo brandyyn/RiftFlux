@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ItemPumpkinAxe extends ItemAxe {
+public class ItemEnderflameShax extends ItemAxe {
     private static final Set<Block> SHAX_EFFECTIVE_BLOCKS = new HashSet<Block>(Arrays.asList(
             Blocks.clay,
             Blocks.dirt,
@@ -28,10 +28,10 @@ public class ItemPumpkinAxe extends ItemAxe {
             Blocks.soul_sand
     ));
 
-    public ItemPumpkinAxe(ToolMaterial material) {
+    public ItemEnderflameShax(ToolMaterial material) {
         super(material);
-        setUnlocalizedName("pumpkin_axe");
-        setTextureName("riftflux:pumpkinpastures/pumpkin_axe");
+        setUnlocalizedName("enderflame_shax");
+        setTextureName("riftflux:pumpkinpastures/enderflame_shax");
         setCreativeTab(CreativeTabs.tabTools);
         setMaxDamage(Math.max(0, ModConfig.pumpkinPasturesEnderflameShaxDurability));
     }
