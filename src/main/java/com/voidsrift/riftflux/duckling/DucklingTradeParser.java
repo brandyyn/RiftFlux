@@ -2,6 +2,8 @@ package com.voidsrift.riftflux.duckling;
 
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.registry.GameRegistry;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import net.minecraft.block.Block;
@@ -20,16 +22,29 @@ final class DucklingTradeParser {
             return recipes;
         }
 
+        List<TradeOption> validOptions = new ArrayList<TradeOption>();
         for (int i = 0; i < entries.length; i++) {
-            MerchantRecipe recipe = parseRecipe(entries[i], random);
-            if (recipe != null) {
-                recipes.add(recipe);
+            TradeOption option = parseTradeOption(entries[i], random);
+            if (option != null) {
+                validOptions.add(option);
+                if (random.nextFloat() * 100.0F < option.chancePercent) {
+                    recipes.add(option.recipe);
+                }
             }
+        }
+
+        if (!recipes.isEmpty() || validOptions.isEmpty()) {
+            return recipes;
+        }
+
+        TradeOption fallback = chooseGuaranteedTrade(validOptions, random);
+        if (fallback != null) {
+            recipes.add(fallback.recipe);
         }
         return recipes;
     }
 
-    private static MerchantRecipe parseRecipe(String entry, Random random) {
+    private static TradeOption parseTradeOption(String entry, Random random) {
         if (entry == null) {
             return null;
         }
@@ -39,37 +54,64 @@ final class DucklingTradeParser {
             return null;
         }
 
-        int arrow = line.indexOf("->");
+        String[] segments = line.split(";");
+        String tradeText = segments[0].trim();
+        float chancePercent = 100.0F;
+        for (int i = 1; i < segments.length; i++) {
+            String option = segments[i] == null ? "" : segments[i].trim();
+            if (option.isEmpty()) {
+                continue;
+            }
+            int equalsIndex = option.indexOf('=');
+            if (equalsIndex <= 0) {
+                warnInvalid(line, "invalid trade option '" + option + "'");
+                return null;
+            }
+            String optionKey = option.substring(0, equalsIndex).trim().toLowerCase(Locale.ROOT);
+            String optionValue = option.substring(equalsIndex + 1).trim();
+            if ("chance".equals(optionKey)) {
+                chancePercent = parseChance(optionValue);
+                if (chancePercent < 0.0F) {
+                    warnInvalid(line, "invalid chance percentage");
+                    return null;
+                }
+            } else {
+                warnInvalid(line, "unknown trade option '" + optionKey + "'");
+                return null;
+            }
+        }
+
+        int arrow = tradeText.indexOf("->");
         if (arrow < 0) {
-            warnInvalid(line, "missing '->'");
+            warnInvalid(tradeText, "missing '->'");
             return null;
         }
 
-        String buySide = line.substring(0, arrow).trim();
-        String sellSide = line.substring(arrow + 2).trim();
+        String buySide = tradeText.substring(0, arrow).trim();
+        String sellSide = tradeText.substring(arrow + 2).trim();
         String[] buys = buySide.split("\\+");
         if (buys.length < 1 || buys.length > 2) {
-            warnInvalid(line, "expected one or two buy stacks");
+            warnInvalid(tradeText, "expected one or two buy stacks");
             return null;
         }
 
         ItemStack firstBuy = parseStack(buys[0], random);
         ItemStack sell = parseStack(sellSide, random);
         if (firstBuy == null || sell == null) {
-            warnInvalid(line, "could not resolve an item stack");
+            warnInvalid(tradeText, "could not resolve an item stack");
             return null;
         }
 
         if (buys.length == 2) {
             ItemStack secondBuy = parseStack(buys[1], random);
             if (secondBuy == null) {
-                warnInvalid(line, "could not resolve the second buy stack");
+                warnInvalid(tradeText, "could not resolve the second buy stack");
                 return null;
             }
-            return new MerchantRecipe(firstBuy, secondBuy, sell);
+            return new TradeOption(new MerchantRecipe(firstBuy, secondBuy, sell), chancePercent);
         }
 
-        return new MerchantRecipe(firstBuy, sell);
+        return new TradeOption(new MerchantRecipe(firstBuy, sell), chancePercent);
     }
 
     private static ItemStack parseStack(String token, Random random) {
@@ -120,7 +162,11 @@ final class DucklingTradeParser {
         String[] split = namespacedId.split(":", 2);
         Item item = null;
         if (split.length == 2) {
-            item = GameRegistry.findItem(split[0].toLowerCase(Locale.ROOT), split[1]);
+            String namespace = split[0].toLowerCase(Locale.ROOT);
+            item = resolveDucklingItem(namespace, split[1]);
+            if (item == null) {
+                item = GameRegistry.findItem(namespace, split[1]);
+            }
         }
         if (item == null) {
             Object registryObject = Item.itemRegistry.getObject(namespacedId);
@@ -141,6 +187,43 @@ final class DucklingTradeParser {
             }
         }
         return item;
+    }
+
+    private static Item resolveDucklingItem(String namespace, String path) {
+        if (namespace == null || path == null) {
+            return null;
+        }
+        if (!DucklingContent.MODID.equals(namespace)
+                && !"duckling".equals(namespace)
+                && !"sootspritecraft".equals(namespace)) {
+            return null;
+        }
+
+        if ("raw_duck".equals(path)) {
+            return DucklingContent.rawDuck;
+        }
+        if ("cooked_duck".equals(path)) {
+            return DucklingContent.cookedDuck;
+        }
+        if ("duck_egg".equals(path)) {
+            return DucklingContent.duckEgg;
+        }
+        if ("duck_spawn_egg".equals(path)) {
+            return DucklingContent.duckSpawnEgg;
+        }
+        if ("quackling_spawn_egg".equals(path)) {
+            return DucklingContent.quacklingSpawnEgg;
+        }
+        if ("star_candy".equals(path)) {
+            return DucklingContent.starCandy;
+        }
+        if ("soot_jar".equals(path)) {
+            return DucklingContent.sootJar;
+        }
+        if ("soot_sprite_spawn_egg".equals(path)) {
+            return DucklingContent.sootSpriteSpawnEgg;
+        }
+        return null;
     }
 
     private static int parseCount(String raw, Random random) {
@@ -177,7 +260,58 @@ final class DucklingTradeParser {
         }
     }
 
+    private static float parseChance(String raw) {
+        if (raw == null) {
+            return -1.0F;
+        }
+        try {
+            float chance = Float.parseFloat(raw.trim());
+            if (chance < 0.0F || chance > 100.0F) {
+                return -1.0F;
+            }
+            return chance;
+        } catch (NumberFormatException ignored) {
+            return -1.0F;
+        }
+    }
+
+    private static TradeOption chooseGuaranteedTrade(List<TradeOption> options, Random random) {
+        if (options == null || options.isEmpty()) {
+            return null;
+        }
+
+        float totalWeight = 0.0F;
+        for (int i = 0; i < options.size(); i++) {
+            totalWeight += Math.max(0.0F, options.get(i).chancePercent);
+        }
+
+        if (totalWeight <= 0.0F) {
+            return options.get(random.nextInt(options.size()));
+        }
+
+        float target = random.nextFloat() * totalWeight;
+        for (int i = 0; i < options.size(); i++) {
+            TradeOption option = options.get(i);
+            target -= Math.max(0.0F, option.chancePercent);
+            if (target <= 0.0F) {
+                return option;
+            }
+        }
+
+        return options.get(options.size() - 1);
+    }
+
     private static void warnInvalid(String entry, String reason) {
         FMLLog.warning("[RiftFlux] Skipping invalid Duckling Quackling trade '%s': %s.", entry, reason);
+    }
+
+    private static final class TradeOption {
+        private final MerchantRecipe recipe;
+        private final float chancePercent;
+
+        private TradeOption(MerchantRecipe recipe, float chancePercent) {
+            this.recipe = recipe;
+            this.chancePercent = chancePercent;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.duckling;
 
+import com.voidsrift.riftflux.ModConfig;
 import java.util.Locale;
 import java.util.Random;
 import net.minecraft.util.ResourceLocation;
@@ -47,6 +48,9 @@ public enum DuckVariant {
     }
 
     public static DuckVariant randomNatural(Random random) {
+        if (random != null && random.nextFloat() * 100.0F < ModConfig.ducklingAgentDNaturalVariantChancePercent) {
+            return AGENTD;
+        }
         return random != null && random.nextBoolean() ? MALLARD : PEKIN;
     }
 }

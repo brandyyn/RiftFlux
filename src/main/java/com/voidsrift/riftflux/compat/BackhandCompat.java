@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.compat;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Optional;
+import java.lang.reflect.Method;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
@@ -25,11 +26,13 @@ import net.minecraft.item.ItemSign;
 import net.minecraft.item.ItemSnowball;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraft.world.World;
 import xonin.backhand.api.core.IBackhandPlayer;
 import xonin.backhand.api.core.BackhandUtils;
 
 public final class BackhandCompat {
     private static Boolean classPresentCache;
+    private static final ThreadLocal<Boolean> EXECUTING_OFFHAND_ACTION = new ThreadLocal<Boolean>();
 
     private BackhandCompat() {
     }
@@ -135,6 +138,18 @@ public final class BackhandCompat {
         return isOffhandItemInUseInternal(player);
     }
 
+    public static boolean isExecutingOffhandAction() {
+        return Boolean.TRUE.equals(EXECUTING_OFFHAND_ACTION.get());
+    }
+
+    public static void beginOffhandAction() {
+        EXECUTING_OFFHAND_ACTION.set(Boolean.TRUE);
+    }
+
+    public static void endOffhandAction() {
+        EXECUTING_OFFHAND_ACTION.remove();
+    }
+
     @SafeVarargs
     public static void addOffhandPriorityItems(Class<? extends Item>... itemClasses) {
         if (!isAvailable() || itemClasses == null || itemClasses.length == 0) {
@@ -214,7 +229,22 @@ public final class BackhandCompat {
                 || item instanceof ItemFishingRod
                 || item instanceof ItemLead
                 || item instanceof ItemCarrotOnAStick
-                || item instanceof ItemSign;
+                || item instanceof ItemSign
+                || overridesRightClick(item);
+    }
+
+    private static boolean overridesRightClick(Item item) {
+        return overridesRightClickMethod(item, "onItemRightClick")
+                || overridesRightClickMethod(item, "func_77659_a");
+    }
+
+    private static boolean overridesRightClickMethod(Item item, String methodName) {
+        try {
+            Method method = item.getClass().getMethod(methodName, ItemStack.class, World.class, EntityPlayer.class);
+            return method.getDeclaringClass() != Item.class;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     @Optional.Method(modid = "backhand")

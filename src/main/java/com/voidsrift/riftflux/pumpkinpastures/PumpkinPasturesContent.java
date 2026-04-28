@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.pumpkinpastures;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.palaria.PalariaMobContent;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.pumpkinpastures.client.render.RenderPumpkinCreeper;
@@ -12,7 +13,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureType;
@@ -269,19 +269,9 @@ public final class PumpkinPasturesContent {
     }
 
     private static void registerEntities() {
-        int id = 300;
-        EntityRegistry.registerModEntity(EntityPumpkinZombie.class, "PumpkinZombie", id++, riftflux.instance, 80, 3, true);
-        registerEntityEgg(EntityPumpkinZombie.class, "RiftFluxPumpkinZombie", 0xF9663D, 0x551A17);
-        EntityRegistry.registerModEntity(EntityPumpkinSkeleton.class, "PumpkinSkeleton", id++, riftflux.instance, 80, 3, true);
-        registerEntityEgg(EntityPumpkinSkeleton.class, "RiftFluxPumpkinSkeleton", 0xF9663D, 0x042814);
-        EntityRegistry.registerModEntity(EntityPumpkinCreeper.class, "PumpkinCreeper", id, riftflux.instance, 80, 3, true);
-        registerEntityEgg(EntityPumpkinCreeper.class, "RiftFluxPumpkinCreeper", 0xF9663D, 0x6D5451);
-    }
-
-    private static void registerEntityEgg(Class<? extends Entity> entityClass, String entityName, int primaryColor, int secondaryColor) {
-        int entityId = EntityRegistry.findGlobalUniqueEntityId();
-        EntityRegistry.registerGlobalEntityID(entityClass, entityName, entityId);
-        EntityList.entityEggs.put(entityId, new EntityList.EntityEggInfo(entityId, primaryColor, secondaryColor));
+        RiftFluxEntityRegistry.registerModEntity(EntityPumpkinZombie.class, "PumpkinZombie", riftflux.instance, 80, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityPumpkinSkeleton.class, "PumpkinSkeleton", riftflux.instance, 80, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityPumpkinCreeper.class, "PumpkinCreeper", riftflux.instance, 80, 3, true);
     }
 
     public static void dropSoulItems(EntityLivingBase entity, int looting) {

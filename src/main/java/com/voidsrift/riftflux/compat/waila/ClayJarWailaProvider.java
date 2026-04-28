@@ -27,6 +27,11 @@ public class ClayJarWailaProvider implements IWailaDataProvider {
     @Override
     public List<String> getWailaBody(ItemStack itemStack, List<String> currenttip, IWailaDataAccessor accessor,
             IWailaConfigHandler config) {
+        TileEntity tile = accessor == null ? null : accessor.getTileEntity();
+        if (!this.isClayJarTile(tile)) {
+            return currenttip;
+        }
+
         NBTTagCompound tag = accessor == null ? null : accessor.getNBTData();
         if (tag != null && tag.hasKey(TileEntityJar.TAG_JAR_DATA, 10)) {
             TileEntityJar preview = new TileEntityJar();
@@ -35,11 +40,8 @@ public class ClayJarWailaProvider implements IWailaDataProvider {
             return currenttip;
         }
 
-        TileEntity tile = accessor == null ? null : accessor.getTileEntity();
-        if (tile instanceof TileEntityJar) {
-            TileEntityJar jar = (TileEntityJar) tile;
-            currenttip.add(this.formatContentsLine(jar.contents, jar.getStoredItemCount()));
-        }
+        TileEntityJar jar = (TileEntityJar) tile;
+        currenttip.add(this.formatContentsLine(jar.contents, jar.getStoredItemCount()));
         return currenttip;
     }
 
@@ -52,13 +54,17 @@ public class ClayJarWailaProvider implements IWailaDataProvider {
     @Override
     public NBTTagCompound getNBTData(EntityPlayerMP player, TileEntity te, NBTTagCompound tag, World world, int x, int y,
             int z) {
-        if (!(te instanceof TileEntityJar)) {
+        if (!this.isClayJarTile(te)) {
             return tag;
         }
 
         NBTTagCompound result = tag == null ? new NBTTagCompound() : tag;
         result.setTag(TileEntityJar.TAG_JAR_DATA, ((TileEntityJar) te).writeJarData(new NBTTagCompound()));
         return result;
+    }
+
+    private boolean isClayJarTile(TileEntity tile) {
+        return tile != null && tile.getClass() == TileEntityJar.class;
     }
 
     private String formatContentsLine(ItemStack stack, int storedCount) {

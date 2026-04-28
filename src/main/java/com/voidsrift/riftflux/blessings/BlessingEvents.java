@@ -71,7 +71,15 @@ public class BlessingEvents {
         if (player == null || player.worldObj == null || player.worldObj.isRemote) {
             return;
         }
-        if (!BlessingHelper.hasBlessing(player) && ModConfig.blessingsGrantOnFirstJoin) {
+        String playerId = player.getUniqueID() == null ? null : player.getUniqueID().toString();
+        boolean seenBefore = BlessingHelper.hasProcessedStartingBlessing(player)
+                || BlessingPlayerJoinData.hasSeenPlayer(player.worldObj, playerId);
+        if (!seenBefore && !BlessingHelper.isLikelyFirstJoin(player)) {
+            BlessingHelper.markStartingBlessingProcessed(player);
+            BlessingPlayerJoinData.markSeen(player.worldObj, playerId);
+            seenBefore = true;
+        }
+        if (!seenBefore && !BlessingHelper.hasBlessing(player) && ModConfig.blessingsGrantOnFirstJoin) {
             String blessing = BlessingHelper.getRandomBlessing(RNG, ModConfig.blessingsAllowInfernoOnFirstJoin);
             if (blessing != null) {
                 BlessingHelper.setBlessing(player, blessing);
@@ -81,6 +89,10 @@ public class BlessingEvents {
                     BlockBlessingPillar.sendGrantedBlessingMessage(player, blessing);
                 }
             }
+        }
+        if (!seenBefore) {
+            BlessingHelper.markStartingBlessingProcessed(player);
+            BlessingPlayerJoinData.markSeen(player.worldObj, playerId);
         }
         String existing = BlessingHelper.getBlessing(player);
         if (existing != null && !BlessingHelper.isBlessingEnabled(existing)) {
@@ -494,6 +506,10 @@ public class BlessingEvents {
             player.setAir(300);
         }
 
+        if ("Inferno".equals(blessing)) {
+            applyInfernoWetDamage(player);
+        }
+
         applyScoutSpeed(player, "Scout".equals(blessing));
         updateDamageModifiers(player, blessing, active);
         updateBerserkerStats(player, blessing, active);
@@ -603,6 +619,16 @@ public class BlessingEvents {
             return true;
         }
         return "fall".equals(source.damageType);
+    }
+
+    private void applyInfernoWetDamage(EntityPlayer player) {
+        if (player == null
+                || player.capabilities.disableDamage
+                || !player.isWet()
+                || player.ticksExisted % 20 != 0) {
+            return;
+        }
+        player.attackEntityFrom(DamageSource.drown, 1.0F);
     }
 
     private void triggerNinjaCooldown(EntityPlayer player) {

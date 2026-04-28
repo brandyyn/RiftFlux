@@ -14,16 +14,14 @@ import com.voidsrift.riftflux.avatar.glider.GliderPlayerRenderHandler;
 import com.voidsrift.riftflux.avatar.glider.ItemGlider;
 import com.voidsrift.riftflux.avatar.glider.RenderGliderActive;
 import com.voidsrift.riftflux.avatar.glider.RenderGliderInHand;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraft.init.Items;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.MinecraftForge;
@@ -132,17 +130,9 @@ public final class AvatarTLBContent {
     }
 
     private static void registerEntities() {
-        int id = 50;
-        EntityRegistry.registerModEntity(EntityGlider.class, "Glider", id++, riftflux.instance, 80, 1, true);
-        EntityRegistry.registerModEntity(EntityBison.class, "Bison", id++, riftflux.instance, 80, 3, true);
-        EntityRegistry.registerModEntity(EntityBisonSeat.class, "BisonSeat", id++, riftflux.instance, 64, 1, false);
-        registerEntityEgg(EntityBison.class, 0xEDEDDF, 14071663);
-    }
-
-    private static void registerEntityEgg(Class<? extends Entity> entityClass, int primaryColor, int secondaryColor) {
-        int entityId = EntityRegistry.findGlobalUniqueEntityId();
-        EntityRegistry.registerGlobalEntityID(entityClass, entityClass.getSimpleName(), entityId);
-        EntityList.entityEggs.put(entityId, new EntityList.EntityEggInfo(entityId, primaryColor, secondaryColor));
+        RiftFluxEntityRegistry.registerModEntity(EntityGlider.class, "Glider", riftflux.instance, 80, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityBison.class, "Bison", riftflux.instance, 80, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityBisonSeat.class, "BisonSeat", riftflux.instance, 64, 1, false);
     }
 
     private static void registerGliderDyeRecipes() {

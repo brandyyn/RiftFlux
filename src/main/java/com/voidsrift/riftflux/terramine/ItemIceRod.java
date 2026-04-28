@@ -292,11 +292,13 @@ public class ItemIceRod extends Item {
         if (player == null || stack == null || !BackhandCompat.isAvailable()) {
             return false;
         }
-        ItemStack mainhand = BackhandCompat.getMainhandItem(player);
-        if (isIceRodOrGlider(mainhand) && mainhand.getItem() != stack.getItem()) {
-            return true;
+        boolean offhandStack = BackhandCompat.isOffhandStack(player, stack);
+        if (!offhandStack) {
+            return false;
         }
-        if (!BackhandCompat.isOffhandStack(player, stack)) {
+        if (BackhandCompat.isExecutingOffhandAction()
+                || BackhandCompat.isUsingOffhand(player)
+                || BackhandCompat.isOffhandItemInUse(player)) {
             return false;
         }
         return shouldBlockOffhandByMainhand(player);
@@ -307,6 +309,11 @@ public class ItemIceRod extends Item {
             return true;
         }
         if (!BackhandCompat.isOffhandStack(player, stack)) {
+            return true;
+        }
+        if (BackhandCompat.isExecutingOffhandAction()
+                || BackhandCompat.isUsingOffhand(player)
+                || BackhandCompat.isOffhandItemInUse(player)) {
             return true;
         }
         return !shouldBlockOffhandByMainhand(player);

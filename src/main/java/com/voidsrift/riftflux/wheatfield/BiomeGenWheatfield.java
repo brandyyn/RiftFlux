@@ -31,6 +31,8 @@ public class BiomeGenWheatfield extends BiomeGenBase {
     private static final int EDGE_TENDRIL_MIN_LENGTH = 8;
     private static final int EDGE_TENDRIL_MAX_LENGTH = 24;
     private static final int EDGE_TENDRIL_BOUNDARY_RADIUS = 5;
+    private static final int TREE_CHANCE_PER_CHUNK = 5;
+    private static final int TREE_ATTEMPTS_PER_CHUNK = 2;
     private static final int BIOME_SCAN_RADIUS = Math.max(
             EDGE_SAMPLE_RADIUS,
             Math.max(EDGE_DITHER_DEPTH, EDGE_TENDRIL_BOUNDARY_RADIUS));
@@ -129,6 +131,41 @@ public class BiomeGenWheatfield extends BiomeGenBase {
 
         populateBarleyArea(world, chunkX, chunkZ, sampler, surfaceCache);
         populateBoundaryTendrils(world, chunkX, chunkZ, sampler, surfaceCache);
+    }
+
+    public void populateTreesForChunk(World world, int chunkX, int chunkZ, WheatfieldBiomeSampler sampler) {
+        if (world == null || sampler == null) {
+            return;
+        }
+
+        if (!sampler.hasWheatfieldInRegion(chunkX, chunkZ, chunkX + 16, chunkZ + 16)) {
+            return;
+        }
+
+        Random random = createChunkRandom(world.getSeed(), chunkX >> 4, chunkZ >> 4, 0x6F1E3A4DL);
+        if (random.nextInt(TREE_CHANCE_PER_CHUNK) != 0) {
+            return;
+        }
+
+        short[] surfaceCache = new short[256];
+        Arrays.fill(surfaceCache, SURFACE_CACHE_UNSET);
+        for (int attempt = 0; attempt < TREE_ATTEMPTS_PER_CHUNK; attempt++) {
+            int x = chunkX + random.nextInt(16);
+            int z = chunkZ + random.nextInt(16);
+            if (!sampler.isWheatfield(x, z)) {
+                continue;
+            }
+
+            int y = findSurfaceSoilY(world, x, z, chunkX, chunkZ, surfaceCache);
+            if (y < 0) {
+                continue;
+            }
+
+            WorldGenAbstractTree tree = random.nextInt(4) == 0 ? worldGeneratorBigTree : worldGeneratorTrees;
+            if (!tree.generate(world, random, x, y + 1, z) && tree != worldGeneratorTrees) {
+                worldGeneratorTrees.generate(world, random, x, y + 1, z);
+            }
+        }
     }
 
     public static int getBiomeScanRadius() {
@@ -537,6 +574,14 @@ public class BiomeGenWheatfield extends BiomeGenBase {
     private static int positiveMod(int value, int divisor) {
         int mod = value % divisor;
         return mod < 0 ? mod + divisor : mod;
+    }
+
+    private static Random createChunkRandom(long worldSeed, int chunkX, int chunkZ, long salt) {
+        long seed = worldSeed;
+        seed ^= (long) chunkX * 341873128712L;
+        seed ^= (long) chunkZ * 132897987541L;
+        seed ^= salt;
+        return new Random(seed);
     }
 
     private static OffsetKernel buildInfluenceKernel(int radius) {

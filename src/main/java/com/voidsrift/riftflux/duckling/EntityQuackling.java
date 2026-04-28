@@ -47,6 +47,8 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     private final AnimationFactory animationFactory = new AnimationFactory(this);
     private EntityPlayer customer;
     private MerchantRecipeList recipes;
+    private long tradeRecipeDay = Long.MIN_VALUE;
+    private boolean fishingSessionTradeUsed;
     private long fishingDay = Long.MIN_VALUE;
     private int fishingSessionsToday;
     private int fishingSessionLimitToday = -1;
@@ -64,6 +66,8 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     private int fishingSessionCatchesThisSession;
     private int fishingSessionLostTargetTicks;
     private int ducklingFlags;
+    private transient String activeAnimationName = "";
+    private transient int movingAnimationGraceTicks;
 
     public EntityQuackling(World world) {
         super(world);
@@ -145,6 +149,7 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
                 && !this.isChild()
                 && ModConfig.ducklingQuacklingTradingEnabled
                 && ModConfig.hasQuacklingTradesConfigured()
+                && !this.fishingSessionTradeUsed
                 && (!ModConfig.ducklingQuacklingTradeOnlyWhileFishing || this.isFishing())
                 && (held == null || held.getItem() != DucklingContent.quacklingSpawnEgg);
     }
@@ -249,6 +254,8 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
         tag.setInteger("FishingSessionTargetCatches", this.fishingSessionTargetCatches);
         tag.setInteger("FishingSessionCatchesThisSession", this.fishingSessionCatchesThisSession);
         tag.setInteger("FishingSessionLostTargetTicks", this.fishingSessionLostTargetTicks);
+        tag.setBoolean("FishingSessionTradeUsed", this.fishingSessionTradeUsed);
+        tag.setLong("TradeRecipeDay", this.tradeRecipeDay);
         if (this.recipes != null) {
             tag.setTag("Offers", this.recipes.getRecipiesAsTags());
         }
@@ -274,6 +281,8 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
         this.fishingSessionTargetCatches = Math.max(0, tag.getInteger("FishingSessionTargetCatches"));
         this.fishingSessionCatchesThisSession = Math.max(0, tag.getInteger("FishingSessionCatchesThisSession"));
         this.fishingSessionLostTargetTicks = Math.max(0, tag.getInteger("FishingSessionLostTargetTicks"));
+        this.fishingSessionTradeUsed = tag.getBoolean("FishingSessionTradeUsed");
+        this.tradeRecipeDay = tag.hasKey("TradeRecipeDay") ? tag.getLong("TradeRecipeDay") : Long.MIN_VALUE;
         if (this.fishingSessionTargetCatches <= this.fishingSessionCatchesThisSession) {
             this.clearFishingSession();
         }
@@ -346,6 +355,7 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
         if (!this.worldObj.isRemote && this.fishingSessionsToday < this.fishingSessionLimitToday) {
             ++this.fishingSessionsToday;
         }
+        this.fishingSessionTradeUsed = false;
         this.setFishingActive(false);
     }
 
@@ -450,12 +460,13 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
             this.fishingSessionsToday = 0;
             this.fishingSessionLimitToday = this.getRandomFishingSessionLimit();
             this.nextFishingCheckTicks = this.nextFishingStartDelay();
+            this.fishingSessionTradeUsed = false;
         }
     }
 
     private int getRandomFishingSessionLimit() {
-        int min = Math.max(0, Math.min(2, ModConfig.getQuacklingFishingMinSessionsPerDay()));
-        int max = Math.max(min, Math.min(2, ModConfig.getQuacklingFishingMaxSessionsPerDay()));
+        int min = Math.max(0, ModConfig.getQuacklingFishingMinSessionsPerDay());
+        int max = Math.max(min, ModConfig.getQuacklingFishingMaxSessionsPerDay());
         return min + this.rand.nextInt(max - min + 1);
     }
 
@@ -494,8 +505,16 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
         if (!ModConfig.ducklingQuacklingTradingEnabled || !ModConfig.hasQuacklingTradesConfigured()) {
             return new MerchantRecipeList();
         }
+        if (this.fishingSessionTradeUsed) {
+            return new MerchantRecipeList();
+        }
+        if (this.worldObj != null && this.worldObj.isRemote) {
+            return this.recipes == null ? new MerchantRecipeList() : this.recipes;
+        }
+        this.refreshTradesIfNeeded();
         if (this.recipes == null) {
             this.recipes = DucklingTradeParser.buildRecipes(ModConfig.ducklingQuacklingTrades, this.rand);
+            this.tradeRecipeDay = this.getCurrentWorldDay();
         }
         return this.recipes;
     }
@@ -503,6 +522,9 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     @Override
     public void setRecipes(MerchantRecipeList recipes) {
         this.recipes = recipes;
+        if (recipes != null) {
+            this.tradeRecipeDay = this.getCurrentWorldDay();
+        }
     }
 
     @Override
@@ -511,6 +533,13 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
             recipe.incrementToolUses();
         }
         if (!this.worldObj.isRemote) {
+            this.fishingSessionTradeUsed = true;
+            this.setFishingActive(false);
+            this.clearFishingSession();
+            if (this.customer != null) {
+                this.customer.closeScreen();
+                this.setCustomer(null);
+            }
             this.worldObj.setEntityState(this, (byte)14);
         }
     }
@@ -519,15 +548,58 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     public void func_110297_a_(ItemStack stack) {
     }
 
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
-        AnimationBuilder builder = new AnimationBuilder();
-        if (this.isFishing()) {
-            builder.addAnimation("fishing", Boolean.TRUE);
-        } else if (event.isMoving()) {
-            builder.addAnimation("walking", Boolean.TRUE);
-        } else {
-            builder.addAnimation("idle", Boolean.TRUE);
+    private void refreshTradesIfNeeded() {
+        if (!ModConfig.ducklingQuacklingRefreshTradesDaily || this.worldObj == null || this.worldObj.isRemote) {
+            return;
         }
+        long currentDay = this.getCurrentWorldDay();
+        if (currentDay == Long.MIN_VALUE) {
+            return;
+        }
+        if (this.tradeRecipeDay != currentDay) {
+            this.tradeRecipeDay = currentDay;
+            this.recipes = null;
+        }
+    }
+
+    private long getCurrentWorldDay() {
+        return this.worldObj == null ? Long.MIN_VALUE : this.worldObj.getWorldTime() / 24000L;
+    }
+
+    private boolean isAnimationMoving(AnimationEvent<?> event) {
+        boolean moving = (event != null && event.isMoving())
+                || this.limbSwingAmount > 0.015F
+                || this.motionX * this.motionX + this.motionZ * this.motionZ > 1.0E-4D
+                || this.getHorizontalTravelSq() > 1.0E-4D;
+        if (moving) {
+            this.movingAnimationGraceTicks = 3;
+            return true;
+        }
+        if (this.movingAnimationGraceTicks > 0) {
+            --this.movingAnimationGraceTicks;
+            return true;
+        }
+        return false;
+    }
+
+    private double getHorizontalTravelSq() {
+        double dx = this.posX - this.prevPosX;
+        double dz = this.posZ - this.prevPosZ;
+        return dx * dx + dz * dz;
+    }
+
+    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+        String animationName;
+        if (this.isFishing()) {
+            animationName = "fishing";
+        } else if (this.isAnimationMoving(event)) {
+            animationName = "walking";
+        } else {
+            animationName = "idle";
+        }
+        this.activeAnimationName = animationName;
+        AnimationBuilder builder = new AnimationBuilder();
+        builder.addAnimation(animationName, Boolean.TRUE);
         event.getController().setAnimation(builder);
         return PlayState.CONTINUE;
     }

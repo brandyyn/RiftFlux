@@ -128,6 +128,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.enableWheatfieldBiome) {
             mixins.add("early.MixinWorldGenLakes_SkipWheatfield");
+            mixins.add("early.MixinMapGenStructure_NoWheatfieldStructures");
         }
         if (ModConfig.enableArmorMixin) {
             mixins.add("early.MixinArmorProperties");
@@ -230,6 +231,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.legendGearEnableLegacyLegendGear) {
             mixins.add("early.legendgear.MixinEntityLivingBase_StarbeamJumpAccessor");
             mixins.add("early.legendgear.MixinBlockRedstoneComparator_LegacyPedestal");
+            if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+                mixins.add("early.legendgear.MixinGuiIngame_StarbeamMountPrompt");
+            }
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             mixins.add("accessor.GuiChatAccessor");
@@ -370,11 +374,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             boolean hasBackhand = loadedCoreMods.contains("xonin.backhand.coremod.BackhandLoadingPlugin")
                     || hasBackhandClass();
             if (hasBackhand) {
-                mixins.add("early.backhand.MixinBackhandUtils_IceRodGliderMainhandOnly");
                 mixins.add("early.backhand.MixinGuiInventory_BackhandSlot");
                 mixins.add("early.backhand.MixinGuiInventoryBackpack_BackhandSlot");
                 mixins.add("early.backhand.MixinGuiSatchelsInventory_BackhandSlot");
                 mixins.add("early.backhand.MixinContainerPlayer_BackhandSlot");
+                mixins.add("early.backhand.MixinBackhandUtils_BlockUtilityOffhand");
                 if (ModConfig.enableIsometricPhotoMode) {
                     mixins.add("early.backhand.MixinSyncedKeybind_BackhandPhotoMode");
                 }

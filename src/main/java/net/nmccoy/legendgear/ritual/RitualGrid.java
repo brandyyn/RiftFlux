@@ -59,9 +59,9 @@ public class RitualGrid {
         for (int i = 0; i < this.offsets.length; ++i) {
             int offset = rand.nextInt(6) + 1;
             if (offset >= 4) {
-                // empty if block
+                ++offset;
             }
-            this.offsets[i] = ++offset;
+            this.offsets[i] = offset;
         }
     }
 
@@ -163,4 +163,3 @@ public class RitualGrid {
 
     }
 }
-

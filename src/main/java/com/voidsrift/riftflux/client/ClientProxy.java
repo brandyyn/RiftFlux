@@ -165,6 +165,8 @@ public class ClientProxy extends CommonProxy {
         }
         CelestialFogEventClientState.bootstrap();
         BombCarryClientHandler.bootstrap();
+        StarbeamRailHud.bootstrap();
+        TorchBillboardRenderer.bootstrap();
         // Stars (tag new items so the GUI mixin can draw)
         if (ModConfig.enableItemPickupStar) {
             PickupStarClientTracker.bootstrap();

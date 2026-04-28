@@ -49,6 +49,7 @@ public class ModConfig {
     public static boolean disableThermalDynamicsFacades;
     public static boolean fixChocolateQuestDivideByZero;
     public static boolean hideChocolateQuestGeneratingStructureOverlay;
+    public static boolean thaumcraftOnlyWarpResearchRequiresMinigame;
 
     public static boolean enableArmorMixin;
 
@@ -100,6 +101,8 @@ public class ModConfig {
     public static boolean hotbarSelectorAboveItemText;
     public static boolean enableFenceTextureModule;
     public static boolean disableFencePumpkinConnections;
+    public static boolean dualHotbarShowMountedHealth;
+    public static boolean dualHotbarUseCustomMountOnboardPrompt;
     public static boolean enableJackOLanternHelmet;
     public static boolean disablePumpkinOverlay;
     public static boolean disableUnderwaterOverlay;
@@ -653,12 +656,33 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     private static final String[] DEFAULT_PALARIA_NIMATIN_PASSENGER_BLACKLIST = new String[]{
             "EntityNimatin",
-            "EntityBison"
+            "EntityBison",
+            "EntitySootSprite"
     };
 
     private static final String[] DEFAULT_DUCKLING_QUACKLING_TRADES = new String[]{
             "minecraft:emerald*1-6 -> minecraft:fish*1-6",
-            "minecraft:emerald*1-6 -> duckling:duck_egg*1-6"
+            "minecraft:emerald*1-6 -> ghibli:duck_egg*1-6",
+            "minecraft:emerald*1-6 -> legendgear:reedPipes*1; chance=50",
+            "minecraft:emerald*1-6 -> riftflux:creeptile_eye*1; chance=1",
+            "minecraft:emerald*1-6 -> riftflux:glider_yellow*1; chance=5",
+            "minecraft:emerald*1-6 -> riftflux:poptart*1-6; chance=15",
+            "minecraft:emerald*1-6 -> riftflux:glintrune*1-3@4; chance=10",
+            "minecraft:emerald*1-6 -> riftflux:suspicious_looking_eye*1; chance=2",
+            "minecraft:emerald*1-6 -> riftflux:axolotl_bucket*1@2; chance=10",
+            "minecraft:emerald*1-6 -> riftflux:pet_sun*1; chance=2",
+            "minecraft:emerald*1-6 -> riftflux:bright_sunflower*16-32; chance=20",
+            "minecraft:emerald*1-6 -> riftflux:sunflower_bush*16-32; chance=20",
+            "minecraft:emerald*1-6 -> riftflux:beanstalk*16-32; chance=20",
+            "minecraft:emerald*1-6 -> legendgear:blockBombFlower*1-3; chance=5",
+            "minecraft:emerald*1-6 -> riftflux:furniture_curtain_yellow*1-3; chance=7",
+            "minecraft:emerald*1-6 -> zelda:heartContainer*1; chance=2",
+            "minecraft:emerald*1-6 -> riftflux:petBanana*1; chance=2",
+            "minecraft:emerald*1-6 -> ghibli:soot_jar*1; chance=7",
+            "minecraft:emerald*1-6 -> worldexplorer:blowpipe*1; chance=25",
+            "minecraft:emerald*1-6 -> ghibli:star_candy*1; chance=25",
+            "minecraft:emerald*1-6 -> riftflux:toolbelt*1; chance=7",
+            "minecraft:emerald*1-6 -> riftflux:pet_pixie*1; chance=1"
     };
 
     private static final String[] DEFAULT_DUCKLING_QUACKLING_BREED_ITEMS = new String[]{
@@ -671,21 +695,55 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "fishRaw"
     };
 
+    private static final String[] DEFAULT_SOOT_SPRITE_HEALING_ITEMS = new String[]{
+            "minecraft:coal@0",
+            "minecraft:coal@1",
+            "ghibli:star_candy"
+    };
+
+    private static final String[] DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES = new String[]{
+            "heartPickup*1|0.2",
+            "emeraldShard*1|0.2",
+            "minecraft:arrow*1|0.2",
+            "starCandy*1|0.01"
+    };
+
+    private static final String[] DEFAULT_LEGACY_MYSTIC_SHRUB_CHARGED_PRIZE_ENTRIES = new String[]{
+            "minecraft:gold_nugget*1|20",
+            "heartPickup*3|20",
+            "minecraft:arrow*5|20",
+            "emeraldShard*1@1|20",
+            "itemBomb*3|20"
+    };
+
     // Axolotl module
     public static boolean enableAxolotlModule;
     public static boolean enableAxolotlNaturalSpawning;
     public static int axolotlSpawnWeight;
     public static float axolotlMaxHealth;
 
-    // Duckling module
+    // Ghibli module
     public static boolean enableDucklingModule;
     public static boolean enableDucklingNaturalSpawning;
+    public static boolean ghibliStarCandyRecipeEnabled;
     public static int ducklingDuckSpawnWeight;
+    public static float ducklingAgentDNaturalVariantChancePercent;
     public static int ducklingQuacklingSpawnWeight;
+    public static boolean ghibliSootSpriteNaturalSpawning;
+    public static int ghibliSootSpriteSpawnWeight;
+    public static int ghibliSootSpriteMinGroupSize;
+    public static int ghibliSootSpriteMaxGroupSize;
+    public static float ghibliSootSpriteCoalOreSpawnChancePercent;
+    public static int ghibliSootSpriteCoalOreMinSpawns;
+    public static int ghibliSootSpriteCoalOreMaxSpawns;
+    public static int ghibliSootSpriteChirpIntervalTicks;
+    public static float ghibliSootSpriteMaxHealth;
+    public static String[] ghibliSootSpriteHealingItems;
     public static float ducklingQuacklingMaxHealth;
     public static boolean ducklingQuacklingTradingEnabled;
     public static boolean ducklingQuacklingTradeOnlyWhileFishing;
     public static String[] ducklingQuacklingTrades;
+    public static boolean ducklingQuacklingRefreshTradesDaily;
     public static String[] ducklingQuacklingBreedItems;
     public static String[] ducklingQuacklingBreedOreDictionary;
     public static int[] ducklingQuacklingFishingCatchDelayTicks;
@@ -700,9 +758,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int legendGearSpellSpreadId;
     public static int legendGearSpellArmoredId;
     public static boolean legendGearEnableLegacyLegendGear;
+    public static boolean legendGearSoulTetherEnabled;
     public static int legendGearLegacyFocusEnchantmentId;
     public static int legendGearLegacySoulTetherEnchantmentId;
     public static int legendGearLegacyBombBagCapacity;
+    public static int legendGearLegacyBombMaxStackSize;
     public static int legendGearLegacyBombDamage;
     public static int legendGearLegacyBombFuseTimeTicks;
     public static float legendGearLegacyBombExplosionStrength;
@@ -719,12 +779,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int legendGearLegacyClayJarUndergroundMaxY;
     public static String[] legendGearLegacyClayJarNaturalLootEntries;
     public static String[] legendGearLegacyBombableBlocks;
-    public static double legendGearLegacyMysticShrubArrowChance;
     public static double legendGearLegacyMysticShrubGenStarChance;
-    public static double legendGearLegacyMysticShrubHeartChance;
+    public static String[] legendGearLegacyMysticShrubChargedPrizeEntries;
     public static double legendGearLegacyMysticShrubJackpotChance;
+    public static String[] legendGearLegacyMysticShrubDropEntries;
     public static int legendGearLegacyMysticShrubRarity;
-    public static double legendGearLegacyMysticShrubShardChance;
     public static int legendGearLegacyQuiverMaxCapacity;
     public static int[] legendGearLegacyShrubDisabledBiomes;
     public static boolean legendGearLegacyAllowCandy;
@@ -732,11 +791,15 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean legendGearLegacyEmeraldShardsAllowed;
     public static boolean legendGearLegacyHeartsAllowed;
     public static boolean legendGearLegacyMagicMirrorAllowed;
+    public static int legendGearLegacyMagicMirrorDurability;
+    public static String[] legendGearFortuneCookiePotionEffects;
+    public static String[] legendGearSweetSnackPotionEffects;
     public static boolean legendGearLegacyMedallionsAllowed;
     public static boolean legendGearLegacyMysticShrubAllowed;
     public static boolean legendGearLegacyMysticShrubSuperPrizes;
     public static boolean legendGearLegacyQuiverAllowed;
     public static boolean legendGearLegacyHookshotAnyBlock;
+    public static String[] legendGearLegacyHookshotBlocks;
     public static int legendGearLegacyHookshotDurability;
     public static boolean legendGearLegacyAmuletsWorkFromInventory;
     public static boolean legendGearLegacyAmuletsUseBaublesSlot;
@@ -994,9 +1057,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean directionalCrossedPlantRenderingByPlacement;
     public static boolean directionalCrossedPlantFacePlayerOnPlacement;
     public static boolean doubleSidedTorchRendering;
+    public static boolean billboardTorchRendering;
+    public static String[] billboardTorchRenderingBlacklist;
+    public static String[] billboardTorchRenderingWhitelist;
     public static boolean modernTorchRendering;
-    public static boolean modernTorchRenderingWhitelistMode;
-    public static String[] modernTorchRenderingFilter;
+    public static String[] modernTorchRenderingBlacklist;
+    public static String[] modernTorchRenderingWhitelist;
     public static boolean asyncWorldSelection;
     public static boolean saveWorldBeforeWindowClose;
     public static float movementSpeedFovFactorMax;
@@ -1084,6 +1150,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     public static void init(File file){
         config = new Configuration(file);
+        config.load();
         syncConfig();
     }
 
@@ -1171,6 +1238,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "general",
                 true,
                 "If true, disables ThermalDynamics facades/covers (recipes, placement, and persisted cover data)."
+        );
+
+        thaumcraftOnlyWarpResearchRequiresMinigame = config.getBoolean(
+                "OnlyWarpResearchRequiresMinigame",
+                "thaumcraft",
+                true,
+                "If true, direct-learn warp research creates a Thaumcraft research note instead of completing immediately. This lets Thaumcraft's own research_difficulty setting stay in control while keeping warp research dangerous. Requires restart."
         );
 
         fixChocolateQuestDivideByZero = config.getBoolean(
@@ -2617,11 +2691,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "avatar",
                 new String[]{
                         "EntityBison",
-                        "EntityNimatin"
+                        "EntityNimatin",
+                        "EntitySootSprite"
                 },
                 "Entity IDs/class names used to filter which mobs can ride Appa.\n" +
                         "Matches entity ID, class simple name, or full class name.\n" +
-                        "Default blocks Appa from mounting itself and Nimatins from riding Appa."
+                        "Default blocks Appa from mounting itself, Nimatins from riding Appa, and Soot Sprites from riding Appa."
         );
         appaMobPassengerEntityFilter = sanitizeAppaPassengerFilter(appaMobPassengerEntityFilter);
         config.getCategory("avatar")
@@ -3011,6 +3086,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, restores the missing 1.5.2 LegendGear legacy items and blocks inside the integrated LegendGear module."
         );
 
+        legendGearSoulTetherEnabled = config.getBoolean(
+                "EnableSoulTether",
+                "legendgear",
+                true,
+                "If false, disables both the legacy Soul Tether enchantment and the ritual-applied Soul Tether item effect."
+        );
+
         legendGearLegacyFocusEnchantmentId = config.getInt(
                 "legacyFocusEnchantmentId",
                 "legendgear",
@@ -3040,6 +3122,19 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 ),
                 0,
                 999
+        );
+
+        legendGearLegacyBombMaxStackSize = clampInt(
+                config.getInt(
+                        "legacyBombMaxStackSize",
+                        "legendgear",
+                        16,
+                        1,
+                        64,
+                        "Maximum inventory stack size for legacy Bomb items."
+                ),
+                1,
+                64
         );
 
         legendGearLegacyBombDamage = config.getInt(
@@ -3172,16 +3267,27 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legacyBombableBlocks",
                 "legendgear",
                 new String[]{"minecraft:cobblestone", "minecraft:tnt"},
-                "Block registry names that legacy bombs can break, for example minecraft:cobblestone. Ore dictionary entries are also supported with an ore: prefix, for example ore:stone."
+                "Block registry names that legacy bombs can break, for example minecraft:cobblestone. Specific metadata is supported with modid:block:meta or modid:block@meta. Ore dictionary entries are also supported with an ore: prefix, for example ore:stone."
         );
 
-        legendGearLegacyMysticShrubArrowChance = config.getFloat(
-                "legacyMysticShrubArrowChance",
+        legendGearLegacyMysticShrubDropEntries = config.getStringList(
+                "legacyMysticShrubDropEntries",
                 "legendgear",
-                0.2F,
-                0.0F,
-                1.0F,
-                "Chance for a normal legacy Mystic Shrub to drop an arrow."
+                DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES,
+                "Independent normal legacy Mystic Shrub drop rolls.\n" +
+                        "Syntax: item_or_alias[*count or *min-max][@meta]|chance\n" +
+                        "Chance accepts 0.05 or 5 for 5%.\n" +
+                        "Examples: legendgear:heartPickup*1|20  or  minecraft:arrow*1-3|0.5."
+        );
+
+        legendGearLegacyMysticShrubChargedPrizeEntries = config.getStringList(
+                "legacyMysticShrubChargedPrizeEntries",
+                "legendgear",
+                DEFAULT_LEGACY_MYSTIC_SHRUB_CHARGED_PRIZE_ENTRIES,
+                "Weighted charged legacy Mystic Shrub prize table.\n" +
+                        "Syntax: item_or_alias[*count or *min-max][@meta]|weight\n" +
+                        "Exactly one valid entry is chosen when a charged shrub pays out.\n" +
+                        "Examples: heartPickup*3|20  or  itemBomb*1-3|5."
         );
 
         legendGearLegacyMysticShrubGenStarChance = config.getFloat(
@@ -3191,15 +3297,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 0.0F,
                 1.0F,
                 "Chance for a legacy Mystic Shrub cluster to generate in a star shape."
-        );
-
-        legendGearLegacyMysticShrubHeartChance = config.getFloat(
-                "legacyMysticShrubHeartChance",
-                "legendgear",
-                0.2F,
-                0.0F,
-                1.0F,
-                "Chance for a normal legacy Mystic Shrub to drop a heart."
         );
 
         legendGearLegacyMysticShrubJackpotChance = config.getFloat(
@@ -3214,19 +3311,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         legendGearLegacyMysticShrubRarity = config.getInt(
                 "legacyMysticShrubRarity",
                 "legendgear",
-                8,
+                16,
                 1,
                 1024,
                 "Average chunk rarity for legacy Mystic Shrub generation. 1 means every chunk."
-        );
-
-        legendGearLegacyMysticShrubShardChance = config.getFloat(
-                "legacyMysticShrubShardChance",
-                "legendgear",
-                0.2F,
-                0.0F,
-                1.0F,
-                "Chance for a normal legacy Mystic Shrub to drop an emerald shard."
         );
 
         legendGearLegacyQuiverMaxCapacity = clampInt(
@@ -3284,6 +3372,38 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, the legacy Magic Mirror recipe and behavior remain enabled."
         );
 
+        legendGearLegacyMagicMirrorDurability = config.getInt(
+                "legacyMagicMirrorDurability",
+                "legendgear",
+                64,
+                0,
+                32767,
+                "Durability for the legacy Magic Mirror. Set to 0 for unlimited uses."
+        );
+
+        legendGearFortuneCookiePotionEffects = config.getStringList(
+                "fortuneCookiePotionEffects",
+                "legendgear",
+                new String[0],
+                "Potion effects Fortune Cookies can apply at random when eaten.\n" +
+                        "Format per entry: potionNameOrId,level,durationSeconds (or durationTicks).\n" +
+                        "Examples: speed,2,30  or  regeneration,1,10s.\n" +
+                        "Leave empty to keep Fortune Cookies as chat-only."
+        );
+
+        legendGearSweetSnackPotionEffects = config.getStringList(
+                "sweetSnackPotionEffects",
+                "legendgear",
+                new String[]{
+                        "legendgearManaRegen,2,20s",
+                        "speed,3,20s"
+                },
+                "Potion effects Star Candy and Poptarts can apply at random when eaten.\n" +
+                        "Format per entry: potionNameOrId,level,durationSeconds (or durationTicks).\n" +
+                        "Examples: legendgearManaRegen,2,20s  or  speed,3,20s.\n" +
+                        "Leave empty to disable random potion effects from those snacks."
+        );
+
         legendGearLegacyMedallionsAllowed = config.getBoolean(
                 "legacyMedallionsAllowed",
                 "legendgear",
@@ -3317,6 +3437,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legendgear",
                 true,
                 "If true, the legacy Hookshot can attach to any solid block instead of only wood plus the compatibility list."
+        );
+
+        legendGearLegacyHookshotBlocks = config.getStringList(
+                "legacyHookshotBlocks",
+                "legendgear",
+                new String[0],
+                "Extra blocks the legacy Hookshot can attach to when legacyHookshotAnyBlock=false. Use registry names such as minecraft:stone or modid:block_name. Wood blocks are always allowed."
         );
 
         legendGearLegacyHookshotDurability = config.getInt(
@@ -5705,40 +5832,128 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         );
 
         enableDucklingModule = config.getBoolean(
-                "EnableDucklingModule",
-                "duckling",
+                "EnableGhibliModule",
+                "ghibli",
                 true,
-                "Master switch for integrated Duckling content."
+                "Master switch for integrated Ghibli content."
         );
 
         enableDucklingNaturalSpawning = config.getBoolean(
                 "EnableNaturalSpawning",
-                "duckling",
+                "ghibli",
                 true,
                 "If true, ducks spawn in river biomes and quacklings spawn in swamp-like biomes."
         );
 
+        ghibliStarCandyRecipeEnabled = config.getBoolean(
+                "EnableStarCandyRecipe",
+                "ghibli",
+                true,
+                "If true, the Star Candy crafting recipe is registered."
+        );
+
         ducklingDuckSpawnWeight = config.getInt(
                 "DuckSpawnWeight",
-                "duckling",
+                "ghibli",
                 5,
                 0,
                 1000,
                 "Spawn weight for natural duck spawning."
         );
 
+        ducklingAgentDNaturalVariantChancePercent = config.getFloat(
+                "DuckAgentDNaturalVariantChancePercent",
+                "ghibli",
+                1.0F,
+                0.0F,
+                100.0F,
+                "Percent chance for a naturally/randomly generated duck to use the Agent D variant as its real stored variant. Agent D ducks keep the skin even after renaming."
+        );
+
         ducklingQuacklingSpawnWeight = config.getInt(
                 "QuacklingSpawnWeight",
-                "duckling",
+                "ghibli",
                 1,
                 0,
                 1000,
                 "Spawn weight for natural quackling spawning."
         );
 
+        ghibliSootSpriteNaturalSpawning = config.getBoolean(
+                "EnableSootSpriteNaturalSpawning",
+                "ghibli",
+                true,
+                "If false, Soot Sprites will not spawn naturally. Coal ore spawning is controlled separately."
+        );
+
+        ghibliSootSpriteSpawnWeight = config.getInt(
+                "SootSpriteSpawnWeight",
+                "ghibli",
+                100,
+                0,
+                1000,
+                "Spawn weight for natural Soot Sprite spawning. Soot Sprites only accept low-light spawn positions."
+        );
+
+        int[] sootSpriteGroupSize = getIntRange(
+                "SootSpriteGroupSize",
+                "ghibli",
+                "4-8",
+                1,
+                64,
+                "Natural Soot Sprite spawn group size as min-max, for example 4-8."
+        );
+        ghibliSootSpriteMinGroupSize = sootSpriteGroupSize[0];
+        ghibliSootSpriteMaxGroupSize = sootSpriteGroupSize[1];
+
+        ghibliSootSpriteCoalOreSpawnChancePercent = config.getFloat(
+                "SootSpriteCoalOreSpawnChancePercent",
+                "ghibli",
+                10.0F,
+                0.0F,
+                100.0F,
+                "Percent chance for breaking coal ore to spawn Soot Sprites."
+        );
+
+        int[] sootSpriteCoalOreSpawns = getIntRange(
+                "SootSpriteCoalOreSpawns",
+                "ghibli",
+                "1-4",
+                0,
+                64,
+                "Number of Soot Sprites spawned when coal ore spawning triggers, as min-max, for example 1-3."
+        );
+        ghibliSootSpriteCoalOreMinSpawns = sootSpriteCoalOreSpawns[0];
+        ghibliSootSpriteCoalOreMaxSpawns = sootSpriteCoalOreSpawns[1];
+
+        ghibliSootSpriteChirpIntervalTicks = config.getInt(
+                "SootSpriteChirpIntervalTicks",
+                "ghibli",
+                600,
+                0,
+                12000,
+                "Base interval between Soot Sprite ambient chirps, in ticks. 20 ticks = 1 second. Set to 0 to disable ambient chirps."
+        );
+
+        ghibliSootSpriteMaxHealth = config.getFloat(
+                "SootSpriteMaxHealth",
+                "ghibli",
+                6.0F,
+                1.0F,
+                1024.0F,
+                "Base max health for Soot Sprites."
+        );
+
+        ghibliSootSpriteHealingItems = config.getStringList(
+                "SootSpriteHealingItems",
+                "ghibli",
+                DEFAULT_SOOT_SPRITE_HEALING_ITEMS,
+                "Items that can heal Soot Sprites when fed to them. Syntax: modid:item or modid:item@meta. If meta is omitted, all metadata values match."
+        );
+
         ducklingQuacklingMaxHealth = config.getFloat(
                 "QuacklingMaxHealth",
-                "duckling",
+                "ghibli",
                 40.0F,
                 1.0F,
                 4096.0F,
@@ -5747,41 +5962,48 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
         ducklingQuacklingTradingEnabled = config.getBoolean(
                 "EnableQuacklingTrading",
-                "duckling",
+                "ghibli",
                 true,
                 "If false, Quacklings cannot open their trade GUI."
         );
 
         ducklingQuacklingTradeOnlyWhileFishing = config.getBoolean(
                 "QuacklingTradeOnlyWhileFishing",
-                "duckling",
+                "ghibli",
                 true,
                 "If true, players can only trade with Quacklings while they are sitting and actively fishing."
         );
 
         ducklingQuacklingTrades = config.getStringList(
                 "QuacklingTrades",
-                "duckling",
+                "ghibli",
                 DEFAULT_DUCKLING_QUACKLING_TRADES,
-                "Trades Quacklings can offer. Leave this list empty to disable Quackling trading. Syntax: buy_item[*count or *min-max][@meta][ + second_buy_item[*count or *min-max][@meta]] -> sell_item[*count or *min-max][@meta]. Examples: minecraft:emerald*1-4 -> minecraft:fish*1-4 or minecraft:emerald*1 + minecraft:fish*2 -> duckling:duck_egg*1. Meta defaults to 0; use 32767 for wildcard input meta."
+                "Trades Quacklings can offer. Leave this list empty to disable Quackling trading. Syntax: buy_item[*count or *min-max][@meta][ + second_buy_item[*count or *min-max][@meta]] -> sell_item[*count or *min-max][@meta][; chance=percent]. Examples: minecraft:emerald*1-4 -> minecraft:fish*1-4, minecraft:emerald*1 + minecraft:fish*2 -> ghibli:duck_egg*1, or minecraft:emerald*4 -> ghibli:duck_egg*1; chance=35. Meta defaults to 0; use 32767 for wildcard input meta. If no trades pass their chance rolls, one valid trade is still guaranteed."
+        );
+
+        ducklingQuacklingRefreshTradesDaily = config.getBoolean(
+                "QuacklingRefreshTradesDaily",
+                "ghibli",
+                true,
+                "If true, each Quackling rerolls its offers at the start of every in-game day."
         );
 
         ducklingQuacklingBreedItems = config.getStringList(
                 "QuacklingBreedItems",
-                "duckling",
+                "ghibli",
                 DEFAULT_DUCKLING_QUACKLING_BREED_ITEMS,
                 "Item registry names that can breed and tempt Quacklings. Syntax: modid:item or modid:item@meta. If meta is omitted, all metadata values match. Entries starting with ore: are treated as ore dictionary names."
         );
 
         ducklingQuacklingBreedOreDictionary = config.getStringList(
                 "QuacklingBreedOreDictionary",
-                "duckling",
+                "ghibli",
                 DEFAULT_DUCKLING_QUACKLING_BREED_ORE_DICTIONARY,
                 "Ore dictionary names that can breed and tempt Quacklings."
         );
 
         ducklingQuacklingFishingCatchDelayTicks = getIntRangeConfig(
-                "duckling",
+                "ghibli",
                 "QuacklingFishingCatchDelayTicks",
                 1200,
                 3600,
@@ -5791,7 +6013,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         );
 
         ducklingQuacklingFishingCatchesBeforeStop = getIntRangeConfig(
-                "duckling",
+                "ghibli",
                 "QuacklingFishingCatchesBeforeStop",
                 6,
                 12,
@@ -5801,18 +6023,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         );
 
         ducklingQuacklingFishingSessionsPerDay = getIntRangeConfig(
-                "duckling",
+                "ghibli",
                 "QuacklingFishingSessionsPerDay",
                 0,
                 2,
                 0,
-                2,
-                "Random daily autonomous fishing session range for each Quackling. Format: [minimum, maximum]. Maximum is capped at 2."
+                64,
+                "Random daily autonomous fishing session range for each Quackling. Format: [minimum, maximum]."
         );
 
         ducklingQuacklingFishingBumpRecoveryTicks = config.getInt(
                 "QuacklingFishingBumpRecoveryTicks",
-                "duckling",
+                "ghibli",
                 300,
                 20,
                 72000,
@@ -6061,6 +6283,20 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Extra pixels of vertical padding between the held-item tooltip and the top-most armor/mana bar."
         );
 
+        dualHotbarShowMountedHealth = config.getBoolean(
+                "ShowMountedHealth",
+                "dualhotbar",
+                true,
+                "If false, hides the mounted creature health bar and keeps the normal HUD layout while riding."
+        );
+
+        dualHotbarUseCustomMountOnboardPrompt = config.getBoolean(
+                "UseCustomMountOnboardPrompt",
+                "dualhotbar",
+                true,
+                "If true, RiftFlux renders the mount dismount prompt itself so it can share the same font, fade timing, and positioning rules as the rest of the centered HUD overlays."
+        );
+
         // --- Satchels ---
         satchelsHotSwap = config.getBoolean(
                 "SatchelsHotSwap", "satchels", false,
@@ -6265,28 +6501,44 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, torch-style renders keep their normal torch geometry but do not hide back faces when viewed from the opposite side."
         );
+        billboardTorchRendering = config.getBoolean(
+                "BillboardTorchRendering",
+                "client",
+                false,
+                "If true, torch-style renders listed in BillboardTorchRenderingWhitelist or not using ModernTorchRendering render with RiftFlux's camera-facing billboard technique. This supersedes DoubleSidedTorchRendering for matching torch blocks."
+        );
+        billboardTorchRenderingBlacklist = config.getStringList(
+                "BillboardTorchRenderingBlacklist",
+                "client",
+                new String[0],
+                "Entries blocked from BillboardTorchRendering unless also listed in BillboardTorchRenderingWhitelist. Entries can be a mod id (example: divinerpg), a mod wildcard (example: divinerpg:*), a block id (example: divinerpg:edenTorch), a block path/name (example: starRail), or a block class name."
+        );
+        billboardTorchRenderingWhitelist = config.getStringList(
+                "BillboardTorchRenderingWhitelist",
+                "client",
+                new String[0],
+                "Entries forced to use BillboardTorchRendering even when ModernTorchRendering would otherwise apply."
+        );
         modernTorchRendering = config.getBoolean(
                 "ModernTorchRendering",
                 "client",
                 true,
-                "If true, torch-render blocks allowed by ModernTorchRenderingFilter render with RiftFlux's modern redstone-torch-inspired model."
+                "If true, torch-render blocks render with RiftFlux's modern redstone-torch-inspired model unless blocked by ModernTorchRenderingBlacklist."
         );
-        modernTorchRenderingWhitelistMode = config.getBoolean(
-                "ModernTorchRenderingWhitelistMode",
-                "client",
-                false,
-                "If true, ModernTorchRendering only applies to entries in ModernTorchRenderingFilter.\n" +
-                        "If false, ModernTorchRendering applies to every torch-render block except entries in ModernTorchRenderingFilter."
-        );
-        modernTorchRenderingFilter = config.getStringList(
-                "ModernTorchRenderingFilter",
+        modernTorchRenderingBlacklist = config.getStringList(
+                "ModernTorchRenderingBlacklist",
                 "client",
                 new String[] {
                         "chisel",
                         "netherlicious",
                 },
-                "Whitelist or blacklist entries for ModernTorchRendering depending on ModernTorchRenderingWhitelistMode.\n" +
-                        "Entries can be a mod id (example: divinerpg), a block id (example: divinerpg:edenTorch), a block path/name (example: starRail), or a block class name."
+                "Entries blocked from ModernTorchRendering. Entries can be a mod id (example: divinerpg), a mod wildcard (example: divinerpg:*), a block id (example: divinerpg:edenTorch), a block path/name (example: starRail), or a block class name."
+        );
+        modernTorchRenderingWhitelist = config.getStringList(
+                "ModernTorchRenderingWhitelist",
+                "client",
+                new String[0],
+                "Entries forced to use ModernTorchRendering even if their mod is blocked by ModernTorchRenderingBlacklist. Use this for per-block exceptions such as divinerpg:edenTorch."
         );
         asyncWorldSelection = config.getBoolean(
                 "AsyncWorldSelection",
@@ -6975,7 +7227,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     }
 
     public static int getQuacklingFishingMaxSessionsPerDay() {
-        return getRangeMax(ducklingQuacklingFishingSessionsPerDay, 2);
+        return getRangeMax(ducklingQuacklingFishingSessionsPerDay, 64);
     }
 
     public static boolean hasQuacklingTradesConfigured() {
@@ -6983,7 +7235,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             return false;
         }
         for (String trade : ducklingQuacklingTrades) {
-            if (trade != null && !trade.trim().isEmpty()) {
+            if (trade == null) {
+                continue;
+            }
+            String trimmed = trade.trim();
+            if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
                 return true;
             }
         }
@@ -7000,10 +7256,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     private static String[] sanitizeAppaPassengerFilter(String[] values) {
         if (values == null || values.length == 0) {
-            return new String[]{"EntityBison", "EntityNimatin"};
+            return new String[]{"EntityBison", "EntityNimatin", "EntitySootSprite"};
         }
         final String appaEntityClass = "EntityBison";
         final String nimatinEntityClass = "EntityNimatin";
+        final String sootSpriteEntityClass = "EntitySootSprite";
         LinkedHashSet<String> unique = new LinkedHashSet<String>();
         HashSet<String> lowered = new HashSet<String>();
         for (String raw : values) {
@@ -7018,6 +7275,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 entry = appaEntityClass;
             } else if ("EntityNimatin".equalsIgnoreCase(entry)) {
                 entry = nimatinEntityClass;
+            } else if ("EntitySootSprite".equalsIgnoreCase(entry)) {
+                entry = sootSpriteEntityClass;
             }
             String key = entry.toLowerCase();
             if (lowered.add(key)) {
@@ -7030,6 +7289,9 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         if (lowered.add(nimatinEntityClass.toLowerCase())) {
             unique.add(nimatinEntityClass);
         }
+        if (lowered.add(sootSpriteEntityClass.toLowerCase())) {
+            unique.add(sootSpriteEntityClass);
+        }
         return unique.toArray(new String[unique.size()]);
     }
 
@@ -7039,6 +7301,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         }
         final String nimatinEntityClass = "EntityNimatin";
         final String appaEntityClass = "EntityBison";
+        final String sootSpriteEntityClass = "EntitySootSprite";
         LinkedHashSet<String> unique = new LinkedHashSet<String>();
         HashSet<String> lowered = new HashSet<String>();
         for (String raw : values) {
@@ -7053,6 +7316,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 entry = nimatinEntityClass;
             } else if ("EntityBison".equalsIgnoreCase(entry)) {
                 entry = appaEntityClass;
+            } else if ("EntitySootSprite".equalsIgnoreCase(entry)) {
+                entry = sootSpriteEntityClass;
             }
             String key = entry.toLowerCase();
             if (lowered.add(key)) {
@@ -7064,6 +7329,9 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         }
         if (lowered.add(appaEntityClass.toLowerCase())) {
             unique.add(appaEntityClass);
+        }
+        if (lowered.add(sootSpriteEntityClass.toLowerCase())) {
+            unique.add(sootSpriteEntityClass);
         }
         return unique.toArray(new String[unique.size()]);
     }
@@ -7506,6 +7774,36 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     private static int[] parsePotionIdList(String[] entries) {
         return ConfigResolver.parseIntegerList(entries);
+    }
+
+    private static int[] getIntRange(String key, String category, String defaultValue, int minAllowed, int maxAllowed, String comment) {
+        String raw = config.get(category, key, defaultValue, comment).getString();
+        int[] parsed = parseIntRange(raw, defaultValue, minAllowed, maxAllowed);
+        if (parsed[0] > parsed[1]) {
+            int swap = parsed[0];
+            parsed[0] = parsed[1];
+            parsed[1] = swap;
+        }
+        return parsed;
+    }
+
+    private static int[] parseIntRange(String raw, String defaultValue, int minAllowed, int maxAllowed) {
+        String value = raw == null ? defaultValue : raw.trim();
+        String[] parts = value.split("\\s*-\\s*", 2);
+        if (parts.length != 2) {
+            parts = defaultValue.split("\\s*-\\s*", 2);
+        }
+        try {
+            int min = clampInt(Integer.parseInt(parts[0].trim()), minAllowed, maxAllowed);
+            int max = clampInt(Integer.parseInt(parts[1].trim()), minAllowed, maxAllowed);
+            return new int[]{min, max};
+        } catch (NumberFormatException e) {
+            String[] defaults = defaultValue.split("\\s*-\\s*", 2);
+            return new int[]{
+                    clampInt(Integer.parseInt(defaults[0].trim()), minAllowed, maxAllowed),
+                    clampInt(Integer.parseInt(defaults[1].trim()), minAllowed, maxAllowed)
+            };
+        }
     }
 
     private static int getLegendGearPotionId(String key, int defaultId, String comment) {

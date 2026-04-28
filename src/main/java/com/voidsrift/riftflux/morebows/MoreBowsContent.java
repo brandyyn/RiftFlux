@@ -1,11 +1,11 @@
 package com.voidsrift.riftflux.morebows;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.util.PrefixedConfiguration;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import java.lang.reflect.Field;
@@ -108,19 +108,17 @@ public final class MoreBowsContent {
         addRecipes(diamondBow, enderBow, flameBow, frostBow, goldBow, ironBow, multiBow, stoneBow);
         registerOreDictionary(diamondBow, enderBow, flameBow, frostBow, goldBow, ironBow, multiBow, stoneBow);
 
-        EntityRegistry.registerModEntity(
+        RiftFluxEntityRegistry.registerModEntity(
                 (Class<? extends Entity>) Class.forName("iDiamondhunter.morebows.d"),
                 "MoreBowsArrowSpawner",
-                660,
                 riftflux.instance,
                 -1,
                 Integer.MAX_VALUE,
                 false
         );
-        EntityRegistry.registerModEntity(
+        RiftFluxEntityRegistry.registerModEntity(
                 (Class<? extends Entity>) Class.forName("iDiamondhunter.morebows.e"),
                 "MoreBowsCustomArrow",
-                661,
                 riftflux.instance,
                 64,
                 20,

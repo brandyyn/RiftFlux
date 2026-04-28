@@ -31,7 +31,8 @@
  */
 package net.nmccoy.legendgear.ritual;
 
-import java.util.HashSet;
+import com.voidsrift.riftflux.ModConfig;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.block.Block;
@@ -71,7 +72,7 @@ import net.nmccoy.legendgear.ritual.Ritual;
 import net.nmccoy.legendgear.ritual.RitualRecipe;
 
 public class RitualManager {
-    public Set<Ritual> rituals = new HashSet<Ritual>();
+    public Set<Ritual> rituals = new LinkedHashSet<Ritual>();
 
     public EntityFallingStar spawnRewardStar(TileEntityRitual location) {
         EntityFallingStar star = new EntityFallingStar(location.getWorldObj());
@@ -94,6 +95,9 @@ public class RitualManager {
     }
 
     public boolean spiritOffering(int spirit, Object offering, TileEntityRitual location, EntityPlayer caster) {
+        if (location == null || location.getWorldObj() == null || caster == null || caster.worldObj == null) {
+            return false;
+        }
         int offeringValue;
         boolean request = false;
         boolean granted = false;
@@ -170,7 +174,6 @@ public class RitualManager {
 
             @Override
             public boolean invoke(RitualRecipe ingredients, TileEntityRitual location, EntityPlayer caster) {
-                System.out.println("invoked " + this.unlocalizedName);
                 if (caster != null && !caster.worldObj.isRemote) {
                     List<EntityCow> cows = location.targetsInRitual(EntityCow.class);
                     if (cows.size() == 0) {
@@ -195,14 +198,6 @@ public class RitualManager {
         this.rituals.add(summonHorse);
         Ritual.Summoning summonPig = new Ritual.Summoning("summonPig", EntityPig.class, new RecipeComponent((Block)Blocks.brown_mushroom, (Block)Blocks.grass), (Object)Items.carrot);
         this.rituals.add(summonPig);
-        Ritual testCase = new Ritual("testCase", new RitualRecipe().add(new RecipeComponent(Blocks.gravel, Blocks.gravel))){
-
-            @Override
-            public boolean invoke(RitualRecipe ingredients, TileEntityRitual location, EntityPlayer caster) {
-                List<EntityItem> items = location.itemsInRitual();
-                return true;
-            }
-        };
         Ritual phoenixOffering = new Ritual("phoenixOffering", new RitualRecipe().add(new RecipeComponent((Block)Blocks.fire, Blocks.gold_block)).add(new RecipeComponent(LegendGear2.starstoneBlock))){
 
             @Override
@@ -250,30 +245,32 @@ public class RitualManager {
             }
         };
         this.rituals.add(phoenixAltarOffering);
-        Ritual soulTether = new Ritual("soulTether", new RitualRecipe().add(new RecipeComponent(Blocks.soul_sand, Blocks.tripwire)).add(new RecipeComponent(Blocks.iron_block))){
+        if (ModConfig.legendGearSoulTetherEnabled) {
+            Ritual soulTether = new Ritual("soulTether", new RitualRecipe().add(new RecipeComponent(Blocks.soul_sand, Blocks.tripwire)).add(new RecipeComponent(Blocks.iron_block))){
 
-            @Override
-            public boolean invoke(RitualRecipe ingredients, TileEntityRitual location, EntityPlayer caster) {
-                List<EntityItem> items = location.itemsInRitual();
-                if (items.size() == 1) {
-                    EntityItem ei = items.get(0);
-                    ItemStack stack = ei.getEntityItem();
-                    boolean pricePaid = RitualManager.spendRitualLevels(caster, 10);
-                    if (!pricePaid) {
-                        return false;
-                    }
-                    if (stack.getItem().getItemStackLimit(stack) == 1) {
-                        if (!stack.hasTagCompound()) {
-                            stack.setTagCompound(new NBTTagCompound());
+                @Override
+                public boolean invoke(RitualRecipe ingredients, TileEntityRitual location, EntityPlayer caster) {
+                    List<EntityItem> items = location.itemsInRitual();
+                    if (items.size() == 1) {
+                        EntityItem ei = items.get(0);
+                        ItemStack stack = ei.getEntityItem();
+                        if (stack.getItem().getItemStackLimit(stack) == 1) {
+                            boolean pricePaid = RitualManager.spendRitualLevels(caster, 10);
+                            if (!pricePaid) {
+                                return false;
+                            }
+                            if (!stack.hasTagCompound()) {
+                                stack.setTagCompound(new NBTTagCompound());
+                            }
+                            stack.getTagCompound().setBoolean("soulTether", true);
+                            return true;
                         }
-                        stack.getTagCompound().setBoolean("soulTether", true);
-                        return true;
                     }
+                    return false;
                 }
-                return false;
-            }
-        };
-        this.rituals.add(soulTether);
+            };
+            this.rituals.add(soulTether);
+        }
         Ritual crucible = new Ritual("crucible", new RitualRecipe().add(new RecipeComponent(Blocks.lava, Blocks.lava))){
 
             @Override
@@ -367,12 +364,109 @@ public class RitualManager {
     }
 
     public boolean attemptInvocation(RitualRecipe ingredients, TileEntityRitual location, EntityPlayer caster) {
+        if (location == null || location.getWorldObj() == null || location.getWorldObj().isRemote) {
+            return false;
+        }
         RitualRecipe generic = ingredients.generic();
         for (Ritual r : this.rituals) {
-            System.out.println("considered " + r.unlocalizedName);
-            if (!r.accepts(ingredients) && !r.accepts(generic)) continue;
-            return r.invoke(ingredients, location, caster);
+            boolean acceptsExact = r.accepts(ingredients);
+            boolean acceptsGeneric = r.accepts(generic);
+            if (!acceptsExact && !acceptsGeneric) continue;
+            try {
+                if (r.invoke(acceptsExact ? ingredients : generic, location, caster)) {
+                    return true;
+                }
+            } catch (RuntimeException ex) {
+                System.err.println("LegendGear ritual " + r.unlocalizedName + " failed safely: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        for (Ritual r : this.rituals) {
+            if (!this.hasRecipeBlocksOnGrid(location, r.components)) {
+                continue;
+            }
+            try {
+                if (r.invoke(r.components, location, caster)) {
+                    return true;
+                }
+            } catch (RuntimeException ex) {
+                System.err.println("LegendGear ritual " + r.unlocalizedName + " failed safely: " + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
         return false;
+    }
+
+    private boolean hasRecipeBlocksOnGrid(TileEntityRitual location, RitualRecipe recipe) {
+        if (location == null || location.grid == null || recipe == null || recipe.ingredients.isEmpty()) {
+            return false;
+        }
+        for (RecipeComponent component : recipe.ingredients.keySet()) {
+            if (!this.hasComponentOnGrid(location, component)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean hasComponentOnGrid(TileEntityRitual location, RecipeComponent component) {
+        if (component == null) {
+            return false;
+        }
+        if (component.alternatives != null) {
+            for (RecipeComponent alternative : component.alternatives) {
+                if (this.hasComponentOnGrid(location, alternative)) {
+                    return true;
+                }
+            }
+        }
+        if (component.type == RecipeComponent.ComponentType.SINGLETON) {
+            return this.countMatchingGridPoints(location, component.blocks) >= 1;
+        }
+        if (component.type == RecipeComponent.ComponentType.MATCH) {
+            return this.countMatchingGridPoints(location, component.blocks) >= 2;
+        }
+        if (component.type == RecipeComponent.ComponentType.DUO) {
+            for (RecipeElement required : component.blocks) {
+                if (this.countMatchingGridPoints(location, required) <= 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private int countMatchingGridPoints(TileEntityRitual location, Set<RecipeElement> required) {
+        int matches = 0;
+        for (int i = 0; i < 8; ++i) {
+            Block block = location.grid.blockOnPoint(i, location.getWorldObj());
+            if (block == Blocks.air) {
+                continue;
+            }
+            RecipeElement actual = new RecipeElement(block, location.grid.metaOnPoint(i, location.getWorldObj()));
+            for (RecipeElement element : required) {
+                if (element.match(actual)) {
+                    ++matches;
+                    break;
+                }
+            }
+        }
+        return matches;
+    }
+
+    private int countMatchingGridPoints(TileEntityRitual location, RecipeElement required) {
+        int matches = 0;
+        for (int i = 0; i < 8; ++i) {
+            Block block = location.grid.blockOnPoint(i, location.getWorldObj());
+            if (block == Blocks.air) {
+                continue;
+            }
+            RecipeElement actual = new RecipeElement(block, location.grid.metaOnPoint(i, location.getWorldObj()));
+            if (required.match(actual)) {
+                ++matches;
+            }
+        }
+        return matches;
     }
 }

@@ -1,9 +1,12 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.TorchRenderRules;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.IIcon;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,12 +31,18 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
 
     @Inject(method = "renderTorchAtAngle", at = @At("HEAD"), cancellable = true)
     private void riftflux$renderDoubleSidedTorch(Block block, double x, double y, double z, double xTilt, double zTilt, int meta, CallbackInfo ci) {
-        boolean useModernTorchModel = ModConfig.modernTorchRendering && this.riftflux$isModernTorchRenderingEligible(block, meta);
-        if (!ModConfig.doubleSidedTorchRendering && !useModernTorchModel) {
+        boolean useModernTorchModel = ModConfig.modernTorchRendering && TorchRenderRules.isModernTorchRenderingEligible(block, meta);
+        boolean billboardTorchEnabled = ModConfig.billboardTorchRendering;
+        boolean useBillboardTorch = billboardTorchEnabled && TorchRenderRules.shouldUseBillboardTorchRendering(block, meta, useModernTorchModel);
+        boolean useLegacyDoubleSided = ModConfig.doubleSidedTorchRendering && !billboardTorchEnabled;
+        if (!useModernTorchModel && !useBillboardTorch && !useLegacyDoubleSided) {
             return;
         }
 
-        if (useModernTorchModel) {
+        if (useBillboardTorch) {
+            ci.cancel();
+            return;
+        } else if (useModernTorchModel) {
             this.riftflux$renderTorchAtAngleModern(block, x, y, z, xTilt, zTilt, meta);
         } else {
             this.riftflux$renderTorchAtAngleDoubleSided(block, x, y, z, xTilt, zTilt, meta);
@@ -46,18 +55,37 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
         if (block == null || block.getRenderType() != Blocks.redstone_torch.getRenderType()) {
             return false;
         }
-        return riftflux$modernTorchFilterAllows(block);
+        return riftflux$torchFilterAllows(
+                block,
+                ModConfig.modernTorchRenderingWhitelist,
+                ModConfig.modernTorchRenderingBlacklist
+        );
     }
 
     @Unique
-    private static boolean riftflux$modernTorchFilterAllows(Block block) {
-        boolean matched = riftflux$matchesModernTorchFilter(block);
-        return ModConfig.modernTorchRenderingWhitelistMode ? matched : !matched;
+    private boolean riftflux$shouldUseBillboardTorchRendering(Block block, int meta, boolean useModernTorchModel) {
+        if (block == null || block.getRenderType() != Blocks.redstone_torch.getRenderType()) {
+            return false;
+        }
+        if (riftflux$matchesTorchFilter(block, ModConfig.billboardTorchRenderingWhitelist)) {
+            return true;
+        }
+        if (riftflux$matchesTorchFilter(block, ModConfig.billboardTorchRenderingBlacklist)) {
+            return false;
+        }
+        return !useModernTorchModel;
     }
 
     @Unique
-    private static boolean riftflux$matchesModernTorchFilter(Block block) {
-        String[] entries = ModConfig.modernTorchRenderingFilter;
+    private static boolean riftflux$torchFilterAllows(Block block, String[] whitelist, String[] blacklist) {
+        if (riftflux$matchesTorchFilter(block, whitelist)) {
+            return true;
+        }
+        return !riftflux$matchesTorchFilter(block, blacklist);
+    }
+
+    @Unique
+    private static boolean riftflux$matchesTorchFilter(Block block, String[] entries) {
         if (block == null || entries == null || entries.length == 0) {
             return false;
         }
@@ -117,6 +145,68 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
 
     @Unique
     private void riftflux$renderTorchAtAngleDoubleSided(Block block, double x, double y, double z, double xTilt, double zTilt, int meta) {
+        this.riftflux$renderTorchAtAngleDoubleSided(block, x, y, z, xTilt, zTilt, meta, false);
+    }
+
+    @Unique
+    private void riftflux$renderTorchAtAngleBillboard(Block block, double x, double y, double z, double xTilt, double zTilt, int meta) {
+        Tessellator tessellator = Tessellator.instance;
+        IIcon icon = this.getBlockIconFromSideAndMetadata(block, 0, meta);
+
+        if (this.hasOverrideBlockTexture()) {
+            icon = this.overrideBlockTexture;
+        }
+
+        x += 0.5D;
+        z += 0.5D;
+
+        double bottomX = x + xTilt;
+        double bottomY = y;
+        double bottomZ = z + zTilt;
+        double topX = x;
+        double topY = y + 1.0D;
+        double topZ = z;
+        double centerX = (bottomX + topX) * 0.5D;
+        double centerZ = (bottomZ + topZ) * 0.5D;
+        double[] billboardSide = this.riftflux$getBillboardSideVector(centerX, centerZ, 0.5D);
+        double sideX = billboardSide[0];
+        double sideZ = billboardSide[1];
+
+        this.riftflux$addDoubleSidedQuad(
+                tessellator,
+                topX - sideX, topY, topZ - sideZ, icon.getMinU(), icon.getMinV(),
+                bottomX - sideX, bottomY, bottomZ - sideZ, icon.getMinU(), icon.getMaxV(),
+                bottomX + sideX, bottomY, bottomZ + sideZ, icon.getMaxU(), icon.getMaxV(),
+                topX + sideX, topY, topZ + sideZ, icon.getMaxU(), icon.getMinV()
+        );
+    }
+
+    @Unique
+    private double[] riftflux$getBillboardSideVector(double centerX, double centerZ, double halfWidth) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        Entity camera = minecraft == null ? null : minecraft.renderViewEntity;
+        if (camera == null && minecraft != null) {
+            camera = minecraft.thePlayer;
+        }
+        if (camera == null) {
+            return new double[]{halfWidth, 0.0D};
+        }
+
+        double toCameraX = camera.posX - centerX;
+        double toCameraZ = camera.posZ - centerZ;
+        double length = Math.sqrt(toCameraX * toCameraX + toCameraZ * toCameraZ);
+        if (length < 1.0E-6D) {
+            return new double[]{halfWidth, 0.0D};
+        }
+
+        return new double[]{
+                -toCameraZ / length * halfWidth,
+                toCameraX / length * halfWidth
+        };
+    }
+
+    @Unique
+    private void riftflux$renderTorchAtAngleDoubleSided(Block block, double x, double y, double z, double xTilt, double zTilt, int meta, boolean cameraSelectiveBackFaces) {
         Tessellator tessellator = Tessellator.instance;
         IIcon icon = this.getBlockIconFromSideAndMetadata(block, 0, meta);
 
@@ -150,48 +240,54 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
         double topOffsetX = x + xTilt * (1.0D - topHeight);
         double topOffsetZ = z + zTilt * (1.0D - topHeight);
 
-        this.riftflux$addDoubleSidedQuad(
+        this.riftflux$addDoubleSidedTorchQuad(
                 tessellator,
+                cameraSelectiveBackFaces,
                 topOffsetX - halfWidth, y + topHeight, topOffsetZ - halfWidth, capMinU, capMinV,
                 topOffsetX - halfWidth, y + topHeight, topOffsetZ + halfWidth, capMinU, capMaxV,
                 topOffsetX + halfWidth, y + topHeight, topOffsetZ + halfWidth, capMaxU, capMaxV,
                 topOffsetX + halfWidth, y + topHeight, topOffsetZ - halfWidth, capMaxU, capMinV
         );
 
-        this.riftflux$addDoubleSidedQuad(
+        this.riftflux$addDoubleSidedTorchQuad(
                 tessellator,
+                cameraSelectiveBackFaces,
                 x + halfWidth + xTilt, y, z - halfWidth + zTilt, stemMaxU, stemMinV,
                 x + halfWidth + xTilt, y, z + halfWidth + zTilt, stemMaxU, stemMaxV,
                 x - halfWidth + xTilt, y, z + halfWidth + zTilt, stemMinU, stemMaxV,
                 x - halfWidth + xTilt, y, z - halfWidth + zTilt, stemMinU, stemMinV
         );
 
-        this.riftflux$addDoubleSidedQuad(
+        this.riftflux$addDoubleSidedTorchQuad(
                 tessellator,
+                cameraSelectiveBackFaces,
                 x - halfWidth, y + 1.0D, zMin, minU, minV,
                 x - halfWidth + xTilt, y, zMin + zTilt, minU, maxV,
                 x - halfWidth + xTilt, y, zMax + zTilt, maxU, maxV,
                 x - halfWidth, y + 1.0D, zMax, maxU, minV
         );
 
-        this.riftflux$addDoubleSidedQuad(
+        this.riftflux$addDoubleSidedTorchQuad(
                 tessellator,
+                cameraSelectiveBackFaces,
                 x + halfWidth, y + 1.0D, zMax, minU, minV,
                 x + xTilt + halfWidth, y, zMax + zTilt, minU, maxV,
                 x + xTilt + halfWidth, y, zMin + zTilt, maxU, maxV,
                 x + halfWidth, y + 1.0D, zMin, maxU, minV
         );
 
-        this.riftflux$addDoubleSidedQuad(
+        this.riftflux$addDoubleSidedTorchQuad(
                 tessellator,
+                cameraSelectiveBackFaces,
                 xMin, y + 1.0D, z + halfWidth, minU, minV,
                 xMin + xTilt, y, z + halfWidth + zTilt, minU, maxV,
                 xMax + xTilt, y, z + halfWidth + zTilt, maxU, maxV,
                 xMax, y + 1.0D, z + halfWidth, maxU, minV
         );
 
-        this.riftflux$addDoubleSidedQuad(
+        this.riftflux$addDoubleSidedTorchQuad(
                 tessellator,
+                cameraSelectiveBackFaces,
                 xMax, y + 1.0D, z - halfWidth, minU, minV,
                 xMax + xTilt, y, z - halfWidth + zTilt, minU, maxV,
                 xMin + xTilt, y, z - halfWidth + zTilt, maxU, maxV,
@@ -342,6 +438,19 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
     }
 
     @Unique
+    private void riftflux$addReversedQuad(
+            Tessellator tessellator,
+            double x1, double y1, double z1, double u1, double v1,
+            double x2, double y2, double z2, double u2, double v2,
+            double x3, double y3, double z3, double u3, double v3,
+            double x4, double y4, double z4, double u4, double v4) {
+        tessellator.addVertexWithUV(x4, y4, z4, u4, v4);
+        tessellator.addVertexWithUV(x3, y3, z3, u3, v3);
+        tessellator.addVertexWithUV(x2, y2, z2, u2, v2);
+        tessellator.addVertexWithUV(x1, y1, z1, u1, v1);
+    }
+
+    @Unique
     private void riftflux$addDoubleSidedQuad(
             Tessellator tessellator,
             double x1, double y1, double z1, double u1, double v1,
@@ -353,6 +462,120 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
         tessellator.addVertexWithUV(x3, y3, z3, u3, v3);
         tessellator.addVertexWithUV(x2, y2, z2, u2, v2);
         tessellator.addVertexWithUV(x1, y1, z1, u1, v1);
+    }
+
+    @Unique
+    private void riftflux$addDoubleSidedTorchQuad(
+            Tessellator tessellator,
+            boolean cameraSelectiveBackFaces,
+            double x1, double y1, double z1, double u1, double v1,
+            double x2, double y2, double z2, double u2, double v2,
+            double x3, double y3, double z3, double u3, double v3,
+            double x4, double y4, double z4, double u4, double v4) {
+        if (cameraSelectiveBackFaces) {
+            this.riftflux$addCameraSelectiveDoubleSidedQuad(
+                    tessellator,
+                    x1, y1, z1, u1, v1,
+                    x2, y2, z2, u2, v2,
+                    x3, y3, z3, u3, v3,
+                    x4, y4, z4, u4, v4
+            );
+            return;
+        }
+        this.riftflux$addDoubleSidedQuad(
+                tessellator,
+                x1, y1, z1, u1, v1,
+                x2, y2, z2, u2, v2,
+                x3, y3, z3, u3, v3,
+                x4, y4, z4, u4, v4
+        );
+    }
+
+    @Unique
+    private void riftflux$addCameraSelectiveDoubleSidedQuad(
+            Tessellator tessellator,
+            double x1, double y1, double z1, double u1, double v1,
+            double x2, double y2, double z2, double u2, double v2,
+            double x3, double y3, double z3, double u3, double v3,
+            double x4, double y4, double z4, double u4, double v4) {
+        this.riftflux$addQuad(
+                tessellator,
+                x1, y1, z1, u1, v1,
+                x2, y2, z2, u2, v2,
+                x3, y3, z3, u3, v3,
+                x4, y4, z4, u4, v4
+        );
+
+        if (!this.riftflux$shouldAddCameraSelectiveBackFace(
+                x1, y1, z1,
+                x2, y2, z2,
+                x3, y3, z3,
+                x4, y4, z4)) {
+            return;
+        }
+
+        tessellator.addVertexWithUV(x4, y4, z4, u4, v4);
+        tessellator.addVertexWithUV(x3, y3, z3, u3, v3);
+        tessellator.addVertexWithUV(x2, y2, z2, u2, v2);
+        tessellator.addVertexWithUV(x1, y1, z1, u1, v1);
+    }
+
+    @Unique
+    private boolean riftflux$shouldAddCameraSelectiveBackFace(
+            double x1, double y1, double z1,
+            double x2, double y2, double z2,
+            double x3, double y3, double z3,
+            double x4, double y4, double z4) {
+        double dot = this.riftflux$getCameraFacingDot(
+                x1, y1, z1,
+                x2, y2, z2,
+                x3, y3, z3,
+                x4, y4, z4
+        );
+        return !Double.isNaN(dot) && dot <= 1.0E-7D;
+    }
+
+    @Unique
+    private double riftflux$getCameraFacingDot(
+            double x1, double y1, double z1,
+            double x2, double y2, double z2,
+            double x3, double y3, double z3,
+            double x4, double y4, double z4) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null) {
+            return Double.NaN;
+        }
+
+        Entity camera = minecraft.renderViewEntity;
+        if (camera == null) {
+            camera = minecraft.thePlayer;
+        }
+        if (camera == null) {
+            return Double.NaN;
+        }
+
+        double edgeAx = x2 - x1;
+        double edgeAy = y2 - y1;
+        double edgeAz = z2 - z1;
+        double edgeBx = x3 - x2;
+        double edgeBy = y3 - y2;
+        double edgeBz = z3 - z2;
+        double normalX = edgeAy * edgeBz - edgeAz * edgeBy;
+        double normalY = edgeAz * edgeBx - edgeAx * edgeBz;
+        double normalZ = edgeAx * edgeBy - edgeAy * edgeBx;
+        double normalLengthSq = normalX * normalX + normalY * normalY + normalZ * normalZ;
+        if (normalLengthSq < 1.0E-12D) {
+            return Double.NaN;
+        }
+
+        double centerX = (x1 + x2 + x3 + x4) * 0.25D;
+        double centerY = (y1 + y2 + y3 + y4) * 0.25D;
+        double centerZ = (z1 + z2 + z3 + z4) * 0.25D;
+        double cameraY = camera.posY + camera.getEyeHeight();
+        double dot = normalX * (camera.posX - centerX)
+                + normalY * (cameraY - centerY)
+                + normalZ * (camera.posZ - centerZ);
+        return dot;
     }
 
     @Unique

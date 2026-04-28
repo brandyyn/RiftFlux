@@ -1,18 +1,16 @@
 package com.voidsrift.riftflux.axolotl;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -64,7 +62,7 @@ public final class AxolotlContent {
         if (ModConfig.enableAxolotlNaturalSpawning && ModConfig.axolotlSpawnWeight > 0) {
             BiomeGenBase[] biomes = getSpawnBiomes();
             if (biomes.length > 0) {
-                EntityRegistry.addSpawn(
+                cpw.mods.fml.common.registry.EntityRegistry.addSpawn(
                         EntityAxolotl.class,
                         ModConfig.axolotlSpawnWeight,
                         1,
@@ -121,14 +119,6 @@ public final class AxolotlContent {
     }
 
     private static void registerEntities() {
-        int id = 220;
-        EntityRegistry.registerModEntity(EntityAxolotl.class, "Axolotl", id, riftflux.instance, 64, 3, true);
-        registerEntityEgg(EntityAxolotl.class, "Axolotl", 0xA8D1D1, 0xF3A4D5);
-    }
-
-    private static void registerEntityEgg(Class<? extends Entity> entityClass, String entityName, int primaryColor, int secondaryColor) {
-        int entityId = EntityRegistry.findGlobalUniqueEntityId();
-        EntityRegistry.registerGlobalEntityID(entityClass, entityName, entityId);
-        EntityList.entityEggs.put(entityId, new EntityList.EntityEggInfo(entityId, primaryColor, secondaryColor));
+        RiftFluxEntityRegistry.registerModEntity(EntityAxolotl.class, "Axolotl", riftflux.instance, 64, 3, true);
     }
 }

@@ -252,6 +252,9 @@ public class riftflux {
                 if (target == null) {
                     target = resolveInventoryPetsItemAlias(mapping.name);
                 }
+                if (target == null) {
+                    target = resolveGhibliItemAlias(mapping.name);
+                }
                 if (target != null) {
                     mapping.remap(target);
                 }
@@ -543,6 +546,42 @@ public class riftflux {
         return InventoryPetsContent.resolveLegacyItemAlias(fullName);
     }
 
+    private static Item resolveGhibliItemAlias(String fullName) {
+        if (fullName == null) {
+            return null;
+        }
+        String lower = fullName.toLowerCase(Locale.ROOT);
+        if (!(lower.startsWith("duckling:") || lower.startsWith("sootspritecraft:"))) {
+            return null;
+        }
+        String key = lower.substring(lower.indexOf(':') + 1);
+        if ("raw_duck".equals(key)) {
+            return DucklingContent.rawDuck;
+        }
+        if ("cooked_duck".equals(key)) {
+            return DucklingContent.cookedDuck;
+        }
+        if ("duck_egg".equals(key)) {
+            return DucklingContent.duckEgg;
+        }
+        if ("duck_spawn_egg".equals(key)) {
+            return DucklingContent.duckSpawnEgg;
+        }
+        if ("quackling_spawn_egg".equals(key)) {
+            return DucklingContent.quacklingSpawnEgg;
+        }
+        if ("star_candy".equals(key)) {
+            return DucklingContent.starCandy;
+        }
+        if ("soot_jar".equals(key)) {
+            return DucklingContent.sootJar;
+        }
+        if ("soot_sprite_spawn_egg".equals(key)) {
+            return DucklingContent.sootSpriteSpawnEgg;
+        }
+        return null;
+    }
+
     private static void registerLegacyRegistryAliases() {
         if (legacyRegistryAliasesRegistered) {
             return;
@@ -556,6 +595,7 @@ public class riftflux {
         registerPlaceableGunpowderLegacyAliases();
         registerGlowstoneDustLegacyAliases();
         InventoryPetsContent.registerLegacyItemAliases();
+        DucklingContent.registerLegacyAliases();
     }
 
     private static void registerLevelUpLegacyAliases() {

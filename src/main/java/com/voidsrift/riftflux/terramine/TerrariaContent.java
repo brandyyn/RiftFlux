@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.terramine;
 
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -10,7 +11,6 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -175,11 +175,8 @@ public final class TerrariaContent {
     }
 
     private static void registerEntities() {
-        int id = 200;
-        EntityRegistry.registerModEntity(EntityDemonEye.class, "DemonEye", id++, riftflux.instance, 80, 3, true);
-        EntityRegistry.registerModEntity(EntityEyeOfCthulhu.class, "EyeOfCthulhu", id++, riftflux.instance, 128, 3, true);
-        registerEntityEgg(EntityDemonEye.class, "DemonEye", 0xFFFFFF, 0xB52525);
-        registerEntityEgg(EntityEyeOfCthulhu.class, "EyeOfCthulhu", 0xFFFFFF, 0xB52525);
+        RiftFluxEntityRegistry.registerModEntity(EntityDemonEye.class, "DemonEye", riftflux.instance, 80, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityEyeOfCthulhu.class, "EyeOfCthulhu", riftflux.instance, 128, 3, true);
     }
 
     private static void registerRecipes() {
@@ -193,12 +190,6 @@ public final class TerrariaContent {
                 new ItemStack(lens, 1),
                 new ItemStack(lens, 1)
         );
-    }
-
-    private static void registerEntityEgg(Class<? extends Entity> entityClass, String entityName, int primaryColor, int secondaryColor) {
-        int entityId = EntityRegistry.findGlobalUniqueEntityId();
-        EntityRegistry.registerGlobalEntityID(entityClass, entityName, entityId);
-        EntityList.entityEggs.put(entityId, new EntityList.EntityEggInfo(entityId, primaryColor, secondaryColor));
     }
 
     private static BiomeGenBase[] getAllOverworldBiomes() {

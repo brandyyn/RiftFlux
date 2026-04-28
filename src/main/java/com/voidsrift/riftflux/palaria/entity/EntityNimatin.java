@@ -77,12 +77,13 @@ public class EntityNimatin extends EntityTameable implements IEntitySyncData {
         tasks.addTask(1, aiSit);
         tasks.addTask(2, new EntityAILeapAtTarget(this, 0.4F));
         tasks.addTask(3, new EntityAIAttackOnCollide(this, 0.4D, true));
-        tasks.addTask(4, new EntityAINimatinFollowOwner(this, 0.4D, 10.0F, 4.0F));
-        tasks.addTask(5, new EntityAIMate(this, 0.4D));
-        tasks.addTask(6, new EntityAIWander(this, 0.4D));
-        tasks.addTask(7, new EntityAINimatinBeg(this, 8.0F));
-        tasks.addTask(8, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
-        tasks.addTask(9, new EntityAILookIdle(this));
+        tasks.addTask(4, new EntityAINimatinTempt(this, 0.4D, 8.0F));
+        tasks.addTask(5, new EntityAINimatinFollowOwner(this, 0.4D, 10.0F, 4.0F));
+        tasks.addTask(6, new EntityAIMate(this, 0.4D));
+        tasks.addTask(7, new EntityAIWander(this, 0.4D));
+        tasks.addTask(8, new EntityAINimatinBeg(this, 8.0F));
+        tasks.addTask(9, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
+        tasks.addTask(10, new EntityAILookIdle(this));
         targetTasks.addTask(1, new EntityAIOwnerHurtByTarget(this));
         targetTasks.addTask(2, new EntityAIOwnerHurtTarget(this));
         targetTasks.addTask(3, new EntityAIHurtByTarget(this, true));
@@ -349,20 +350,15 @@ public class EntityNimatin extends EntityTameable implements IEntitySyncData {
     public boolean interact(EntityPlayer player) {
         ItemStack held = player.inventory.getCurrentItem();
         if (isTamed()) {
-            if (held != null) {
-                if (held.getItem() instanceof ItemFood) {
-                    ItemFood food = (ItemFood) held.getItem();
-                    if (isNimatinMeat(held, food) && getHealth() < getMaxHealth()) {
-                        if (!player.capabilities.isCreativeMode) {
-                            --held.stackSize;
-                        }
-                        heal(food.func_150905_g(held));
-                        if (held.stackSize <= 0) {
-                            player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
-                        }
-                        return true;
-                    }
+            if (held != null && getHealth() < getMaxHealth() && canHealWithItem(held)) {
+                if (!player.capabilities.isCreativeMode) {
+                    --held.stackSize;
                 }
+                heal(getNimatinHealAmount(held));
+                if (held.stackSize <= 0) {
+                    player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+                }
+                return true;
             }
             if (!isBreedingItem(held)) {
                 if (func_152114_e(player) && player.isSneaking() && !worldObj.isRemote) {
@@ -397,7 +393,7 @@ public class EntityNimatin extends EntityTameable implements IEntitySyncData {
                 }
                 return true;
             }
-        } else if (ModConfig.palariaNimatinTameable && held != null && PalariaMobDrops.matchesConfiguredItem(held, ModConfig.palariaNimatinTameItems) && !isAngry()) {
+        } else if (isConfiguredTameItem(held) && !isAngry()) {
             if (!player.capabilities.isCreativeMode) {
                 --held.stackSize;
             }
@@ -876,6 +872,29 @@ public class EntityNimatin extends EntityTameable implements IEntitySyncData {
                 || name.contains("turkey")
                 || name.contains("duck")
                 || name.contains("fish");
+    }
+
+    private boolean canHealWithItem(ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
+        if (isConfiguredTameItem(stack)) {
+            return true;
+        }
+        return stack.getItem() instanceof ItemFood && isNimatinMeat(stack, (ItemFood) stack.getItem());
+    }
+
+    private float getNimatinHealAmount(ItemStack stack) {
+        if (stack != null && stack.getItem() instanceof ItemFood) {
+            return Math.max(1.0F, (float) ((ItemFood) stack.getItem()).func_150905_g(stack));
+        }
+        return 4.0F;
+    }
+
+    private boolean isConfiguredTameItem(ItemStack stack) {
+        return ModConfig.palariaNimatinTameable
+                && stack != null
+                && PalariaMobDrops.matchesConfiguredItem(stack, ModConfig.palariaNimatinTameItems);
     }
 
     @SideOnly(Side.CLIENT)

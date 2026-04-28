@@ -1,0 +1,30 @@
+{
+  "quack": {
+    "category": "neutral",
+    "sounds": [
+      {"name": "ghibli:quack1", "stream": false},
+      {"name": "ghibli:quack2", "stream": false},
+      {"name": "ghibli:quack3", "stream": false},
+      {"name": "ghibli:quack4", "stream": false},
+      {"name": "ghibli:quack5", "stream": false}
+    ]
+  },
+  "deep_quack": {
+    "category": "neutral",
+    "sounds": [
+      {"name": "ghibli:deep_quack", "stream": false}
+    ]
+  },
+  "duck_death": {
+    "category": "neutral",
+    "sounds": [
+      {"name": "ghibli:duck_death", "stream": false}
+    ]
+  },
+  "quackling_death": {
+    "category": "neutral",
+    "sounds": [
+      {"name": "ghibli:quackling_death", "stream": false}
+    ]
+  }
+}

@@ -18,6 +18,7 @@ import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.placeditem.PlacedItemContent;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import net.nmccoy.legendgear.LegendGear2;
+import net.nmccoy.legendgear.legacy.LegendGear;
 
 import java.util.List;
 
@@ -148,6 +149,13 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 API.hideItem(new ItemStack(LegendGear2.infusedStarPieceBlock));
             } catch (Throwable t) {
                 FMLLog.severe("[RiftFlux] Failed to hide infused placed star piece block in NEI: %s", t);
+            }
+        }
+        if (LegendGear.blockPedestalTech != null) {
+            try {
+                API.hideItem(new ItemStack(LegendGear.blockPedestalTech));
+            } catch (Throwable t) {
+                FMLLog.severe("[RiftFlux] Failed to hide inserted sword pedestal block in NEI: %s", t);
             }
         }
     }

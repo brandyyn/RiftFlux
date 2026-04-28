@@ -16,12 +16,15 @@
  */
 package net.nmccoy.legendgear.item;
 
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.StatBase;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
@@ -50,7 +53,15 @@ extends ItemFood {
             String fortune = LegendGear2.fortunes.randomFortune();
             player.addChatMessage((IChatComponent)new ChatComponentText(EnumChatFormatting.ITALIC + fortune));
             player.addStat((StatBase)LegendGear2.achievementFortunate, 1);
+            PotionEffect effect = this.getRandomConfiguredEffect(world);
+            if (effect != null) {
+                player.addPotionEffect(effect);
+            }
         }
         return super.onEaten(stack, world, player);
+    }
+
+    private PotionEffect getRandomConfiguredEffect(World world) {
+        return RandomFoodPotionEffectHelper.getRandomConfiguredEffect(world, ModConfig.legendGearFortuneCookiePotionEffects);
     }
 }

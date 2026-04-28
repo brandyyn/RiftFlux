@@ -38,10 +38,14 @@ public class LegendGearManaTooltipHandler {
         }
 
         if (item == ModItems.poptart) {
-            this.addNumericTooltip(event.toolTip, "Mana Restore", ModConfig.poptartLegendGearManaRestore);
+            this.addManaRestoreTooltip(event.toolTip, ModConfig.poptartLegendGearManaRestore);
         }
 
         if (!ModConfig.enableLegendGearModule) {
+            return;
+        }
+
+        if (item == LegendGear2.spiritEmblem && stack.getItemDamage() <= 0) {
             return;
         }
 
@@ -70,6 +74,20 @@ public class LegendGearManaTooltipHandler {
                 ? EnumChatFormatting.AQUA
                 : EnumChatFormatting.GRAY;
         tooltip.add(color + prefix + " " + this.formatMana(clamped));
+    }
+
+    private void addManaRestoreTooltip(List tooltip, float value) {
+        float clamped = Math.max(0.0F, value);
+        if (clamped <= 0.0F) {
+            return;
+        }
+
+        String line = "Restores " + this.formatMana(clamped) + " Mana";
+        if (hasTooltipPrefix(tooltip, "Restores")) {
+            return;
+        }
+
+        tooltip.add(EnumChatFormatting.AQUA + line);
     }
 
     private void addMagicRingManaTooltip(List tooltip, ItemStack stack) {

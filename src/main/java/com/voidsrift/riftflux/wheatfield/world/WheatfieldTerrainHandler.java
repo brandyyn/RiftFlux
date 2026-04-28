@@ -35,7 +35,7 @@ public final class WheatfieldTerrainHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPopulate(PopulateChunkEvent.Populate event) {
-        if (event == null || event.world == null || !WheatfieldTerrainUtil.chunkIsPredominantlyWheatfield(event.world, event.chunkX, event.chunkZ)) {
+        if (event == null || event.world == null || !WheatfieldTerrainUtil.chunkHasWheatfield(event.world, event.chunkX, event.chunkZ)) {
             return;
         }
 
@@ -50,7 +50,7 @@ public final class WheatfieldTerrainHandler {
 
         int chunkX = event.chunkX >> 4;
         int chunkZ = event.chunkZ >> 4;
-        if (WheatfieldTerrainUtil.chunkIsPredominantlyWheatfield(event.world, chunkX, chunkZ)) {
+        if (WheatfieldTerrainUtil.chunkHasWheatfield(event.world, chunkX, chunkZ)) {
             event.setResult(Event.Result.DENY);
         }
     }
@@ -78,6 +78,7 @@ public final class WheatfieldTerrainHandler {
                 return;
             }
 
+            wheatfieldBiome.populateTreesForChunk(event.world, chunkBlockX, chunkBlockZ, sampler);
             wheatfieldBiome.populateBarleyForChunk(event.world, chunkBlockX, chunkBlockZ, sampler);
         }
     }

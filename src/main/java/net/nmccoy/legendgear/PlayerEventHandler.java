@@ -190,7 +190,9 @@ public class PlayerEventHandler {
 
     @SubscribeEvent
     public void addTooltipInfo(ItemTooltipEvent event) {
-        if (event.itemStack.hasTagCompound() && event.itemStack.getTagCompound().getBoolean("soulTether")) {
+        if (ModConfig.legendGearSoulTetherEnabled
+                && event.itemStack.hasTagCompound()
+                && event.itemStack.getTagCompound().getBoolean("soulTether")) {
             event.toolTip.add(EnumChatFormatting.DARK_PURPLE + "Soul Tethered");
         }
         this.addUseTooltipInfo(event);
@@ -265,7 +267,7 @@ public class PlayerEventHandler {
         if (item == LegendGear2.dimensionalCatalyst) {
             this.addUseLine(event, "Right-click compatible blocks to translocate them to nearby air.");
             this.addUseLine(event, "Special: Right-click Azurite Ore to convert it to stone and drop 3 azurite.");
-            this.addUseLine(event, "Cost: Consumes 1 catalyst on successful transform.");
+            this.addUseLine(event, "Consumes 1 catalyst on successful transform.");
             return;
         }
         if (item == LegendGear2.reedPipes) {
@@ -273,25 +275,15 @@ public class PlayerEventHandler {
             this.addUseLine(event, "Sneak while playing for the alternate note scale.");
             return;
         }
-        if (item == LegendGear2.emeraldShard) {
-            if (meta == 0) {
-                this.addUseLine(event, "Right-click with at least " + LegendGear2.emeraldExchangeRate + " shards to combine into 1 emerald piece.");
-            } else {
-                this.addUseLine(event, "Right-click with at least " + LegendGear2.emeraldExchangeRate + " pieces to combine into 1 emerald.");
-            }
-            return;
-        }
         if (item == LegendGear2.azureFeather) {
             this.addUseLine(event, "Midair right-click while wearing Azure/Phoenix Mantle to start/extend glide and gain forward boost.");
-            this.addUseLine(event, "Cost: Consumes 1 feather and 12 mana.");
+            this.addUseLine(event, "Consumes 1 feather and 12 mana.");
             return;
         }
         if (item == LegendGear2.spiritEmblem) {
             if (meta == 1) {
                 this.addUseLine(event, "Hold right-click to channel Phoenix intervention.");
                 this.addUseLine(event, "Every 10 ticks spends 1 mana and can fully heal low HP, refill low hunger, or burn nearby undead in emergencies.");
-            } else {
-                this.addUseLine(event, "Blank emblem (crafting/ritual progression item).");
             }
             return;
         }
@@ -528,6 +520,9 @@ public class PlayerEventHandler {
 
     @SubscribeEvent
     public void saveTetheredItems(LivingDropsEvent event) {
+        if (!ModConfig.legendGearSoulTetherEnabled) {
+            return;
+        }
         if (event.entityLiving instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
             Iterator i = event.drops.iterator();

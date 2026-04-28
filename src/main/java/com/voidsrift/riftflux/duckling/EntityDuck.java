@@ -232,7 +232,18 @@ public class EntityDuck extends EntityAnimal implements IAnimatable, IEntitySync
     }
 
     public DuckVariant getTextureVariant() {
-        return "agent d".equalsIgnoreCase(this.getCommandSenderName()) ? DuckVariant.AGENTD : this.getVariant();
+        return this.hasAgentDName() ? DuckVariant.AGENTD : this.getVariant();
+    }
+
+    private boolean hasAgentDName() {
+        String name = this.getCommandSenderName();
+        if (name == null) {
+            return false;
+        }
+        String trimmed = name.trim();
+        return "agent d".equalsIgnoreCase(trimmed)
+                || "perry".equalsIgnoreCase(trimmed)
+                || "perry the platypus".equalsIgnoreCase(trimmed);
     }
 
     public float getHeadRotationOffset(float partialTicks) {

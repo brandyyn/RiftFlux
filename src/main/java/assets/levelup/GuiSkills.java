@@ -31,6 +31,7 @@ extends GuiScreen {
     byte cl = (byte)-1;
 
     protected void actionPerformed(GuiButton guibutton) {
+        int step = isShiftKeyDown() ? 2 : 1;
         if (guibutton.id == 0) {
             this.closedWithButton = true;
             this.mc.displayGuiScreen(null);
@@ -40,17 +41,21 @@ extends GuiScreen {
             this.mc.displayGuiScreen(null);
             this.mc.setIngameFocus();
         } else if (guibutton.id < 21) {
-            if (this.getSkillOffset(this.skills.length - 1) > 0 && this.getSkillOffset(guibutton.id - 1) < ClassBonus.getMaxSkillPoints()) {
-                int n = guibutton.id - 1;
-                this.skills[n] = this.skills[n] + 1;
+            int availablePoints = this.getSkillOffset(this.skills.length - 1);
+            int skillIndex = guibutton.id - 1;
+            int addAmount = Math.min(step, Math.min(availablePoints, ClassBonus.getMaxSkillPoints() - this.getSkillOffset(skillIndex)));
+            if (addAmount > 0) {
+                int n = skillIndex;
+                this.skills[n] = this.skills[n] + addAmount;
                 int n2 = this.skills.length - 1;
-                this.skills[n2] = this.skills[n2] - 1;
+                this.skills[n2] = this.skills[n2] - addAmount;
             }
         } else if (guibutton.id > 20 && this.skills[guibutton.id - 21] > 0) {
             int n = guibutton.id - 21;
-            this.skills[n] = this.skills[n] - 1;
+            int removeAmount = Math.min(step, this.skills[n]);
+            this.skills[n] = this.skills[n] - removeAmount;
             int n3 = this.skills.length - 1;
-            this.skills[n3] = this.skills[n3] + 1;
+            this.skills[n3] = this.skills[n3] + removeAmount;
         }
     }
 
@@ -121,4 +126,3 @@ extends GuiScreen {
         return this.skillsPrev[i] + this.skills[i];
     }
 }
-

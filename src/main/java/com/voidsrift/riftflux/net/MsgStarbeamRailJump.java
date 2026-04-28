@@ -9,7 +9,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.nmccoy.legendgear.legacy.entities.EntityGrindStar;
 
 public class MsgStarbeamRailJump implements IMessage {
-    private static final String CLIENT_JUST_JUMPED = "clientJustJumped";
     private int entityId;
 
     public MsgStarbeamRailJump() {
@@ -39,7 +38,7 @@ public class MsgStarbeamRailJump implements IMessage {
 
             EntityGrindStar star = resolveStar(player, msg.entityId);
             if (star != null) {
-                player.getEntityData().setBoolean(CLIENT_JUST_JUMPED, true);
+                star.handleServerJumpInput(player);
             }
             return null;
         }

@@ -59,21 +59,9 @@ public abstract class Ritual {
             return entities;
         }
         Block blockFocus = location.focusBlock();
-        List<EntityItem> items = location.itemsInRitual();
-        for (EntityItem item : items) {
-            Item itemFilter;
-            ItemStack stackFilter;
-            ItemStack stack = item.getEntityItem();
-            if (filter instanceof ItemStack && (stackFilter = (ItemStack)filter).getItem() == stack.getItem() && stackFilter.getItemDamage() == stack.getItemDamage()) {
-                entities.add((Entity)item);
-            }
-            if (filter instanceof Item && (itemFilter = (Item)filter) == stack.getItem()) {
-                entities.add((Entity)item);
-            }
-            if (!(filter instanceof Block)) continue;
-            Block blockFilter = (Block)filter;
-            if (!(stack.getItem() instanceof ItemBlock) || Block.getBlockFromItem((Item)stack.getItem()) != blockFilter) continue;
-            entities.add((Entity)item);
+        this.addMatchingFocusItems(filter, location.itemsInRitual(), entities);
+        if (entities.isEmpty() && this.isItemFocus(filter)) {
+            this.addMatchingFocusItems(filter, location.itemsNearRitualFocus(2.0D, 2.0D), entities);
         }
         if (filter instanceof Block) {
             if (entities.size() > 0 && blockFocus == Blocks.air) {
@@ -86,6 +74,37 @@ public abstract class Ritual {
             return null;
         }
         return entities;
+    }
+
+    private boolean isItemFocus(Object filter) {
+        return filter instanceof ItemStack || filter instanceof Item || filter instanceof Block;
+    }
+
+    private void addMatchingFocusItems(Object filter, List<EntityItem> items, List<Entity> entities) {
+        for (EntityItem item : items) {
+            Item itemFilter;
+            ItemStack stackFilter;
+            ItemStack stack = item.getEntityItem();
+            if (stack == null || stack.getItem() == null) {
+                continue;
+            }
+            if (filter instanceof ItemStack && (stackFilter = (ItemStack)filter).getItem() == stack.getItem() && stackFilter.getItemDamage() == stack.getItemDamage()) {
+                this.addFocusEntity(entities, item);
+            }
+            if (filter instanceof Item && (itemFilter = (Item)filter) == stack.getItem()) {
+                this.addFocusEntity(entities, item);
+            }
+            if (!(filter instanceof Block)) continue;
+            Block blockFilter = (Block)filter;
+            if (!(stack.getItem() instanceof ItemBlock) || Block.getBlockFromItem((Item)stack.getItem()) != blockFilter) continue;
+            this.addFocusEntity(entities, item);
+        }
+    }
+
+    private void addFocusEntity(List<Entity> entities, Entity entity) {
+        if (!entities.contains(entity)) {
+            entities.add(entity);
+        }
     }
 
     public static class Summoning
@@ -106,8 +125,13 @@ public abstract class Ritual {
 
         @Override
         public boolean invoke(RitualRecipe ingredients, TileEntityRitual location, EntityPlayer caster) {
+            if (location == null || location.getWorldObj() == null) {
+                return false;
+            }
+            if (location.getWorldObj().isRemote) {
+                return false;
+            }
             List<Entity> targets = this.filterFocus(this.focusFilter, location);
-            System.out.println(targets);
             if (targets == null) {
                 return false;
             }
@@ -115,7 +139,7 @@ public abstract class Ritual {
                 return false;
             }
             if (targets.size() > 0) {
-                targets.get(0).setDead();
+                this.consumeFocus(targets.get(0));
             } else if (this.focusFilter instanceof Block) {
                 location.clearFocusBlock();
             } else {
@@ -131,10 +155,26 @@ public abstract class Ritual {
             if (summoned == null) {
                 return false;
             }
+            float yaw = caster == null ? location.getWorldObj().rand.nextFloat() * 360.0F : caster.rotationYaw;
+            summoned.setLocationAndAngles((double)location.xCoord + 0.5, (double)(location.yCoord + 1), (double)location.zCoord + 0.5, yaw, 0.0F);
             summoned.onSpawnWithEgg(null);
-            summoned.setPosition((double)location.xCoord + 0.5, (double)(location.yCoord + 1), (double)location.zCoord + 0.5);
-            location.getWorldObj().spawnEntityInWorld((Entity)summoned);
-            return true;
+            return location.getWorldObj().spawnEntityInWorld((Entity)summoned);
+        }
+
+        private void consumeFocus(Entity entity) {
+            if (entity instanceof EntityItem) {
+                EntityItem item = (EntityItem)entity;
+                ItemStack stack = item.getEntityItem();
+                if (stack != null && stack.stackSize > 1) {
+                    ItemStack remaining = stack.copy();
+                    remaining.stackSize = stack.stackSize - 1;
+                    item.setEntityItemStack(remaining);
+                } else {
+                    item.setDead();
+                }
+            } else {
+                entity.setDead();
+            }
         }
     }
 }

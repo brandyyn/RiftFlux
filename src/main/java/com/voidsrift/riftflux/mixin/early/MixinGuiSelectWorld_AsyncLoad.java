@@ -55,6 +55,11 @@ public abstract class MixinGuiSelectWorld_AsyncLoad extends GuiScreen {
         }
     }
 
+    @Inject(method = "func_146615_e", at = @At("HEAD"))
+    private void riftflux$finishWorldListRefreshBeforeLoad(int selectedWorld, CallbackInfo ci) {
+        WorldSelectionCache.cancelAndWaitForIdle();
+    }
+
     @Inject(method = "drawScreen", at = @At("HEAD"))
     private void riftflux$applyLoadedWorldList(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         AnvilConverterException error = WorldSelectionCache.consumePendingError();

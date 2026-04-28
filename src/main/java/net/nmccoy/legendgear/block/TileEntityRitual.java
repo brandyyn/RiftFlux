@@ -67,6 +67,16 @@ extends TileEntity {
     public List<EntityItem> itemsInRitual() {
         AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox((double)this.xCoord, (double)(this.yCoord + 1), (double)this.zCoord, (double)(this.xCoord + 1), (double)(this.yCoord + 2), (double)(this.zCoord + 1));
         bounds = bounds.expand(0.5, 0.5, 0.5);
+        return this.collectItems(bounds);
+    }
+
+    public List<EntityItem> itemsNearRitualFocus(double horizontal, double vertical) {
+        AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox((double)this.xCoord + 0.5, (double)(this.yCoord + 1), (double)this.zCoord + 0.5, (double)this.xCoord + 0.5, (double)(this.yCoord + 1), (double)this.zCoord + 0.5);
+        bounds = bounds.expand(horizontal, vertical, horizontal);
+        return this.collectItems(bounds);
+    }
+
+    private List<EntityItem> collectItems(AxisAlignedBB bounds) {
         List entities = this.worldObj.getEntitiesWithinAABB(EntityItem.class, bounds);
         ArrayList<EntityItem> items = new ArrayList<EntityItem>();
         for (Object obj : entities) {
@@ -97,6 +107,12 @@ extends TileEntity {
     }
 
     public boolean tryInvoke(EntityPlayer player) {
+        if (this.worldObj == null || this.worldObj.isRemote) {
+            return false;
+        }
+        if (this.grid == null) {
+            this.grid = new RitualGrid(this.xCoord, this.yCoord + 1, this.zCoord);
+        }
         if (!this.active) {
             return false;
         }
@@ -106,14 +122,15 @@ extends TileEntity {
         }
         RitualRecipe ingredients = this.getIngredients();
         boolean success = LegendGear2.ritualManager.attemptInvocation(ingredients, this, player);
-        System.out.println("Attempted ritual with:\n" + ingredients + "\nSuccess: " + success);
         if (success) {
             this.worldObj.playSoundEffect((double)this.xCoord + 0.5, (double)this.yCoord + 0.5, (double)this.zCoord + 0.5, "legendgear:ritualSuccess", 1.0f, 1.0f);
             this.successGoing = true;
             this.worldObj.playSoundEffect((double)this.xCoord + 0.5, (double)this.yCoord + 0.5, (double)this.zCoord + 0.5, "legendgear:laser", 0.15f, 1.0f);
-            player.addStat((StatBase)LegendGear2.achievementRitualist, 1);
-            if (player.worldObj.getWorldTime() % 24000L < 12000L) {
-                player.addStat((StatBase)LegendGear2.achievementDayRitual, 1);
+            if (player != null) {
+                player.addStat((StatBase)LegendGear2.achievementRitualist, 1);
+                if (player.worldObj.getWorldTime() % 24000L < 12000L) {
+                    player.addStat((StatBase)LegendGear2.achievementDayRitual, 1);
+                }
             }
         } else {
             this.worldObj.playSoundEffect((double)this.xCoord + 0.5, (double)this.yCoord + 0.5, (double)this.zCoord + 0.5, "legendgear:ritualFail", 1.0f, 1.0f);
@@ -309,4 +326,3 @@ extends TileEntity {
         }
     }
 }
-

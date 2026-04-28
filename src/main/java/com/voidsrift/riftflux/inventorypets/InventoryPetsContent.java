@@ -1,11 +1,11 @@
 package com.voidsrift.riftflux.inventorypets;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -183,7 +183,7 @@ public final class InventoryPetsContent {
             GameRegistry.registerItem(item, definition.registryName);
         }
 
-        EntityRegistry.registerModEntity(EntityBananaBoomerang.class, "inventoryPetBananaBoomerang", 0, riftflux.instance, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityBananaBoomerang.class, "inventoryPetBananaBoomerang", riftflux.instance, 64, 10, true);
     }
 
     public static void init(FMLInitializationEvent event) {

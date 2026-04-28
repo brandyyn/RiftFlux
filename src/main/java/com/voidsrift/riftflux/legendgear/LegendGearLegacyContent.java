@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.legendgear;
 
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.FMLLog;
@@ -281,6 +282,7 @@ public final class LegendGearLegacyContent {
         LegendGear.creativeTab = LegendGear2.legendgearTab;
         LegendGear.prismaticXP = LegendGear2.CONFIG_FANCY_XP;
         LegendGear.magicMirrorAllowed = ModConfig.legendGearLegacyMagicMirrorAllowed;
+        LegendGear.magicMirrorDurability = ModConfig.legendGearLegacyMagicMirrorDurability;
         LegendGear.emeraldShardsAllowed = ModConfig.legendGearLegacyEmeraldShardsAllowed;
         LegendGear.quiverAllowed = ModConfig.legendGearLegacyQuiverAllowed;
         LegendGear.heartsAllowed = ModConfig.legendGearLegacyHeartsAllowed;
@@ -296,6 +298,8 @@ public final class LegendGearLegacyContent {
         LegendGear.subtleShrubs = false;
         LegendGear.enableStarfall = true;
         LegendGear.hookshotAnyBlock = ModConfig.legendGearLegacyHookshotAnyBlock;
+        LegendGear.extraHookshotBlocks = resolveLegacyBlockIds(ModConfig.legendGearLegacyHookshotBlocks);
+        LegendGear.hookshotDurability = ModConfig.legendGearLegacyHookshotDurability;
         LegendGear.amuletsWorkFromInventory = ModConfig.legendGearLegacyAmuletsWorkFromInventory;
         LegendGear.amuletsUseBaublesSlot = ModConfig.legendGearLegacyAmuletsUseBaublesSlot;
         LegendGear.medallionEffectsAffectPlayer = ModConfig.legendGearLegacyMedallionEffectsAffectPlayer;
@@ -319,6 +323,7 @@ public final class LegendGearLegacyContent {
         LegendGear.headbandOfValorBonusDamage = ModConfig.legendGearLegacyHeadbandOfValorBonusDamage;
         LegendGear.starbeamRailRightClickTravel = ModConfig.legendGearLegacyStarbeamRailRightClickTravel;
         LegendGear.maxBombBagCapacity = ModConfig.legendGearLegacyBombBagCapacity;
+        LegendGear.bombMaxStackSize = ModConfig.legendGearLegacyBombMaxStackSize;
         LegendGear.maxQuiverCapacity = ModConfig.legendGearLegacyQuiverMaxCapacity;
         LegendGear.bombDamage = ModConfig.legendGearLegacyBombDamage;
         LegendGear.bombFuseTime = ModConfig.legendGearLegacyBombFuseTimeTicks;
@@ -344,9 +349,6 @@ public final class LegendGearLegacyContent {
         LegendGear.heartMinMult = 0.4D;
         LegendGear.heartDropScale = 0.6D;
         LegendGear.maxHeartDrop = 10;
-        LegendGear.mysticShrubHeartChance = LegendGear.heartsAllowed ? ModConfig.legendGearLegacyMysticShrubHeartChance : 0.0D;
-        LegendGear.mysticShrubShardChance = LegendGear.emeraldShardsAllowed ? ModConfig.legendGearLegacyMysticShrubShardChance : 0.0D;
-        LegendGear.mysticShrubArrowChance = ModConfig.legendGearLegacyMysticShrubArrowChance;
         LegendGear.shrubJackpotChance = ModConfig.legendGearLegacyMysticShrubJackpotChance;
         LegendGear.shrubGenStarChance = ModConfig.legendGearLegacyMysticShrubGenStarChance;
         LegendGear.shrubRarity = ModConfig.legendGearLegacyMysticShrubRarity;
@@ -354,10 +356,10 @@ public final class LegendGearLegacyContent {
         LegendGear.fallenStarLifetime = 440;
         LegendGear.shrubDisabledBiomes = ModConfig.legendGearLegacyShrubDisabledBiomes;
         LegendGear.bombableBlocks = resolveLegacyBombableBlockIds(ModConfig.legendGearLegacyBombableBlocks);
+        LegendGear.bombableBlockMetas = resolveLegacyBombableBlockMetas(ModConfig.legendGearLegacyBombableBlocks);
         LegendGear.bombableBlockOreIds = resolveLegacyBombableOreIds(ModConfig.legendGearLegacyBombableBlocks);
         LegendGear.quiverLeakBows = new int[0];
         LegendGear.alsoCountAsSwords = new int[0];
-        LegendGear.extraHookshotBlocks = new int[0];
         LegendGear.enchantmentFocusID = LegendGear2.scanEnchantmentID(ModConfig.legendGearLegacyFocusEnchantmentId);
         LegendGear.enchantmentSoulTetherID = LegendGear2.scanEnchantmentID(ModConfig.legendGearLegacySoulTetherEnchantmentId);
         LegendGear.normalizeCompatibilityLists();
@@ -441,12 +443,14 @@ public final class LegendGearLegacyContent {
                 5,
                 "Focus"
         );
-        LegendGear.enchantmentSoulTether = createLegacyEnchantment(
-                "net.nmccoy.legendgear.legacy.enchantments.EnchantmentSoulTether",
-                LegendGear.enchantmentSoulTetherID,
-                1,
-                "Soul Tether"
-        );
+        LegendGear.enchantmentSoulTether = ModConfig.legendGearSoulTetherEnabled
+                ? createLegacyEnchantment(
+                        "net.nmccoy.legendgear.legacy.enchantments.EnchantmentSoulTether",
+                        LegendGear.enchantmentSoulTetherID,
+                        1,
+                        "Soul Tether"
+                )
+                : null;
     }
 
     private static net.minecraft.enchantment.Enchantment createLegacyEnchantment(
@@ -674,25 +678,27 @@ public final class LegendGearLegacyContent {
         MinecraftForge.EVENT_BUS.register(LegendGear.itemHeadband);
         MinecraftForge.EVENT_BUS.register(LegendGear.enderMedallion);
         MinecraftForge.EVENT_BUS.register(LegendGear.titanBand);
+        FMLCommonHandler.instance().bus().register(LegendGear.titanBand);
+        MinecraftForge.EVENT_BUS.register(LegendGear.bombBag);
+        MinecraftForge.EVENT_BUS.register(LegendGear.aeroAmulet);
         MinecraftForge.EVENT_BUS.register(LegendGear.itemMagicPowder);
     }
 
     private static void registerEntities() {
         Object owner = modEntityOwner();
-        int id = ENTITY_ID_BASE;
-        EntityRegistry.registerModEntity(EntityEarthMedallion.class, "earthMedallion", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityQuake.class, "earthMedallionQuake", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityWindMedallion.class, "windMedallion", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityArrowStorm.class, "windMedallionStorm", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityBomb.class, "throwableBomb", id++, owner, 64, 1, true);
-        EntityRegistry.registerModEntity(EntityBombBlast.class, "bombExplosion", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityFireMedallion.class, "fireMedallion", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityFireblast.class, "fireMedallionBlast", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityWhirlwind.class, "whirlwind", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityShotHook.class, "hookshotHook", id++, owner, 64, 5, true);
-        EntityRegistry.registerModEntity(EntityGrindStar.class, "grindStar", id++, owner, 64, 5, true);
-        EntityRegistry.registerModEntity(EntityEnderMedallion.class, "enderMedallion", id++, owner, 64, 10, true);
-        EntityRegistry.registerModEntity(EntityEnderBomb.class, "enderBomb", id++, owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityEarthMedallion.class, "earthMedallion", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityQuake.class, "earthMedallionQuake", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityWindMedallion.class, "windMedallion", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityArrowStorm.class, "windMedallionStorm", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityBomb.class, "throwableBomb", owner, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityBombBlast.class, "bombExplosion", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityFireMedallion.class, "fireMedallion", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityFireblast.class, "fireMedallionBlast", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityWhirlwind.class, "whirlwind", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityShotHook.class, "hookshotHook", owner, 64, 5, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityGrindStar.class, "grindStar", owner, 64, 5, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityEnderMedallion.class, "enderMedallion", owner, 64, 10, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityEnderBomb.class, "enderBomb", owner, 64, 10, true);
     }
 
     private static void registerWorldGenerators() {
@@ -782,6 +788,62 @@ public final class LegendGearLegacyContent {
                 continue;
             }
 
+            String[] tokens = entry.trim().split("[,; ]+");
+            for (String token : tokens) {
+                LegacyBlockReference reference = parseLegacyBlockReference(token);
+                if (reference != null && reference.meta < 0) {
+                    resolved.add(Block.getIdFromBlock(reference.block));
+                }
+            }
+        }
+
+        int[] ids = new int[resolved.size()];
+        int index = 0;
+        for (Integer value : resolved) {
+            ids[index++] = value.intValue();
+        }
+        return ids;
+    }
+
+    private static int[] resolveLegacyBombableBlockMetas(String[] configuredEntries) {
+        Set<Integer> resolved = new LinkedHashSet<Integer>();
+        if (configuredEntries == null) {
+            return new int[0];
+        }
+
+        for (String entry : configuredEntries) {
+            if (entry == null) {
+                continue;
+            }
+
+            String[] tokens = entry.trim().split("[,; ]+");
+            for (String token : tokens) {
+                LegacyBlockReference reference = parseLegacyBlockReference(token);
+                if (reference != null && reference.meta >= 0) {
+                    resolved.add(encodeBlockMeta(Block.getIdFromBlock(reference.block), reference.meta));
+                }
+            }
+        }
+
+        int[] ids = new int[resolved.size()];
+        int index = 0;
+        for (Integer value : resolved) {
+            ids[index++] = value.intValue();
+        }
+        return ids;
+    }
+
+    private static int[] resolveLegacyBlockIds(String[] configuredEntries) {
+        Set<Integer> resolved = new LinkedHashSet<Integer>();
+        if (configuredEntries == null) {
+            return new int[0];
+        }
+
+        for (String entry : configuredEntries) {
+            if (entry == null) {
+                continue;
+            }
+
             String trimmed = entry.trim();
             if (trimmed.isEmpty()) {
                 continue;
@@ -789,7 +851,7 @@ public final class LegendGearLegacyContent {
 
             String[] tokens = trimmed.split("[,; ]+");
             for (String token : tokens) {
-                int resolvedId = resolveLegacyBombableBlockId(token);
+                int resolvedId = resolveLegacyBlockId(token);
                 if (resolvedId >= 0) {
                     resolved.add(resolvedId);
                 }
@@ -837,19 +899,55 @@ public final class LegendGearLegacyContent {
         return ids;
     }
 
-    private static int resolveLegacyBombableBlockId(String rawToken) {
+    private static int resolveLegacyBlockId(String rawToken) {
+        LegacyBlockReference reference = parseLegacyBlockReference(rawToken);
+        return reference == null || reference.meta >= 0 ? -1 : Block.getIdFromBlock(reference.block);
+    }
+
+    private static LegacyBlockReference parseLegacyBlockReference(String rawToken) {
         if (rawToken == null) {
-            return -1;
+            return null;
         }
 
         String token = rawToken.trim();
         if (token.isEmpty() || token.regionMatches(true, 0, "ore:", 0, 4) || token.regionMatches(true, 0, "oredict:", 0, 8)) {
-            return -1;
+            return null;
+        }
+
+        int meta = -1;
+        int atIndex = token.lastIndexOf('@');
+        if (atIndex >= 0 && atIndex + 1 < token.length()) {
+            meta = parseMetadata(token.substring(atIndex + 1));
+            if (meta >= 0) {
+                token = token.substring(0, atIndex);
+            }
+        } else {
+            int colonIndex = token.lastIndexOf(':');
+            if (colonIndex >= 0 && colonIndex + 1 < token.length()) {
+                int parsedMeta = parseMetadata(token.substring(colonIndex + 1));
+                if (parsedMeta >= 0) {
+                    meta = parsedMeta;
+                    token = token.substring(0, colonIndex);
+                }
+            }
         }
 
         String registryName = token.indexOf(':') >= 0 ? token : "minecraft:" + token;
         Object rawBlock = Block.blockRegistry.getObject(registryName);
-        return rawBlock instanceof Block ? Block.getIdFromBlock((Block) rawBlock) : -1;
+        return rawBlock instanceof Block ? new LegacyBlockReference((Block) rawBlock, meta) : null;
+    }
+
+    private static int parseMetadata(String rawMeta) {
+        try {
+            int meta = Integer.parseInt(rawMeta.trim());
+            return meta >= 0 && meta <= 15 ? meta : -1;
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
+    }
+
+    private static int encodeBlockMeta(int blockId, int meta) {
+        return blockId << 16 | meta & 0xFFFF;
     }
 
     private static int resolveLegacyBombableOreId(String rawToken) {
@@ -875,5 +973,15 @@ public final class LegendGearLegacyContent {
             return -1;
         }
         return OreDictionary.getOreID(oreName);
+    }
+
+    private static final class LegacyBlockReference {
+        private final Block block;
+        private final int meta;
+
+        private LegacyBlockReference(Block block, int meta) {
+            this.block = block;
+            this.meta = meta;
+        }
     }
 }

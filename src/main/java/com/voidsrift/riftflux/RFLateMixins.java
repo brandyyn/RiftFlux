@@ -133,6 +133,13 @@ public class RFLateMixins implements ILateMixinLoader {
             mixins.add("late.vortex.MixinInfusionEnchantmentRecipe");
             mixins.add("late.thaumcraft.MixinThaumcraft_WarpSyncSafeLogin");
             mixins.add("late.thaumcraft.MixinResearchManager_LogEarlyWarpResearch");
+            if (ModConfig.thaumcraftOnlyWarpResearchRequiresMinigame) {
+                mixins.add("late.thaumcraft.AccessorPacketPlayerCompleteToServer");
+                mixins.add("late.thaumcraft.MixinPacketPlayerCompleteToServer_WarpOnlyResearchNotes");
+                if (FMLLaunchHandler.side() == Side.CLIENT) {
+                    mixins.add("late.thaumcraft.MixinGuiResearchBrowser_WarpOnlyResearchText");
+                }
+            }
         }
 
         // AlternativeChunkloading compatibility fixes port

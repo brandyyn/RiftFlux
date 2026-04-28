@@ -60,7 +60,8 @@ public class EntityAINimatinFollowOwner extends EntityAIBase {
 
     @Override
     public void updateTask() {
-        if (owner == null) {
+        if (owner == null || nimatin.isSitting()) {
+            this.resetTask();
             return;
         }
 
@@ -85,6 +86,9 @@ public class EntityAINimatinFollowOwner extends EntityAIBase {
     }
 
     private boolean teleportNearOwner() {
+        if (nimatin.isSitting()) {
+            return false;
+        }
         int ownerX = MathHelper.floor_double(owner.posX) - 2;
         int ownerY = MathHelper.floor_double(owner.boundingBox.minY);
         int ownerZ = MathHelper.floor_double(owner.posZ) - 2;

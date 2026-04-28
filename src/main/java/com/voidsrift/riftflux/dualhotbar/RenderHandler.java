@@ -9,6 +9,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -47,6 +48,8 @@ public class RenderHandler {
     private static Field toolHighlightTicksField;
     private static boolean overlayMessageTicksFieldChecked;
     private static Field overlayMessageTicksField;
+    private static boolean overlayMessageFieldChecked;
+    private static Field overlayMessageField;
     private static boolean toolHighlightShiftPushed;
     private static boolean toolHighlightAttribPushed;
 
@@ -506,6 +509,11 @@ public class RenderHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void shiftRendererUp(RenderGameOverlayEvent.Pre event) {
+        if (event.type == ElementType.HEALTHMOUNT && !ModConfig.dualHotbarShowMountedHealth) {
+            event.setCanceled(true);
+            return;
+        }
+
         if (!DualHotbarConfig.enable
                 || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4)) {
             return;
@@ -532,6 +540,10 @@ public class RenderHandler {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void shiftRendererDown(RenderGameOverlayEvent.Post event) {
+        if (event.type == ElementType.HEALTHMOUNT && !ModConfig.dualHotbarShowMountedHealth) {
+            return;
+        }
+
         if (!DualHotbarConfig.enable
                 || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4)) {
             return;
@@ -678,6 +690,55 @@ public class RenderHandler {
         return screenHeight - 59 + getDualHotbarTooltipShiftY() + getOverlayAwareTooltipShiftY();
     }
 
+    public static int getCenteredOverlayTextTopY(Minecraft mc, EntityPlayer player) {
+        if (mc == null || player == null) {
+            return Integer.MIN_VALUE;
+        }
+
+        ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        int topY = res.getScaledHeight() - 72;
+        if (isHeldItemTooltipVisible(mc)) {
+            int tooltipTopY = getHeldItemTooltipTopY(mc, player);
+            if (tooltipTopY != Integer.MIN_VALUE) {
+                topY = Math.min(topY, tooltipTopY - 12);
+            }
+        }
+        return topY;
+    }
+
+    public static float getCenteredOverlayTranslateY(Minecraft mc, EntityPlayer player, float defaultY) {
+        int topY = getCenteredOverlayTextTopY(mc, player);
+        if (topY == Integer.MIN_VALUE) {
+            return defaultY;
+        }
+        return (float) topY + 4.0F;
+    }
+
+    public static boolean isHeldItemTooltipVisible(Minecraft mc) {
+        return getRemainingHighlightTicks(mc) > 0;
+    }
+
+    public static int getOverlayMessageTicks(Minecraft mc) {
+        if (mc == null || mc.ingameGUI == null) {
+            return 0;
+        }
+
+        if (!overlayMessageTicksFieldChecked) {
+            overlayMessageTicksFieldChecked = true;
+            overlayMessageTicksField = findField(mc.ingameGUI.getClass(), "recordPlayingUpFor", "field_73845_h");
+        }
+
+        if (overlayMessageTicksField == null) {
+            return 0;
+        }
+
+        try {
+            return Math.max(0, overlayMessageTicksField.getInt(mc.ingameGUI));
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
     private static boolean isLegendGearManaBarVisible(EntityPlayer player) {
         if (player == null || !ModConfig.enableLegendGearModule) {
             return false;
@@ -707,7 +768,7 @@ public class RenderHandler {
 
     private static int getAdditionalHotbarTooltipTopY(Minecraft mc, EntityPlayer player, int screenHeight) {
         int tooltipTopY = Integer.MAX_VALUE;
-        if (isOverlayMessageVisible(mc)) {
+        if (isOverlayMessageVisible(mc) && !isMountOnboardOverlayVisible(mc, player)) {
             tooltipTopY = Math.min(tooltipTopY, screenHeight - 68);
         }
         if (isBotaniaWandModeDisplayVisible(mc, player)) {
@@ -717,24 +778,46 @@ public class RenderHandler {
     }
 
     private static boolean isOverlayMessageVisible(Minecraft mc) {
+        return getOverlayMessageTicks(mc) > 0;
+    }
+
+    private static String getOverlayMessageText(Minecraft mc) {
         if (mc == null || mc.ingameGUI == null) {
-            return false;
+            return null;
         }
 
-        if (!overlayMessageTicksFieldChecked) {
-            overlayMessageTicksFieldChecked = true;
-            overlayMessageTicksField = findField(mc.ingameGUI.getClass(), "recordPlayingUpFor", "field_73845_h");
+        if (!overlayMessageFieldChecked) {
+            overlayMessageFieldChecked = true;
+            overlayMessageField = findField(mc.ingameGUI.getClass(), "recordPlaying", "field_73838_g");
         }
 
-        if (overlayMessageTicksField == null) {
-            return false;
+        if (overlayMessageField == null) {
+            return null;
         }
 
         try {
-            return overlayMessageTicksField.getInt(mc.ingameGUI) > 0;
+            Object value = overlayMessageField.get(mc.ingameGUI);
+            return value instanceof String ? (String) value : null;
         } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    public static boolean isMountOnboardOverlayVisible(Minecraft mc, EntityPlayer player) {
+        if (mc == null || player == null || mc.gameSettings == null) {
             return false;
         }
+
+        String overlayMessage = getOverlayMessageText(mc);
+        if (overlayMessage == null || overlayMessage.isEmpty()) {
+            return false;
+        }
+
+        String mountPrompt = I18n.format(
+                "mount.onboard",
+                GameSettings.getKeyDisplayString(mc.gameSettings.keyBindSneak.getKeyCode())
+        );
+        return mountPrompt.equals(overlayMessage);
     }
 
     private static boolean isBotaniaWandModeDisplayVisible(Minecraft mc, EntityPlayer player) {

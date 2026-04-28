@@ -7,9 +7,11 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.nmccoy.legendgear.PlayerStarstatsExtension;
+import net.nmccoy.legendgear.item.RandomFoodPotionEffectHelper;
 
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +26,13 @@ public class ItemPoptart extends ItemFood {
     @Override
     protected void onFoodEaten(ItemStack stack, World world, EntityPlayer player) {
         super.onFoodEaten(stack, world, player);
+
+        if (world != null && !world.isRemote && player != null) {
+            PotionEffect effect = RandomFoodPotionEffectHelper.getRandomConfiguredEffect(world, ModConfig.legendGearSweetSnackPotionEffects);
+            if (effect != null) {
+                player.addPotionEffect(effect);
+            }
+        }
 
         if (world == null || world.isRemote || player == null || !ModConfig.enableLegendGearModule) {
             return;
@@ -47,7 +56,7 @@ public class ItemPoptart extends ItemFood {
     public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advanced) {
         float restore = Math.max(0.0F, ModConfig.poptartLegendGearManaRestore);
         if (restore > 0.0F && ModConfig.enableLegendGearModule) {
-            list.add(EnumChatFormatting.GRAY + "Mana Restore: " + formatManaValue(restore));
+            list.add(EnumChatFormatting.AQUA + "Restores " + formatManaValue(restore) + " Mana");
         }
     }
 

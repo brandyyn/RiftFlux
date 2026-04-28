@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.palaria;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.palaria.client.model.ModelCowasaurus;
 import com.voidsrift.riftflux.palaria.client.model.ModelCreeptile;
 import com.voidsrift.riftflux.palaria.client.model.ModelEnderWalker;
@@ -25,8 +26,6 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
@@ -54,41 +53,33 @@ public final class PalariaMobContent {
         preInited = true;
 
         registerDropItems();
-        int id = 260;
         if (ModConfig.enablePalariaCreeptile) {
-            EntityRegistry.registerModEntity(EntityCreeptile.class, "Creeptile", id++, riftflux.instance, 80, 3, true);
-            registerEntityEgg(EntityCreeptile.class, "RiftFluxCreeptile", 0x23DD15, 0x000000);
+            RiftFluxEntityRegistry.registerModEntity(EntityCreeptile.class, "Creeptile", riftflux.instance, 80, 3, true);
             registerSpawnEgg("creeptile_spawn_egg", "creeptile", 0x23DD15, 0x000000);
         }
         if (ModConfig.enablePalariaRaptorChicken) {
-            EntityRegistry.registerModEntity(EntityRaptorChicken.class, "RaptorChicken", id++, riftflux.instance, 100, 3, true);
-            registerEntityEgg(EntityRaptorChicken.class, "RiftFluxRaptorChicken", 0xCFCFB8, 0xD11515);
+            RiftFluxEntityRegistry.registerModEntity(EntityRaptorChicken.class, "RaptorChicken", riftflux.instance, 100, 3, true);
             registerSpawnEgg("raptor_chicken_spawn_egg", "raptor_chicken", 0xCFCFB8, 0xD11515);
         }
         if (ModConfig.enablePalariaCowasaurus) {
-            EntityRegistry.registerModEntity(EntityCowasaurus.class, "Cowasaurus", id++, riftflux.instance, 100, 3, true);
-            registerEntityEgg(EntityCowasaurus.class, "RiftFluxCowasaurus", 0x4F3D2B, 0x8C8282);
+            RiftFluxEntityRegistry.registerModEntity(EntityCowasaurus.class, "Cowasaurus", riftflux.instance, 100, 3, true);
             registerSpawnEgg("cowasaurus_spawn_egg", "cowasaurus", 0x4F3D2B, 0x8C8282);
         }
         if (ModConfig.enablePalariaEnderWalker) {
-            EntityRegistry.registerModEntity(EntityEnderWalker.class, "EnderWalker", id++, riftflux.instance, 100, 3, true);
-            registerEntityEgg(EntityEnderWalker.class, "RiftFluxEnderWalker", 0x000000, 0xA00000);
+            RiftFluxEntityRegistry.registerModEntity(EntityEnderWalker.class, "EnderWalker", riftflux.instance, 100, 3, true);
             registerSpawnEgg("ender_walker_spawn_egg", "ender_walker", 0x000000, 0xA00000);
         }
         if (ModConfig.enablePalariaNimatin) {
-            EntityRegistry.registerModEntity(EntityNimatin.class, "Nimatin", id++, riftflux.instance, 100, 3, true);
-            EntityRegistry.registerModEntity(EntityNimatinSeat.class, "NimatinSeat", id++, riftflux.instance, 64, 1, false);
-            registerEntityEgg(EntityNimatin.class, "RiftFluxNimatin", 0xD1AD00, 0x6E6E6E);
+            RiftFluxEntityRegistry.registerModEntity(EntityNimatin.class, "Nimatin", riftflux.instance, 100, 3, true);
+            RiftFluxEntityRegistry.registerModEntity(EntityNimatinSeat.class, "NimatinSeat", riftflux.instance, 64, 1, false);
             registerSpawnEgg("nimatin_spawn_egg", "nimatin", 0xD1AD00, 0x6E6E6E);
         }
         if (ModConfig.enablePalariaEnderRaptorChicken) {
-            EntityRegistry.registerModEntity(EntityEnderRaptorChicken.class, "EnderRaptorChicken", id++, riftflux.instance, 100, 3, true);
-            registerEntityEgg(EntityEnderRaptorChicken.class, "RiftFluxEnderRaptorChicken", 0x5B1A8E, 0x000000);
+            RiftFluxEntityRegistry.registerModEntity(EntityEnderRaptorChicken.class, "EnderRaptorChicken", riftflux.instance, 100, 3, true);
             registerSpawnEgg("ender_raptor_chicken_spawn_egg", "ender_raptor_chicken", 0x5B1A8E, 0x000000);
         }
         if (ModConfig.enablePalariaMagmaRaptorChicken) {
-            EntityRegistry.registerModEntity(EntityMagmaRaptorChicken.class, "MagmaRaptorChicken", id, riftflux.instance, 100, 3, true);
-            registerEntityEgg(EntityMagmaRaptorChicken.class, "RiftFluxMagmaRaptorChicken", 0xFFD000, 0xD60000);
+            RiftFluxEntityRegistry.registerModEntity(EntityMagmaRaptorChicken.class, "MagmaRaptorChicken", riftflux.instance, 100, 3, true);
             registerSpawnEgg("magma_raptor_chicken_spawn_egg", "magma_raptor_chicken", 0xFFD000, 0xD60000);
         }
     }
@@ -178,9 +169,4 @@ public final class PalariaMobContent {
         GameRegistry.registerItem(new ItemPalariaSpawnEgg(mobKey, primaryColor, secondaryColor).setUnlocalizedName(registryName), registryName);
     }
 
-    private static void registerEntityEgg(Class<? extends Entity> entityClass, String entityName, int primaryColor, int secondaryColor) {
-        int entityId = EntityRegistry.findGlobalUniqueEntityId();
-        EntityRegistry.registerGlobalEntityID(entityClass, entityName, entityId);
-        EntityList.entityEggs.put(entityId, new EntityList.EntityEggInfo(entityId, primaryColor, secondaryColor));
-    }
 }

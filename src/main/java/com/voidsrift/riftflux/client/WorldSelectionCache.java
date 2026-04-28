@@ -18,6 +18,7 @@ public final class WorldSelectionCache {
     private static AnvilConverterException pendingError;
     private static boolean loading;
     private static int generation;
+    private static Thread loaderThread;
 
     private WorldSelectionCache() {
     }
@@ -68,6 +69,33 @@ public final class WorldSelectionCache {
         invalidate();
     }
 
+    public static void cancelAndWaitForIdle() {
+        Thread thread;
+        synchronized (LOCK) {
+            generation++;
+            pendingSaveList = null;
+            pendingError = null;
+            loading = false;
+            thread = loaderThread;
+        }
+
+        if (thread == null || thread == Thread.currentThread()) {
+            return;
+        }
+
+        try {
+            thread.join();
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+        }
+
+        synchronized (LOCK) {
+            if (loaderThread == thread) {
+                loaderThread = null;
+            }
+        }
+    }
+
     private static void startRefresh(final ISaveFormat saveFormat) {
         final int refreshGeneration;
         synchronized (LOCK) {
@@ -78,7 +106,7 @@ public final class WorldSelectionCache {
             refreshGeneration = generation;
         }
 
-        Thread loaderThread = new Thread(new Runnable() {
+        Thread newLoaderThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 List loadedSaveList = null;
@@ -107,10 +135,16 @@ public final class WorldSelectionCache {
                         }
                         loading = false;
                     }
+                    if (loaderThread == Thread.currentThread()) {
+                        loaderThread = null;
+                    }
                 }
             }
         }, "RiftFlux World Selection Loader");
-        loaderThread.setDaemon(true);
-        loaderThread.start();
+        newLoaderThread.setDaemon(true);
+        synchronized (LOCK) {
+            loaderThread = newLoaderThread;
+        }
+        newLoaderThread.start();
     }
 }

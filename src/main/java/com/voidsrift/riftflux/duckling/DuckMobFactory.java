@@ -20,6 +20,9 @@ public final class DuckMobFactory {
             }
             return quackling;
         }
+        if ("soot_sprite".equals(key)) {
+            return new EntitySootSprite(world);
+        }
         return null;
     }
 }

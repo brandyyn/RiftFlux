@@ -22,6 +22,7 @@ public final class BlessingHelper {
     public static final String NBT_BLESSING_PILLAR_Y = "BlessingPillarY";
     public static final String NBT_BLESSING_PILLAR_Z = "BlessingPillarZ";
     public static final String NBT_BLESSING_PILLAR_DIM = "BlessingPillarDim";
+    public static final String NBT_STARTING_BLESSING_PROCESSED = "StartingBlessingProcessed";
 
     public static final String[] BLESSINGS = new String[] {
             "Miner",
@@ -301,6 +302,36 @@ public final class BlessingHelper {
         if (tag.hasKey(NBT_BLESSING_PILLAR_DIM)) {
             persisted.setInteger(NBT_BLESSING_PILLAR_DIM, tag.getInteger(NBT_BLESSING_PILLAR_DIM));
         }
+    }
+
+    public static boolean hasProcessedStartingBlessing(EntityPlayer player) {
+        if (player == null) {
+            return false;
+        }
+        NBTTagCompound persisted = getPersisted(player, false);
+        return persisted != null && persisted.getBoolean(NBT_STARTING_BLESSING_PROCESSED);
+    }
+
+    public static void markStartingBlessingProcessed(EntityPlayer player) {
+        if (player == null) {
+            return;
+        }
+        NBTTagCompound persisted = getPersisted(player, true);
+        if (persisted != null) {
+            persisted.setBoolean(NBT_STARTING_BLESSING_PROCESSED, true);
+        }
+        player.getEntityData().setBoolean(NBT_STARTING_BLESSING_PROCESSED, true);
+    }
+
+    public static boolean isLikelyFirstJoin(EntityPlayer player) {
+        if (player == null) {
+            return false;
+        }
+        NBTTagCompound persisted = getPersisted(player, false);
+        if (persisted == null) {
+            return true;
+        }
+        return persisted.func_150296_c().isEmpty();
     }
 
     private static NBTTagCompound getPersisted(EntityPlayer player, boolean create) {

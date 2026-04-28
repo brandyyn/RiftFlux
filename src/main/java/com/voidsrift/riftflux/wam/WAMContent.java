@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.wam;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.wam.client.render.RenderBlackWidow;
 import com.voidsrift.riftflux.wam.client.render.RenderCyclops;
@@ -19,8 +20,6 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -49,30 +48,24 @@ public final class WAMContent {
         }
         preInited = true;
 
-        int id = 230;
         if (ModConfig.enableCyclopsMob) {
-            EntityRegistry.registerModEntity(EntityCyclops.class, "Cyclops", id++, riftflux.instance, 80, 3, true);
-            registerEntityEgg(EntityCyclops.class, "RiftFluxCyclops", 0x8C755F, 0xD6C39A);
+            RiftFluxEntityRegistry.registerModEntity(EntityCyclops.class, "Cyclops", riftflux.instance, 80, 3, true);
             cyclopsSpawnEgg = registerSpawnEggItem("cyclops_spawn_egg", "cyclops", 0x8C755F, 0xD6C39A);
         }
         if (ModConfig.enableFlowerManMob) {
-            EntityRegistry.registerModEntity(EntityFlowerMan.class, "FlowerMan", id++, riftflux.instance, 64, 3, true);
-            registerEntityEgg(EntityFlowerMan.class, "RiftFluxFlowerMan", 0x4E8C3A, 0xEE6CC8);
+            RiftFluxEntityRegistry.registerModEntity(EntityFlowerMan.class, "FlowerMan", riftflux.instance, 64, 3, true);
             flowerManSpawnEgg = registerSpawnEggItem("flower_man_spawn_egg", "flowerman", 0x4E8C3A, 0xEE6CC8);
         }
         if (ModConfig.enableEnderTrollMob) {
-            EntityRegistry.registerModEntity(EntityEnderTroll.class, "EnderTroll", id++, riftflux.instance, 80, 3, true);
-            registerEntityEgg(EntityEnderTroll.class, "RiftFluxEnderTroll", 0x21122E, 0x57C7E3);
+            RiftFluxEntityRegistry.registerModEntity(EntityEnderTroll.class, "EnderTroll", riftflux.instance, 80, 3, true);
             enderTrollSpawnEgg = registerSpawnEggItem("ender_troll_spawn_egg", "endertroll", 0x21122E, 0x57C7E3);
         }
         if (ModConfig.enableJaxxMob) {
-            EntityRegistry.registerModEntity(EntityJaxx.class, "Jaxx", id++, riftflux.instance, 96, 3, true);
-            registerEntityEgg(EntityJaxx.class, "RiftFluxJaxx", 0xD17527, 0xF7D14C);
+            RiftFluxEntityRegistry.registerModEntity(EntityJaxx.class, "Jaxx", riftflux.instance, 96, 3, true);
             jaxxSpawnEgg = registerSpawnEggItem("jaxx_spawn_egg", "jaxx", 0xD17527, 0xF7D14C);
         }
         if (ModConfig.enableBlackWidowMob) {
-            EntityRegistry.registerModEntity(EntityBlackWidow.class, "BlackWidow", id++, riftflux.instance, 64, 3, true);
-            registerEntityEgg(EntityBlackWidow.class, "RiftFluxBlackWidow", 0x121212, 0xA10618);
+            RiftFluxEntityRegistry.registerModEntity(EntityBlackWidow.class, "BlackWidow", riftflux.instance, 64, 3, true);
             blackWidowSpawnEgg = registerSpawnEggItem("black_widow_spawn_egg", "blackwidow", 0x121212, 0xA10618);
         }
     }
@@ -136,12 +129,6 @@ public final class WAMContent {
         if (ModConfig.enableBlackWidowMob) {
             RenderingRegistry.registerEntityRenderingHandler(EntityBlackWidow.class, new RenderBlackWidow());
         }
-    }
-
-    private static void registerEntityEgg(Class<? extends Entity> entityClass, String entityName, int primaryColor, int secondaryColor) {
-        int entityId = EntityRegistry.findGlobalUniqueEntityId();
-        EntityRegistry.registerGlobalEntityID(entityClass, entityName, entityId);
-        EntityList.entityEggs.put(entityId, new EntityList.EntityEggInfo(entityId, primaryColor, secondaryColor));
     }
 
     private static Item registerSpawnEggItem(String registryName, String mobKey, int primaryColor, int secondaryColor) {

@@ -42,6 +42,8 @@ import assets.levelup.SkillPacketHandler;
 import assets.levelup.SkillProxy;
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.FMLEventChannel;
@@ -68,7 +70,9 @@ import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 public final class LevelUp {
     public static final String ID = "levelup";
+    @Mod.Instance("levelup")
     public static LevelUp instance;
+    @SidedProxy(modId = "levelup", clientSide = "assets.levelup.SkillClientProxy", serverSide = "assets.levelup.SkillProxy")
     public static SkillProxy proxy;
     private Property[] clientProperties;
     private Property[] serverProperties;
