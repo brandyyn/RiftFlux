@@ -7,20 +7,14 @@ import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.MinecraftForge;
 import software.bernie.geckolib3.GeckoLib;
 import software.bernie.geckolib3.particles.BedrockLibrary;
@@ -97,7 +91,6 @@ public final class DucklingContent {
         }
 
         registerRecipes();
-        registerNaturalSpawns();
         registerEventHandlers();
     }
 
@@ -155,78 +148,6 @@ public final class DucklingContent {
                 'E', duckEgg);
 
         GameRegistry.addShapelessRecipe(new ItemStack(Items.pumpkin_pie), Blocks.pumpkin, Items.sugar, duckEgg);
-    }
-
-    private static void registerNaturalSpawns() {
-        if (!ModConfig.enableDucklingNaturalSpawning) {
-            return;
-        }
-        if (ModConfig.ducklingDuckSpawnWeight > 0) {
-            BiomeGenBase[] duckBiomes = collectWetBiomes();
-            if (duckBiomes.length > 0) {
-                EntityRegistry.addSpawn(EntityDuck.class, ModConfig.ducklingDuckSpawnWeight, 3, 4, EnumCreatureType.creature, duckBiomes);
-            }
-        }
-        if (ModConfig.ducklingQuacklingSpawnWeight > 0) {
-            BiomeGenBase[] quacklingBiomes = collectWetBiomes();
-            if (quacklingBiomes.length > 0) {
-                EntityRegistry.addSpawn(EntityQuackling.class, ModConfig.ducklingQuacklingSpawnWeight, 1, 2, EnumCreatureType.creature, quacklingBiomes);
-            }
-        }
-        if (ModConfig.ghibliSootSpriteNaturalSpawning && ModConfig.ghibliSootSpriteSpawnWeight > 0) {
-            BiomeGenBase[] overworld = collectOverworldBiomes();
-            if (overworld.length > 0) {
-                int minGroup = Math.max(1, Math.min(ModConfig.ghibliSootSpriteMinGroupSize, ModConfig.ghibliSootSpriteMaxGroupSize));
-                int maxGroup = Math.max(minGroup, Math.max(ModConfig.ghibliSootSpriteMinGroupSize, ModConfig.ghibliSootSpriteMaxGroupSize));
-                EntityRegistry.addSpawn(EntitySootSprite.class, ModConfig.ghibliSootSpriteSpawnWeight, minGroup, maxGroup, EnumCreatureType.creature, overworld);
-            }
-        }
-    }
-
-    private static BiomeGenBase[] collectWetBiomes() {
-        return collectBiomes("river", "lake", "pond", "swamp", "marsh", "bog", "wetland", "mangrove", "fen", "bayou");
-    }
-
-    private static BiomeGenBase[] collectBiomes(String... nameFragments) {
-        List<BiomeGenBase> out = new ArrayList<BiomeGenBase>();
-        BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
-        if (biomes == null || nameFragments == null) {
-            return new BiomeGenBase[0];
-        }
-        for (int i = 0; i < biomes.length; i++) {
-            BiomeGenBase biome = biomes[i];
-            if (biome == null || biome.biomeName == null) {
-                continue;
-            }
-            String name = biome.biomeName.toLowerCase(Locale.ROOT);
-            for (int j = 0; j < nameFragments.length; j++) {
-                if (name.contains(nameFragments[j])) {
-                    out.add(biome);
-                    break;
-                }
-            }
-        }
-        return out.toArray(new BiomeGenBase[out.size()]);
-    }
-
-    private static BiomeGenBase[] collectOverworldBiomes() {
-        List<BiomeGenBase> out = new ArrayList<BiomeGenBase>();
-        BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
-        if (biomes == null) {
-            return new BiomeGenBase[0];
-        }
-        for (int i = 0; i < biomes.length; i++) {
-            BiomeGenBase biome = biomes[i];
-            if (biome == null || biome.biomeName == null) {
-                continue;
-            }
-            String name = biome.biomeName.toLowerCase(Locale.ROOT);
-            if (name.contains("hell") || name.contains("nether") || name.contains("sky") || name.contains("end")) {
-                continue;
-            }
-            out.add(biome);
-        }
-        return out.toArray(new BiomeGenBase[out.size()]);
     }
 
     private static void registerEventHandlers() {

@@ -36,7 +36,7 @@ public abstract class MixinEntityMob_ZeroBlockLightSpawn {
         int y = MathHelper.floor_double(self.boundingBox.minY);
         int z = MathHelper.floor_double(self.posZ);
 
-        if (world.isDaytime() && world.canBlockSeeTheSky(x, y, z)) {
+        if (world.isDaytime() && world.getSavedLightValue(EnumSkyBlock.Sky, x, y, z) > 0) {
             cir.setReturnValue(false);
             return;
         }

@@ -24,9 +24,7 @@ import com.voidsrift.riftflux.riftflux;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -90,27 +88,6 @@ public final class PalariaMobContent {
         }
         initialized = true;
 
-        if (ModConfig.enablePalariaCreeptile && ModConfig.palariaCreeptileSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityCreeptile.class, ModConfig.palariaCreeptileSpawnWeight, 2, 3, EnumCreatureType.monster, PalariaBiomeHelper.overworldMonsterBiomes(false));
-        }
-        if (ModConfig.enablePalariaRaptorChicken && ModConfig.palariaRaptorChickenSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityRaptorChicken.class, ModConfig.palariaRaptorChickenSpawnWeight, 4, 6, EnumCreatureType.monster, PalariaBiomeHelper.overworldMonsterBiomes(false));
-        }
-        if (ModConfig.enablePalariaCowasaurus && ModConfig.palariaCowasaurusSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityCowasaurus.class, ModConfig.palariaCowasaurusSpawnWeight, 2, 3, EnumCreatureType.monster, PalariaBiomeHelper.overworldMonsterBiomes(false));
-        }
-        if (ModConfig.enablePalariaEnderWalker && ModConfig.palariaEnderWalkerSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityEnderWalker.class, ModConfig.palariaEnderWalkerSpawnWeight, 2, 5, EnumCreatureType.monster, PalariaBiomeHelper.overworldMonsterBiomes(true));
-        }
-        if (ModConfig.enablePalariaNimatin && ModConfig.palariaNimatinSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityNimatin.class, ModConfig.palariaNimatinSpawnWeight, 1, 1, EnumCreatureType.creature, PalariaBiomeHelper.nimatinBiomes());
-        }
-        if (ModConfig.enablePalariaEnderRaptorChicken && ModConfig.palariaEnderRaptorChickenSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityEnderRaptorChicken.class, ModConfig.palariaEnderRaptorChickenSpawnWeight, 2, 5, EnumCreatureType.monster, PalariaBiomeHelper.endBiomes());
-        }
-        if (ModConfig.enablePalariaMagmaRaptorChicken && ModConfig.palariaMagmaRaptorChickenSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityMagmaRaptorChicken.class, ModConfig.palariaMagmaRaptorChickenSpawnWeight, 2, 5, EnumCreatureType.monster, PalariaBiomeHelper.netherBiomes());
-        }
         if (ModConfig.enablePalariaNimatin) {
             MinecraftForge.EVENT_BUS.register(new NimatinSeatEvents());
         }

@@ -16,6 +16,34 @@ import com.voidsrift.riftflux.dualhotbar.DualHotbarConfig;
 
 public class ModConfig {
     private static final String PALARIA_CATEGORY = "palaria";
+    private static final String MOB_SPAWNING_CATEGORY = "mobspawning";
+    private static final String[] DEFAULT_MOB_SPAWN_WHITELIST = new String[]{
+            "demoneye|300|1-3|0",
+            "cyclops|150|1|0",
+            "flowerman|330|1-2|0|forest,magical,river|Flower Forest,Forest,wheatfield",
+            "endertroll|150|1|0|forest,coniferous|wheatfield",
+            "jaxx|150|1|0|forest,coniferous|wheatfield",
+            "blackwidow|450|1-2|0|forest,coniferous|wheatfield",
+            "pumpkinzombie|450|3-5|0||wheatfield",
+            "pumpkinskeleton|450|2-4|0||wheatfield",
+            "pumpkincreeper|250|1-3|0||wheatfield",
+            "creeptile|150|2-3|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "raptorchicken|150|4-6|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "cowasaurus|150|2-3|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "enderwalker|150|2-5|0,1",
+            "nimatin|200|1|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "enderraptorchicken|150|1|1,0||Sky",
+            "magmaraptorchicken|150|1|-1",
+            "axolotl|330|1-3|0|swamp,river",
+            "duck|660|3-4|0|river",
+            "quackling|440|1-2|0|swamp,river",
+            "sootsprite|800|4-8|0|magical,spooky"
+    };
+    private static final String[] DEFAULT_MOB_SPAWN_BLACKLIST = new String[]{
+            "axolotl|||0|snowy",
+            "duck|||0|snowy",
+            "quackling|||0|snowy"
+    };
 
     public static Configuration config;
     private static final int VANILLA_POTION_ID_SLOWNESS = 2;
@@ -230,6 +258,10 @@ public class ModConfig {
     public static int[] blessingDrunkNegativePotionIds;
     public static String[] blessingsDisabledList;
 
+    // Natural mob spawning
+    public static String[] mobSpawnWhitelist;
+    public static String[] mobSpawnBlacklist;
+
     // Avatar 
     public static boolean gliderDyeRecipes;
     public static boolean gliderStackable;
@@ -245,7 +277,6 @@ public class ModConfig {
 
     // Terraria module
     public static boolean enableTerraModule;
-    public static boolean enableDemonEyeSpawning;
     public static float demonEyeHealth;
     public static float eyeOfCthulhuHealth;
     public static int eyeOfCthulhuExperience;
@@ -266,7 +297,6 @@ public class ModConfig {
     public static boolean iceRodUseLegendGearMana;
     public static float iceRodLegendGearManaCost;
     public static boolean magicIceRequireSilkTouch;
-    public static int demonEyeSpawnWeight;
     public static boolean whoopieCushionKnockbackEnabled;
     public static float whoopieCushionKnockbackRadius;
     public static float whoopieCushionKnockbackStrength;
@@ -293,38 +323,23 @@ public class ModConfig {
     public static int wheatfieldBiomeId;
     public static int wheatfieldBiomeWeight;
     public static boolean wheatfieldAllowVillage;
+    public static int wheatfieldTreeChunkChance;
+    public static int wheatfieldPumpkinChunkChance;
     public static int wheatfieldBarleyFistDropChancePercent;
     public static boolean wheatfieldBarleyOnlyDropsWhenSheared;
-    public static boolean wheatfieldRestrictHostileSpawns;
-    public static String[] wheatfieldAllowedHostileMobIds;
 
     // Witches and More ports
     public static boolean enableWitchesAndMoreModule;
     public static boolean enableCyclopsMob;
-    public static int cyclopsSpawnWeight;
     public static int cyclopsMaxHealth;
-    public static boolean cyclopsUseBiomeWhitelist;
-    public static String[] cyclopsBiomeList;
     public static boolean enableFlowerManMob;
-    public static int flowerManSpawnWeight;
     public static int flowerManMaxHealth;
-    public static boolean flowerManUseBiomeWhitelist;
-    public static String[] flowerManBiomeList;
     public static boolean enableEnderTrollMob;
-    public static int enderTrollSpawnWeight;
     public static int enderTrollMaxHealth;
-    public static boolean enderTrollUseBiomeWhitelist;
-    public static String[] enderTrollBiomeList;
     public static boolean enableJaxxMob;
-    public static int jaxxSpawnWeight;
     public static int jaxxMaxHealth;
-    public static boolean jaxxUseBiomeWhitelist;
-    public static String[] jaxxBiomeList;
     public static boolean enableBlackWidowMob;
-    public static int blackWidowSpawnWeight;
     public static int blackWidowMaxHealth;
-    public static boolean blackWidowUseBiomeWhitelist;
-    public static String[] blackWidowBiomeList;
 
     // OffLawn ports
     public static boolean enableOffLawnModule;
@@ -350,10 +365,6 @@ public class ModConfig {
 
     // Pumpkin Pastures ports
     public static boolean enablePumpkinPasturesModule;
-    public static boolean enablePumpkinPasturesNaturalSpawns;
-    public static int pumpkinPasturesZombieSpawnWeight;
-    public static int pumpkinPasturesSkeletonSpawnWeight;
-    public static int pumpkinPasturesCreeperSpawnWeight;
     public static float pumpkinPasturesCreeperExplosionStrength;
     public static float pumpkinPasturesCreeperDamageMultiplier;
     public static float pumpkinPasturesCreeperKnockbackMultiplier;
@@ -420,23 +431,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     // Palaria mob ports
     public static boolean enablePalariaModule;
     public static boolean enablePalariaCowasaurus;
-    public static int palariaCowasaurusSpawnWeight;
     public static float palariaCowasaurusMaxHealth;
     public static boolean enablePalariaCreeptile;
-    public static int palariaCreeptileSpawnWeight;
     public static float palariaCreeptileMaxHealth;
     public static float palariaCreeptileExplosionStrength;
     public static float palariaCreeptileDamageMultiplier;
     public static float palariaCreeptileKnockbackMultiplier;
     public static boolean palariaCreeptileExplosionDamagesEnvironment;
     public static boolean enablePalariaRaptorChicken;
-    public static int palariaRaptorChickenSpawnWeight;
     public static float palariaRaptorChickenMaxHealth;
     public static boolean enablePalariaEnderWalker;
-    public static int palariaEnderWalkerSpawnWeight;
     public static float palariaEnderWalkerMaxHealth;
     public static boolean enablePalariaNimatin;
-    public static int palariaNimatinSpawnWeight;
     public static boolean palariaNimatinTameable;
     public static float palariaNimatinTameChance;
     public static float palariaNimatinMaxHealth;
@@ -454,10 +460,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean palariaNimatinAllowMobPassengers;
     public static String[] palariaNimatinMobPassengerBlacklist;
     public static boolean enablePalariaEnderRaptorChicken;
-    public static int palariaEnderRaptorChickenSpawnWeight;
     public static float palariaEnderRaptorChickenMaxHealth;
     public static boolean enablePalariaMagmaRaptorChicken;
-    public static int palariaMagmaRaptorChickenSpawnWeight;
     public static float palariaMagmaRaptorChickenMaxHealth;
     public static boolean palariaMagmaRaptorChickenPlaceFire;
     public static String[] palariaNimatinDropEntries;
@@ -723,21 +727,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     // Axolotl module
     public static boolean enableAxolotlModule;
-    public static boolean enableAxolotlNaturalSpawning;
-    public static int axolotlSpawnWeight;
     public static float axolotlMaxHealth;
 
     // Ghibli module
     public static boolean enableDucklingModule;
-    public static boolean enableDucklingNaturalSpawning;
     public static boolean ghibliStarCandyRecipeEnabled;
-    public static int ducklingDuckSpawnWeight;
     public static float ducklingAgentDNaturalVariantChancePercent;
-    public static int ducklingQuacklingSpawnWeight;
-    public static boolean ghibliSootSpriteNaturalSpawning;
-    public static int ghibliSootSpriteSpawnWeight;
-    public static int ghibliSootSpriteMinGroupSize;
-    public static int ghibliSootSpriteMaxGroupSize;
     public static float ghibliSootSpriteCoalOreSpawnChancePercent;
     public static int ghibliSootSpriteCoalOreMinSpawns;
     public static int ghibliSootSpriteCoalOreMaxSpawns;
@@ -790,8 +785,9 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static double legendGearLegacyMysticShrubJackpotChance;
     public static String[] legendGearLegacyMysticShrubDropEntries;
     public static int legendGearLegacyMysticShrubRarity;
+    public static String[] legendGearLegacyMysticShrubBiomeWhitelist;
+    public static String[] legendGearLegacyMysticShrubBiomeBlacklist;
     public static int legendGearLegacyQuiverMaxCapacity;
-    public static int[] legendGearLegacyShrubDisabledBiomes;
     public static boolean legendGearLegacyAllowCandy;
     public static boolean legendGearLegacyBombsAllowed;
     public static boolean legendGearLegacyEmeraldShardsAllowed;
@@ -2647,6 +2643,31 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Potion IDs eligible for the Drunk blessing negative effect."
         ));
 
+        mobSpawnWhitelist = config.getStringList(
+                "Whitelist",
+                MOB_SPAWNING_CATEGORY,
+                DEFAULT_MOB_SPAWN_WHITELIST,
+                "Natural mob spawn whitelist. RiftFlux mobs only spawn naturally when listed here; vanilla/other mod mobs listed here have their natural biome spawn entries overwritten per mob.\n"
+                        + "Format: mobname|spawnweight|min-max group size|dimension ids|biome types|biome names or ids\n"
+                        + "Spawn weight is relative to other entries in the same biome and creature type: higher = more common, lower = rarer. A whitelist entry with weight 0 is ignored.\n"
+                        + "Leave dimension ids empty for every dimension. Leave biome types and biome names/ids empty for every biome in the matched dimensions.\n"
+                        + "Separate dimensions, biome types, or biome names/ids with commas. Biome types are Forge BiomeDictionary tags such as forest, magic, dry, river, swamp. The aliases ice and icy map to the snowy tag.\n"
+                        + "Biome names/ids accept exact biome display names, numeric ids, id:123, name:Biome Name, or the special token wheatfield. Names are resolved to numeric biome ids once at startup; spawn checks do not perform string matching.\n"
+                        + "Structure and manual mob spawning are not configured here."
+        );
+        mobSpawnWhitelist = sanitizeMobSpawnRules(mobSpawnWhitelist);
+        config.getCategory(MOB_SPAWNING_CATEGORY).get("Whitelist").set(mobSpawnWhitelist);
+
+        mobSpawnBlacklist = config.getStringList(
+                "Blacklist",
+                MOB_SPAWNING_CATEGORY,
+                DEFAULT_MOB_SPAWN_BLACKLIST,
+                "Natural mob spawn blacklist using the same fields as Whitelist. Spawn weight and group size are ignored here.\n"
+                        + "Blacklist entries take precedence over whitelist entries, so a mob can be whitelisted for a dimension/type and then blocked from one biome name/id."
+        );
+        mobSpawnBlacklist = sanitizeMobSpawnRules(mobSpawnBlacklist);
+        config.getCategory(MOB_SPAWNING_CATEGORY).get("Blacklist").set(mobSpawnBlacklist);
+
         gliderDyeRecipes = config.getBoolean(
                 "GliderDyeRecipes",
                 "avatar",
@@ -2740,13 +2761,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "terraria",
                 true,
                 "Master switch for the Terraria module (Demon Eye, Eye of Cthulhu, Suspicious Looking Eye, lenses, and Ice Rod)."
-        );
-
-        enableDemonEyeSpawning = config.getBoolean(
-                "EnableDemonEyeSpawning",
-                "terraria",
-                true,
-                "If true, Demon Eyes can spawn naturally at night."
         );
 
         demonEyeHealth = config.getFloat(
@@ -2923,15 +2937,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "terraria",
                 true,
                 "If true, temporary Magic Ice only drops permanent Magic Ice when broken with Silk Touch."
-        );
-
-        demonEyeSpawnWeight = config.getInt(
-                "DemonEyeSpawnWeight",
-                "terraria",
-                2,
-                0,
-                200,
-                "Spawn weight for Demon Eye. Lower is rarer. Set to 0 to disable natural spawning without disabling the module."
         );
 
         whoopieCushionKnockbackEnabled = config.getBoolean(
@@ -3347,6 +3352,20 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Average chunk rarity for legacy Mystic Shrub generation. 1 means every chunk."
         );
 
+        legendGearLegacyMysticShrubBiomeWhitelist = config.getStringList(
+                "legacyMysticShrubBiomeWhitelist",
+                "legendgear",
+                new String[0],
+                "Biome IDs or names where legacy Mystic Shrubs may generate. Leave empty to allow every Overworld biome unless blacklisted. Entries are resolved once at startup; generation checks numeric biome IDs only. Special token: wheatfield."
+        );
+
+        legendGearLegacyMysticShrubBiomeBlacklist = config.getStringList(
+                "legacyMysticShrubBiomeBlacklist",
+                "legendgear",
+                new String[]{"wheatfield"},
+                "Biome IDs or names where legacy Mystic Shrubs must not generate. This blacklist takes precedence over the whitelist. Entries are resolved once at startup; generation checks numeric biome IDs only. Special token: wheatfield."
+        );
+
         legendGearLegacyQuiverMaxCapacity = clampInt(
                 config.getInt(
                         "legacyQuiverMaxCapacity",
@@ -3359,13 +3378,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 0,
                 999
         );
-
-        legendGearLegacyShrubDisabledBiomes = config.get(
-                "legendgear",
-                "legacyShrubDisabledBiomes",
-                new int[]{2, 5, 8, 9, 10, 11, 12, 13, 17, 19},
-                "Biome IDs where legacy Mystic Shrubs will not generate."
-        ).getIntList();
 
         legendGearLegacyAllowCandy = config.getBoolean(
                 "legacyAllowCandy",
@@ -4478,6 +4490,24 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, villages may generate in the Wheatfield biome."
         );
 
+        wheatfieldTreeChunkChance = config.getInt(
+                "TreeChunkChance",
+                "wheatfield",
+                7,
+                1,
+                1000,
+                "Chance for Wheatfield tree generation per chunk, expressed as 1 in N chunks. Higher numbers make trees rarer. Default 7 is about 30% rarer than the old hardcoded 1 in 5 chance."
+        );
+
+        wheatfieldPumpkinChunkChance = config.getInt(
+                "PumpkinChunkChance",
+                "wheatfield",
+                64,
+                1,
+                1000,
+                "Chance for Wheatfield pumpkin generation per chunk, expressed as 1 in N chunks. Higher numbers make pumpkins rarer. Default 64 is half as common as the old hardcoded 1 in 32 chance."
+        );
+
         wheatfieldBarleyFistDropChancePercent = config.getInt(
                 "BarleyFistDropChancePercent",
                 "wheatfield",
@@ -4494,22 +4524,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, barley only drops when harvested with shears."
         );
 
-        wheatfieldRestrictHostileSpawns = config.getBoolean(
-                "RestrictHostileSpawns",
-                "wheatfield",
-                false,
-                "If true, only the configured hostile mob ids may naturally spawn in Wheatfield."
-        );
-
-        wheatfieldAllowedHostileMobIds = config.getStringList(
-                "AllowedHostileMobIds",
-                "wheatfield",
-                new String[0],
-                "Normalized hostile mob ids allowed to naturally spawn in Wheatfield when RestrictHostileSpawns is true.\n"
-                        + "Examples: zombie, spider, cyclops, demoneye, blackwidow\n"
-                        + "RiftFlux rebuilds Wheatfield's hostile spawn list from these ids, copying default spawn weights and group sizes from existing natural spawns."
-        );
-
         enableWitchesAndMoreModule = config.getBoolean(
                 "EnableWitchesAndMoreModule",
                 "witchesandmore",
@@ -4524,15 +4538,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, Cyclops are registered and may spawn from eggs, natural spawning, and structures."
         );
 
-        cyclopsSpawnWeight = config.getInt(
-                "CyclopsSpawnWeight",
-                "witchesandmore",
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Cyclops in overworld biomes at night."
-        );
-
         cyclopsMaxHealth = config.getInt(
                 "CyclopsMaxHealth",
                 "witchesandmore",
@@ -4542,35 +4547,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Base max health for Cyclops. The eyeless state still scales down from this value."
         );
 
-        cyclopsUseBiomeWhitelist = config.getBoolean(
-                "CyclopsUseBiomeWhitelist",
-                "witchesandmore",
-                false,
-                "If true, CyclopsBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
-        );
-
-        cyclopsBiomeList = config.getStringList(
-                "CyclopsBiomeList",
-                "witchesandmore",
-                new String[0],
-                "Biome filters for natural Cyclops spawns.\n"
-                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
-        );
-
         enableFlowerManMob = config.getBoolean(
                 "EnableFlowerMan",
                 "witchesandmore",
                 true,
                 "If true, Flower Men are registered and may spawn from eggs, natural spawning, and structures."
-        );
-
-        flowerManSpawnWeight = config.getInt(
-                "FlowerManSpawnWeight",
-                "witchesandmore",
-                4,
-                0,
-                1000,
-                "Natural spawn weight for Flower Men in forest-type biomes."
         );
 
         flowerManMaxHealth = config.getInt(
@@ -4582,35 +4563,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Base max health for Flower Men."
         );
 
-        flowerManUseBiomeWhitelist = config.getBoolean(
-                "FlowerManUseBiomeWhitelist",
-                "witchesandmore",
-                false,
-                "If true, FlowerManBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
-        );
-
-        flowerManBiomeList = config.getStringList(
-                "FlowerManBiomeList",
-                "witchesandmore",
-                new String[0],
-                "Biome filters for natural Flower Man spawns.\n"
-                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
-        );
-
         enableEnderTrollMob = config.getBoolean(
                 "EnableEnderTroll",
                 "witchesandmore",
                 true,
                 "If true, Ender Trolls are registered and may spawn from eggs, natural spawning, and structures."
-        );
-
-        enderTrollSpawnWeight = config.getInt(
-                "EnderTrollSpawnWeight",
-                "witchesandmore",
-                2,
-                0,
-                1000,
-                "Natural spawn weight for Ender Trolls in forest-type biomes at night."
         );
 
         enderTrollMaxHealth = config.getInt(
@@ -4622,35 +4579,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Base max health for Ender Trolls."
         );
 
-        enderTrollUseBiomeWhitelist = config.getBoolean(
-                "EnderTrollUseBiomeWhitelist",
-                "witchesandmore",
-                false,
-                "If true, EnderTrollBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
-        );
-
-        enderTrollBiomeList = config.getStringList(
-                "EnderTrollBiomeList",
-                "witchesandmore",
-                new String[0],
-                "Biome filters for natural Ender Troll spawns.\n"
-                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
-        );
-
         enableJaxxMob = config.getBoolean(
                 "EnableJaxx",
                 "witchesandmore",
                 true,
                 "If true, JAXX are registered and may spawn from eggs, natural spawning, and structures."
-        );
-
-        jaxxSpawnWeight = config.getInt(
-                "JaxxSpawnWeight",
-                "witchesandmore",
-                1,
-                0,
-                1000,
-                "Natural spawn weight for JAXX in forest-type biomes at night."
         );
 
         jaxxMaxHealth = config.getInt(
@@ -4662,35 +4595,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Base max health for JAXX."
         );
 
-        jaxxUseBiomeWhitelist = config.getBoolean(
-                "JaxxUseBiomeWhitelist",
-                "witchesandmore",
-                false,
-                "If true, JaxxBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
-        );
-
-        jaxxBiomeList = config.getStringList(
-                "JaxxBiomeList",
-                "witchesandmore",
-                new String[0],
-                "Biome filters for natural JAXX spawns.\n"
-                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
-        );
-
         enableBlackWidowMob = config.getBoolean(
                 "EnableBlackWidow",
                 "witchesandmore",
                 true,
                 "If true, Black Widows are registered and may spawn from eggs, natural spawning, and structures."
-        );
-
-        blackWidowSpawnWeight = config.getInt(
-                "BlackWidowSpawnWeight",
-                "witchesandmore",
-                4,
-                0,
-                1000,
-                "Natural spawn weight for Black Widows in forest-type biomes at night."
         );
 
         blackWidowMaxHealth = config.getInt(
@@ -4700,21 +4609,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 1,
                 2048,
                 "Base max health for Black Widows."
-        );
-
-        blackWidowUseBiomeWhitelist = config.getBoolean(
-                "BlackWidowUseBiomeWhitelist",
-                "witchesandmore",
-                false,
-                "If true, BlackWidowBiomeList becomes a whitelist for natural spawning. If false, it is a blacklist."
-        );
-
-        blackWidowBiomeList = config.getStringList(
-                "BlackWidowBiomeList",
-                "witchesandmore",
-                new String[0],
-                "Biome filters for natural Black Widow spawns.\n"
-                        + "Accepted entries: biome id (4), biome name (Birch Forest), or biome dictionary tag (type:FOREST)."
         );
 
         enableOffLawnModule = config.getBoolean(
@@ -4888,40 +4782,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "pumpkinpastures",
                 true,
                 "Master switch for integrated Pumpkin Pastures content."
-        );
-
-        enablePumpkinPasturesNaturalSpawns = config.getBoolean(
-                "EnableNaturalSpawns",
-                "pumpkinpastures",
-                true,
-                "If true, pumpkin zombie/skeleton/creeper naturally spawn in configured overworld biomes."
-        );
-
-        pumpkinPasturesZombieSpawnWeight = config.getInt(
-                "PumpkinZombieSpawnWeight",
-                "pumpkinpastures",
-                45,
-                0,
-                1000,
-                "Natural spawn weight for Pumpkin Zombies."
-        );
-
-        pumpkinPasturesSkeletonSpawnWeight = config.getInt(
-                "PumpkinSkeletonSpawnWeight",
-                "pumpkinpastures",
-                45,
-                0,
-                1000,
-                "Natural spawn weight for Pumpkin Skeletons."
-        );
-
-        pumpkinPasturesCreeperSpawnWeight = config.getInt(
-                "PumpkinCreeperSpawnWeight",
-                "pumpkinpastures",
-                25,
-                0,
-                1000,
-                "Natural spawn weight for Pumpkin Creepers."
         );
 
         pumpkinPasturesCreeperExplosionStrength = config.getFloat(
@@ -5392,14 +5252,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, the Palaria Cowasaurus mob and spawn egg are registered."
         );
-        palariaCowasaurusSpawnWeight = config.getInt(
-                "CowasaurusSpawnWeight",
-                PALARIA_CATEGORY,
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Cowasaurus. Set to 0 to keep the mob and egg but disable natural spawning."
-        );
         palariaCowasaurusMaxHealth = config.getFloat(
                 "CowasaurusMaxHealth",
                 PALARIA_CATEGORY,
@@ -5413,14 +5265,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 PALARIA_CATEGORY,
                 true,
                 "If true, the Palaria Creeptile mob and spawn egg are registered."
-        );
-        palariaCreeptileSpawnWeight = config.getInt(
-                "CreeptileSpawnWeight",
-                PALARIA_CATEGORY,
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Creeptiles. Set to 0 to keep the mob and egg but disable natural spawning."
         );
         palariaCreeptileMaxHealth = config.getFloat(
                 "CreeptileMaxHealth",
@@ -5466,14 +5310,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, the Palaria Raptor Chicken mob and spawn egg are registered."
         );
-        palariaRaptorChickenSpawnWeight = config.getInt(
-                "RaptorChickenSpawnWeight",
-                PALARIA_CATEGORY,
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Raptor Chickens. Set to 0 to keep the mob and egg but disable natural spawning."
-        );
         palariaRaptorChickenMaxHealth = config.getFloat(
                 "RaptorChickenMaxHealth",
                 PALARIA_CATEGORY,
@@ -5488,14 +5324,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, the Palaria Ender Walker mob and spawn egg are registered."
         );
-        palariaEnderWalkerSpawnWeight = config.getInt(
-                "EnderWalkerSpawnWeight",
-                PALARIA_CATEGORY,
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Ender Walkers. Set to 0 to keep the mob and egg but disable natural spawning."
-        );
         palariaEnderWalkerMaxHealth = config.getFloat(
                 "EnderWalkerMaxHealth",
                 PALARIA_CATEGORY,
@@ -5509,14 +5337,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 PALARIA_CATEGORY,
                 true,
                 "If true, the Palaria Nimatin mob and spawn egg are registered."
-        );
-        palariaNimatinSpawnWeight = config.getInt(
-                "NimatinSpawnWeight",
-                PALARIA_CATEGORY,
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Nimatins. Set to 0 to keep the mob and egg but disable natural spawning."
         );
         palariaNimatinTameable = config.getBoolean(
                 "NimatinTameable",
@@ -5648,14 +5468,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, the Palaria Ender Raptor Chicken mob and spawn egg are registered."
         );
-        palariaEnderRaptorChickenSpawnWeight = config.getInt(
-                "EnderRaptorChickenSpawnWeight",
-                PALARIA_CATEGORY,
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Ender Raptor Chickens in The End. Set to 0 to keep the mob and egg but disable natural spawning."
-        );
         palariaEnderRaptorChickenMaxHealth = config.getFloat(
                 "EnderRaptorChickenMaxHealth",
                 PALARIA_CATEGORY,
@@ -5669,14 +5481,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 PALARIA_CATEGORY,
                 true,
                 "If true, the Palaria Magma Raptor Chicken mob and spawn egg are registered."
-        );
-        palariaMagmaRaptorChickenSpawnWeight = config.getInt(
-                "MagmaRaptorChickenSpawnWeight",
-                PALARIA_CATEGORY,
-                1,
-                0,
-                1000,
-                "Natural spawn weight for Magma Raptor Chickens in the Nether. Set to 0 to keep the mob and egg but disable natural spawning."
         );
         palariaMagmaRaptorChickenMaxHealth = config.getFloat(
                 "MagmaRaptorChickenMaxHealth",
@@ -5752,7 +5556,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         witchHouseInsideMobCount = config.getInt(
                 "WitchHouseInsideMobCount",
                 "witchesandmore",
-                2,
+                7,
                 0,
                 32,
                 "How many configured mobs to spawn inside each witch house."
@@ -5886,22 +5690,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Master switch for integrated axolotl content."
         );
 
-        enableAxolotlNaturalSpawning = config.getBoolean(
-                "EnableNaturalSpawning",
-                "axolotl",
-                true,
-                "If true, axolotls naturally spawn in wet overworld biomes."
-        );
-
-        axolotlSpawnWeight = config.getInt(
-                "SpawnWeight",
-                "axolotl",
-                6,
-                0,
-                1000,
-                "Spawn weight for natural axolotl spawning."
-        );
-
         axolotlMaxHealth = config.getFloat(
                 "MaxHealth",
                 "axolotl",
@@ -5918,27 +5706,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Master switch for integrated Ghibli content."
         );
 
-        enableDucklingNaturalSpawning = config.getBoolean(
-                "EnableNaturalSpawning",
-                "ghibli",
-                true,
-                "If true, ducks spawn in river biomes and quacklings spawn in swamp-like biomes."
-        );
-
         ghibliStarCandyRecipeEnabled = config.getBoolean(
                 "EnableStarCandyRecipe",
                 "ghibli",
                 false,
                 "If true, the Star Candy crafting recipe is registered."
-        );
-
-        ducklingDuckSpawnWeight = config.getInt(
-                "DuckSpawnWeight",
-                "ghibli",
-                5,
-                0,
-                1000,
-                "Spawn weight for natural duck spawning."
         );
 
         ducklingAgentDNaturalVariantChancePercent = config.getFloat(
@@ -5949,42 +5721,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 100.0F,
                 "Percent chance for a naturally/randomly generated duck to use the Agent D variant as its real stored variant. Agent D ducks keep the skin even after renaming."
         );
-
-        ducklingQuacklingSpawnWeight = config.getInt(
-                "QuacklingSpawnWeight",
-                "ghibli",
-                1,
-                0,
-                1000,
-                "Spawn weight for natural quackling spawning."
-        );
-
-        ghibliSootSpriteNaturalSpawning = config.getBoolean(
-                "EnableSootSpriteNaturalSpawning",
-                "ghibli",
-                true,
-                "If false, Soot Sprites will not spawn naturally. Coal ore spawning is controlled separately."
-        );
-
-        ghibliSootSpriteSpawnWeight = config.getInt(
-                "SootSpriteSpawnWeight",
-                "ghibli",
-                100,
-                0,
-                1000,
-                "Spawn weight for natural Soot Sprite spawning. Soot Sprites only accept low-light spawn positions."
-        );
-
-        int[] sootSpriteGroupSize = getIntRange(
-                "SootSpriteGroupSize",
-                "ghibli",
-                "4-8",
-                1,
-                64,
-                "Natural Soot Sprite spawn group size as min-max, for example 4-8."
-        );
-        ghibliSootSpriteMinGroupSize = sootSpriteGroupSize[0];
-        ghibliSootSpriteMaxGroupSize = sootSpriteGroupSize[1];
 
         ghibliSootSpriteCoalOreSpawnChancePercent = config.getFloat(
                 "SootSpriteCoalOreSpawnChancePercent",
@@ -7332,6 +7068,74 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     private static int getRangeMax(int[] range, int fallback) {
         return range != null && range.length > 1 ? range[1] : getRangeMin(range, fallback);
+    }
+
+    private static String[] sanitizeMobSpawnRules(String[] values) {
+        if (values == null || values.length == 0) {
+            return new String[0];
+        }
+
+        List<String> sanitized = new ArrayList<String>();
+        for (String raw : values) {
+            if (raw == null) {
+                continue;
+            }
+            String entry = raw.trim();
+            if (entry.isEmpty()) {
+                continue;
+            }
+
+            String[] parts = entry.split("\\|", -1);
+            if (parts.length >= 6) {
+                parts[5] = sanitizeMobSpawnBiomeIdField(parts[5]);
+                StringBuilder rebuilt = new StringBuilder(entry.length());
+                for (int i = 0; i < parts.length; i++) {
+                    if (i > 0) {
+                        rebuilt.append('|');
+                    }
+                    rebuilt.append(parts[i].trim());
+                }
+                entry = rebuilt.toString();
+            }
+            sanitized.add(entry);
+        }
+        return sanitized.toArray(new String[sanitized.size()]);
+    }
+
+    private static String sanitizeMobSpawnBiomeIdField(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return "";
+        }
+
+        LinkedHashSet<String> tokens = new LinkedHashSet<String>();
+        String[] parts = raw.split("[,;]+");
+        for (String part : parts) {
+            if (part == null) {
+                continue;
+            }
+            String token = part.trim();
+            if (token.isEmpty()) {
+                continue;
+            }
+
+            String lowered = token.toLowerCase(Locale.ROOT);
+            if ("name:wheatfield".equals(lowered)) {
+                tokens.add("wheatfield");
+            } else if ("name:unnamed".equals(lowered) || "unnamed".equals(lowered)) {
+                continue;
+            } else {
+                tokens.add(token);
+            }
+        }
+
+        StringBuilder out = new StringBuilder(raw.length());
+        for (String token : tokens) {
+            if (out.length() > 0) {
+                out.append(',');
+            }
+            out.append(token);
+        }
+        return out.toString();
     }
 
     private static String[] sanitizeAppaPassengerFilter(String[] values) {

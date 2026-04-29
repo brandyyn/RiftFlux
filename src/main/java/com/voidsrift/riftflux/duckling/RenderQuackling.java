@@ -58,6 +58,7 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
             if (entity instanceof EntityLiving) {
                 GeoLeashRenderer.renderLeash((EntityLiving) entity, x, y, z, partialTicks);
             }
+            this.renderCustomName(entity, x, y, z);
         } finally {
             DucklingRenderState.popRenderMatrices();
             DucklingRenderState.popRenderClientAttribs();
@@ -69,6 +70,12 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
     @Override
     protected void renderLeash(EntityLiving entity, double x, double y, double z, float entityYaw, float partialTicks) {
         // Rendered manually after GeoEntityRenderer finishes so it uses vanilla world-space transforms.
+    }
+
+    private void renderCustomName(Entity entity, double x, double y, double z) {
+        if (entity instanceof EntityLiving && ((EntityLiving) entity).hasCustomNameTag()) {
+            this.func_147906_a(entity, ((EntityLiving) entity).getCustomNameTag(), x, y, z, 64);
+        }
     }
 
     @Override

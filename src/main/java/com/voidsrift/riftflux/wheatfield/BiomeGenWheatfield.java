@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.wheatfield;
 
+import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.offlawn.OffLawnContent;
 import com.voidsrift.riftflux.wheatfield.world.WheatfieldBiomeSampler;
 import cpw.mods.fml.relauncher.Side;
@@ -10,6 +11,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
+import net.minecraft.world.gen.feature.WorldGenBigTree;
+import net.minecraft.world.gen.feature.WorldGenTrees;
 import net.minecraft.world.gen.feature.WorldGenTallGrass;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
@@ -31,8 +34,9 @@ public class BiomeGenWheatfield extends BiomeGenBase {
     private static final int EDGE_TENDRIL_MIN_LENGTH = 8;
     private static final int EDGE_TENDRIL_MAX_LENGTH = 24;
     private static final int EDGE_TENDRIL_BOUNDARY_RADIUS = 5;
-    private static final int TREE_CHANCE_PER_CHUNK = 5;
     private static final int TREE_ATTEMPTS_PER_CHUNK = 2;
+    private static final int TREE_MIN_SPACING_SQUARED = 64;
+    private static final int PUMPKIN_ATTEMPTS_PER_CHUNK = 12;
     private static final int BIOME_SCAN_RADIUS = Math.max(
             EDGE_SAMPLE_RADIUS,
             Math.max(EDGE_DITHER_DEPTH, EDGE_TENDRIL_BOUNDARY_RADIUS));
@@ -96,7 +100,7 @@ public class BiomeGenWheatfield extends BiomeGenBase {
 
     @Override
     public WorldGenAbstractTree func_150567_a(Random random) {
-        return worldGeneratorBigTree;
+        return createTreeGenerator(random);
     }
 
     @Override
@@ -143,13 +147,62 @@ public class BiomeGenWheatfield extends BiomeGenBase {
         }
 
         Random random = createChunkRandom(world.getSeed(), chunkX >> 4, chunkZ >> 4, 0x6F1E3A4DL);
-        if (random.nextInt(TREE_CHANCE_PER_CHUNK) != 0) {
+        if (random.nextInt(Math.max(1, ModConfig.wheatfieldTreeChunkChance)) != 0) {
             return;
         }
 
         short[] surfaceCache = new short[256];
         Arrays.fill(surfaceCache, SURFACE_CACHE_UNSET);
+        int lastTreeX = Integer.MIN_VALUE;
+        int lastTreeZ = Integer.MIN_VALUE;
         for (int attempt = 0; attempt < TREE_ATTEMPTS_PER_CHUNK; attempt++) {
+            int x = chunkX + random.nextInt(16);
+            int z = chunkZ + random.nextInt(16);
+            if (!sampler.isWheatfield(x, z)) {
+                continue;
+            }
+            if (lastTreeX != Integer.MIN_VALUE) {
+                int dx = x - lastTreeX;
+                int dz = z - lastTreeZ;
+                if (dx * dx + dz * dz < TREE_MIN_SPACING_SQUARED) {
+                    continue;
+                }
+            }
+
+            int y = findSurfaceSoilY(world, x, z, chunkX, chunkZ, surfaceCache);
+            if (y < 0) {
+                continue;
+            }
+
+            WorldGenAbstractTree tree = createTreeGenerator(random);
+            boolean generated = tree.generate(world, random, x, y + 1, z);
+            if (!generated && tree instanceof WorldGenBigTree) {
+                generated = new WorldGenTrees(false).generate(world, random, x, y + 1, z);
+            }
+            if (generated) {
+                lastTreeX = x;
+                lastTreeZ = z;
+            }
+        }
+    }
+
+    public void populatePumpkinsForChunk(World world, int chunkX, int chunkZ, WheatfieldBiomeSampler sampler) {
+        if (world == null || sampler == null) {
+            return;
+        }
+
+        if (!sampler.hasWheatfieldInRegion(chunkX, chunkZ, chunkX + 16, chunkZ + 16)) {
+            return;
+        }
+
+        Random random = createChunkRandom(world.getSeed(), chunkX >> 4, chunkZ >> 4, 0x4A2F1C93L);
+        if (random.nextInt(Math.max(1, ModConfig.wheatfieldPumpkinChunkChance)) != 0) {
+            return;
+        }
+
+        short[] surfaceCache = new short[256];
+        Arrays.fill(surfaceCache, SURFACE_CACHE_UNSET);
+        for (int attempt = 0; attempt < PUMPKIN_ATTEMPTS_PER_CHUNK; attempt++) {
             int x = chunkX + random.nextInt(16);
             int z = chunkZ + random.nextInt(16);
             if (!sampler.isWheatfield(x, z)) {
@@ -161,11 +214,15 @@ public class BiomeGenWheatfield extends BiomeGenBase {
                 continue;
             }
 
-            WorldGenAbstractTree tree = random.nextInt(4) == 0 ? worldGeneratorBigTree : worldGeneratorTrees;
-            if (!tree.generate(world, random, x, y + 1, z) && tree != worldGeneratorTrees) {
-                worldGeneratorTrees.generate(world, random, x, y + 1, z);
+            int pumpkinY = y + 1;
+            if (world.isAirBlock(x, pumpkinY, z) && Blocks.pumpkin.canPlaceBlockAt(world, x, pumpkinY, z)) {
+                world.setBlock(x, pumpkinY, z, Blocks.pumpkin, random.nextInt(4), 2);
             }
         }
+    }
+
+    private WorldGenAbstractTree createTreeGenerator(Random random) {
+        return random.nextInt(4) == 0 ? new WorldGenBigTree(false) : new WorldGenTrees(false);
     }
 
     public static int getBiomeScanRadius() {

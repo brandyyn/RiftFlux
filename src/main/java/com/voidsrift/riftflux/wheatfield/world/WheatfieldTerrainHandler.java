@@ -79,6 +79,7 @@ public final class WheatfieldTerrainHandler {
             }
 
             wheatfieldBiome.populateTreesForChunk(event.world, chunkBlockX, chunkBlockZ, sampler);
+            wheatfieldBiome.populatePumpkinsForChunk(event.world, chunkBlockX, chunkBlockZ, sampler);
             wheatfieldBiome.populateBarleyForChunk(event.world, chunkBlockX, chunkBlockZ, sampler);
         }
     }

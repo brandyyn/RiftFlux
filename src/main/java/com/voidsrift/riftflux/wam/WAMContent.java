@@ -14,15 +14,11 @@ import com.voidsrift.riftflux.wam.entity.EntityEnderTroll;
 import com.voidsrift.riftflux.wam.entity.EntityFlowerMan;
 import com.voidsrift.riftflux.wam.entity.EntityJaxx;
 import com.voidsrift.riftflux.wam.world.WitchHouseWorldGenerator;
-import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.MinecraftForge;
 
 public final class WAMContent {
@@ -76,36 +72,12 @@ public final class WAMContent {
         }
         initialized = true;
 
-        BiomeGenBase[] cyclopsBiomes = WAMBiomeHelper.getSpawnBiomes("cyclops");
-        BiomeGenBase[] flowerManBiomes = WAMBiomeHelper.getSpawnBiomes("flowerman");
-        BiomeGenBase[] enderTrollBiomes = WAMBiomeHelper.getSpawnBiomes("endertroll");
-        BiomeGenBase[] jaxxBiomes = WAMBiomeHelper.getSpawnBiomes("jaxx");
-        BiomeGenBase[] blackWidowBiomes = WAMBiomeHelper.getSpawnBiomes("blackwidow");
-
-        if (ModConfig.enableCyclopsMob && ModConfig.cyclopsSpawnWeight > 0 && cyclopsBiomes.length > 0) {
-            EntityRegistry.addSpawn(EntityCyclops.class, ModConfig.cyclopsSpawnWeight, 1, 1, EnumCreatureType.monster, cyclopsBiomes);
-        }
-        if (ModConfig.enableFlowerManMob && ModConfig.flowerManSpawnWeight > 0 && flowerManBiomes.length > 0) {
-            EntityRegistry.addSpawn(EntityFlowerMan.class, ModConfig.flowerManSpawnWeight, 1, 2, EnumCreatureType.creature, flowerManBiomes);
-        }
-        if (ModConfig.enableEnderTrollMob && ModConfig.enderTrollSpawnWeight > 0 && enderTrollBiomes.length > 0) {
-            EntityRegistry.addSpawn(EntityEnderTroll.class, ModConfig.enderTrollSpawnWeight, 1, 1, EnumCreatureType.monster, enderTrollBiomes);
-        }
-        if (ModConfig.enableJaxxMob && ModConfig.jaxxSpawnWeight > 0 && jaxxBiomes.length > 0) {
-            EntityRegistry.addSpawn(EntityJaxx.class, ModConfig.jaxxSpawnWeight, 1, 1, EnumCreatureType.monster, jaxxBiomes);
-        }
-        if (ModConfig.enableBlackWidowMob && ModConfig.blackWidowSpawnWeight > 0 && blackWidowBiomes.length > 0) {
-            EntityRegistry.addSpawn(EntityBlackWidow.class, ModConfig.blackWidowSpawnWeight, 1, 2, EnumCreatureType.monster, blackWidowBiomes);
-        }
-
         if (ModConfig.enableEnderTrollMob) {
             MinecraftForge.EVENT_BUS.register(new WAMEventHandler());
         }
         if (ModConfig.enableWitchHouseStructure) {
             GameRegistry.registerWorldGenerator(new WitchHouseWorldGenerator(), 0);
         }
-
-        WheatfieldContent.refreshHostileSpawnList();
     }
 
     public static void initClient() {

@@ -284,8 +284,6 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         int y = MathHelper.floor_double(this.boundingBox.minY);
         int z = MathHelper.floor_double(this.posZ);
         return ModConfig.enableDucklingModule
-                && ModConfig.enableDucklingNaturalSpawning
-                && ModConfig.ghibliSootSpriteNaturalSpawning
                 && this.worldObj.difficultySetting != EnumDifficulty.PEACEFUL
                 && this.worldObj.getBlockLightValue(x, y, z) <= 7
                 && super.getCanSpawnHere();

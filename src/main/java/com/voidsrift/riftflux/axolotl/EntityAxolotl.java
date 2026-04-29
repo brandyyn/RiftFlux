@@ -381,9 +381,6 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
 
     @Override
     public boolean getCanSpawnHere() {
-        if (!ModConfig.enableAxolotlModule || !ModConfig.enableAxolotlNaturalSpawning) {
-            return false;
-        }
         int x = MathHelper.floor_double(this.posX);
         int y = MathHelper.floor_double(this.boundingBox.minY);
         int z = MathHelper.floor_double(this.posZ);
@@ -392,9 +389,6 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
             return false;
         }
         if (this.posY > 63.0D) {
-            return false;
-        }
-        if (!AxolotlContent.isSpawnBiome(this.worldObj.getBiomeGenForCoords(x, z))) {
             return false;
         }
         return this.hasSpawnableFloor(x, y, z) && this.worldObj.checkNoEntityCollision(this.boundingBox);

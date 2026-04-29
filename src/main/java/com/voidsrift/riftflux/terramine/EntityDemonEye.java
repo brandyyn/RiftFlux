@@ -242,9 +242,6 @@ public class EntityDemonEye extends EntityMob implements IEntitySyncData {
 
     @Override
     public boolean getCanSpawnHere() {
-        if (!ModConfig.enableDemonEyeSpawning) {
-            return false;
-        }
         if (this.worldObj.isDaytime()) {
             return false;
         }

@@ -10,12 +10,10 @@ import com.voidsrift.riftflux.pumpkinpastures.client.render.RenderPumpkinZombie;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -25,16 +23,11 @@ import net.minecraft.item.ItemSoup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.nmccoy.legendgear.LegendGear2;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 public final class PumpkinPasturesContent {
     public static Block pumpkinJBlock;
@@ -140,25 +133,6 @@ public final class PumpkinPasturesContent {
 
         registerRecipes();
         MinecraftForge.EVENT_BUS.register(new PumpkinPasturesEvents());
-
-        if (!ModConfig.enablePumpkinPasturesNaturalSpawns) {
-            return;
-        }
-
-        BiomeGenBase[] biomes = getPumpkinSpawnBiomes();
-        if (biomes.length <= 0) {
-            return;
-        }
-
-        if (ModConfig.pumpkinPasturesZombieSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityPumpkinZombie.class, ModConfig.pumpkinPasturesZombieSpawnWeight, 3, 5, EnumCreatureType.monster, biomes);
-        }
-        if (ModConfig.pumpkinPasturesSkeletonSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityPumpkinSkeleton.class, ModConfig.pumpkinPasturesSkeletonSpawnWeight, 2, 4, EnumCreatureType.monster, biomes);
-        }
-        if (ModConfig.pumpkinPasturesCreeperSpawnWeight > 0) {
-            EntityRegistry.addSpawn(EntityPumpkinCreeper.class, ModConfig.pumpkinPasturesCreeperSpawnWeight, 1, 3, EnumCreatureType.monster, biomes);
-        }
     }
 
     public static void initClient() {
@@ -391,34 +365,4 @@ public final class PumpkinPasturesContent {
         return out.toString();
     }
 
-    private static BiomeGenBase[] getPumpkinSpawnBiomes() {
-        Set<BiomeGenBase> out = new LinkedHashSet<BiomeGenBase>();
-        addIfPresent(out, BiomeGenBase.taiga);
-        addIfPresent(out, BiomeGenBase.swampland);
-        addIfPresent(out, BiomeGenBase.plains);
-        addIfPresent(out, BiomeGenBase.forest);
-        addIfPresent(out, BiomeGenBase.extremeHills);
-        addIfPresent(out, BiomeGenBase.savanna);
-
-        BiomeGenBase[] all = BiomeGenBase.getBiomeGenArray();
-        if (all != null) {
-            addBiomeById(out, all, 129);
-            addBiomeById(out, all, 132);
-        }
-
-        List<BiomeGenBase> list = new ArrayList<BiomeGenBase>(out);
-        return list.toArray(new BiomeGenBase[list.size()]);
-    }
-
-    private static void addIfPresent(Set<BiomeGenBase> set, BiomeGenBase biome) {
-        if (biome != null) {
-            set.add(biome);
-        }
-    }
-
-    private static void addBiomeById(Set<BiomeGenBase> set, BiomeGenBase[] all, int id) {
-        if (id >= 0 && id < all.length && all[id] != null) {
-            set.add(all[id]);
-        }
-    }
 }

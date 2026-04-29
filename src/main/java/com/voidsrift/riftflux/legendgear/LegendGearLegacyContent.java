@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
+import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.IWorldGenerator;
@@ -20,6 +21,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.oredict.OreDictionary;
 import net.nmccoy.legendgear.LegendGear2;
@@ -358,7 +360,9 @@ public final class LegendGearLegacyContent {
         LegendGear.shrubRarity = ModConfig.legendGearLegacyMysticShrubRarity;
         LegendGear.starFallRarity = 4200;
         LegendGear.fallenStarLifetime = 440;
-        LegendGear.shrubDisabledBiomes = ModConfig.legendGearLegacyShrubDisabledBiomes;
+        LegendGear.shrubBiomeWhitelist = resolveLegacyShrubBiomeIds(ModConfig.legendGearLegacyMysticShrubBiomeWhitelist, "whitelist");
+        LegendGear.shrubBiomeBlacklist = resolveLegacyShrubBiomeIds(ModConfig.legendGearLegacyMysticShrubBiomeBlacklist, "blacklist");
+        LegendGear.shrubDisabledBiomes = LegendGear.shrubBiomeBlacklist;
         LegendGear.bombableBlocks = resolveLegacyBombableBlockIds(ModConfig.legendGearLegacyBombableBlocks);
         LegendGear.bombableBlockMetas = resolveLegacyBombableBlockMetas(ModConfig.legendGearLegacyBombableBlocks);
         LegendGear.bombableBlockOreIds = resolveLegacyBombableOreIds(ModConfig.legendGearLegacyBombableBlocks);
@@ -901,6 +905,90 @@ public final class LegendGearLegacyContent {
             ids[index++] = value.intValue();
         }
         return ids;
+    }
+
+    private static int[] resolveLegacyShrubBiomeIds(String[] configuredEntries, String listName) {
+        Set<Integer> resolved = new LinkedHashSet<Integer>();
+        if (configuredEntries == null) {
+            return new int[0];
+        }
+
+        for (String entry : configuredEntries) {
+            if (entry == null) {
+                continue;
+            }
+
+            String trimmed = entry.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+
+            String[] tokens = trimmed.split("[,;]+");
+            for (String token : tokens) {
+                Integer biomeId = resolveLegacyShrubBiomeId(token);
+                if (biomeId != null) {
+                    resolved.add(biomeId);
+                } else if (token != null && token.trim().length() > 0) {
+                    FMLLog.warning("[RiftFlux] Ignoring unknown legacy Mystic Shrub biome %s entry: %s", listName, token.trim());
+                }
+            }
+        }
+
+        int[] ids = new int[resolved.size()];
+        int index = 0;
+        for (Integer value : resolved) {
+            ids[index++] = value.intValue();
+        }
+        return ids;
+    }
+
+    private static Integer resolveLegacyShrubBiomeId(String rawToken) {
+        if (rawToken == null) {
+            return null;
+        }
+
+        String token = rawToken.trim();
+        if (token.isEmpty()) {
+            return null;
+        }
+        if (token.regionMatches(true, 0, "id:", 0, 3)) {
+            token = token.substring(3).trim();
+        } else if (token.regionMatches(true, 0, "name:", 0, 5)) {
+            token = token.substring(5).trim();
+        }
+
+        if ("wheatfield".equalsIgnoreCase(token)) {
+            return WheatfieldContent.wheatfieldBiome == null ? null : WheatfieldContent.wheatfieldBiome.biomeID;
+        }
+
+        try {
+            return Integer.valueOf(Integer.parseInt(token));
+        } catch (NumberFormatException ignored) {
+            return resolveLegacyShrubBiomeName(token);
+        }
+    }
+
+    private static Integer resolveLegacyShrubBiomeName(String rawName) {
+        String target = normalizeLegacyShrubBiomeName(rawName);
+        if (target.length() == 0) {
+            return null;
+        }
+
+        BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
+        if (biomes == null) {
+            return null;
+        }
+
+        for (BiomeGenBase biome : biomes) {
+            if (biome != null && biome.biomeName != null && target.equals(normalizeLegacyShrubBiomeName(biome.biomeName))) {
+                return Integer.valueOf(biome.biomeID);
+            }
+        }
+        return null;
+    }
+
+    private static String normalizeLegacyShrubBiomeName(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT).replace(" ", "").replace("_", "").replace("-", "");
     }
 
     private static int resolveLegacyBlockId(String rawToken) {

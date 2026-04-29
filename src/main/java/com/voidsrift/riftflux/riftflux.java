@@ -28,6 +28,7 @@ import com.voidsrift.riftflux.pumpkinpastures.PumpkinPasturesContent;
 import com.voidsrift.riftflux.offlawn.OffLawnContent;
 import com.voidsrift.riftflux.riftexplorer.RiftExplorerContent;
 import com.voidsrift.riftflux.server.CelestialFogEventServerEvents;
+import com.voidsrift.riftflux.spawning.ConfiguredMobSpawns;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
@@ -184,6 +185,7 @@ public class riftflux {
         HeartCrystalContent.init(event);
         ArmorOverlayContent.init(event);
         LevelUpContent.init(event);
+        ConfiguredMobSpawns.init();
         registerLegacyRegistryAliases();
     }
 

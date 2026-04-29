@@ -200,7 +200,6 @@ public class EntityQuackling extends EntityAnimal implements IMerchant, IAnimata
     @Override
     public boolean getCanSpawnHere() {
         return ModConfig.enableDucklingModule
-                && ModConfig.enableDucklingNaturalSpawning
                 && this.worldObj.checkNoEntityCollision(this.boundingBox)
                 && this.worldObj.getCollidingBoundingBoxes(this, this.boundingBox).isEmpty()
                 && !this.worldObj.isAnyLiquid(this.boundingBox);

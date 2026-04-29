@@ -7,16 +7,13 @@ import com.voidsrift.riftflux.riftflux;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.WeightedRandomChestContent;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.init.Items;
 import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.MinecraftForge;
@@ -120,13 +117,6 @@ public final class TerrariaContent {
             return;
         }
 
-        if (ModConfig.enableDemonEyeSpawning && ModConfig.demonEyeSpawnWeight > 0) {
-            BiomeGenBase[] biomes = getAllOverworldBiomes();
-            if (biomes.length > 0) {
-                EntityRegistry.addSpawn(EntityDemonEye.class, ModConfig.demonEyeSpawnWeight, 1, 1, EnumCreatureType.monster, biomes);
-            }
-        }
-
         GameRegistry.registerWorldGenerator(new TerraPlantWorldGenerator(), 0);
         MinecraftForge.EVENT_BUS.register(new TerraLifecycleEvents());
         ChestGenHooks.addItem(
@@ -190,24 +180,6 @@ public final class TerrariaContent {
                 new ItemStack(lens, 1),
                 new ItemStack(lens, 1)
         );
-    }
-
-    private static BiomeGenBase[] getAllOverworldBiomes() {
-        List<BiomeGenBase> out = new ArrayList<BiomeGenBase>();
-        BiomeGenBase[] all = BiomeGenBase.getBiomeGenArray();
-        if (all == null) {
-            return new BiomeGenBase[0];
-        }
-        for (BiomeGenBase biome : all) {
-            if (biome == null) {
-                continue;
-            }
-            if (biome == BiomeGenBase.hell || biome == BiomeGenBase.sky) {
-                continue;
-            }
-            out.add(biome);
-        }
-        return out.toArray(new BiomeGenBase[out.size()]);
     }
 
     public static int getIceRodLifetimeTicks() {

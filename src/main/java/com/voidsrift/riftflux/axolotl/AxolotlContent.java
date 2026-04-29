@@ -8,12 +8,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.item.Item;
-import net.minecraft.world.biome.BiomeGenBase;
 
 public final class AxolotlContent {
     public static Item axolotlBucket;
@@ -59,19 +54,6 @@ public final class AxolotlContent {
             return;
         }
 
-        if (ModConfig.enableAxolotlNaturalSpawning && ModConfig.axolotlSpawnWeight > 0) {
-            BiomeGenBase[] biomes = getSpawnBiomes();
-            if (biomes.length > 0) {
-                cpw.mods.fml.common.registry.EntityRegistry.addSpawn(
-                        EntityAxolotl.class,
-                        ModConfig.axolotlSpawnWeight,
-                        1,
-                        3,
-                        EnumCreatureType.waterCreature,
-                        biomes
-                );
-            }
-        }
     }
 
     public static void initClient() {
@@ -88,34 +70,6 @@ public final class AxolotlContent {
     }
 
     public static void postInit(FMLPostInitializationEvent event) {
-    }
-
-    public static boolean isSpawnBiome(BiomeGenBase biome) {
-        if (biome == null) {
-            return false;
-        }
-        String name = biome.biomeName == null ? "" : biome.biomeName.toLowerCase(Locale.ROOT);
-        return name.contains("swamp")
-                || name.contains("river")
-                || name.contains("marsh")
-                || name.contains("bog")
-                || name.contains("wetland")
-                || name.contains("mangrove");
-    }
-
-    private static BiomeGenBase[] getSpawnBiomes() {
-        List<BiomeGenBase> out = new ArrayList<BiomeGenBase>();
-        BiomeGenBase[] all = BiomeGenBase.getBiomeGenArray();
-        if (all == null) {
-            return new BiomeGenBase[0];
-        }
-
-        for (BiomeGenBase biome : all) {
-            if (isSpawnBiome(biome)) {
-                out.add(biome);
-            }
-        }
-        return out.toArray(new BiomeGenBase[out.size()]);
     }
 
     private static void registerEntities() {
