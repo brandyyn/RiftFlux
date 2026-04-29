@@ -21,7 +21,7 @@ import java.util.Random;
 
 public class BiomeGenWheatfield extends BiomeGenBase {
     private static final int PASTURE_GRASS_COLOR = 13166666;
-    private static final Height WHEATFIELD_HEIGHT = new Height(0.0009F, 0.00006F);
+    private static final Height WHEATFIELD_HEIGHT = new Height(0.0F, 0.0F);
     private static final int EDGE_SAMPLE_RADIUS = 9;
     private static final float EDGE_BLEND_START = 0.08F;
     private static final float FULL_BARLEY_COVERAGE_START = 0.46F;

@@ -8,7 +8,9 @@ import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,6 +34,7 @@ import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 public final class ConfiguredMobSpawns {
     private static final Map<Class<? extends EntityLiving>, RuleSet> ACTIVE_RULES =
             new HashMap<Class<? extends EntityLiving>, RuleSet>();
+    private static final BitSet WHITELIST_ONLY_BIOME_IDS = new BitSet();
     private static boolean initialized;
 
     private ConfiguredMobSpawns() {
@@ -45,6 +48,7 @@ public final class ConfiguredMobSpawns {
 
         List<SpawnRule> whitelist = parseRules(ModConfig.mobSpawnWhitelist, true);
         List<SpawnRule> blacklist = parseRules(ModConfig.mobSpawnBlacklist, false);
+        setWhitelistOnlyBiomes(parseWhitelistOnlyBiomes(ModConfig.mobSpawnWhitelistOnlyBiomes));
 
         for (SpawnRule rule : whitelist) {
             Class<? extends EntityLiving> entityClass = resolveLivingClass(rule.mobName);
@@ -81,6 +85,7 @@ public final class ConfiguredMobSpawns {
             removeExistingSpawns(ruleSet.entityClass);
             registerWhitelistSpawns(ruleSet);
         }
+        removeUnwhitelistedSpawnsFromWhitelistOnlyBiomes();
 
         MinecraftForge.EVENT_BUS.register(new ConfiguredMobSpawns());
     }
@@ -95,7 +100,7 @@ public final class ConfiguredMobSpawns {
         }
 
         RuleSet ruleSet = ACTIVE_RULES.get(event.entityLiving.getClass());
-        if (ruleSet == null) {
+        if (ruleSet == null && WHITELIST_ONLY_BIOME_IDS.isEmpty()) {
             return;
         }
 
@@ -104,6 +109,13 @@ public final class ConfiguredMobSpawns {
         int z = MathHelper.floor_double(event.z);
         BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
         int dimension = world.provider == null ? 0 : world.provider.dimensionId;
+        boolean whitelistOnlyBiome = biome != null && isWhitelistOnlyBiome(biome.biomeID);
+        if (ruleSet == null) {
+            if (whitelistOnlyBiome) {
+                event.setResult(Event.Result.DENY);
+            }
+            return;
+        }
         if (!ruleSet.allows(dimension, biome)) {
             event.setResult(Event.Result.DENY);
         }
@@ -111,34 +123,42 @@ public final class ConfiguredMobSpawns {
 
     private static void registerWhitelistSpawns(RuleSet ruleSet) {
         for (SpawnRule rule : ruleSet.whitelist) {
-            BiomeGenBase[] biomes = collectRegistrationBiomes(rule);
-            if (biomes.length == 0) {
-                continue;
+            Map<Integer, List<BiomeGenBase>> biomesByWeight = collectRegistrationBiomesByWeight(rule);
+            for (Map.Entry<Integer, List<BiomeGenBase>> entry : biomesByWeight.entrySet()) {
+                if (entry.getKey().intValue() <= 0 || entry.getValue().isEmpty()) {
+                    continue;
+                }
+                EntityRegistry.addSpawn(
+                        ruleSet.entityClass,
+                        entry.getKey().intValue(),
+                        rule.minGroup,
+                        rule.maxGroup,
+                        ruleSet.creatureType,
+                        entry.getValue().toArray(new BiomeGenBase[entry.getValue().size()])
+                );
             }
-            EntityRegistry.addSpawn(
-                    ruleSet.entityClass,
-                    rule.weight,
-                    rule.minGroup,
-                    rule.maxGroup,
-                    ruleSet.creatureType,
-                    biomes
-            );
         }
     }
 
-    private static BiomeGenBase[] collectRegistrationBiomes(SpawnRule rule) {
-        List<BiomeGenBase> out = new ArrayList<BiomeGenBase>();
+    private static Map<Integer, List<BiomeGenBase>> collectRegistrationBiomesByWeight(SpawnRule rule) {
+        Map<Integer, List<BiomeGenBase>> out = new LinkedHashMap<Integer, List<BiomeGenBase>>();
         BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
         if (biomes == null) {
-            return new BiomeGenBase[0];
+            return out;
         }
 
         for (BiomeGenBase biome : biomes) {
             if (biome != null && rule.matchesBiome(biome)) {
-                out.add(biome);
+                Integer weight = Integer.valueOf(rule.getRegistrationWeight(biome));
+                List<BiomeGenBase> weightedBiomes = out.get(weight);
+                if (weightedBiomes == null) {
+                    weightedBiomes = new ArrayList<BiomeGenBase>();
+                    out.put(weight, weightedBiomes);
+                }
+                weightedBiomes.add(biome);
             }
         }
-        return out.toArray(new BiomeGenBase[out.size()]);
+        return out;
     }
 
     private static void removeExistingSpawns(Class<? extends EntityLiving> entityClass) {
@@ -169,6 +189,45 @@ public final class ConfiguredMobSpawns {
         }
     }
 
+    private static void removeUnwhitelistedSpawnsFromWhitelistOnlyBiomes() {
+        if (WHITELIST_ONLY_BIOME_IDS.isEmpty()) {
+            return;
+        }
+
+        BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
+        if (biomes == null) {
+            return;
+        }
+
+        for (BiomeGenBase biome : biomes) {
+            if (biome == null || !isWhitelistOnlyBiome(biome.biomeID)) {
+                continue;
+            }
+
+            EnumCreatureType[] creatureTypes = EnumCreatureType.values();
+            for (EnumCreatureType creatureType : creatureTypes) {
+                List spawnList = biome.getSpawnableList(creatureType);
+                if (spawnList == null) {
+                    continue;
+                }
+
+                Iterator iterator = spawnList.iterator();
+                while (iterator.hasNext()) {
+                    Object entryObj = iterator.next();
+                    if (!(entryObj instanceof BiomeGenBase.SpawnListEntry)) {
+                        continue;
+                    }
+
+                    Class entityClass = ((BiomeGenBase.SpawnListEntry) entryObj).entityClass;
+                    RuleSet ruleSet = ACTIVE_RULES.get(entityClass);
+                    if (ruleSet == null || !ruleSet.allowsBiomeIgnoringDimension(biome)) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
     private static List<SpawnRule> parseRules(String[] entries, boolean whitelist) {
         List<SpawnRule> rules = new ArrayList<SpawnRule>();
         if (entries == null) {
@@ -182,6 +241,35 @@ public final class ConfiguredMobSpawns {
             }
         }
         return rules;
+    }
+
+    private static Set<Integer> parseWhitelistOnlyBiomes(String[] entries) {
+        Set<Integer> out = new LinkedHashSet<Integer>();
+        if (entries == null) {
+            return out;
+        }
+
+        for (String raw : entries) {
+            out.addAll(SpawnRule.parseBiomeIdSet(raw, "WhitelistOnlyBiomes"));
+        }
+        return out;
+    }
+
+    private static void setWhitelistOnlyBiomes(Set<Integer> biomeIds) {
+        WHITELIST_ONLY_BIOME_IDS.clear();
+        if (biomeIds == null) {
+            return;
+        }
+
+        for (Integer biomeId : biomeIds) {
+            if (biomeId != null && biomeId.intValue() >= 0) {
+                WHITELIST_ONLY_BIOME_IDS.set(biomeId.intValue());
+            }
+        }
+    }
+
+    private static boolean isWhitelistOnlyBiome(int biomeId) {
+        return biomeId >= 0 && WHITELIST_ONLY_BIOME_IDS.get(biomeId);
     }
 
     @SuppressWarnings("unchecked")
@@ -216,6 +304,10 @@ public final class ConfiguredMobSpawns {
     }
 
     private static boolean matchesEntityName(String configuredName, String registeredName, Class<?> entityClass) {
+        if (hasRiftFluxEntityPrefix(configuredName) && !isRiftFluxEntity(registeredName, entityClass)) {
+            return false;
+        }
+
         String configured = ConfigResolver.stripKnownEntityPrefixes(ConfigResolver.normalizeToken(configuredName));
         String configuredPath = ConfigResolver.stripKnownEntityPrefixes(ConfigResolver.normalizeToken(stripNamespace(configuredName)));
         if (configured.isEmpty() && configuredPath.isEmpty()) {
@@ -235,6 +327,25 @@ public final class ConfiguredMobSpawns {
                 || configuredPath.equals(registeredPath)
                 || configuredPath.equals(simple)
                 || configuredPath.equals(full);
+    }
+
+    private static boolean hasRiftFluxEntityPrefix(String configuredName) {
+        if (configuredName == null) {
+            return false;
+        }
+
+        String trimmed = configuredName.trim().toLowerCase(Locale.ROOT);
+        if (trimmed.startsWith("riftflux:") || trimmed.startsWith("riftflux.")) {
+            return true;
+        }
+        return ConfigResolver.normalizeToken(configuredName).startsWith("riftflux");
+    }
+
+    private static boolean isRiftFluxEntity(String registeredName, Class<?> entityClass) {
+        if (entityClass != null && entityClass.getName().startsWith("com.voidsrift.riftflux.")) {
+            return true;
+        }
+        return registeredName != null && ConfigResolver.normalizeToken(registeredName).startsWith("riftflux");
     }
 
     private static String stripNamespace(String value) {
@@ -295,6 +406,20 @@ public final class ConfiguredMobSpawns {
             }
             return false;
         }
+
+        private boolean allowsBiomeIgnoringDimension(BiomeGenBase biome) {
+            for (SpawnRule rule : blacklist) {
+                if (rule.matchesBiome(biome)) {
+                    return false;
+                }
+            }
+            for (SpawnRule rule : whitelist) {
+                if (rule.matchesBiome(biome)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     private static final class SpawnRule {
@@ -305,6 +430,9 @@ public final class ConfiguredMobSpawns {
         private final Set<Integer> dimensions;
         private final Set<BiomeDictionary.Type> biomeTypes;
         private final Set<Integer> biomeIds;
+        private final boolean anyBiome;
+        private final BitSet matchingBiomeIds;
+        private final Map<Integer, Integer> biomeWeights;
         private SpawnRule(
                 String mobName,
                 int weight,
@@ -312,7 +440,8 @@ public final class ConfiguredMobSpawns {
                 int maxGroup,
                 Set<Integer> dimensions,
                 Set<BiomeDictionary.Type> biomeTypes,
-                Set<Integer> biomeIds
+                Set<Integer> biomeIds,
+                Map<Integer, Integer> biomeWeights
         ) {
             this.mobName = mobName;
             this.weight = weight;
@@ -321,6 +450,9 @@ public final class ConfiguredMobSpawns {
             this.dimensions = dimensions;
             this.biomeTypes = biomeTypes;
             this.biomeIds = biomeIds;
+            this.anyBiome = biomeTypes.isEmpty() && biomeIds.isEmpty();
+            this.matchingBiomeIds = compileMatchingBiomeIds(biomeTypes, biomeIds);
+            this.biomeWeights = biomeWeights;
         }
 
         private static SpawnRule parse(String raw, boolean whitelist) {
@@ -345,6 +477,7 @@ public final class ConfiguredMobSpawns {
             }
 
             int[] group = parseGroupSize(getPart(parts, 2));
+            BiomeSelectorParse biomeSelectors = parseBiomeSelectors(getPart(parts, 5), mobName);
             return new SpawnRule(
                     mobName,
                     weight,
@@ -352,7 +485,8 @@ public final class ConfiguredMobSpawns {
                     group[1],
                     parseIntegerSet(getPart(parts, 3)),
                     parseBiomeTypeSet(getPart(parts, 4)),
-                    parseBiomeIdSet(getPart(parts, 5), mobName)
+                    biomeSelectors.biomeIds,
+                    biomeSelectors.biomeWeights
             );
         }
 
@@ -368,18 +502,18 @@ public final class ConfiguredMobSpawns {
             if (biome == null) {
                 return false;
             }
-            if (biomeTypes.isEmpty() && biomeIds.isEmpty()) {
+            if (anyBiome) {
                 return true;
             }
-            for (BiomeDictionary.Type type : biomeTypes) {
-                if (BiomeDictionary.isBiomeOfType(biome, type)) {
-                    return true;
-                }
+            return biome.biomeID >= 0 && matchingBiomeIds.get(biome.biomeID);
+        }
+
+        private int getRegistrationWeight(BiomeGenBase biome) {
+            if (biome == null) {
+                return weight;
             }
-            if (biomeIds.contains(Integer.valueOf(biome.biomeID))) {
-                return true;
-            }
-            return false;
+            Integer biomeWeight = biomeWeights.get(Integer.valueOf(biome.biomeID));
+            return biomeWeight == null ? weight : biomeWeight.intValue();
         }
 
         private static String getPart(String[] parts, int index) {
@@ -468,10 +602,49 @@ public final class ConfiguredMobSpawns {
             return out;
         }
 
-        private static Set<Integer> parseBiomeIdSet(String value, String mobName) {
-            Set<Integer> out = new LinkedHashSet<Integer>();
-            if (value == null || value.trim().isEmpty()) {
+        private static BitSet compileMatchingBiomeIds(Set<BiomeDictionary.Type> biomeTypes, Set<Integer> biomeIds) {
+            BitSet out = new BitSet();
+            if (biomeIds != null) {
+                for (Integer biomeId : biomeIds) {
+                    if (biomeId != null && biomeId.intValue() >= 0) {
+                        out.set(biomeId.intValue());
+                    }
+                }
+            }
+
+            if (biomeTypes == null || biomeTypes.isEmpty()) {
                 return out;
+            }
+
+            BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
+            if (biomes == null) {
+                return out;
+            }
+
+            for (BiomeGenBase biome : biomes) {
+                if (biome == null || biome.biomeID < 0) {
+                    continue;
+                }
+
+                for (BiomeDictionary.Type type : biomeTypes) {
+                    if (BiomeDictionary.isBiomeOfType(biome, type)) {
+                        out.set(biome.biomeID);
+                        break;
+                    }
+                }
+            }
+            return out;
+        }
+
+        private static Set<Integer> parseBiomeIdSet(String value, String mobName) {
+            return parseBiomeSelectors(value, mobName).biomeIds;
+        }
+
+        private static BiomeSelectorParse parseBiomeSelectors(String value, String mobName) {
+            Set<Integer> out = new LinkedHashSet<Integer>();
+            Map<Integer, Integer> weights = new LinkedHashMap<Integer, Integer>();
+            if (value == null || value.trim().isEmpty()) {
+                return new BiomeSelectorParse(out, weights);
             }
 
             String[] parts = value.trim().split("[,;]+");
@@ -485,6 +658,16 @@ public final class ConfiguredMobSpawns {
                 }
 
                 String rawToken = token;
+                Integer weightOverride = null;
+                int openParen = token.lastIndexOf('(');
+                if (openParen > 0 && token.endsWith(")")) {
+                    String weightText = token.substring(openParen + 1, token.length() - 1).trim();
+                    if (ConfigResolver.isInteger(weightText)) {
+                        weightOverride = Integer.valueOf(Math.max(0, ConfigResolver.parseIntSafe(weightText, 0)));
+                        token = token.substring(0, openParen).trim();
+                    }
+                }
+
                 String lowered = token.toLowerCase(Locale.ROOT);
                 if (lowered.startsWith("id:")) {
                     token = token.substring(3).trim();
@@ -495,7 +678,11 @@ public final class ConfiguredMobSpawns {
                 }
 
                 if (ConfigResolver.isInteger(token)) {
-                    out.add(Integer.valueOf(ConfigResolver.parseIntSafe(token, Integer.MIN_VALUE)));
+                    Integer biomeId = Integer.valueOf(ConfigResolver.parseIntSafe(token, Integer.MIN_VALUE));
+                    out.add(biomeId);
+                    if (weightOverride != null) {
+                        weights.put(biomeId, weightOverride);
+                    }
                     continue;
                 }
 
@@ -503,6 +690,9 @@ public final class ConfiguredMobSpawns {
                     Integer wheatfieldId = getWheatfieldBiomeId();
                     if (wheatfieldId != null) {
                         out.add(wheatfieldId);
+                        if (weightOverride != null) {
+                            weights.put(wheatfieldId, weightOverride);
+                        }
                     }
                     continue;
                 }
@@ -513,11 +703,14 @@ public final class ConfiguredMobSpawns {
                 }
                 if (biomeId != null) {
                     out.add(biomeId);
+                    if (weightOverride != null) {
+                        weights.put(biomeId, weightOverride);
+                    }
                 } else {
                     FMLLog.warning("[RiftFlux] Ignoring unknown natural mob spawn biome name/id '%s' in rule for '%s'.", rawToken, mobName);
                 }
             }
-            return out;
+            return new BiomeSelectorParse(out, weights);
         }
 
         private static Integer resolveBiomeName(String value) {
@@ -545,6 +738,16 @@ public final class ConfiguredMobSpawns {
             return WheatfieldContent.wheatfieldBiome == null
                     ? null
                     : Integer.valueOf(WheatfieldContent.wheatfieldBiome.biomeID);
+        }
+
+        private static final class BiomeSelectorParse {
+            private final Set<Integer> biomeIds;
+            private final Map<Integer, Integer> biomeWeights;
+
+            private BiomeSelectorParse(Set<Integer> biomeIds, Map<Integer, Integer> biomeWeights) {
+                this.biomeIds = biomeIds;
+                this.biomeWeights = biomeWeights;
+            }
         }
     }
 }

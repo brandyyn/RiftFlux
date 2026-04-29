@@ -66,6 +66,11 @@ public class EntityCyclops extends EntityMob implements IEntitySyncData {
     }
 
     @Override
+    public boolean getCanSpawnHere() {
+        return worldObj != null && !worldObj.isDaytime() && super.getCanSpawnHere();
+    }
+
+    @Override
     public boolean attackEntityAsMob(Entity target) {
         attackTimer = 10;
         worldObj.setEntityState(this, (byte) 4);

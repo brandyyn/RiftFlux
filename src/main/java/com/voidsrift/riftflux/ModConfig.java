@@ -3,8 +3,10 @@ package com.voidsrift.riftflux;
 import com.voidsrift.riftflux.util.ConfigResolver;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,32 +20,34 @@ public class ModConfig {
     private static final String PALARIA_CATEGORY = "palaria";
     private static final String MOB_SPAWNING_CATEGORY = "mobspawning";
     private static final String[] DEFAULT_MOB_SPAWN_WHITELIST = new String[]{
-            "demoneye|300|1-3|0",
-            "cyclops|150|1|0",
-            "flowerman|330|1-2|0|forest,magical,river|Flower Forest,Forest,wheatfield",
-            "endertroll|150|1|0|forest,coniferous|wheatfield",
-            "jaxx|150|1|0|forest,coniferous|wheatfield",
-            "blackwidow|450|1-2|0|forest,coniferous|wheatfield",
-            "pumpkinzombie|450|3-5|0||wheatfield",
-            "pumpkinskeleton|450|2-4|0||wheatfield",
-            "pumpkincreeper|250|1-3|0||wheatfield",
-            "creeptile|150|2-3|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
-            "raptorchicken|150|4-6|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
-            "cowasaurus|150|2-3|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
-            "enderwalker|150|2-5|0,1",
-            "nimatin|200|1|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
-            "enderraptorchicken|150|1|1,0||Sky",
-            "magmaraptorchicken|150|1|-1",
-            "axolotl|330|1-3|0|swamp,river",
-            "duck|660|3-4|0|river",
-            "quackling|440|1-2|0|swamp,river",
-            "sootsprite|800|4-8|0|magical,spooky"
+            "riftflux.DemonEye|300|1-3|0",
+            "riftflux.Cyclops|150|1|0",
+            "riftflux.FlowerMan|330|1-2|0|forest,magical,river|Flower Forest,Forest,wheatfield",
+            "riftflux.EnderTroll|150|1|0|forest,coniferous|wheatfield",
+            "riftflux.Jaxx|150|1|0|forest,coniferous|wheatfield",
+            "riftflux.BlackWidow|450|1-2|0|forest,coniferous|wheatfield",
+            "riftflux.PumpkinZombie|450|3-5|0||wheatfield",
+            "riftflux.PumpkinSkeleton|450|2-4|0||wheatfield",
+            "riftflux.PumpkinCreeper|250|1-3|0||wheatfield",
+            "riftflux.Creeptile|150|2-3|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "riftflux.RaptorChicken|150|4-6|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "riftflux.Cowasaurus|150|2-3|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "riftflux.EnderWalker|150|2-5|0,1",
+            "riftflux.Nimatin|200|1|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "riftflux.EnderRaptorChicken|150|1|1,0||Sky",
+            "riftflux.MagmaRaptorChicken|150|1|-1",
+            "riftflux.Axolotl|330|1-3|0|swamp,river",
+            "riftflux.duck|660|3-4|0|river",
+            "riftflux.quackling|440|1-2|0|swamp,river",
+            "riftflux.soot_sprite|800|4-8|0|magical,spooky"
     };
     private static final String[] DEFAULT_MOB_SPAWN_BLACKLIST = new String[]{
-            "axolotl|||0|snowy",
-            "duck|||0|snowy",
-            "quackling|||0|snowy"
+            "riftflux.Axolotl|||0|snowy",
+            "riftflux.duck|||0|snowy",
+            "riftflux.quackling|||0|snowy"
     };
+    private static final String[] DEFAULT_MOB_SPAWN_WHITELIST_ONLY_BIOMES = new String[0];
+    private static final Map<String, String> RIFTFLUX_NATURAL_MOB_CONFIG_IDS = buildRiftFluxNaturalMobConfigIds();
 
     public static Configuration config;
     private static final int VANILLA_POTION_ID_SLOWNESS = 2;
@@ -95,6 +99,31 @@ public class ModConfig {
 
     public static boolean enableMeleeDamageTooltip;
     public static boolean enableUniversalDurabilityTooltip;
+
+    private static Map<String, String> buildRiftFluxNaturalMobConfigIds() {
+        HashMap<String, String> ids = new HashMap<String, String>();
+        ids.put("demoneye", "riftflux.DemonEye");
+        ids.put("cyclops", "riftflux.Cyclops");
+        ids.put("flowerman", "riftflux.FlowerMan");
+        ids.put("endertroll", "riftflux.EnderTroll");
+        ids.put("jaxx", "riftflux.Jaxx");
+        ids.put("blackwidow", "riftflux.BlackWidow");
+        ids.put("pumpkinzombie", "riftflux.PumpkinZombie");
+        ids.put("pumpkinskeleton", "riftflux.PumpkinSkeleton");
+        ids.put("pumpkincreeper", "riftflux.PumpkinCreeper");
+        ids.put("creeptile", "riftflux.Creeptile");
+        ids.put("raptorchicken", "riftflux.RaptorChicken");
+        ids.put("cowasaurus", "riftflux.Cowasaurus");
+        ids.put("enderwalker", "riftflux.EnderWalker");
+        ids.put("nimatin", "riftflux.Nimatin");
+        ids.put("enderraptorchicken", "riftflux.EnderRaptorChicken");
+        ids.put("magmaraptorchicken", "riftflux.MagmaRaptorChicken");
+        ids.put("axolotl", "riftflux.Axolotl");
+        ids.put("duck", "riftflux.duck");
+        ids.put("quackling", "riftflux.quackling");
+        ids.put("sootsprite", "riftflux.soot_sprite");
+        return ids;
+    }
 
     // Combat tweaks
     public static boolean enableFistDamageBoost;
@@ -261,6 +290,7 @@ public class ModConfig {
     // Natural mob spawning
     public static String[] mobSpawnWhitelist;
     public static String[] mobSpawnBlacklist;
+    public static String[] mobSpawnWhitelistOnlyBiomes;
 
     // Avatar 
     public static boolean gliderDyeRecipes;
@@ -2650,9 +2680,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Natural mob spawn whitelist. RiftFlux mobs only spawn naturally when listed here; vanilla/other mod mobs listed here have their natural biome spawn entries overwritten per mob.\n"
                         + "Format: mobname|spawnweight|min-max group size|dimension ids|biome types|biome names or ids\n"
                         + "Spawn weight is relative to other entries in the same biome and creature type: higher = more common, lower = rarer. A whitelist entry with weight 0 is ignored.\n"
+                        + "A biome name/id may override the entry weight with biome(weight), for example Jungle(60), Desert(40), Taiga(500). Higher per-biome weight = more common in that biome.\n"
                         + "Leave dimension ids empty for every dimension. Leave biome types and biome names/ids empty for every biome in the matched dimensions.\n"
                         + "Separate dimensions, biome types, or biome names/ids with commas. Biome types are Forge BiomeDictionary tags such as forest, magic, dry, river, swamp. The aliases ice and icy map to the snowy tag.\n"
                         + "Biome names/ids accept exact biome display names, numeric ids, id:123, name:Biome Name, or the special token wheatfield. Names are resolved to numeric biome ids once at startup; spawn checks do not perform string matching.\n"
+                        + "Use the Forge 1.7.10 entity id for RiftFlux mobs, for example riftflux.BlackWidow or riftflux.quackling, to avoid matching another mod's entity with the same simple name. riftflux: still resolves as an alias.\n"
                         + "Structure and manual mob spawning are not configured here."
         );
         mobSpawnWhitelist = sanitizeMobSpawnRules(mobSpawnWhitelist);
@@ -2667,6 +2699,17 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         );
         mobSpawnBlacklist = sanitizeMobSpawnRules(mobSpawnBlacklist);
         config.getCategory(MOB_SPAWNING_CATEGORY).get("Blacklist").set(mobSpawnBlacklist);
+
+        mobSpawnWhitelistOnlyBiomes = config.getStringList(
+                "WhitelistOnlyBiomes",
+                MOB_SPAWNING_CATEGORY,
+                DEFAULT_MOB_SPAWN_WHITELIST_ONLY_BIOMES,
+                "Biome names or ids where natural spawning is locked to mobs that have a matching Whitelist entry for that biome.\n"
+                        + "Any existing vanilla/mod spawn-list entries in these biomes are removed unless that mob is whitelisted here. CheckSpawn also denies unlisted mobs in these biomes.\n"
+                        + "Accepts exact biome display names, numeric ids, id:123, name:Biome Name, or wheatfield. Names are resolved once at startup."
+        );
+        mobSpawnWhitelistOnlyBiomes = sanitizeBiomeNameIdList(mobSpawnWhitelistOnlyBiomes);
+        config.getCategory(MOB_SPAWNING_CATEGORY).get("WhitelistOnlyBiomes").set(mobSpawnWhitelistOnlyBiomes);
 
         gliderDyeRecipes = config.getBoolean(
                 "GliderDyeRecipes",
@@ -7086,20 +7129,73 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             }
 
             String[] parts = entry.split("\\|", -1);
+            if (parts.length > 0) {
+                parts[0] = sanitizeMobSpawnMobName(parts[0]);
+            }
             if (parts.length >= 6) {
                 parts[5] = sanitizeMobSpawnBiomeIdField(parts[5]);
-                StringBuilder rebuilt = new StringBuilder(entry.length());
-                for (int i = 0; i < parts.length; i++) {
-                    if (i > 0) {
-                        rebuilt.append('|');
-                    }
-                    rebuilt.append(parts[i].trim());
-                }
-                entry = rebuilt.toString();
             }
+
+            StringBuilder rebuilt = new StringBuilder(entry.length() + 10);
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) {
+                    rebuilt.append('|');
+                }
+                rebuilt.append(parts[i].trim());
+            }
+            entry = rebuilt.toString();
             sanitized.add(entry);
         }
         return sanitized.toArray(new String[sanitized.size()]);
+    }
+
+    private static String sanitizeMobSpawnMobName(String raw) {
+        if (raw == null) {
+            return "";
+        }
+
+        String token = raw.trim();
+        if (token.isEmpty()) {
+            return "";
+        }
+
+        String lowered = token.toLowerCase(Locale.ROOT);
+        if (lowered.startsWith("riftflux.")) {
+            return token;
+        }
+
+        String normalized = ConfigResolver.stripKnownEntityPrefixes(ConfigResolver.normalizeToken(token));
+        String riftFluxId = RIFTFLUX_NATURAL_MOB_CONFIG_IDS.get(normalized);
+        if (riftFluxId != null) {
+            return riftFluxId;
+        }
+        return token;
+    }
+
+    private static String[] sanitizeBiomeNameIdList(String[] values) {
+        if (values == null || values.length == 0) {
+            return new String[0];
+        }
+
+        LinkedHashSet<String> tokens = new LinkedHashSet<String>();
+        for (String raw : values) {
+            if (raw == null) {
+                continue;
+            }
+
+            String[] parts = raw.split("[,;]+");
+            for (String part : parts) {
+                if (part == null) {
+                    continue;
+                }
+                String token = part.trim();
+                if (!token.isEmpty()) {
+                    tokens.add(token);
+                }
+            }
+        }
+
+        return tokens.toArray(new String[tokens.size()]);
     }
 
     private static String sanitizeMobSpawnBiomeIdField(String raw) {
