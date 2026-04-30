@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockGrass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -12,6 +13,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -23,6 +25,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
@@ -31,6 +34,7 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
     private static final float FLAT_ITEM_CLOCKWISE_ROLL = -25.0F;
     private static final float FLAT_ITEM_DEPTH = 0.0625F;
+    private static final RenderBlocks HELD_BLOCK_RENDERER = new RenderBlocks();
     private static final ResourceLocation ENCHANTED_ITEM_GLINT =
             new ResourceLocation("textures/misc/enchanted_item_glint.png");
 
@@ -153,9 +157,9 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             DucklingRenderState.prepareForRender();
             RenderHelper.enableStandardItemLighting();
             if (blockModel) {
-                RenderManager.instance.itemRenderer.renderItem(sprite, held, 0, IItemRenderer.ItemRenderType.ENTITY);
+                this.renderHeldBlockItem(sprite, held, brightness, partialTicks);
             } else {
-                this.renderFlatHeldItem(sprite, held, brightness);
+                this.renderFlatHeldItem(sprite, held, brightness, partialTicks);
             }
             RenderHelper.disableStandardItemLighting();
         } finally {
@@ -175,6 +179,185 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
         return block != null && block != Blocks.air && RenderBlocks.renderItemIn3d(block.getRenderType());
     }
 
+    private void renderHeldBlockItem(EntitySootSprite sprite, ItemStack held, int brightness, float partialTicks) {
+        Block block = Block.getBlockFromItem(held.getItem());
+        if (block == null || block == Blocks.air) {
+            RenderManager.instance.itemRenderer.renderItem(sprite, held, 0, IItemRenderer.ItemRenderType.ENTITY);
+            return;
+        }
+
+        if (DucklingRenderState.usesPackedLightmap() && this.shouldRenderLitCubeBlockItem(block)) {
+            this.renderLitHeldCubeBlockItem(sprite, block, this.normalizeHeldBlockMetadata(block, held.getItemDamage()), brightness, partialTicks);
+            return;
+        }
+
+        RenderManager.instance.itemRenderer.renderItem(sprite, held, 0, IItemRenderer.ItemRenderType.ENTITY);
+    }
+
+    private boolean shouldRenderLitCubeBlockItem(Block block) {
+        int renderType = block.getRenderType();
+        return renderType == 0 || renderType == 16 || renderType == 26 || renderType == 31 || renderType == 39;
+    }
+
+    private int normalizeHeldBlockMetadata(Block block, int metadata) {
+        if (block == Blocks.dispenser || block == Blocks.dropper || block == Blocks.furnace) {
+            return 3;
+        }
+        if (block.getRenderType() == 16) {
+            return 1;
+        }
+        return metadata;
+    }
+
+    private void renderLitHeldCubeBlockItem(EntitySootSprite sprite, Block block, int metadata, int brightness, float partialTicks) {
+        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+        float sceneBrightness = this.resolveHeldItemColorBrightness(sprite, partialTicks);
+
+        GL11.glPushMatrix();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        RenderHelper.disableStandardItemLighting();
+        GL11.glDisable(GL11.GL_LIGHTING);
+        try {
+            block.setBlockBoundsForItemRender();
+            HELD_BLOCK_RENDERER.setRenderBoundsFromBlock(block);
+            GL11.glRotatef(90.0F, 0.0F, 1.0F, 0.0F);
+            GL11.glTranslatef(-0.5F, -0.5F, -0.5F);
+            this.renderLitHeldCubeFaces(block, metadata, brightness, sceneBrightness);
+        } finally {
+            GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+            GL11.glPopMatrix();
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+    }
+
+    private void renderLitHeldCubeFaces(Block block, int metadata, int brightness, float sceneBrightness) {
+        boolean grass = block == Blocks.grass;
+        int color = grass ? 0xFFFFFF : block.getRenderColor(metadata);
+        float red = (float) (color >> 16 & 255) / 255.0F * sceneBrightness;
+        float green = (float) (color >> 8 & 255) / 255.0F * sceneBrightness;
+        float blue = (float) (color & 255) / 255.0F * sceneBrightness;
+
+        this.renderLitHeldBlockFace(block, metadata, brightness, 0, 0.0F, -1.0F, 0.0F, red * 0.5F, green * 0.5F, blue * 0.5F);
+
+        if (grass) {
+            int topColor = block.getRenderColor(metadata);
+            red = (float) (topColor >> 16 & 255) / 255.0F * sceneBrightness;
+            green = (float) (topColor >> 8 & 255) / 255.0F * sceneBrightness;
+            blue = (float) (topColor & 255) / 255.0F * sceneBrightness;
+        }
+
+        this.renderLitHeldBlockFace(block, metadata, brightness, 1, 0.0F, 1.0F, 0.0F, red, green, blue);
+
+        if (grass) {
+            red = sceneBrightness;
+            green = sceneBrightness;
+            blue = sceneBrightness;
+        }
+
+        this.renderLitHeldBlockFace(block, metadata, brightness, 2, 0.0F, 0.0F, -1.0F, red * 0.8F, green * 0.8F, blue * 0.8F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 3, 0.0F, 0.0F, 1.0F, red * 0.8F, green * 0.8F, blue * 0.8F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 4, -1.0F, 0.0F, 0.0F, red * 0.6F, green * 0.6F, blue * 0.6F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 5, 1.0F, 0.0F, 0.0F, red * 0.6F, green * 0.6F, blue * 0.6F);
+
+        if (grass) {
+            this.renderLitHeldGrassOverlay(block, metadata, brightness, sceneBrightness);
+        }
+    }
+
+    private void renderLitHeldGrassOverlay(Block block, int metadata, int brightness, float sceneBrightness) {
+        int color = block.getRenderColor(metadata);
+        float red = (float) (color >> 16 & 255) / 255.0F * sceneBrightness;
+        float green = (float) (color >> 8 & 255) / 255.0F * sceneBrightness;
+        float blue = (float) (color & 255) / 255.0F * sceneBrightness;
+        IIcon overlay = BlockGrass.getIconSideOverlay();
+
+        this.renderLitHeldBlockFace(block, metadata, brightness, 2, 0.0F, 0.0F, -1.0F, red * 0.8F, green * 0.8F, blue * 0.8F, overlay);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 3, 0.0F, 0.0F, 1.0F, red * 0.8F, green * 0.8F, blue * 0.8F, overlay);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 4, -1.0F, 0.0F, 0.0F, red * 0.6F, green * 0.6F, blue * 0.6F, overlay);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 5, 1.0F, 0.0F, 0.0F, red * 0.6F, green * 0.6F, blue * 0.6F, overlay);
+    }
+
+    private void renderLitHeldBlockFace(
+            Block block,
+            int metadata,
+            int brightness,
+            int side,
+            float normalX,
+            float normalY,
+            float normalZ,
+            float red,
+            float green,
+            float blue
+    ) {
+        this.renderLitHeldBlockFace(
+                block,
+                metadata,
+                brightness,
+                side,
+                normalX,
+                normalY,
+                normalZ,
+                red,
+                green,
+                blue,
+                HELD_BLOCK_RENDERER.getBlockIconFromSideAndMetadata(block, side, metadata)
+        );
+    }
+
+    private void renderLitHeldBlockFace(
+            Block block,
+            int metadata,
+            int brightness,
+            int side,
+            float normalX,
+            float normalY,
+            float normalZ,
+            float red,
+            float green,
+            float blue,
+            IIcon icon
+    ) {
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+        tessellator.setBrightness(brightness);
+        tessellator.setColorOpaque_F(red, green, blue);
+        tessellator.setNormal(normalX, normalY, normalZ);
+        switch (side) {
+            case 0:
+                HELD_BLOCK_RENDERER.renderFaceYNeg(block, 0.0D, 0.0D, 0.0D, icon);
+                break;
+            case 1:
+                HELD_BLOCK_RENDERER.renderFaceYPos(block, 0.0D, 0.0D, 0.0D, icon);
+                break;
+            case 2:
+                HELD_BLOCK_RENDERER.renderFaceZNeg(block, 0.0D, 0.0D, 0.0D, icon);
+                break;
+            case 3:
+                HELD_BLOCK_RENDERER.renderFaceZPos(block, 0.0D, 0.0D, 0.0D, icon);
+                break;
+            case 4:
+                HELD_BLOCK_RENDERER.renderFaceXNeg(block, 0.0D, 0.0D, 0.0D, icon);
+                break;
+            case 5:
+                HELD_BLOCK_RENDERER.renderFaceXPos(block, 0.0D, 0.0D, 0.0D, icon);
+                break;
+            default:
+                break;
+        }
+        tessellator.draw();
+    }
+
+    private float resolveHeldItemColorBrightness(EntitySootSprite sprite, float partialTicks) {
+        if (sprite.worldObj == null) {
+            return sprite.getBrightness(partialTicks);
+        }
+
+        int x = MathHelper.floor_double(sprite.posX);
+        int y = MathHelper.floor_double(sprite.posY + (double) (sprite.height * 0.5F));
+        int z = MathHelper.floor_double(sprite.posZ);
+        return sprite.worldObj.getLightBrightness(x, y, z);
+    }
+
     private int resolveHeldItemBrightness(EntitySootSprite sprite, float partialTicks) {
         if (sprite.worldObj == null) {
             return sprite.getBrightnessForRender(partialTicks);
@@ -186,11 +369,14 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
         return sprite.worldObj.getLightBrightnessForSkyBlocks(x, y, z, 0);
     }
 
-    private void renderFlatHeldItem(EntitySootSprite sprite, ItemStack held, int brightness) {
+    private void renderFlatHeldItem(EntitySootSprite sprite, ItemStack held, int brightness, float partialTicks) {
         TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
         textureManager.bindTexture(textureManager.getResourceLocation(held.getItemSpriteNumber()));
         TextureUtil.func_152777_a(false, false, 1.0F);
         Tessellator tessellator = Tessellator.instance;
+        float sceneBrightness = DucklingRenderState.usesPackedLightmap()
+                ? this.resolveHeldItemColorBrightness(sprite, partialTicks)
+                : 1.0F;
         int passes = held.getItem().requiresMultipleRenderPasses()
                 ? held.getItem().getRenderPasses(held.getItemDamage())
                 : 1;
@@ -204,9 +390,9 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             }
 
             int color = held.getItem().getColorFromItemStack(held, pass);
-            float red = (float) (color >> 16 & 255) / 255.0F;
-            float green = (float) (color >> 8 & 255) / 255.0F;
-            float blue = (float) (color & 255) / 255.0F;
+            float red = (float) (color >> 16 & 255) / 255.0F * sceneBrightness;
+            float green = (float) (color >> 8 & 255) / 255.0F * sceneBrightness;
+            float blue = (float) (color & 255) / 255.0F * sceneBrightness;
             GL11.glColor4f(red, green, blue, 1.0F);
             this.renderFlatHeldItemIn2D(
                     tessellator,

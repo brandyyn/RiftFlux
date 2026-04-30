@@ -243,6 +243,10 @@ final class DucklingRenderState {
         return entity.getBrightnessForRender(partialTicks);
     }
 
+    static boolean usesPackedLightmap() {
+        return LIGHTMAP_COMPAT.usesPackedLightmap();
+    }
+
     static boolean isTooltipPreviewRender() {
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
         for (int i = 0; i < stack.length; i++) {
