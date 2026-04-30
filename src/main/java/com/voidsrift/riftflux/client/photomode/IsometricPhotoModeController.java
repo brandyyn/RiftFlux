@@ -644,6 +644,50 @@ public final class IsometricPhotoModeController {
         return this.isOutsideHorizontalRenderBoundary(x, z, this.cameraEntity.posX, this.cameraEntity.posZ, renderDistance);
     }
 
+    public boolean beginHorizontalPhotoModeRenderBoundaryContext(int x, int y, int z) {
+        if (!this.isActive() || this.mc.gameSettings == null || this.cameraEntity == null) {
+            return false;
+        }
+
+        int renderDistance = Math.max(1, this.mc.gameSettings.renderDistanceChunks);
+        int centerChunkX = MathHelper.floor_double(this.cameraEntity.posX) >> 4;
+        int centerChunkZ = MathHelper.floor_double(this.cameraEntity.posZ) >> 4;
+        int minX = (centerChunkX - renderDistance) << 4;
+        int maxXExclusive = (centerChunkX + renderDistance + 1) << 4;
+        int minZ = (centerChunkZ - renderDistance) << 4;
+        int maxZExclusive = (centerChunkZ + renderDistance + 1) << 4;
+        if (x != minX && x != maxXExclusive - 1 && z != minZ && z != maxZExclusive - 1) {
+            return false;
+        }
+
+        PhotoModeBlockRenderContext.begin(x, y, z, minX, maxXExclusive, minZ, maxZExclusive);
+        return true;
+    }
+
+    public int getHorizontalPhotoModeRenderDistanceChunks() {
+        if (!this.isActive() || this.mc.gameSettings == null) {
+            return 0;
+        }
+
+        return Math.max(1, this.mc.gameSettings.renderDistanceChunks);
+    }
+
+    public int getHorizontalPhotoModeCenterChunkX() {
+        if (!this.isActive() || this.cameraEntity == null) {
+            return 0;
+        }
+
+        return MathHelper.floor_double(this.cameraEntity.posX) >> 4;
+    }
+
+    public int getHorizontalPhotoModeCenterChunkZ() {
+        if (!this.isActive() || this.cameraEntity == null) {
+            return 0;
+        }
+
+        return MathHelper.floor_double(this.cameraEntity.posZ) >> 4;
+    }
+
     public boolean touchesHorizontalPhotoModeRenderBoundary(int x, int z) {
         if (!this.isActive()) {
             return false;

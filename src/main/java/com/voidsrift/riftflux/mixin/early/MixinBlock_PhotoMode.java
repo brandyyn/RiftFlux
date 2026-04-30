@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
+import com.voidsrift.riftflux.client.photomode.PhotoModeBlockRenderContext;
 import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
 import java.lang.reflect.Field;
 import net.minecraft.block.Block;
@@ -24,8 +25,30 @@ public abstract class MixinBlock_PhotoMode {
     private void riftflux$disableFaceCullingInPhotoMode(IBlockAccess world, int x, int y, int z, int side, CallbackInfoReturnable<Boolean> cir) {
         Block block = (Block) (Object) this;
         if (!IsometricPhotoModeController.instance().isActive()
+                || world == null
                 || !block.isOpaqueCube()
                 || block.getMaterial().isLiquid()) {
+            return;
+        }
+
+        if (side >= 2 && side <= 5) {
+            if (PhotoModeBlockRenderContext.shouldForceHorizontalSide(side)) {
+                cir.setReturnValue(Boolean.TRUE);
+                return;
+            }
+
+            if (IsometricPhotoModeController.instance().isOutsideHorizontalPhotoModeRenderBoundary(x, z)) {
+                cir.setReturnValue(Boolean.TRUE);
+                return;
+            }
+
+            if (PhotoModeBlockRenderContext.isOutsideHorizontalRenderGrid(x, z)) {
+                cir.setReturnValue(Boolean.TRUE);
+                return;
+            }
+        }
+
+        if (this.riftflux$tryUseLoadedChunkCacheNeighbor(world, x, y, z, cir)) {
             return;
         }
 
@@ -128,6 +151,27 @@ public abstract class MixinBlock_PhotoMode {
         }
 
         return access.isAirBlock(x, y, z) ? 0 : 1;
+    }
+
+    private boolean riftflux$tryUseLoadedChunkCacheNeighbor(
+            IBlockAccess access,
+            int x,
+            int y,
+            int z,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        if (!(access instanceof ChunkCache) || y < 0 || y >= 256) {
+            return false;
+        }
+
+        World world = ((ChunkCacheAccessor) access).riftflux$getWorldObj();
+        if (world == null || !world.blockExists(x, y, z) || world.isAirBlock(x, y, z)) {
+            return false;
+        }
+
+        Block adjacent = world.getBlock(x, y, z);
+        cir.setReturnValue(Boolean.valueOf(!adjacent.isOpaqueCube()));
+        return true;
     }
 
     private boolean riftflux$isWorldCutoff(IBlockAccess access, int x, int y, int z) {

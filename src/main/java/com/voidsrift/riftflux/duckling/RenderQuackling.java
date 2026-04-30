@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -14,14 +15,18 @@ import net.minecraftforge.client.IItemRenderer;
 import org.lwjgl.opengl.GL11;
 import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
+import software.bernie.geckolib3.geo.render.built.GeoCube;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
     private static final String WDMLA_ROOT = "com.gtnewhorizons.wdmla.";
     private static final String WAILA_ROOT = "mcp.mobius.waila.";
+    private static final boolean RIFTFLUX_HAS_BEDDIUM =
+            hasClass("com.ventooth.beddium.modules.TerrainRendering.CeleritasWorldRenderer");
 
     private final ModelQuackling quacklingModel;
+    private int riftflux$currentBeddiumBrightness = -1;
 
     public RenderQuackling() {
         this(new ModelQuackling());
@@ -53,6 +58,9 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
         DucklingRenderState.pushRenderClientAttribs();
         DucklingRenderState.pushRenderMatrices();
         DucklingRenderState.prepareForEntityRender(entity, partialTicks);
+        this.riftflux$currentBeddiumBrightness = RIFTFLUX_HAS_BEDDIUM && entity != null
+                ? entity.getBrightnessForRender(partialTicks)
+                : -1;
         try {
             super.doRender(entity, x, y, z, yaw, partialTicks);
             if (entity instanceof EntityLiving) {
@@ -64,7 +72,16 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
             DucklingRenderState.popRenderClientAttribs();
             DucklingRenderState.popRenderAttribs();
             DucklingRenderState.restoreAfterRender(snapshot);
+            this.riftflux$currentBeddiumBrightness = -1;
         }
+    }
+
+    @Override
+    public void renderCube(Tessellator tessellator, GeoCube cube, float red, float green, float blue, float alpha) {
+        if (this.riftflux$currentBeddiumBrightness >= 0) {
+            tessellator.setBrightness(this.riftflux$currentBeddiumBrightness);
+        }
+        super.renderCube(tessellator, cube, red, green, blue, alpha);
     }
 
     @Override
@@ -159,5 +176,14 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
             }
         }
         return false;
+    }
+
+    private static boolean hasClass(String className) {
+        try {
+            ClassLoader loader = RenderQuackling.class.getClassLoader();
+            return loader.getResource(className.replace('.', '/') + ".class") != null;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }

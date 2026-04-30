@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import com.voidsrift.riftflux.client.photomode.PhotoModeBlockRenderContext;
 import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
+import com.voidsrift.riftflux.util.RFTessellatorCompat;
 import java.lang.reflect.Field;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -28,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(RenderBlocks.class)
+@Mixin(value = RenderBlocks.class, priority = 1100)
 public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
 
     private static final String RIFTFLUX_NETHERLICIOUS_BRITTLE_BEDROCK_CLASS =
@@ -157,7 +158,7 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             return shouldRender;
         }
 
-        if (this.riftflux$isLiquidBlock(block) && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, z)) {
+        if (this.riftflux$isLiquidBlock(block) && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, y, z)) {
             return true;
         }
 
@@ -185,7 +186,7 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
     ) {
         if (access != null
                 && this.riftflux$isLiquidBlock(block)
-                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, z)) {
+                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, y, z)) {
             int sourceBrightness = block.getMixedBrightnessForBlock(
                     access,
                     PhotoModeBlockRenderContext.x(),
@@ -220,7 +221,7 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
         if (material != null
                 && material.isLiquid()
                 && this.blockAccess != null
-                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(this.blockAccess, x, z)) {
+                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(this.blockAccess, x, y, z)) {
             cir.setReturnValue(1.0F);
             return;
         }
@@ -358,7 +359,7 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
         int bx = MathHelper.floor_double(x);
         int by = MathHelper.floor_double(y);
         int bz = MathHelper.floor_double(z);
-        Tessellator tessellator = Tessellator.instance;
+        Tessellator tessellator = RFTessellatorCompat.current();
         tessellator.setBrightness(block.getMixedBrightnessForBlock(this.blockAccess, bx, by, bz));
 
         int color = block.colorMultiplier(this.blockAccess, bx, by, bz);
@@ -490,9 +491,10 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
         return block != null && block.getMaterial() != null && block.getMaterial().isLiquid();
     }
 
-    private boolean riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(IBlockAccess access, int x, int z) {
+    private boolean riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(IBlockAccess access, int x, int y, int z) {
         return access != null
-                && PhotoModeBlockRenderContext.isOutsideHorizontalRenderGrid(x, z)
+                && (PhotoModeBlockRenderContext.isOutsideHorizontalRenderGrid(x, z)
+                || PhotoModeBlockRenderContext.shouldForceHorizontalLiquidEdge(x, y, z))
                 && !this.riftflux$isNetherBlockAccess(access);
     }
 

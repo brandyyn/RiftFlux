@@ -16,6 +16,24 @@ import java.util.Set;
 public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     private static final String ANGELICA_INCOMPATIBLE_TWEAKER =
             "com.gtnewhorizons.angelica.loading.fml.tweakers.IncompatibleModsDisablerTweaker";
+    private static final String ANGELICA_FOG_SERVICE =
+            "com.gtnewhorizons.angelica.glsm.AngelicaFogService";
+    private static final String ANGELICA_RENDER_SECTION_MANAGER =
+            "com.gtnewhorizons.angelica.rendering.celeritas.AngelicaRenderSectionManager";
+    private static final String ANGELICA_CHUNK_RENDERER =
+            "com.gtnewhorizons.angelica.rendering.celeritas.AngelicaChunkRenderer";
+    private static final String ANGELICA_CELERITAS_WORLD_RENDERER =
+            "com.gtnewhorizons.angelica.rendering.celeritas.CeleritasWorldRenderer";
+    private static final String BEDDIUM_FOG_STATE_SERVICE =
+            "com.ventooth.beddium.modules.TerrainRendering.fog.FogStateService";
+    private static final String BEDDIUM_RENDER_SECTION_MANAGER =
+            "com.ventooth.beddium.modules.TerrainRendering.ArchaicRenderSectionManager";
+    private static final String BEDDIUM_CELERITAS_WORLD_RENDERER =
+            "com.ventooth.beddium.modules.TerrainRendering.CeleritasWorldRenderer";
+    private static final String BEDDIUM_SWANSONG_CHUNK_RENDERER =
+            "com.ventooth.beddium.modules.TerrainRendering.render.SwanSongChunkRenderer";
+    private static final String BEDDIUM_SIMPLE_CHUNK_BUILDER_MESHING_TASK =
+            "com.ventooth.beddium.api.task.SimpleChunkBuilderMeshingTask";
 
     public RFEarlyMixins() {
         ModConfig.init(new File("config/riftflux.cfg"));
@@ -275,8 +293,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityRenderer_BlackNightFog");
             mixins.add("early.MixinEntityRenderer_BetaStyleFogDistance");
             mixins.add("early.MixinWorld_BetaStyleCloudColor");
-            if (hasClass("com.gtnewhorizons.angelica.glsm.AngelicaFogService")) {
+            if (hasClass(ANGELICA_FOG_SERVICE)) {
                 mixins.add("early.angelica.MixinAngelicaFogService_BetaStyleFog");
+            }
+            if (hasClass(BEDDIUM_FOG_STATE_SERVICE)) {
+                mixins.add("early.beddium.MixinBeddiumFogStateService_BetaStyleFog");
             }
             if (ModConfig.saveWorldBeforeWindowClose) {
                 mixins.add("early.MixinMinecraft_SaveBeforeWindowClose");
@@ -290,28 +311,47 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.MixinMinecraft_IsometricPhotoMode");
                 mixins.add("early.MixinMovementInputFromOptions_IsometricPhotoMode");
                 mixins.add("early.MixinRenderGlobal_IsometricPhotoMode");
+                if (!hasCeleritasStack()) {
+                    mixins.add("early.MixinRenderGlobal_VanillaPhotoModeFallback");
+                }
                 mixins.add("early.MixinEffectRenderer_IsometricPhotoMode");
+                mixins.add("early.MixinBlock_PhotoMode");
                 mixins.add("early.MixinBlock_NetherHideBlocks_PhotoMode");
                 mixins.add("early.MixinWorldRenderer_PhotoModeBlockFaceCulling");
                 mixins.add("early.MixinRenderBlocks_PhotoModeAllFacesBrightness");
                 mixins.add("early.MixinRenderBlocks_NetherHideBlocks_PhotoMode");
-                if (hasClass("com.gtnewhorizons.angelica.glsm.AngelicaFogService")) {
+                if (hasClass(ANGELICA_FOG_SERVICE)) {
                     mixins.add("early.angelica.MixinAngelicaFogService_PhotoMode");
                 }
-                if (hasClass("com.gtnewhorizons.angelica.rendering.celeritas.AngelicaRenderSectionManager")) {
+                if (hasClass(BEDDIUM_FOG_STATE_SERVICE)) {
+                    mixins.add("early.beddium.MixinBeddiumFogStateService_PhotoMode");
+                }
+                if (hasClass(ANGELICA_RENDER_SECTION_MANAGER)) {
                     mixins.add("early.angelica.MixinAngelicaRenderSectionManager_PhotoMode");
+                }
+                if (hasClass(BEDDIUM_RENDER_SECTION_MANAGER)) {
+                    mixins.add("early.beddium.MixinBeddiumArchaicRenderSectionManager_PhotoMode");
                 }
                 if (hasClass("org.embeddedt.embeddium.impl.render.chunk.RenderSectionManager")) {
                     mixins.add("early.angelica.MixinEmbeddiumRenderSectionManager_PhotoMode");
                 }
-                if (hasClass("com.gtnewhorizons.angelica.rendering.celeritas.AngelicaChunkRenderer")) {
+                if (hasClass(ANGELICA_CHUNK_RENDERER)) {
                     mixins.add("early.angelica.MixinAngelicaChunkRenderer_PhotoMode");
                 }
-                if (hasClass("com.gtnewhorizons.angelica.rendering.celeritas.CeleritasWorldRenderer")) {
+                if (hasClass(ANGELICA_CELERITAS_WORLD_RENDERER)) {
                     mixins.add("early.angelica.MixinAngelicaCeleritasWorldRenderer_PhotoMode");
+                }
+                if (hasClass(BEDDIUM_CELERITAS_WORLD_RENDERER)) {
+                    mixins.add("early.beddium.MixinBeddiumCeleritasWorldRenderer_PhotoMode");
                 }
                 if (hasClass("org.embeddedt.embeddium.impl.render.chunk.DefaultChunkRenderer")) {
                     mixins.add("early.angelica.MixinEmbeddiumDefaultChunkRenderer_PhotoMode");
+                }
+                if (hasClass(BEDDIUM_SWANSONG_CHUNK_RENDERER)) {
+                    mixins.add("early.beddium.MixinBeddiumSwanSongChunkRenderer_PhotoMode");
+                }
+                if (hasClass(BEDDIUM_SIMPLE_CHUNK_BUILDER_MESHING_TASK)) {
+                    mixins.add("early.beddium.MixinBeddiumSimpleChunkBuilderMeshingTask_PhotoModeEdges");
                 }
                 if (hasClass("org.embeddedt.embeddium.impl.render.viewport.frustum.SimpleFrustum")) {
                     mixins.add("early.angelica.MixinEmbeddiumSimpleFrustum_PhotoMode");
@@ -481,6 +521,10 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     private static boolean hasOptimizationsAndTweaks() {
         return hasClass("fr.iamacat.optimizationsandtweaks.OptimizationsAndTweaks")
                 || hasClass("fr.iamacat.optimizationsandtweaks.OptimizationsAndTweaksMod");
+    }
+
+    private static boolean hasCeleritasStack() {
+        return hasClass(ANGELICA_CELERITAS_WORLD_RENDERER) || hasClass(BEDDIUM_CELERITAS_WORLD_RENDERER);
     }
 
     @SuppressWarnings("rawtypes")

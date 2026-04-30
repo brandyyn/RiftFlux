@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.mixin.early;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.RFPlantContext;
 import com.voidsrift.riftflux.util.RFBlockAccessWorldResolver;
+import com.voidsrift.riftflux.util.RFTessellatorCompat;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -114,7 +115,7 @@ public abstract class MixinRenderBlocks_DirectionalCrossedPlants {
         double z1 = centerZ - tangentZ * half;
         double x2 = centerX + tangentX * half;
         double z2 = centerZ + tangentZ * half;
-        Tessellator tessellator = Tessellator.instance;
+        Tessellator tessellator = RFTessellatorCompat.current();
 
         this.riftflux$addQuad(
                 tessellator,

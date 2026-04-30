@@ -10,15 +10,20 @@ public final class AngelicaPhotoModeCompat {
     private static final String ANGELICA_MOD = "com.gtnewhorizons.angelica.AngelicaMod";
     private static final String GL_STATE_MANAGER = "com.gtnewhorizons.angelica.glsm.GLStateManager";
     private static final String BOOLEAN_STATE_STACK = "com.gtnewhorizons.angelica.glsm.stacks.BooleanStateStack";
+    private static final String BEDDIUM_FOG_GL = "com.ventooth.beddium.modules.TerrainRendering.fog.FogGL";
+    private static final String BEDDIUM_FOG_STATE = "com.ventooth.beddium.modules.TerrainRendering.fog.FogState";
 
     private static boolean initialized;
     private static boolean glStateAvailable;
+    private static boolean beddiumFogAvailable;
     private static boolean optionsAvailable;
     private static boolean optionOverridesCaptured;
     private static Method disableFogMethod;
     private static Method getFogModeMethod;
+    private static Method beddiumGlDisableMethod;
     private static Method optionsMethod;
     private static Method setEnabledMethod;
+    private static Field beddiumFogEnabledField;
     private static Field advancedField;
     private static Field performanceField;
     private static Field useParticleCullingField;
@@ -79,6 +84,7 @@ public final class AngelicaPhotoModeCompat {
 
     public static void enforceNoFog() {
         ensureInitialized();
+
         try {
             if (glStateAvailable) {
                 disableFogMethod.invoke(null);
@@ -88,7 +94,18 @@ public final class AngelicaPhotoModeCompat {
                     setEnabledMethod.invoke(fogMode, Boolean.FALSE);
                 }
             }
+        } catch (Throwable ignored) {
+        }
 
+        try {
+            if (beddiumFogAvailable) {
+                beddiumGlDisableMethod.invoke(null, Integer.valueOf(GL11.GL_FOG));
+                beddiumFogEnabledField.setBoolean(null, false);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
             GL11.glDisable(GL11.GL_FOG);
         } catch (Throwable ignored) {
         }
@@ -111,6 +128,18 @@ public final class AngelicaPhotoModeCompat {
             glStateAvailable = true;
         } catch (Throwable ignored) {
             glStateAvailable = false;
+        }
+
+        try {
+            ClassLoader loader = AngelicaPhotoModeCompat.class.getClassLoader();
+            Class<?> fogGlClass = Class.forName(BEDDIUM_FOG_GL, false, loader);
+            Class<?> fogStateClass = Class.forName(BEDDIUM_FOG_STATE, false, loader);
+
+            beddiumGlDisableMethod = fogGlClass.getMethod("glDisable", Integer.TYPE);
+            beddiumFogEnabledField = fogStateClass.getField("enabled");
+            beddiumFogAvailable = true;
+        } catch (Throwable ignored) {
+            beddiumFogAvailable = false;
         }
 
         try {

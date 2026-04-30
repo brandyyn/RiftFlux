@@ -18,7 +18,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class MixinWorldRenderer_PhotoModeBlockFaceCulling {
 
     @Unique
-    private static final boolean RIFTFLUX_HAS_ANGELICA = riftflux$hasClass("com.gtnewhorizons.angelica.AngelicaMod");
+    private static final boolean RIFTFLUX_HAS_CELERITAS_STACK =
+            riftflux$hasClass("com.gtnewhorizons.angelica.AngelicaMod")
+                    || riftflux$hasClass("com.ventooth.beddium.modules.TerrainRendering.CeleritasWorldRenderer");
 
     @Shadow
     public World worldObj;
@@ -51,7 +53,7 @@ public abstract class MixinWorldRenderer_PhotoModeBlockFaceCulling {
 
     @Unique
     private boolean riftflux$shouldApplyVanillaPhotoModeEdgeFix() {
-        if (RIFTFLUX_HAS_ANGELICA || this.riftflux$isNetherWorld()) {
+        if (RIFTFLUX_HAS_CELERITAS_STACK || this.riftflux$isNetherWorld()) {
             return false;
         }
 

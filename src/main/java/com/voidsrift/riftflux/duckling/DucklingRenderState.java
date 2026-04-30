@@ -15,6 +15,7 @@ final class DucklingRenderState {
     private static final int CLIENT_ALL_ATTRIB_BITS = -1;
     private static final float LIGHTMAP_TEXTURE_SCALE = 0.00390625F;
     private static final ByteBuffer BYTE_BUFFER = BufferUtils.createByteBuffer(4);
+    private static final DucklingLightmapCompat LIGHTMAP_COMPAT = createLightmapCompat();
 
     static final class Snapshot {
         private final int matrixMode;
@@ -54,6 +55,7 @@ final class DucklingRenderState {
         private final boolean lightmapTexture2D;
         private final int lightmapTextureBinding;
         private final int lightmapTextureEnvMode;
+        private final long rpleLightMapRGB64;
 
         private Snapshot(
                 int matrixMode,
@@ -92,7 +94,8 @@ final class DucklingRenderState {
                 int defaultTextureEnvMode,
                 boolean lightmapTexture2D,
                 int lightmapTextureBinding,
-                int lightmapTextureEnvMode
+                int lightmapTextureEnvMode,
+                long rpleLightMapRGB64
         ) {
             this.matrixMode = matrixMode;
             this.activeTextureUnit = activeTextureUnit;
@@ -131,6 +134,7 @@ final class DucklingRenderState {
             this.lightmapTexture2D = lightmapTexture2D;
             this.lightmapTextureBinding = lightmapTextureBinding;
             this.lightmapTextureEnvMode = lightmapTextureEnvMode;
+            this.rpleLightMapRGB64 = rpleLightMapRGB64;
         }
     }
 
@@ -192,7 +196,8 @@ final class DucklingRenderState {
                 defaultTexture.textureEnvMode,
                 lightmapTexture.texture2D,
                 lightmapTexture.textureBinding,
-                lightmapTexture.textureEnvMode
+                lightmapTexture.textureEnvMode,
+                LIGHTMAP_COMPAT.lastLightMapRGB64()
         );
     }
 
@@ -254,7 +259,6 @@ final class DucklingRenderState {
 
     static void restoreAfterRender(Snapshot snapshot) {
         restoreSnapshot(snapshot);
-        normalizeAfterEntityRender();
     }
 
     private static void restoreSnapshot(Snapshot snapshot) {
@@ -268,6 +272,9 @@ final class DucklingRenderState {
     }
 
     private static void restoreLightmap(Snapshot snapshot) {
+        if (LIGHTMAP_COMPAT.restoreLightMapTextureCoords(snapshot.rpleLightMapRGB64)) {
+            return;
+        }
         restoreLightmap(snapshot.brightnessX, snapshot.brightnessY);
     }
 
@@ -430,6 +437,12 @@ final class DucklingRenderState {
     }
 
     static void prepareTexturedLightmap(float brightnessX, float brightnessY) {
+        if (LIGHTMAP_COMPAT.setLightMapTextureCoords(brightnessX, brightnessY)) {
+            prepareDefaultTextureUnit();
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            resetColorToOpaqueWhite();
+            return;
+        }
         prepareLightmapTextureUnit();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightnessX, brightnessY);
         prepareDefaultTextureUnit();
@@ -521,16 +534,6 @@ final class DucklingRenderState {
         GlStateManager.enableCull();
     }
 
-    private static void normalizeAfterEntityRender() {
-        resetClientArrays();
-        OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
-
-        prepareLightmapTextureUnit();
-        prepareDefaultTextureUnit();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        resetColorToOpaqueWhite();
-    }
-
     private static void restoreStandardEntityLighting() {
         RenderHelper.enableStandardItemLighting();
         GlStateManager.enableLighting();
@@ -551,5 +554,39 @@ final class DucklingRenderState {
         GlStateManager.resetColor();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    private static DucklingLightmapCompat createLightmapCompat() {
+        if (!hasClass("com.falsepattern.rple.api.client.RPLETessBrightnessUtil")) {
+            return new NoopLightmapCompat();
+        }
+
+        return new DucklingRPLELightmapCompat();
+    }
+
+    private static boolean hasClass(String className) {
+        try {
+            ClassLoader loader = DucklingRenderState.class.getClassLoader();
+            return loader.getResource(className.replace('.', '/') + ".class") != null;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static final class NoopLightmapCompat implements DucklingLightmapCompat {
+        @Override
+        public long lastLightMapRGB64() {
+            return 0L;
+        }
+
+        @Override
+        public boolean restoreLightMapTextureCoords(long rgb64) {
+            return false;
+        }
+
+        @Override
+        public boolean setLightMapTextureCoords(float brightnessX, float brightnessY) {
+            return false;
+        }
     }
 }

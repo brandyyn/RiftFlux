@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.RFTessellatorCompat;
 import com.voidsrift.riftflux.util.TorchRenderRules;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -150,7 +151,7 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
 
     @Unique
     private void riftflux$renderTorchAtAngleBillboard(Block block, double x, double y, double z, double xTilt, double zTilt, int meta) {
-        Tessellator tessellator = Tessellator.instance;
+        Tessellator tessellator = RFTessellatorCompat.current();
         IIcon icon = this.getBlockIconFromSideAndMetadata(block, 0, meta);
 
         if (this.hasOverrideBlockTexture()) {
@@ -207,7 +208,7 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
 
     @Unique
     private void riftflux$renderTorchAtAngleDoubleSided(Block block, double x, double y, double z, double xTilt, double zTilt, int meta, boolean cameraSelectiveBackFaces) {
-        Tessellator tessellator = Tessellator.instance;
+        Tessellator tessellator = RFTessellatorCompat.current();
         IIcon icon = this.getBlockIconFromSideAndMetadata(block, 0, meta);
 
         if (this.hasOverrideBlockTexture()) {
@@ -297,7 +298,7 @@ public abstract class MixinRenderBlocks_TorchAllFaces {
 
     @Unique
     private void riftflux$renderTorchAtAngleModern(Block block, double x, double y, double z, double xTilt, double zTilt, int meta) {
-        Tessellator tessellator = Tessellator.instance;
+        Tessellator tessellator = RFTessellatorCompat.current();
         IIcon icon = this.getBlockIconFromSideAndMetadata(block, 0, meta);
 
         if (this.hasOverrideBlockTexture()) {

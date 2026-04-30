@@ -22,7 +22,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderer.class)
 public abstract class MixinEntityRenderer_IsometricPhotoMode {
 
-    private static final boolean RIFTFLUX_HAS_ANGELICA = riftflux$hasClass("com.gtnewhorizons.angelica.AngelicaMod");
+    private static final boolean RIFTFLUX_HAS_CELERITAS_STACK =
+            riftflux$hasClass("com.gtnewhorizons.angelica.AngelicaMod")
+                    || riftflux$hasClass("com.ventooth.beddium.modules.TerrainRendering.CeleritasWorldRenderer");
 
     private boolean riftflux$photoModeCullFaceWasEnabled;
     private boolean riftflux$restoreCullFaceAfterPhotoWorld;
@@ -312,7 +314,7 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
 
     private boolean riftflux$shouldDisableCullFaceForPhotoWorld() {
         return IsometricPhotoModeController.instance().isActive()
-                && !RIFTFLUX_HAS_ANGELICA
+                && !RIFTFLUX_HAS_CELERITAS_STACK
                 && (this.mc == null
                 || this.mc.theWorld == null
                 || this.mc.theWorld.provider == null

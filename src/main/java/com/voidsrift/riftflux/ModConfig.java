@@ -6414,7 +6414,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         movementSpeedFovFactorMax = config.getFloat(
                 "MovementSpeedFovFactorMax",
                 "client",
-                0.0F,
+                1.15F,
                 0.0F,
                 10.0F,
                 "Maximum movement-speed FOV multiplier before other FOV modifiers are reapplied. Set to 1.15 to cap speed FOV around vanilla sprinting, or 0 to disable the cap."

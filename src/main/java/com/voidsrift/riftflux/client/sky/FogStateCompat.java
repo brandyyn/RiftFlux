@@ -13,6 +13,10 @@ public final class FogStateCompat {
     private static final Method ANGELICA_GL_FOGI;
     private static final Method ANGELICA_GET_FOG_STATE;
     private static final Method ANGELICA_SET_FOG_DISTANCE_MODE;
+    private static final Class<?> BEDDIUM_FOG_GL;
+    private static final Method BEDDIUM_GL_FOG;
+    private static final Method BEDDIUM_GL_FOGF;
+    private static final Method BEDDIUM_GL_FOGI;
     private static final int GL_FOG_DISTANCE_MODE_NV = 34138;
     private static final int GL_EYE_RADIAL_NV = 34139;
     private static final int GL_EYE_PLANE_ABSOLUTE_NV = 34140;
@@ -24,6 +28,10 @@ public final class FogStateCompat {
         Method glFogi = null;
         Method getFogState = null;
         Method setFogDistanceMode = null;
+        Class<?> beddiumFogGl = null;
+        Method beddiumGlFog = null;
+        Method beddiumGlFogf = null;
+        Method beddiumGlFogi = null;
         try {
             glStateManager = Class.forName("com.gtnewhorizons.angelica.glsm.GLStateManager");
             glFog = glStateManager.getMethod("glFog", int.class, FloatBuffer.class);
@@ -40,12 +48,27 @@ public final class FogStateCompat {
             getFogState = null;
             setFogDistanceMode = null;
         }
+        try {
+            beddiumFogGl = Class.forName("com.ventooth.beddium.modules.TerrainRendering.fog.FogGL");
+            beddiumGlFog = beddiumFogGl.getMethod("glFog", int.class, FloatBuffer.class);
+            beddiumGlFogf = beddiumFogGl.getMethod("glFogf", int.class, float.class);
+            beddiumGlFogi = beddiumFogGl.getMethod("glFogi", int.class, int.class);
+        } catch (Throwable ignored) {
+            beddiumFogGl = null;
+            beddiumGlFog = null;
+            beddiumGlFogf = null;
+            beddiumGlFogi = null;
+        }
         ANGELICA_GL_STATE_MANAGER = glStateManager;
         ANGELICA_GL_FOG = glFog;
         ANGELICA_GL_FOGF = glFogf;
         ANGELICA_GL_FOGI = glFogi;
         ANGELICA_GET_FOG_STATE = getFogState;
         ANGELICA_SET_FOG_DISTANCE_MODE = setFogDistanceMode;
+        BEDDIUM_FOG_GL = beddiumFogGl;
+        BEDDIUM_GL_FOG = beddiumGlFog;
+        BEDDIUM_GL_FOGF = beddiumGlFogf;
+        BEDDIUM_GL_FOGI = beddiumGlFogi;
     }
 
     private FogStateCompat() {
@@ -60,6 +83,13 @@ public final class FogStateCompat {
             } catch (Throwable ignored) {
             }
         }
+        if (BEDDIUM_FOG_GL != null && BEDDIUM_GL_FOG != null) {
+            try {
+                params.rewind();
+                BEDDIUM_GL_FOG.invoke(null, pname, params);
+            } catch (Throwable ignored) {
+            }
+        }
         params.rewind();
         GL11.glFog(pname, params);
     }
@@ -69,6 +99,12 @@ public final class FogStateCompat {
             try {
                 ANGELICA_GL_FOGF.invoke(null, pname, param);
                 return;
+            } catch (Throwable ignored) {
+            }
+        }
+        if (BEDDIUM_FOG_GL != null && BEDDIUM_GL_FOGF != null) {
+            try {
+                BEDDIUM_GL_FOGF.invoke(null, pname, param);
             } catch (Throwable ignored) {
             }
         }
@@ -90,6 +126,12 @@ public final class FogStateCompat {
             try {
                 ANGELICA_GL_FOGI.invoke(null, pname, param);
                 return;
+            } catch (Throwable ignored) {
+            }
+        }
+        if (BEDDIUM_FOG_GL != null && BEDDIUM_GL_FOGI != null) {
+            try {
+                BEDDIUM_GL_FOGI.invoke(null, pname, param);
             } catch (Throwable ignored) {
             }
         }

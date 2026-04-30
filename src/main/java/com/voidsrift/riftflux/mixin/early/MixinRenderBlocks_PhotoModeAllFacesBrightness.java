@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import com.voidsrift.riftflux.client.photomode.PhotoModeBlockRenderContext;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -110,7 +111,8 @@ public abstract class MixinRenderBlocks_PhotoModeAllFacesBrightness {
             int side
     ) {
         boolean shouldRender = block.shouldSideBeRendered(access, x, y, z, side);
-        return shouldRender || side >= 2 && side <= 5 && PhotoModeBlockRenderContext.isOutsideHorizontalRenderGrid(x, z);
+        return shouldRender || side >= 2 && side <= 5
+                && IsometricPhotoModeController.instance().isOutsideHorizontalPhotoModeRenderBoundary(x, z);
     }
 
     @Unique
@@ -121,7 +123,7 @@ public abstract class MixinRenderBlocks_PhotoModeAllFacesBrightness {
             int y,
             int z
     ) {
-        if (PhotoModeBlockRenderContext.isOutsideHorizontalRenderGrid(x, z)) {
+        if (PhotoModeBlockRenderContext.shouldUseSourceBrightness(x, y, z)) {
             int sourceBrightness = block.getMixedBrightnessForBlock(
                     access,
                     PhotoModeBlockRenderContext.x(),

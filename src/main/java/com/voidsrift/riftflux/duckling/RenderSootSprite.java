@@ -3,22 +3,27 @@ package com.voidsrift.riftflux.duckling;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
@@ -26,6 +31,8 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
     private static final float FLAT_ITEM_CLOCKWISE_ROLL = -25.0F;
+    private static final float FLAT_ITEM_DEPTH = 0.0625F;
+    private static final RenderBlocks HELD_BLOCK_RENDERER = new RenderBlocks();
     private static final ResourceLocation ENCHANTED_ITEM_GLINT =
             new ResourceLocation("textures/misc/enchanted_item_glint.png");
 
@@ -148,9 +155,9 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             DucklingRenderState.prepareForRender();
             RenderHelper.enableStandardItemLighting();
             if (heldBlock) {
-                RenderManager.instance.itemRenderer.renderItem(sprite, held, 0, IItemRenderer.ItemRenderType.ENTITY);
+                this.renderHeldBlockItem(sprite, held, brightness);
             } else {
-                this.renderFlatHeldItem(sprite, held);
+                this.renderFlatHeldItem(sprite, held, brightness);
             }
             RenderHelper.disableStandardItemLighting();
         } finally {
@@ -161,7 +168,91 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
         }
     }
 
-    private void renderFlatHeldItem(EntitySootSprite sprite, ItemStack held) {
+    private void renderHeldBlockItem(EntitySootSprite sprite, ItemStack held, int brightness) {
+        Block block = Block.getBlockFromItem(held.getItem());
+        if (block == null || block == Blocks.air) {
+            RenderManager.instance.itemRenderer.renderItem(sprite, held, 0, IItemRenderer.ItemRenderType.ENTITY);
+            return;
+        }
+
+        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+        int metadata = held.getItemDamage();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        if (block.getRenderType() == 0) {
+            this.renderLitHeldCubeBlockItem(block, metadata, brightness);
+        } else {
+            HELD_BLOCK_RENDERER.renderBlockAsItem(block, metadata, this.packedBrightnessToFloat(brightness));
+        }
+        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    private float packedBrightnessToFloat(int brightness) {
+        int textureX = brightness & 65535;
+        int textureY = brightness >> 16;
+        return Math.max(textureX, textureY) / 240.0F;
+    }
+
+    private void renderLitHeldCubeBlockItem(Block block, int metadata, int brightness) {
+        int color = block.getRenderColor(metadata);
+        float red = (float) (color >> 16 & 255) / 255.0F;
+        float green = (float) (color >> 8 & 255) / 255.0F;
+        float blue = (float) (color & 255) / 255.0F;
+
+        HELD_BLOCK_RENDERER.setRenderBoundsFromBlock(block);
+        GL11.glTranslatef(-0.5F, -0.5F, -0.5F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 0, 0.0F, -1.0F, 0.0F, red * 0.5F, green * 0.5F, blue * 0.5F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 1, 0.0F, 1.0F, 0.0F, red, green, blue);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 2, 0.0F, 0.0F, -1.0F, red * 0.8F, green * 0.8F, blue * 0.8F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 3, 0.0F, 0.0F, 1.0F, red * 0.8F, green * 0.8F, blue * 0.8F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 4, -1.0F, 0.0F, 0.0F, red * 0.6F, green * 0.6F, blue * 0.6F);
+        this.renderLitHeldBlockFace(block, metadata, brightness, 5, 1.0F, 0.0F, 0.0F, red * 0.6F, green * 0.6F, blue * 0.6F);
+        GL11.glTranslatef(0.5F, 0.5F, 0.5F);
+    }
+
+    private void renderLitHeldBlockFace(
+            Block block,
+            int metadata,
+            int brightness,
+            int side,
+            float normalX,
+            float normalY,
+            float normalZ,
+            float red,
+            float green,
+            float blue
+    ) {
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+        tessellator.setBrightness(brightness);
+        tessellator.setColorOpaque_F(red, green, blue);
+        tessellator.setNormal(normalX, normalY, normalZ);
+        switch (side) {
+            case 0:
+                HELD_BLOCK_RENDERER.renderFaceYNeg(block, 0.0D, 0.0D, 0.0D, block.getIcon(side, metadata));
+                break;
+            case 1:
+                HELD_BLOCK_RENDERER.renderFaceYPos(block, 0.0D, 0.0D, 0.0D, block.getIcon(side, metadata));
+                break;
+            case 2:
+                HELD_BLOCK_RENDERER.renderFaceZNeg(block, 0.0D, 0.0D, 0.0D, block.getIcon(side, metadata));
+                break;
+            case 3:
+                HELD_BLOCK_RENDERER.renderFaceZPos(block, 0.0D, 0.0D, 0.0D, block.getIcon(side, metadata));
+                break;
+            case 4:
+                HELD_BLOCK_RENDERER.renderFaceXNeg(block, 0.0D, 0.0D, 0.0D, block.getIcon(side, metadata));
+                break;
+            case 5:
+                HELD_BLOCK_RENDERER.renderFaceXPos(block, 0.0D, 0.0D, 0.0D, block.getIcon(side, metadata));
+                break;
+            default:
+                break;
+        }
+        tessellator.draw();
+    }
+
+    private void renderFlatHeldItem(EntitySootSprite sprite, ItemStack held, int brightness) {
         TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
         textureManager.bindTexture(textureManager.getResourceLocation(held.getItemSpriteNumber()));
         TextureUtil.func_152777_a(false, false, 1.0F);
@@ -183,7 +274,7 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             float green = (float) (color >> 8 & 255) / 255.0F;
             float blue = (float) (color & 255) / 255.0F;
             GL11.glColor4f(red, green, blue, 1.0F);
-            ItemRenderer.renderItemIn2D(
+            this.renderFlatHeldItemIn2D(
                     tessellator,
                     icon.getMaxU(),
                     icon.getMinV(),
@@ -191,7 +282,8 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
                     icon.getMaxV(),
                     icon.getIconWidth(),
                     icon.getIconHeight(),
-                    0.0625F
+                    FLAT_ITEM_DEPTH,
+                    brightness
             );
         }
 
@@ -202,6 +294,87 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
         GL11.glPopMatrix();
         TextureUtil.func_147945_b();
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    private void renderFlatHeldItemIn2D(
+            Tessellator tessellator,
+            float maxU,
+            float minV,
+            float minU,
+            float maxV,
+            int width,
+            int height,
+            float depth,
+            int brightness
+    ) {
+        this.startLitItemQuad(tessellator, brightness, 0.0F, 0.0F, 1.0F);
+        tessellator.addVertexWithUV(0.0D, 0.0D, 0.0D, maxU, maxV);
+        tessellator.addVertexWithUV(1.0D, 0.0D, 0.0D, minU, maxV);
+        tessellator.addVertexWithUV(1.0D, 1.0D, 0.0D, minU, minV);
+        tessellator.addVertexWithUV(0.0D, 1.0D, 0.0D, maxU, minV);
+        tessellator.draw();
+
+        this.startLitItemQuad(tessellator, brightness, 0.0F, 0.0F, -1.0F);
+        tessellator.addVertexWithUV(0.0D, 1.0D, -depth, maxU, minV);
+        tessellator.addVertexWithUV(1.0D, 1.0D, -depth, minU, minV);
+        tessellator.addVertexWithUV(1.0D, 0.0D, -depth, minU, maxV);
+        tessellator.addVertexWithUV(0.0D, 0.0D, -depth, maxU, maxV);
+        tessellator.draw();
+
+        float texelU = 0.5F * (maxU - minU) / (float) width;
+        float texelV = 0.5F * (maxV - minV) / (float) height;
+
+        this.startLitItemQuad(tessellator, brightness, -1.0F, 0.0F, 0.0F);
+        for (int index = 0; index < width; index++) {
+            float edge = (float) index / (float) width;
+            float u = maxU + (minU - maxU) * edge - texelU;
+            tessellator.addVertexWithUV(edge, 0.0D, -depth, u, maxV);
+            tessellator.addVertexWithUV(edge, 0.0D, 0.0D, u, maxV);
+            tessellator.addVertexWithUV(edge, 1.0D, 0.0D, u, minV);
+            tessellator.addVertexWithUV(edge, 1.0D, -depth, u, minV);
+        }
+        tessellator.draw();
+
+        this.startLitItemQuad(tessellator, brightness, 1.0F, 0.0F, 0.0F);
+        for (int index = 0; index < width; index++) {
+            float edge = (float) index / (float) width;
+            float u = maxU + (minU - maxU) * edge - texelU;
+            edge += 1.0F / (float) width;
+            tessellator.addVertexWithUV(edge, 1.0D, -depth, u, minV);
+            tessellator.addVertexWithUV(edge, 1.0D, 0.0D, u, minV);
+            tessellator.addVertexWithUV(edge, 0.0D, 0.0D, u, maxV);
+            tessellator.addVertexWithUV(edge, 0.0D, -depth, u, maxV);
+        }
+        tessellator.draw();
+
+        this.startLitItemQuad(tessellator, brightness, 0.0F, 1.0F, 0.0F);
+        for (int index = 0; index < height; index++) {
+            float edge = (float) index / (float) height;
+            float v = maxV + (minV - maxV) * edge - texelV;
+            edge += 1.0F / (float) height;
+            tessellator.addVertexWithUV(0.0D, edge, 0.0D, maxU, v);
+            tessellator.addVertexWithUV(1.0D, edge, 0.0D, minU, v);
+            tessellator.addVertexWithUV(1.0D, edge, -depth, minU, v);
+            tessellator.addVertexWithUV(0.0D, edge, -depth, maxU, v);
+        }
+        tessellator.draw();
+
+        this.startLitItemQuad(tessellator, brightness, 0.0F, -1.0F, 0.0F);
+        for (int index = 0; index < height; index++) {
+            float edge = (float) index / (float) height;
+            float v = maxV + (minV - maxV) * edge - texelV;
+            tessellator.addVertexWithUV(1.0D, edge, 0.0D, minU, v);
+            tessellator.addVertexWithUV(0.0D, edge, 0.0D, maxU, v);
+            tessellator.addVertexWithUV(0.0D, edge, -depth, maxU, v);
+            tessellator.addVertexWithUV(1.0D, edge, -depth, minU, v);
+        }
+        tessellator.draw();
+    }
+
+    private void startLitItemQuad(Tessellator tessellator, int brightness, float normalX, float normalY, float normalZ) {
+        tessellator.startDrawingQuads();
+        tessellator.setBrightness(brightness);
+        tessellator.setNormal(normalX, normalY, normalZ);
     }
 
     private void renderFlatHeldItemGlint(TextureManager textureManager, Tessellator tessellator) {

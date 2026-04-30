@@ -1,0 +1,103 @@
+package com.voidsrift.riftflux.mixin.early.beddium;
+
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
+import com.voidsrift.riftflux.client.sky.SunriseSkyTintHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.potion.Potion;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Pseudo
+@Mixin(targets = "com.ventooth.beddium.modules.TerrainRendering.fog.FogStateService", remap = false)
+public abstract class MixinBeddiumFogStateService_BetaStyleFog {
+
+    @Inject(method = "getFogColor", at = @At("HEAD"), cancellable = true, require = 0)
+    private void riftflux$overrideFogColor(CallbackInfoReturnable<float[]> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
+        Minecraft mc = Minecraft.getMinecraft();
+        WorldClient world = mc == null ? null : mc.theWorld;
+        float partialTicks = 0.0F;
+        float[] fogTint = null;
+        boolean processed = false;
+        if (SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)) {
+            fogTint = SunriseSkyTintHelper.resolveEffectiveBetaStyleFogColor(world, mc, partialTicks, null);
+            processed = true;
+        } else if (SunriseSkyTintHelper.shouldMatchFogToSky(world)) {
+            fogTint = SunriseSkyTintHelper.resolveEffectiveSkyMatchingFogColor(world, mc, partialTicks, null);
+            processed = true;
+        } else if (SunriseSkyTintHelper.shouldUseBlackNightFog(world, partialTicks)) {
+            fogTint = SunriseSkyTintHelper.resolveBlackNightFogColor(world, mc, partialTicks);
+            processed = true;
+        }
+        if (fogTint != null && fogTint.length >= 3) {
+            if (!processed) {
+                fogTint = SunriseSkyTintHelper.applyConfiguredFogDesaturation(fogTint);
+                fogTint = SunriseSkyTintHelper.applyNightFogFloor(world, partialTicks, fogTint);
+            }
+            cir.setReturnValue(new float[] { fogTint[0], fogTint[1], fogTint[2], 1.0F });
+        }
+    }
+
+    @Inject(method = "getFogStart", at = @At("HEAD"), cancellable = true, require = 0)
+    private void riftflux$overrideFogStart(CallbackInfoReturnable<Float> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
+        float[] fogDistance = riftflux$resolveFogDistance();
+        if (fogDistance != null) {
+            cir.setReturnValue(Float.valueOf(fogDistance[0]));
+        }
+    }
+
+    @Inject(method = "getFogEnd", at = @At("HEAD"), cancellable = true, require = 0)
+    private void riftflux$overrideFogEnd(CallbackInfoReturnable<Float> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
+        float[] fogDistance = riftflux$resolveFogDistance();
+        if (fogDistance != null) {
+            cir.setReturnValue(Float.valueOf(fogDistance[1]));
+        }
+    }
+
+    @Inject(method = "getFogCutoff", at = @At("HEAD"), cancellable = true, require = 0)
+    private void riftflux$overrideFogCutoff(CallbackInfoReturnable<Float> cir) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
+        float[] fogDistance = riftflux$resolveFogDistance();
+        if (fogDistance != null) {
+            cir.setReturnValue(Float.valueOf(fogDistance[1]));
+        }
+    }
+
+    private static float[] riftflux$resolveFogDistance() {
+        Minecraft mc = Minecraft.getMinecraft();
+        WorldClient world = mc == null ? null : mc.theWorld;
+        float partialTicks = 0.0F;
+        if (!SunriseSkyTintHelper.shouldUseDenseFogDistance(world, partialTicks)
+                || mc == null
+                || !(mc.renderViewEntity instanceof EntityLivingBase)) {
+            return null;
+        }
+
+        EntityLivingBase view = (EntityLivingBase) mc.renderViewEntity;
+        if (view.isPotionActive(Potion.blindness) || view.isInWater() || view.isInsideOfMaterial(net.minecraft.block.material.Material.lava)) {
+            return null;
+        }
+
+        float farPlaneDistance = mc.gameSettings == null ? 128.0F : (float) (mc.gameSettings.renderDistanceChunks * 16);
+        return SunriseSkyTintHelper.resolveDenseFogDistance(world, view, farPlaneDistance, false, partialTicks);
+    }
+}
