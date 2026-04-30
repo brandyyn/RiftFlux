@@ -405,6 +405,11 @@ public class EntityBlackWidow extends EntitySpider implements IEntitySyncData {
     }
 
     @Override
+    protected void dropFewItems(boolean recentlyHit, int looting) {
+        WAMMobDrops.dropConfigured(this, ModConfig.wamBlackWidowDropEntries);
+    }
+
+    @Override
     public boolean isOnLadder() {
         return !isOnThread() && !hasAggroState() && (super.isOnLadder() || isClimbingWallPose());
     }

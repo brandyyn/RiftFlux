@@ -51,16 +51,32 @@ public class RenderGliderInHand implements IItemRenderer {
         }
 
         if (ModConfig.gliderUseItemInHand) {
-            renderFlatItem(item, living);
+            GL11.glPushMatrix();
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            try {
+                renderFlatItem(item, living);
+            } finally {
+                GL11.glMatrixMode(GL11.GL_MODELVIEW);
+                GL11.glPopMatrix();
+                GL11.glPopAttrib();
+            }
             return;
         }
 
-        GL11.glRotatef(-15.0f, 2.0f, 3.0f, -5.0f);
-        GL11.glTranslatef(0.3f, -0.3f, -0.1f);
-        GL11.glScalef(2.0f, 2.0f, 1.0f);
-        Minecraft.getMinecraft().renderEngine.bindTexture(
-                new ResourceLocation(FileLocation.ENTITYTEXTURE + "Airbending staff closed.png"));
-        this.model.render((Entity) data[1], 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        try {
+            GL11.glRotatef(-15.0f, 2.0f, 3.0f, -5.0f);
+            GL11.glTranslatef(0.3f, -0.3f, -0.1f);
+            GL11.glScalef(2.0f, 2.0f, 1.0f);
+            Minecraft.getMinecraft().renderEngine.bindTexture(
+                    new ResourceLocation(FileLocation.ENTITYTEXTURE + "Airbending staff closed.png"));
+            this.model.render((Entity) data[1], 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        } finally {
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
+        }
     }
 
     private void renderFlatItem(ItemStack item, EntityLivingBase living) {
@@ -103,6 +119,7 @@ public class RenderGliderInHand implements IItemRenderer {
             renderEnchantmentGlint(textureManager, tessellator);
         }
         TextureUtil.func_147945_b();
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     private void renderEnchantmentGlint(TextureManager textureManager, Tessellator tessellator) {

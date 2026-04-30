@@ -51,7 +51,7 @@ public class RenderDuck extends GeoEntityRenderer<EntityDuck> {
         DucklingRenderState.pushRenderMatrices();
         DucklingRenderState.prepareForEntityRender(entity, partialTicks);
         this.riftflux$currentBeddiumBrightness = RIFTFLUX_HAS_BEDDIUM && entity != null
-                ? entity.getBrightnessForRender(partialTicks)
+                ? DucklingRenderState.resolveEntityBrightness(entity, partialTicks)
                 : -1;
         try {
             super.doRender(entity, x, y, z, yaw, partialTicks);

@@ -106,10 +106,7 @@ public class EntityCyclops extends EntityMob implements IEntitySyncData {
 
     @Override
     protected void dropFewItems(boolean recentlyHit, int looting) {
-        int drops = 1 + rand.nextInt(2 + looting);
-        for (int i = 0; i < drops; i++) {
-            dropItem(Items.beef, 1);
-        }
+        WAMMobDrops.dropConfigured(this, ModConfig.wamCyclopsDropEntries);
     }
 
     @Override

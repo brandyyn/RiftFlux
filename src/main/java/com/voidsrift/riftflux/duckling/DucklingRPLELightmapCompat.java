@@ -21,4 +21,9 @@ final class DucklingRPLELightmapCompat implements DucklingLightmapCompat {
         RPLETessBrightnessUtil.setLightMapTextureCoordsRGB64(CookieMonster.RGB64FromCookie(packedBrightness));
         return true;
     }
+
+    @Override
+    public boolean usesPackedLightmap() {
+        return true;
+    }
 }

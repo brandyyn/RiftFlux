@@ -29,37 +29,41 @@ public class RenderTilePlacedItem extends TileEntitySpecialRenderer {
             return;
         }
         GL11.glPushMatrix();
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
-        GL11.glTranslated(x + 0.5D, y + 0.5D, z + 0.5D);
-        int meta = tile.getBlockMetadata();
-        switch (meta) {
-            case 1:
-                GL11.glRotated(180.0D, 1.0D, 0.0D, 0.0D);
-                GL11.glRotated(180.0D, 0.0D, 1.0D, 0.0D);
-                break;
-            case 2:
-                GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
-                break;
-            case 3:
-                GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
-                GL11.glRotated(180.0D, 0.0D, 0.0D, 1.0D);
-                break;
-            case 4:
-                GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
-                GL11.glRotated(-90.0D, 0.0D, 0.0D, 1.0D);
-                break;
-            case 5:
-                GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
-                GL11.glRotated(90.0D, 0.0D, 0.0D, 1.0D);
-                break;
-            default:
-                break;
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        try {
+            GL11.glTranslated(x + 0.5D, y + 0.5D, z + 0.5D);
+            int meta = tile.getBlockMetadata();
+            switch (meta) {
+                case 1:
+                    GL11.glRotated(180.0D, 1.0D, 0.0D, 0.0D);
+                    GL11.glRotated(180.0D, 0.0D, 1.0D, 0.0D);
+                    break;
+                case 2:
+                    GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
+                    break;
+                case 3:
+                    GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
+                    GL11.glRotated(180.0D, 0.0D, 0.0D, 1.0D);
+                    break;
+                case 4:
+                    GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
+                    GL11.glRotated(-90.0D, 0.0D, 0.0D, 1.0D);
+                    break;
+                case 5:
+                    GL11.glRotated(90.0D, 1.0D, 0.0D, 0.0D);
+                    GL11.glRotated(90.0D, 0.0D, 0.0D, 1.0D);
+                    break;
+                default:
+                    break;
+            }
+            GL11.glTranslated(0.0D, -0.5D, 0.0D);
+            GL11.glRotated(-placed.rotation, 0.0D, 1.0D, 0.0D);
+            renderItem(placed, partialTicks);
+        } finally {
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
         }
-        GL11.glTranslated(0.0D, -0.5D, 0.0D);
-        GL11.glRotated(-placed.rotation, 0.0D, 1.0D, 0.0D);
-        renderItem(placed, partialTicks);
-        GL11.glPopAttrib();
-        GL11.glPopMatrix();
     }
 
     private void renderItem(TilePlacedItem tile, float partialTicks) {
@@ -106,62 +110,73 @@ public class RenderTilePlacedItem extends TileEntitySpecialRenderer {
     }
 
     private void renderStack(World world, ItemStack stack, EntityItem entity, float partialTicks) {
+        ItemStack entityStack = entity.getEntityItem();
+        if (entityStack == null) {
+            return;
+        }
+
         GL11.glPushMatrix();
-        entity.getEntityItem().stackSize = 1;
-        entity.age = 0;
-        entity.hoverStart = 0.0F;
-        entity.rotationYaw = 0.0F;
-        entity.rotationPitch = 0.0F;
-        entity.onGround = true;
+        int previousStackSize = entityStack.stackSize;
+        boolean previousInFrame = RenderItem.renderInFrame;
+        try {
+            entityStack.stackSize = 1;
+            entity.age = 0;
+            entity.hoverStart = 0.0F;
+            entity.rotationYaw = 0.0F;
+            entity.rotationPitch = 0.0F;
+            entity.onGround = true;
 
-        int renderType = getRenderTypeFromStack(stack);
-        boolean onGround = true;
+            int renderType = getRenderTypeFromStack(stack);
+            boolean onGround = true;
 
-        if (renderType == 1) {
-            GL11.glScaled(0.5D, 0.5D, 0.5D);
-            GL11.glTranslated(0.0D, 0.5D, 0.0D);
-            GL11.glRotated(-90.0D, 0.0D, 1.0D, 0.0D);
-            GL11.glScaled(4.0D, 4.0D, 4.0D);
-            if (onGround) {
-                GL11.glRotated(90.0D, 0.0D, 1.0D, 0.0D);
-                if (ITEM_PHYSIC) {
-                    GL11.glTranslated(0.0D, -0.09D, 0.0D);
-                }
-                GL11.glTranslated(0.0D, -0.05D, 0.0D);
-                GL11.glScaled(0.8D, 0.8D, 0.8D);
-            }
-        } else {
-            GL11.glRotated(-90.0D, 1.0D, 0.0D, 0.0D);
-            GL11.glTranslated(0.0D, -0.25D, 0.04D);
-            if (RenderManager.instance.options.fancyGraphics) {
-                GL11.glRotatef(180.0F, 0.0F, 1.0F, 0.0F);
+            if (renderType == 1) {
+                GL11.glScaled(0.5D, 0.5D, 0.5D);
+                GL11.glTranslated(0.0D, 0.5D, 0.0D);
+                GL11.glRotated(-90.0D, 0.0D, 1.0D, 0.0D);
+                GL11.glScaled(4.0D, 4.0D, 4.0D);
                 if (onGround) {
-                    GL11.glRotatef(-180.0F, 0.0F, 1.0F, 0.0F);
+                    GL11.glRotated(90.0D, 0.0D, 1.0D, 0.0D);
                     if (ITEM_PHYSIC) {
-                        GL11.glTranslatef(0.0F, -0.09F, 0.0F);
+                        GL11.glTranslated(0.0D, -0.09D, 0.0D);
                     }
-                } else if (ITEM_PHYSIC) {
-                    GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
+                    GL11.glTranslated(0.0D, -0.05D, 0.0D);
+                    GL11.glScaled(0.8D, 0.8D, 0.8D);
                 }
-            } else if (!onGround) {
-                GL11.glRotatef(180.0F - RenderManager.instance.playerViewY, 0.0F, 1.0F, 0.0F);
-            }
-            if (onGround) {
-                GL11.glTranslatef(0.0F, 0.05F, 0.0F);
-                GL11.glScaled(1.95D, 1.95D, 1.95D);
             } else {
-                GL11.glScaled(2.0D, 2.0D, 2.0D);
+                GL11.glRotated(-90.0D, 1.0D, 0.0D, 0.0D);
+                GL11.glTranslated(0.0D, -0.25D, 0.04D);
+                if (RenderManager.instance.options.fancyGraphics) {
+                    GL11.glRotatef(180.0F, 0.0F, 1.0F, 0.0F);
+                    if (onGround) {
+                        GL11.glRotatef(-180.0F, 0.0F, 1.0F, 0.0F);
+                        if (ITEM_PHYSIC) {
+                            GL11.glTranslatef(0.0F, -0.09F, 0.0F);
+                        }
+                    } else if (ITEM_PHYSIC) {
+                        GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
+                    }
+                } else if (!onGround) {
+                    GL11.glRotatef(180.0F - RenderManager.instance.playerViewY, 0.0F, 1.0F, 0.0F);
+                }
+                if (onGround) {
+                    GL11.glTranslatef(0.0F, 0.05F, 0.0F);
+                    GL11.glScaled(1.95D, 1.95D, 1.95D);
+                } else {
+                    GL11.glScaled(2.0D, 2.0D, 2.0D);
+                }
             }
-        }
 
-        boolean prevInFrame = RenderItem.renderInFrame;
-        RenderItem.renderInFrame = onGround;
-        if (!ITEM_PHYSIC) {
-            GL11.glTranslated(0.0D, -0.1D, 0.0D);
+            RenderItem.renderInFrame = onGround;
+            if (!ITEM_PHYSIC) {
+                GL11.glTranslated(0.0D, -0.1D, 0.0D);
+            }
+            RenderManager.instance.renderEntityWithPosYaw(entity, 0.0D, 0.0D, 0.0D, 0.0F, 0.0F);
+        } finally {
+            entityStack.stackSize = previousStackSize;
+            RenderItem.renderInFrame = previousInFrame;
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
         }
-        RenderManager.instance.renderEntityWithPosYaw(entity, 0.0D, 0.0D, 0.0D, 0.0F, 0.0F);
-        RenderItem.renderInFrame = prevInFrame;
-        GL11.glPopMatrix();
     }
 
     

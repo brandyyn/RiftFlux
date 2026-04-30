@@ -20,8 +20,6 @@ import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
-    private static final String WDMLA_ROOT = "com.gtnewhorizons.wdmla.";
-    private static final String WAILA_ROOT = "mcp.mobius.waila.";
     private static final boolean RIFTFLUX_HAS_BEDDIUM =
             hasClass("com.ventooth.beddium.modules.TerrainRendering.CeleritasWorldRenderer");
 
@@ -59,7 +57,7 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
         DucklingRenderState.pushRenderMatrices();
         DucklingRenderState.prepareForEntityRender(entity, partialTicks);
         this.riftflux$currentBeddiumBrightness = RIFTFLUX_HAS_BEDDIUM && entity != null
-                ? entity.getBrightnessForRender(partialTicks)
+                ? DucklingRenderState.resolveEntityBrightness(entity, partialTicks)
                 : -1;
         try {
             super.doRender(entity, x, y, z, yaw, partialTicks);
@@ -106,7 +104,7 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
     @Override
     public void renderAfter(GeoModel model, EntityQuackling quackling, float partialTicks, float red, float green, float blue, float alpha) {
         super.renderAfter(model, quackling, partialTicks, red, green, blue, alpha);
-        if (!quackling.isFishing() || this.isTooltipPreviewRender()) {
+        if (!quackling.isFishing() || DucklingRenderState.isTooltipPreviewRender()) {
             return;
         }
         ItemStack rod = new ItemStack(Items.fishing_rod);
@@ -140,7 +138,7 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
             GL11.glTranslatef(0.0F, 0.45F, -0.3375F);
             GL11.glRotatef(-45.0F, 0.0F, 1.0F, 0.0F);
             GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
-            int brightness = quackling.getBrightnessForRender(partialTicks);
+            int brightness = DucklingRenderState.resolveEntityBrightness(quackling, partialTicks);
             DucklingRenderState.prepareTexturedLightmap((float)(brightness & 65535), (float)(brightness >> 16));
             DucklingRenderState.prepareForRender();
             RenderHelper.enableStandardItemLighting();
@@ -162,20 +160,6 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
             bone = bone.parent;
         }
         return path.toArray(new GeoBone[path.size()]);
-    }
-
-    private boolean isTooltipPreviewRender() {
-        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        for (StackTraceElement element : stack) {
-            String className = element.getClassName();
-            if (className == null) {
-                continue;
-            }
-            if (className.startsWith(WDMLA_ROOT) || className.startsWith(WAILA_ROOT)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static boolean hasClass(String className) {

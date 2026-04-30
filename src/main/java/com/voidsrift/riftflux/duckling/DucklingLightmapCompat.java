@@ -6,4 +6,6 @@ interface DucklingLightmapCompat {
     boolean restoreLightMapTextureCoords(long rgb64);
 
     boolean setLightMapTextureCoords(float brightnessX, float brightnessY);
+
+    boolean usesPackedLightmap();
 }

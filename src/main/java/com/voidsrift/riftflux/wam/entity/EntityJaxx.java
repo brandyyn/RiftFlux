@@ -99,11 +99,7 @@ public class EntityJaxx extends EntityMob {
 
     @Override
     protected void dropFewItems(boolean recentlyHit, int looting) {
-        if (rand.nextBoolean()) {
-            entityDropItem(new ItemStack(Blocks.pumpkin), 0.0F);
-        } else {
-            dropItem(Items.blaze_powder, 1);
-        }
+        WAMMobDrops.dropConfigured(this, ModConfig.wamJaxxDropEntries);
     }
 
     @Override

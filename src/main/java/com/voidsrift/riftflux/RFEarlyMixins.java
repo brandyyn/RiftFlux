@@ -65,6 +65,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntitySafeTick");
             mixins.add("early.MixinWorldSafeEntityTick");
         }
+        mixins.add("early.MixinFMLProxyPacket_NullDispatcherReject");
         if (ModConfig.reworkVillageGolems) {
             mixins.add("early.MixinVillageGolemBlock");
             mixins.add("early.MixinStructureStartVillageSpawn");

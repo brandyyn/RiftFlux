@@ -27,24 +27,30 @@ public class RenderBananaBoomerang extends Render {
     public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
         EntityBananaBoomerang banana = (EntityBananaBoomerang) entity;
         GL11.glPushMatrix();
-        GL11.glDisable(GL11.GL_CULL_FACE);
-        float renderYaw = this.interpolateRotation(banana.prevRotationYaw, banana.rotationYaw, 0.0F);
-        float renderPitch = banana.prevRotationPitch + (banana.rotationPitch - banana.prevRotationPitch) * 0.0F;
-        GL11.glTranslatef((float) x, (float) y, (float) z);
-        float scale = 0.0625F;
-        GL11.glEnable(32826);
-        GL11.glScalef(-1.0F, -1.0F, 1.0F);
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-        float time = Minecraft.getMinecraft().theWorld.getWorldTime();
-        GL11.glRotatef(time * 90.0F * -1.0F, 0.0F, 0.0F, 0.5F);
-        this.bindEntityTexture(banana);
-        this.bananaModel.render(banana, 0.0F, 0.0F, 0.0F, renderYaw, renderPitch, scale);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glMatrixMode(GL11.GL_TEXTURE);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glEnable(GL11.GL_LIGHTING);
-        GL11.glPopMatrix();
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        try {
+            GL11.glDisable(GL11.GL_CULL_FACE);
+            float renderYaw = this.interpolateRotation(banana.prevRotationYaw, banana.rotationYaw, 0.0F);
+            float renderPitch = banana.prevRotationPitch + (banana.rotationPitch - banana.prevRotationPitch) * 0.0F;
+            GL11.glTranslatef((float) x, (float) y, (float) z);
+            float scale = 0.0625F;
+            GL11.glEnable(32826);
+            GL11.glScalef(-1.0F, -1.0F, 1.0F);
+            GL11.glEnable(GL11.GL_ALPHA_TEST);
+            float time = Minecraft.getMinecraft().theWorld.getWorldTime();
+            GL11.glRotatef(time * 90.0F * -1.0F, 0.0F, 0.0F, 0.5F);
+            this.bindEntityTexture(banana);
+            this.bananaModel.render(banana, 0.0F, 0.0F, 0.0F, renderYaw, renderPitch, scale);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glMatrixMode(GL11.GL_TEXTURE);
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glEnable(GL11.GL_LIGHTING);
+        } finally {
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
+        }
     }
 
     @Override

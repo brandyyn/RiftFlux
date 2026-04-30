@@ -136,11 +136,7 @@ public class EntityEnderTroll extends EntityMob {
 
     @Override
     protected void dropFewItems(boolean recentlyHit, int looting) {
-        if (rand.nextBoolean()) {
-            dropItem(Items.ender_pearl, 1);
-        } else {
-            entityDropItem(new ItemStack(Blocks.obsidian), 0.0F);
-        }
+        WAMMobDrops.dropConfigured(this, ModConfig.wamEnderTrollDropEntries);
     }
 
     @Override

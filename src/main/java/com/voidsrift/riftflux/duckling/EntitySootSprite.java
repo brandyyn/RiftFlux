@@ -20,7 +20,6 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -39,11 +38,17 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
 
     private final AnimationFactory animationFactory = new AnimationFactory(this);
     private final EntityAISootAvoidPlayer avoidPlayerTask;
+    private final EntityAISootDepositFuel depositFuelTask;
+    private final EntityAISootStoreItem storeItemTask;
+    private boolean tamedStorageTasksAdded;
     private int idleVariant;
     private int idleTimer;
     private int hidingCooldown;
     private int scaredCooldown;
     private int hideIntentTicks;
+    private int hidingCheckCooldown;
+    private int neighborHideScanCooldown;
+    private boolean temptedByStarCandy;
     private int stackRideTicks;
     private int restackCooldownTicks;
     private transient String activeAnimationName = "";
@@ -61,17 +66,25 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
 
         this.tasks.addTask(0, new EntityAISwimming(this));
         this.avoidPlayerTask = new EntityAISootAvoidPlayer(this, 10.0F, 0.66D, 0.88D);
+        this.depositFuelTask = new EntityAISootDepositFuel(this, 0.825D);
+        this.storeItemTask = new EntityAISootStoreItem(this, 0.825D);
         this.tasks.addTask(1, this.avoidPlayerTask);
         this.tasks.addTask(2, new EntityAITempt(this, 0.715D, DucklingContent.starCandy, false));
         this.tasks.addTask(2, new EntityAISootScavenge(this, 0.825D));
-        this.tasks.addTask(2, new EntityAISootDepositFuel(this, 0.55D));
-        this.tasks.addTask(2, new EntityAISootStoreItem(this, 0.55D));
         this.tasks.addTask(2, new EntityAISootPressButton(this, 0.55D));
-        this.tasks.addTask(3, new EntityAISootSeekDarkness(this, 0.275D));
+        this.tasks.addTask(3, new EntityAISootSeekDarkness(this, 0.4D));
         this.tasks.addTask(4, new EntityAIWander(this, 0.198D));
         this.tasks.addTask(5, new EntityAIWatchClosest(this, EntityPlayer.class, 6.0F));
         this.tasks.addTask(6, new EntityAILookIdle(this));
         this.tasks.addTask(7, new EntityAISootStackUp(this));
+        this.hidingCheckCooldown = this.rand.nextInt(3);
+        this.neighborHideScanCooldown = this.rand.nextInt(30);
+    }
+
+    @Override
+    public void setTamed(boolean tamed) {
+        super.setTamed(tamed);
+        this.updateTamedStorageTasks();
     }
 
     @Override
@@ -93,6 +106,23 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
     @Override
     public boolean isAIEnabled() {
         return true;
+    }
+
+    private void updateTamedStorageTasks() {
+        if (this.depositFuelTask == null || this.storeItemTask == null || this.tasks == null) {
+            return;
+        }
+        if (this.isTamed()) {
+            if (!this.tamedStorageTasksAdded) {
+                this.tasks.addTask(2, this.depositFuelTask);
+                this.tasks.addTask(2, this.storeItemTask);
+                this.tamedStorageTasksAdded = true;
+            }
+        } else if (this.tamedStorageTasksAdded) {
+            this.tasks.removeTask(this.depositFuelTask);
+            this.tasks.removeTask(this.storeItemTask);
+            this.tamedStorageTasksAdded = false;
+        }
     }
 
     @Override
@@ -148,11 +178,9 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
             this.consumeHeldHealingItem(held);
         }
 
-        if (this.isHiding() && this.ticksExisted % 5 == 0) {
-            this.hideNearbySprites();
-        }
+        this.updateNeighborHiding();
 
-        if (this.getHeldItem() != null && this.isMovingHorizontally(1.0E-4D)) {
+        if (this.getHeldItem() != null && this.ticksExisted % 5 == 0 && this.isMovingHorizontally(1.0E-4D)) {
             this.worldObj.spawnParticle("smoke",
                     this.posX + (this.rand.nextDouble() - 0.5D) * 0.5D,
                     this.posY + 0.5D,
@@ -160,7 +188,7 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
                     0.0D, 0.0D, 0.0D);
         }
 
-        if (this.isScared() && this.ticksExisted % 2 == 0) {
+        if (this.isScared() && this.ticksExisted % 4 == 0) {
             this.worldObj.spawnParticle("blockcrack_" + net.minecraft.block.Block.getIdFromBlock(Blocks.coal_block) + "_0",
                     this.posX,
                     this.posY + 0.1D,
@@ -349,6 +377,7 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         this.hideIntentTicks = Math.max(0, tag.getInteger("HideIntentTicks"));
         this.stackRideTicks = Math.max(0, tag.getInteger("StackRideTicks"));
         this.restackCooldownTicks = Math.max(0, tag.getInteger("RestackCooldown"));
+        this.updateTamedStorageTasks();
     }
 
     @Override
@@ -407,7 +436,15 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         if (held == null) {
             return true;
         }
-        return areStacksMergeable(held, stack) && held.stackSize < held.getMaxStackSize();
+        return areStacksMergeable(held, stack) && held.stackSize < this.getCarriedStackLimit(held);
+    }
+
+    public boolean canCarryMoreItems() {
+        if (this.isSupportingAnotherSprite()) {
+            return false;
+        }
+        ItemStack held = this.getHeldItem();
+        return held == null || held.stackSize < this.getCarriedStackLimit(held);
     }
 
     public void performPickup(EntityItem itemEntity) {
@@ -422,11 +459,18 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         ItemStack held = this.getHeldItem();
         int pickedUp;
         if (held == null) {
-            pickedUp = itemStack.stackSize;
-            this.setCurrentItemOrArmor(0, itemStack.copy());
-            itemEntity.setDead();
+            pickedUp = Math.min(this.getCarriedStackLimit(itemStack), itemStack.stackSize);
+            ItemStack carried = itemStack.copy();
+            carried.stackSize = pickedUp;
+            itemStack.stackSize -= pickedUp;
+            this.setCurrentItemOrArmor(0, carried);
+            if (itemStack.stackSize <= 0) {
+                itemEntity.setDead();
+            } else {
+                itemEntity.setEntityItemStack(itemStack);
+            }
         } else {
-            int space = Math.min(held.getMaxStackSize(), held.getItem().getItemStackLimit(held)) - held.stackSize;
+            int space = this.getCarriedStackLimit(held) - held.stackSize;
             pickedUp = Math.min(space, itemStack.stackSize);
             if (pickedUp <= 0) {
                 return;
@@ -441,6 +485,10 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
             }
         }
         this.onItemPickup(itemEntity, pickedUp);
+    }
+
+    private int getCarriedStackLimit(ItemStack stack) {
+        return stack == null ? 0 : Math.max(1, stack.getMaxStackSize());
     }
 
     public static boolean areStacksMergeable(ItemStack left, ItemStack right) {
@@ -480,31 +528,38 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
     }
 
     private void updateHidingState() {
+        if (this.isTamed()) {
+            this.hideIntentTicks = 0;
+            this.hidingCooldown = 0;
+            this.temptedByStarCandy = false;
+            if (this.isHiding()) {
+                this.setHiding(false);
+            }
+            return;
+        }
+
         boolean currentlyHiding = this.isHiding();
+        if (currentlyHiding && this.hidingCooldown > 0) {
+            --this.hidingCooldown;
+        }
+        if (this.hidingCheckCooldown > 0) {
+            --this.hidingCheckCooldown;
+            return;
+        }
+        this.hidingCheckCooldown = 2 + this.rand.nextInt(3);
+
         boolean shouldHide = currentlyHiding;
-        if (!this.shouldIgnoreHiding()) {
-            EntityPlayer player = this.worldObj.getClosestPlayerToEntity(this, 3.0D);
-            if (player != null && !player.capabilities.isCreativeMode && !player.isSneaking()) {
-                boolean canSee = player.canEntityBeSeen(this);
-                Vec3 playerLook = player.getLookVec().normalize();
-                Vec3 toSprite = Vec3.createVectorHelper(
-                        this.posX - player.posX,
-                        this.posY + this.height * 0.5D - (player.posY + player.getEyeHeight()),
-                        this.posZ - player.posZ).normalize();
-                double dot = playerLook.dotProduct(toSprite);
-                boolean directlyObserved = canSee && dot > 0.85D;
-                if (currentlyHiding) {
-                    shouldHide = canSee && dot >= 0.72D;
-                    this.hideIntentTicks = 0;
-                } else if (directlyObserved) {
-                    this.hideIntentTicks = Math.min(this.hideIntentTicks + 1, 10);
-                    shouldHide = this.hideIntentTicks >= 2;
-                } else {
-                    this.hideIntentTicks = 0;
-                }
+        EntityPlayer player = this.findNearbyHidingPlayer();
+        if (!this.temptedByStarCandy && player != null) {
+            boolean canSee = player.canEntityBeSeen(this);
+            if (currentlyHiding) {
+                shouldHide = canSee;
+                this.hideIntentTicks = 0;
+            } else if (canSee) {
+                this.hideIntentTicks = 1;
+                shouldHide = true;
             } else {
                 this.hideIntentTicks = 0;
-                shouldHide = false;
             }
         } else {
             this.hideIntentTicks = 0;
@@ -513,7 +568,6 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         if (shouldHide) {
             this.hidingCooldown = HIDING_COOLDOWN_TICKS;
         } else if (currentlyHiding && this.hidingCooldown > 0) {
-            --this.hidingCooldown;
             shouldHide = true;
         }
         if (currentlyHiding != shouldHide) {
@@ -521,11 +575,24 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         }
     }
 
+    private void updateNeighborHiding() {
+        if (!this.isHiding()) {
+            this.neighborHideScanCooldown = 0;
+            return;
+        }
+        if (this.neighborHideScanCooldown > 0) {
+            --this.neighborHideScanCooldown;
+            return;
+        }
+        this.hideNearbySprites();
+        this.neighborHideScanCooldown = 30 + this.rand.nextInt(31);
+    }
+
     private void hideNearbySprites() {
         java.util.List neighbors = this.worldObj.getEntitiesWithinAABB(EntitySootSprite.class, this.boundingBox.expand(0.5D, 0.5D, 0.5D));
         for (int i = 0; i < neighbors.size(); i++) {
             EntitySootSprite neighbor = (EntitySootSprite)neighbors.get(i);
-            if (neighbor != this && !neighbor.shouldIgnoreHiding()) {
+            if (neighbor != this && neighbor.canBeForcedToHide()) {
                 boolean wasHiding = neighbor.isHiding();
                 neighbor.forceHide(NEIGHBOR_HIDING_COOLDOWN_TICKS);
                 if (wasHiding) {
@@ -537,7 +604,7 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
     }
 
     private void forceHide(int ticks) {
-        if (this.shouldIgnoreHiding()) {
+        if (!this.canBeForcedToHide()) {
             this.hidingCooldown = 0;
             if (this.isHiding()) {
                 this.setHiding(false);
@@ -550,20 +617,43 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         }
     }
 
-    private boolean shouldIgnoreHiding() {
-        return this.isTamed() || this.isTemptedByStarCandy();
+    private boolean canBeForcedToHide() {
+        return !this.isTamed() && !this.temptedByStarCandy;
     }
 
-    private boolean isTemptedByStarCandy() {
-        if (this.worldObj == null) {
-            return false;
+    private EntityPlayer findNearbyHidingPlayer() {
+        this.temptedByStarCandy = false;
+        if (this.worldObj == null || this.worldObj.playerEntities == null || this.worldObj.playerEntities.isEmpty()) {
+            return null;
         }
-        EntityPlayer player = this.worldObj.getClosestPlayerToEntity(this, 10.0D);
-        if (player == null) {
-            return false;
+
+        EntityPlayer closestWatcher = null;
+        double closestWatcherDistance = 81.0D;
+        for (int i = 0; i < this.worldObj.playerEntities.size(); i++) {
+            Object entry = this.worldObj.playerEntities.get(i);
+            if (!(entry instanceof EntityPlayer)) {
+                continue;
+            }
+
+            EntityPlayer player = (EntityPlayer)entry;
+            if (!player.isEntityAlive()) {
+                continue;
+            }
+
+            double distance = this.getDistanceSqToEntity(player);
+            if (distance <= 100.0D) {
+                ItemStack held = player.getCurrentEquippedItem();
+                if (held != null && held.getItem() == DucklingContent.starCandy) {
+                    this.temptedByStarCandy = true;
+                }
+            }
+
+            if (distance <= closestWatcherDistance && !player.capabilities.isCreativeMode && !player.isSneaking()) {
+                closestWatcherDistance = distance;
+                closestWatcher = player;
+            }
         }
-        ItemStack held = player.getCurrentEquippedItem();
-        return held != null && held.getItem() == DucklingContent.starCandy;
+        return closestWatcher;
     }
 
     private void spawnStatusParticles(String particle) {
@@ -611,11 +701,11 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
     }
 
     private int getRandomStackRideDuration() {
-        return 120 + this.rand.nextInt(181);
+        return 300 + this.rand.nextInt(901);
     }
 
     private int getRandomRestackCooldown() {
-        return 200 + this.rand.nextInt(201);
+        return 400 + this.rand.nextInt(801);
     }
 
     private boolean isMountedOnSpriteHoldingItems() {
@@ -728,14 +818,14 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
         } else if (this.isScared() && moving) {
             desiredAnimationName = "scare";
         } else if (isTopOfStack) {
-            desiredAnimationName = "idle";
+            desiredAnimationName = "idle2";
         } else {
             if (moving) {
                 desiredAnimationName = "walk";
             } else {
                 switch (this.idleVariant) {
                     case 0:
-                        desiredAnimationName = "idle";
+                        desiredAnimationName = "idle2";
                         break;
                     case 1:
                         desiredAnimationName = "idle2";
@@ -753,7 +843,7 @@ public class EntitySootSprite extends EntityTameable implements IAnimatable, IEn
                         desiredAnimationName = "idle6";
                         break;
                     default:
-                        desiredAnimationName = "idle";
+                        desiredAnimationName = "idle2";
                         break;
                 }
             }

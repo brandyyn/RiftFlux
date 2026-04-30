@@ -101,9 +101,7 @@ public class EntityFlowerMan extends EntityAnimal implements IEntitySyncData {
 
     @Override
     protected void dropFewItems(boolean recentlyHit, int looting) {
-        Block block = getLifeBlock();
-        int metadata = getLifeMetadata();
-        entityDropItem(new ItemStack(block, 1, metadata), 0.0F);
+        WAMMobDrops.dropConfigured(this, ModConfig.wamFlowerManDropEntries);
     }
 
     @Override
@@ -124,6 +122,10 @@ public class EntityFlowerMan extends EntityAnimal implements IEntitySyncData {
         EntityFlowerMan child = new EntityFlowerMan(worldObj);
         child.setColor(rand.nextBoolean() ? getColor() : (mate instanceof EntityFlowerMan ? ((EntityFlowerMan) mate).getColor() : getColor()));
         return child;
+    }
+
+    public ItemStack createLifeDropStack() {
+        return new ItemStack(getLifeBlock(), 1, getLifeMetadata());
     }
 
     private void spreadLife() {

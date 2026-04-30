@@ -13,7 +13,10 @@ import org.lwjgl.opengl.GL14;
 
 final class DucklingRenderState {
     private static final int CLIENT_ALL_ATTRIB_BITS = -1;
+    private static final int GUI_ENTITY_BRIGHTNESS = 0x00F000F0;
     private static final float LIGHTMAP_TEXTURE_SCALE = 0.00390625F;
+    private static final String WDMLA_ROOT = "com.gtnewhorizons.wdmla.";
+    private static final String WAILA_ROOT = "mcp.mobius.waila.";
     private static final ByteBuffer BYTE_BUFFER = BufferUtils.createByteBuffer(4);
     private static final DucklingLightmapCompat LIGHTMAP_COMPAT = createLightmapCompat();
 
@@ -227,10 +230,31 @@ final class DucklingRenderState {
 
     static void prepareForEntityRender(Entity entity, float partialTicks) {
         if (entity != null) {
-            int brightness = entity.getBrightnessForRender(partialTicks);
+            int brightness = resolveEntityBrightness(entity, partialTicks);
             prepareTexturedLightmap((float) (brightness & 65535), (float) (brightness >> 16));
         }
         prepareForRender();
+    }
+
+    static int resolveEntityBrightness(Entity entity, float partialTicks) {
+        if (entity == null || isTooltipPreviewRender()) {
+            return GUI_ENTITY_BRIGHTNESS;
+        }
+        return entity.getBrightnessForRender(partialTicks);
+    }
+
+    static boolean isTooltipPreviewRender() {
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+        for (int i = 0; i < stack.length; i++) {
+            String className = stack[i].getClassName();
+            if (className == null) {
+                continue;
+            }
+            if (className.startsWith(WDMLA_ROOT) || className.startsWith(WAILA_ROOT)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static void pushRenderMatrices() {
@@ -259,6 +283,7 @@ final class DucklingRenderState {
 
     static void restoreAfterRender(Snapshot snapshot) {
         restoreSnapshot(snapshot);
+        normalizeAfterEntityRender();
     }
 
     private static void restoreSnapshot(Snapshot snapshot) {
@@ -534,6 +559,18 @@ final class DucklingRenderState {
         GlStateManager.enableCull();
     }
 
+    private static void normalizeAfterEntityRender() {
+        resetClientArrays();
+        OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
+
+        if (!LIGHTMAP_COMPAT.usesPackedLightmap()) {
+            prepareLightmapTextureUnit();
+        }
+        prepareDefaultTextureUnit();
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        resetColorToOpaqueWhite();
+    }
+
     private static void restoreStandardEntityLighting() {
         RenderHelper.enableStandardItemLighting();
         GlStateManager.enableLighting();
@@ -586,6 +623,11 @@ final class DucklingRenderState {
 
         @Override
         public boolean setLightMapTextureCoords(float brightnessX, float brightnessY) {
+            return false;
+        }
+
+        @Override
+        public boolean usesPackedLightmap() {
             return false;
         }
     }

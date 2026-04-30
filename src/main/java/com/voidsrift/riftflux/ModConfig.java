@@ -370,6 +370,11 @@ public class ModConfig {
     public static int jaxxMaxHealth;
     public static boolean enableBlackWidowMob;
     public static int blackWidowMaxHealth;
+    public static String[] wamCyclopsDropEntries;
+    public static String[] wamFlowerManDropEntries;
+    public static String[] wamEnderTrollDropEntries;
+    public static String[] wamJaxxDropEntries;
+    public static String[] wamBlackWidowDropEntries;
 
     // OffLawn ports
     public static boolean enableOffLawnModule;
@@ -687,6 +692,29 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "riftflux:charmPendant@3|0.05",
             "riftflux:as_shield_iron_gilded|0.05",
             "minecraft:gunpowder*1-12|1.0"
+    };
+
+    private static final String[] DEFAULT_WAM_CYCLOPS_DROPS = new String[]{
+            "minecraft:beef*1-2|1.0"
+    };
+
+    private static final String[] DEFAULT_WAM_FLOWER_MAN_DROPS = new String[]{
+            "flowerman_flower|1.0"
+    };
+
+    private static final String[] DEFAULT_WAM_ENDER_TROLL_DROPS = new String[]{
+            "minecraft:ender_pearl|0.5",
+            "minecraft:obsidian|0.5"
+    };
+
+    private static final String[] DEFAULT_WAM_JAXX_DROPS = new String[]{
+            "minecraft:pumpkin|0.5",
+            "minecraft:blaze_powder|0.5"
+    };
+
+    private static final String[] DEFAULT_WAM_BLACK_WIDOW_DROPS = new String[]{
+            "minecraft:string*0-2|1.0",
+            "minecraft:spider_eye|0.333"
     };
 
     private static final String[] DEFAULT_PALARIA_NIMATIN_TAME_ITEMS = new String[]{
@@ -4652,6 +4680,37 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 1,
                 2048,
                 "Base max health for Black Widows."
+        );
+        wamCyclopsDropEntries = config.getStringList(
+                "CyclopsDropEntries",
+                "witchesandmore",
+                DEFAULT_WAM_CYCLOPS_DROPS,
+                "Independent Cyclops drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%."
+        );
+        wamFlowerManDropEntries = config.getStringList(
+                "FlowerManDropEntries",
+                "witchesandmore",
+                DEFAULT_WAM_FLOWER_MAN_DROPS,
+                "Independent Flower Man drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%.\n" +
+                        "Use flowerman_flower for the Flower Man's color-specific flower."
+        );
+        wamEnderTrollDropEntries = config.getStringList(
+                "EnderTrollDropEntries",
+                "witchesandmore",
+                DEFAULT_WAM_ENDER_TROLL_DROPS,
+                "Independent Ender Troll drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%."
+        );
+        wamJaxxDropEntries = config.getStringList(
+                "JaxxDropEntries",
+                "witchesandmore",
+                DEFAULT_WAM_JAXX_DROPS,
+                "Independent JAXX drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%."
+        );
+        wamBlackWidowDropEntries = config.getStringList(
+                "BlackWidowDropEntries",
+                "witchesandmore",
+                DEFAULT_WAM_BLACK_WIDOW_DROPS,
+                "Independent Black Widow drop rolls. Syntax: item_or_alias*min-max|chance. Chance accepts 0.05 or 5 for 5%."
         );
 
         enableOffLawnModule = config.getBoolean(

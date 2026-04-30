@@ -6,31 +6,39 @@ import net.minecraft.entity.ai.EntityAIBase;
 
 public class EntityAISootStackUp extends EntityAIBase {
     private final EntitySootSprite sprite;
+    private Entity mountTarget;
+    private int checkCooldown;
 
     public EntityAISootStackUp(EntitySootSprite sprite) {
         this.sprite = sprite;
+        this.checkCooldown = sprite.getRNG().nextInt(20);
         this.setMutexBits(3);
     }
 
     @Override
     public boolean shouldExecute() {
-        if (this.sprite.ticksExisted % 20 != 0
-                || !this.sprite.canStartStacking()
+        if (this.checkCooldown > 0) {
+            --this.checkCooldown;
+            return false;
+        }
+        this.checkCooldown = 20 + this.sprite.getRNG().nextInt(21);
+        if (!this.sprite.canStartStacking()
                 || this.sprite.isRiding()
                 || this.sprite.riddenByEntity != null
                 || this.sprite.motionX * this.sprite.motionX + this.sprite.motionZ * this.sprite.motionZ > 0.01D) {
             return false;
         }
-        return this.findMountTarget() != null;
+        this.mountTarget = this.findMountTarget();
+        return this.mountTarget != null;
     }
 
     @Override
     public void startExecuting() {
-        Entity mountTarget = this.findMountTarget();
-        if (mountTarget != null) {
-            this.sprite.mountEntity(mountTarget);
+        if (this.mountTarget != null) {
+            this.sprite.mountEntity(this.mountTarget);
             this.sprite.beginStackRide();
         }
+        this.mountTarget = null;
     }
 
     private Entity findMountTarget() {

@@ -17,6 +17,7 @@ public class EntityAISootAvoidPlayer extends EntityAIBase {
     private EntityPlayer closestPlayer;
     private PathEntity path;
     private boolean running;
+    private int checkCooldown;
 
     public EntityAISootAvoidPlayer(EntitySootSprite sprite, float avoidDistance, double farSpeed, double nearSpeed) {
         this.sprite = sprite;
@@ -24,6 +25,7 @@ public class EntityAISootAvoidPlayer extends EntityAIBase {
         this.farSpeed = farSpeed;
         this.nearSpeed = nearSpeed;
         this.navigator = sprite.getNavigator();
+        this.checkCooldown = sprite.getRNG().nextInt(8);
         this.setMutexBits(1);
     }
 
@@ -32,6 +34,11 @@ public class EntityAISootAvoidPlayer extends EntityAIBase {
         if (this.sprite.isTamed() || this.sprite.isHiding()) {
             return false;
         }
+        if (this.checkCooldown > 0) {
+            --this.checkCooldown;
+            return false;
+        }
+        this.checkCooldown = 5 + this.sprite.getRNG().nextInt(8);
         this.closestPlayer = this.sprite.worldObj.getClosestPlayerToEntity(this.sprite, this.avoidDistance);
         if (!this.shouldAvoid(this.closestPlayer)) {
             return false;
