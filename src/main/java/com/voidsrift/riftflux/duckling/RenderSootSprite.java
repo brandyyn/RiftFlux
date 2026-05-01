@@ -34,6 +34,7 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
     private static final float FLAT_ITEM_CLOCKWISE_ROLL = -25.0F;
     private static final float FLAT_ITEM_DEPTH = 0.0625F;
+    private static final double CUSTOM_NAME_Y_OFFSET = -0.4D;
     private static final RenderBlocks HELD_BLOCK_RENDERER = new RenderBlocks();
     private static final ResourceLocation ENCHANTED_ITEM_GLINT =
             new ResourceLocation("textures/misc/enchanted_item_glint.png");
@@ -90,8 +91,8 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
     }
 
     private void renderCustomName(Entity entity, double x, double y, double z) {
-        if (entity instanceof EntityLiving && ((EntityLiving) entity).hasCustomNameTag()) {
-            this.func_147906_a(entity, ((EntityLiving) entity).getCustomNameTag(), x, y, z, 64);
+        if (DucklingRenderState.shouldRenderCustomName(entity)) {
+            this.func_147906_a(entity, ((EntityLiving) entity).getCustomNameTag(), x, y + CUSTOM_NAME_Y_OFFSET, z, 64);
         }
     }
 

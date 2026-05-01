@@ -1124,6 +1124,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static String[] billboardTorchRenderingBlacklist;
     public static String[] billboardTorchRenderingWhitelist;
     public static boolean modernTorchRendering;
+    public static boolean betterTorchTexture;
     public static String[] modernTorchRenderingBlacklist;
     public static String[] modernTorchRenderingWhitelist;
     public static boolean asyncWorldSelection;
@@ -1142,6 +1143,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     public static boolean teleportOwnedPetsFromUnloadedChunks;
     public static float teleportOwnedPetsMinimumDistance;
+    public static boolean preventLeadsBreaking;
+    public static boolean preventLeashedMobFallDamage;
 
     public static boolean disableTintedSugarcane;
 
@@ -6443,6 +6446,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, torch-render blocks render with RiftFlux's modern redstone-torch-inspired model unless blocked by ModernTorchRenderingBlacklist."
         );
+        betterTorchTexture = config.getBoolean(
+                "BetterTorchTexture",
+                "client",
+                true,
+                "If true, vanilla torches use RiftFlux's custom torch texture.\n" +
+                        "This is usually only used with ModernTorchRendering turned on as it will make it emulate the style of redstone torches"
+        );
         modernTorchRenderingBlacklist = config.getStringList(
                 "ModernTorchRenderingBlacklist",
                 "client",
@@ -6535,6 +6545,21 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 256.0F,
                 "Minimum distance in blocks before unloaded-chunk pet recovery teleporting is allowed.\n" +
                         "Uses the same default 12 block threshold as vanilla follow-owner teleporting."
+        );
+
+        preventLeadsBreaking = config.getBoolean(
+                "preventLeadsBreaking",
+                "general",
+                true,
+                "If true, loads an early mixin that prevents EntityLiving leash maintenance from automatically breaking leads.\n" +
+                        "Players can still remove leads through normal interaction."
+        );
+
+        preventLeashedMobFallDamage = config.getBoolean(
+                "preventLeashedMobFallDamage",
+                "general",
+                true,
+                "If true, leashed EntityLiving mobs ignore fall damage while attached to a live leash holder."
         );
 
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,

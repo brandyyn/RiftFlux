@@ -111,6 +111,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.invincibleOwnedMobs ) {
             mixins.add("early.MixinEntityLivingBase_PetInvincibility");
         }
+        if (ModConfig.preventLeadsBreaking) {
+            mixins.add("early.MixinEntityLiving_NoLeadBreaking");
+        }
+        if (ModConfig.preventLeashedMobFallDamage) {
+            mixins.add("early.MixinEntityLivingBase_LeashedFallDamage");
+        }
         mixins.add("early.MixinEntityArrow_NoRandomSpread");
         if (ModConfig.enableThornsArmorTweaks) {
             mixins.add("early.MixinEnchantmentThorns_NoExtraDurability");
@@ -283,10 +289,14 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.enableFenceTextureModule) {
                 mixins.add("early.MixinBlockFence_InfdevPlusTexture");
             }
+            mixins.add("early.MixinCreativeTabs_DisabledModuleItems");
             if (ModConfig.directionalCrossedPlantRenderingByPlacement) {
                 mixins.add("early.MixinRenderBlocks_DirectionalCrossedPlants");
             }
             mixins.add("early.MixinRenderBlocks_TorchAllFaces");
+            if (ModConfig.betterTorchTexture) {
+                mixins.add("early.MixinBlock_TorchTextureOverride");
+            }
             if (ModConfig.enableJackOLanternHelmet) {
                 mixins.add("early.MixinGuiIngame_JackOLanternBlur");
             }

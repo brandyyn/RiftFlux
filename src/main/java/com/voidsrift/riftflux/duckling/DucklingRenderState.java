@@ -1,10 +1,12 @@
 package com.voidsrift.riftflux.duckling;
 
 import java.nio.ByteBuffer;
+import java.util.Locale;
 import net.geckominecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -17,7 +19,8 @@ final class DucklingRenderState {
     private static final float LIGHTMAP_TEXTURE_SCALE = 0.00390625F;
     private static final String WDMLA_ROOT = "com.gtnewhorizons.wdmla.";
     private static final String WAILA_ROOT = "mcp.mobius.waila.";
-    private static final ByteBuffer BYTE_BUFFER = BufferUtils.createByteBuffer(4);
+    private static final String DAMAGE_INDICATOR_STACK_TOKEN = "damageindicator";
+    private static final ByteBuffer BYTE_BUFFER = BufferUtils.createByteBuffer(16);
     private static final DucklingLightmapCompat LIGHTMAP_COMPAT = createLightmapCompat();
 
     static final class Snapshot {
@@ -248,6 +251,16 @@ final class DucklingRenderState {
     }
 
     static boolean isTooltipPreviewRender() {
+        return isEntityPreviewRender();
+    }
+
+    static boolean shouldRenderCustomName(Entity entity) {
+        return entity instanceof EntityLiving
+                && ((EntityLiving) entity).hasCustomNameTag()
+                && !isEntityPreviewRender();
+    }
+
+    private static boolean isEntityPreviewRender() {
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
         for (int i = 0; i < stack.length; i++) {
             String className = stack[i].getClassName();
@@ -255,6 +268,9 @@ final class DucklingRenderState {
                 continue;
             }
             if (className.startsWith(WDMLA_ROOT) || className.startsWith(WAILA_ROOT)) {
+                return true;
+            }
+            if (className.toLowerCase(Locale.ROOT).contains(DAMAGE_INDICATOR_STACK_TOKEN)) {
                 return true;
             }
         }

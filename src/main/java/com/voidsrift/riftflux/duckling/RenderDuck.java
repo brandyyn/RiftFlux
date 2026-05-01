@@ -82,7 +82,7 @@ public class RenderDuck extends GeoEntityRenderer<EntityDuck> {
     }
 
     private void renderCustomName(Entity entity, double x, double y, double z) {
-        if (entity instanceof EntityLiving && ((EntityLiving) entity).hasCustomNameTag()) {
+        if (DucklingRenderState.shouldRenderCustomName(entity)) {
             this.func_147906_a(entity, ((EntityLiving) entity).getCustomNameTag(), x, y, z, 64);
         }
     }

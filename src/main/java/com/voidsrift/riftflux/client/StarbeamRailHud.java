@@ -24,6 +24,7 @@ public final class StarbeamRailHud extends Gui {
     private static boolean lastJumpPressed;
     private static final String JUMP_PROMPT = "Jump to launch!";
     private static final int LINE_HEIGHT = 10;
+    private static final int JUMP_DISMOUNT_GRACE_TICKS = 5;
 
     private StarbeamRailHud() {
     }
@@ -102,10 +103,20 @@ public final class StarbeamRailHud extends Gui {
                 && jumpPressed
                 && !lastJumpPressed
                 && RFNetwork.CH != null) {
+            this.startStarbeamLaunchParticles(mc.thePlayer);
             RFNetwork.CH.sendToServer(new MsgStarbeamRailJump(mc.thePlayer.ridingEntity.getEntityId()));
         }
 
         lastJumpPressed = jumpPressed;
+    }
+
+    private void startStarbeamLaunchParticles(EntityPlayer player) {
+        if (player.ridingEntity == null || player.ridingEntity.ticksExisted <= JUMP_DISMOUNT_GRACE_TICKS) {
+            return;
+        }
+
+        player.getEntityData().setBoolean(EntityGrindStar.STARBEAM_LAUNCH_PARTICLES, true);
+        player.getEntityData().setInteger(EntityGrindStar.STARBEAM_LAUNCH_PARTICLE_START, player.ticksExisted);
     }
 
     private String getMountPrompt(Minecraft mc) {
