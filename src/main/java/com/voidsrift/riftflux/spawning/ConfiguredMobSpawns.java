@@ -5,6 +5,7 @@ import com.voidsrift.riftflux.util.ConfigResolver;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.eventhandler.Event;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import java.util.ArrayList;
@@ -19,12 +20,15 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityAmbientCreature;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.util.MathHelper;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.BiomeDictionary;
@@ -90,7 +94,7 @@ public final class ConfiguredMobSpawns {
         MinecraftForge.EVENT_BUS.register(new ConfiguredMobSpawns());
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onCheckSpawn(LivingSpawnEvent.CheckSpawn event) {
         if (event == null
                 || event.entityLiving == null
@@ -99,14 +103,20 @@ public final class ConfiguredMobSpawns {
             return;
         }
 
+        World world = event.entityLiving.worldObj;
+        int x = MathHelper.floor_double(event.x);
+        int y = MathHelper.floor_double(event.entityLiving.boundingBox.minY);
+        int z = MathHelper.floor_double(event.z);
+        if (isHostileMob(event.entityLiving) && isBrightDaylightSurface(world, x, y, z)) {
+            event.setResult(Event.Result.DENY);
+            return;
+        }
+
         RuleSet ruleSet = ACTIVE_RULES.get(event.entityLiving.getClass());
         if (ruleSet == null && WHITELIST_ONLY_BIOME_IDS.isEmpty()) {
             return;
         }
 
-        World world = event.entityLiving.worldObj;
-        int x = MathHelper.floor_double(event.x);
-        int z = MathHelper.floor_double(event.z);
         BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
         int dimension = world.provider == null ? 0 : world.provider.dimensionId;
         boolean whitelistOnlyBiome = biome != null && isWhitelistOnlyBiome(biome.biomeID);
@@ -270,6 +280,21 @@ public final class ConfiguredMobSpawns {
 
     private static boolean isWhitelistOnlyBiome(int biomeId) {
         return biomeId >= 0 && WHITELIST_ONLY_BIOME_IDS.get(biomeId);
+    }
+
+    private static boolean isHostileMob(EntityLivingBase entity) {
+        return entity instanceof IMob || entity instanceof EntityMob;
+    }
+
+    private static boolean isBrightDaylightSurface(World world, int x, int y, int z) {
+        return world != null
+                && world.provider != null
+                && !world.provider.hasNoSky
+                && world.isDaytime()
+                && !world.isRaining()
+                && !world.isThundering()
+                && (world.canBlockSeeTheSky(x, y, z)
+                || world.getSavedLightValue(EnumSkyBlock.Sky, x, y, z) >= 8);
     }
 
     @SuppressWarnings("unchecked")

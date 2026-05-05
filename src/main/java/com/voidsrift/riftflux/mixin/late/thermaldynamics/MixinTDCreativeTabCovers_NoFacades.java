@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.late.thermaldynamics;
 
 import cofh.thermaldynamics.gui.TDCreativeTabCovers;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,6 +15,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinTDCreativeTabCovers_NoFacades {
 
     @Shadow int iconIndex;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void riftflux$removeFacadeCreativeTab(CallbackInfo ci) {
+        int index = ((CreativeTabs) (Object) this).getTabIndex();
+        if (index >= 0 && index < CreativeTabs.creativeTabArray.length
+                && CreativeTabs.creativeTabArray[index] == (Object) this) {
+            CreativeTabs.creativeTabArray[index] = null;
+        }
+    }
 
     @Inject(method = "getIconItemStack()Lnet/minecraft/item/ItemStack;", at = @At("HEAD"), cancellable = true)
     private void riftflux$stableEmptyFacadeTab(CallbackInfoReturnable<ItemStack> cir) {

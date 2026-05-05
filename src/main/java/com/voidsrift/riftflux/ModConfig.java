@@ -1320,7 +1320,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "DisableThermalDynamicsFacades",
                 "general",
                 true,
-                "If true, disables ThermalDynamics facades/covers (recipes, placement, and persisted cover data)."
+                "If true, disables ThermalDynamics facades/covers (creative tab, recipes, placement, and persisted cover data)."
         );
 
         thaumcraftOnlyWarpResearchRequiresMinigame = config.getBoolean(

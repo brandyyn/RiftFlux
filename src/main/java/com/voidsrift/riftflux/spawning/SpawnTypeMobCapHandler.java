@@ -34,6 +34,7 @@ public final class SpawnTypeMobCapHandler {
             return;
         }
         prewarmed = true;
+        CREATURE_TYPE_LOOKUP.clear();
 
         Set<Class<? extends Entity>> entityClasses = collectEntityClasses();
         for (Class<? extends Entity> entityClass : entityClasses) {
@@ -59,12 +60,12 @@ public final class SpawnTypeMobCapHandler {
         if (entityClass.getName().startsWith("net.minecraft.")) {
             return vanillaTypes.isEmpty() ? null : vanillaTypes.get(0);
         }
-        if (vanillaTypes.isEmpty()) {
-            return null;
-        }
 
         EnumCreatureType spawnType = computeSpawnType(entityClass);
-        return spawnType == null ? vanillaTypes.get(0) : spawnType;
+        if (spawnType != null) {
+            return spawnType;
+        }
+        return vanillaTypes.isEmpty() ? null : vanillaTypes.get(0);
     }
 
     private static List<EnumCreatureType> computeVanillaCreatureTypes(Class<? extends Entity> entityClass) {

@@ -16,6 +16,9 @@ public abstract class MixinEntity_SpawnTypeMobCap {
             boolean forSpawnCount,
             CallbackInfoReturnable<Boolean> cir
     ) {
+        if (!forSpawnCount) {
+            return;
+        }
         cir.setReturnValue(SpawnTypeMobCapHandler.isCreatureType((Entity) (Object) this, type));
     }
 }
