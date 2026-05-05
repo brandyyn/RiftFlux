@@ -51,6 +51,8 @@ import net.minecraft.world.WorldServer;
 import net.nmccoy.legendgear.PlayerEventHandler;
 import net.nmccoy.legendgear.entity.EntityFallingStar;
 import net.nmccoy.legendgear.entity.EntityHeart;
+import net.nmccoy.legendgear.legacy.LegendGear;
+import net.nmccoy.legendgear.legacy.entities.EntityBomb;
 
 public class EntityMagicBoomerang
 extends EntityThrowable
@@ -147,8 +149,9 @@ implements IEntityAdditionalSpawnData {
             Material mat = block.getMaterial();
             boolean bl = solid = block.getCollisionBoundingBoxFromPool(this.worldObj, var1.blockX, var1.blockY, var1.blockZ) != null;
             boolean canBreakPlants = (mat == Material.plants || mat == Material.vine) && ModConfig.legendGearMagicBoomerangBreakPlants;
+            boolean canActivateLegacyPlants = ModConfig.legendGearMagicBoomerangActivateLegacyPlants && this.isLegacyBoomerangPlant(block);
             boolean canBreakGlass = mat == Material.glass;
-            if (block.getBlockHardness(this.worldObj, var1.blockX, var1.blockY, var1.blockZ) == 0.0f && (canBreakPlants || canBreakGlass)) {
+            if (block.getBlockHardness(this.worldObj, var1.blockX, var1.blockY, var1.blockZ) == 0.0f && (canBreakPlants || canActivateLegacyPlants || canBreakGlass)) {
                 if (!this.worldObj.isRemote && this.worldObj.func_147480_a(var1.blockX, var1.blockY, var1.blockZ, true)) {
                     block.onBlockDestroyedByPlayer(this.worldObj, var1.blockX, var1.blockY, var1.blockZ, meta);
                     if (block == Blocks.tallgrass && this.owner != null && this.owner instanceof EntityPlayer) {
@@ -212,6 +215,9 @@ implements IEntityAdditionalSpawnData {
             List ents = this.worldObj.getEntitiesWithinAABBExcludingEntity((Entity)this, this.boundingBox.expand(1.0, 1.0, 1.0));
             for (Object o : ents) {
                 Entity e = (Entity)o;
+                if (this.tryMountDefusedBomb(e)) {
+                    break;
+                }
                 if (!(e instanceof EntityItem) && !(e instanceof EntityFallingStar) && !(e instanceof EntityHeart)) continue;
                 e.mountEntity((Entity)this);
                 break;
@@ -243,5 +249,28 @@ implements IEntityAdditionalSpawnData {
 
     protected float getGravityVelocity() {
         return 0.0f;
+    }
+
+    private boolean isLegacyBoomerangPlant(Block block) {
+        return block != null && (block == LegendGear.bombFlower || block == LegendGear.mysticShrub);
+    }
+
+    private boolean tryMountDefusedBomb(Entity entity) {
+        if (!ModConfig.legendGearMagicBoomerangPickupBombFlowerBombs || !(entity instanceof EntityBomb)) {
+            return false;
+        }
+
+        EntityBomb bomb = (EntityBomb) entity;
+        if (bomb.isDead || bomb.ridingEntity != null || bomb.thrower != null || !bomb.onGround || LegendGear.bombItem == null) {
+            return false;
+        }
+
+        EntityItem item = new EntityItem(this.worldObj, bomb.posX, bomb.posY, bomb.posZ, new ItemStack(LegendGear.bombItem));
+        item.delayBeforeCanPickup = 0;
+        bomb.setDead();
+        this.worldObj.spawnEntityInWorld((Entity)item);
+        this.worldObj.playSoundAtEntity((Entity)bomb, "random.fizz", 0.7f, 1.7f);
+        item.mountEntity((Entity)this);
+        return true;
     }
 }

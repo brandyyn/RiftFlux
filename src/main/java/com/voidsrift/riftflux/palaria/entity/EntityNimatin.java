@@ -70,7 +70,7 @@ public class EntityNimatin extends EntityTameable implements IEntitySyncData {
     public EntityNimatin(World world) {
         super(world);
         ignoreFrustumCheck = true;
-        setSize(2.0F, 2.0F);
+        setSize(1.9F, 1.9F);
         getNavigator().setAvoidsWater(true);
         getNavigator().setBreakDoors(true);
         tasks.addTask(0, new EntityAISwimming(this));

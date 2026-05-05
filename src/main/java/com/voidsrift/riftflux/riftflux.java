@@ -29,6 +29,7 @@ import com.voidsrift.riftflux.offlawn.OffLawnContent;
 import com.voidsrift.riftflux.riftexplorer.RiftExplorerContent;
 import com.voidsrift.riftflux.server.CelestialFogEventServerEvents;
 import com.voidsrift.riftflux.spawning.ConfiguredMobSpawns;
+import com.voidsrift.riftflux.spawning.SpawnTypeMobCapHandler;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.vortexContent;
 import com.voidsrift.riftflux.blessings.BlessingContent;
@@ -48,6 +49,7 @@ import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -206,6 +208,13 @@ public class riftflux {
         AxolotlContent.postInit(event);
         GokiStatsContent.postInit(event);
         RiftExplorerContent.postInit(event);
+    }
+
+    @EventHandler
+    public void loadComplete(FMLLoadCompleteEvent event) {
+        if (ModConfig.useSpawnTypeForMobCap) {
+            SpawnTypeMobCapHandler.prewarm();
+        }
     }
 
     @EventHandler

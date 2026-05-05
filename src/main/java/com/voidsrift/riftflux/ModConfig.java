@@ -291,6 +291,7 @@ public class ModConfig {
     public static String[] mobSpawnWhitelist;
     public static String[] mobSpawnBlacklist;
     public static String[] mobSpawnWhitelistOnlyBiomes;
+    public static boolean useSpawnTypeForMobCap;
 
     // Avatar 
     public static boolean gliderDyeRecipes;
@@ -782,6 +783,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "riftflux:emeraldShard*1@1|20",
             "riftflux:itemBomb*3|20"
     };
+    private static final String[] OLD_DEFAULT_LEGACY_MYSTIC_SHRUB_BIOME_BLACKLIST = new String[]{
+            "wheatfield"
+    };
+    private static final String[] DEFAULT_LEGACY_MYSTIC_SHRUB_BIOME_BLACKLIST = new String[]{
+            "wheatfield",
+            "sandy"
+    };
 
     // Axolotl module
     public static boolean enableAxolotlModule;
@@ -895,6 +903,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean legendGearMagicBoomerangInfiniteDurability;
     public static float legendGearMagicBoomerangDamage;
     public static boolean legendGearMagicBoomerangBreakPlants;
+    public static boolean legendGearMagicBoomerangActivateLegacyPlants;
+    public static boolean legendGearMagicBoomerangPickupBombFlowerBombs;
     public static boolean legendGearEnableBadBow;
     public static int legendGearDashRingMaxAirJumps;
     public static boolean legendGearDashRingUseOriginalBehavior;
@@ -2742,6 +2752,16 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         mobSpawnWhitelistOnlyBiomes = sanitizeBiomeNameIdList(mobSpawnWhitelistOnlyBiomes);
         config.getCategory(MOB_SPAWNING_CATEGORY).get("WhitelistOnlyBiomes").set(mobSpawnWhitelistOnlyBiomes);
 
+        useSpawnTypeForMobCap = config.getBoolean(
+                "UseSpawnTypeForMobCap",
+                MOB_SPAWNING_CATEGORY,
+                true,
+                "If true, RiftFlux determines each modded mob's creature type from the biome spawn registry instead of class inheritance when mob caps are checked. "
+                        + "This fixes mobs such as aquatic creatures counting toward the wrong cap. "
+                        + "RiftFlux prewarms the lookup once at load-complete from the final spawn registry, then uses a cached class lookup during play. "
+                        + "Requires restart."
+        );
+
         gliderDyeRecipes = config.getBoolean(
                 "GliderDyeRecipes",
                 "avatar",
@@ -3430,15 +3450,19 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legacyMysticShrubBiomeWhitelist",
                 "legendgear",
                 new String[0],
-                "Biome IDs or names where legacy Mystic Shrubs may generate. Leave empty to allow every Overworld biome unless blacklisted. Entries are resolved once at startup; generation checks numeric biome IDs only. Special token: wheatfield."
+                "Biome IDs, names, or Forge biome dictionary types where legacy Mystic Shrubs may generate. Leave empty to allow every Overworld biome unless blacklisted. Entries are resolved once at startup; generation checks numeric biome IDs only. Special token: wheatfield. Prefixes type: and biometype: are accepted but not required."
         );
 
         legendGearLegacyMysticShrubBiomeBlacklist = config.getStringList(
                 "legacyMysticShrubBiomeBlacklist",
                 "legendgear",
-                new String[]{"wheatfield"},
-                "Biome IDs or names where legacy Mystic Shrubs must not generate. This blacklist takes precedence over the whitelist. Entries are resolved once at startup; generation checks numeric biome IDs only. Special token: wheatfield."
+                DEFAULT_LEGACY_MYSTIC_SHRUB_BIOME_BLACKLIST,
+                "Biome IDs, names, or Forge biome dictionary types where legacy Mystic Shrubs must not generate. This blacklist takes precedence over the whitelist. Entries are resolved once at startup; generation checks numeric biome IDs only. Special token: wheatfield. Prefixes type: and biometype: are accepted but not required."
         );
+        if (Arrays.equals(legendGearLegacyMysticShrubBiomeBlacklist, OLD_DEFAULT_LEGACY_MYSTIC_SHRUB_BIOME_BLACKLIST)) {
+            legendGearLegacyMysticShrubBiomeBlacklist = DEFAULT_LEGACY_MYSTIC_SHRUB_BIOME_BLACKLIST.clone();
+            config.getCategory("legendgear").get("legacyMysticShrubBiomeBlacklist").set(legendGearLegacyMysticShrubBiomeBlacklist);
+        }
 
         legendGearLegacyQuiverMaxCapacity = clampInt(
                 config.getInt(
@@ -3869,6 +3893,20 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legendgear",
                 false,
                 "If true, a thrown Magic Boomerang breaks plant/vine blocks it hits."
+        );
+
+        legendGearMagicBoomerangActivateLegacyPlants = config.getBoolean(
+                "magicBoomerangActivateLegacyPlants",
+                "legendgear",
+                true,
+                "If true, a thrown Magic Boomerang activates LegendGear Bomb Flowers and Mystic Shrubs even when magicBoomerangBreakPlants is false."
+        );
+
+        legendGearMagicBoomerangPickupBombFlowerBombs = config.getBoolean(
+                "magicBoomerangPickupBombFlowerBombs",
+                "legendgear",
+                true,
+                "If true, a thrown Magic Boomerang defuses grounded unowned LegendGear bombs, such as bombs spawned by Bomb Flowers, and carries the bomb item back."
         );
 
         legendGearEnableBadBow = config.getBoolean(
@@ -6321,7 +6359,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         );
 
         pickupNotifyMaxEntries = config.getInt(
-                "PickupNotifierMaxEntries", "general", 50, 1, 200,
+                "PickupNotifierMaxEntries", "general", 25, 1, 200,
                 "Max number of pickup notifications kept on-screen at once."
         );
 

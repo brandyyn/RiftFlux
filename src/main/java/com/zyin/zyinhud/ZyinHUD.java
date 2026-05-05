@@ -1,7 +1,5 @@
 package com.zyin.zyinhud;
 
-import com.zyin.zyinhud.command.CommandFps;
-import com.zyin.zyinhud.command.CommandZyinHUDOptions;
 import com.zyin.zyinhud.mods.HealthMonitor;
 import com.zyin.zyinhud.mods.Miscellaneous;
 import com.zyin.zyinhud.util.ModCompatibility;
@@ -55,9 +53,6 @@ public final class ZyinHUD {
         if (FMLCommonHandler.instance().getSide() != Side.CLIENT) {
             return;
         }
-
-        event.registerServerCommand(new CommandFps());
-        event.registerServerCommand(new CommandZyinHUDOptions());
     }
 
     private static CommonProxy createProxy() {

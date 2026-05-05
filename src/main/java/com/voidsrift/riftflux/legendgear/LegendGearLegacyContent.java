@@ -22,6 +22,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.oredict.OreDictionary;
 import net.nmccoy.legendgear.LegendGear2;
@@ -925,10 +926,7 @@ public final class LegendGearLegacyContent {
 
             String[] tokens = trimmed.split("[,;]+");
             for (String token : tokens) {
-                Integer biomeId = resolveLegacyShrubBiomeId(token);
-                if (biomeId != null) {
-                    resolved.add(biomeId);
-                } else if (token != null && token.trim().length() > 0) {
+                if (!resolveLegacyShrubBiomeToken(token, resolved) && token != null && token.trim().length() > 0) {
                     FMLLog.warning("[RiftFlux] Ignoring unknown legacy Mystic Shrub biome %s entry: %s", listName, token.trim());
                 }
             }
@@ -940,6 +938,30 @@ public final class LegendGearLegacyContent {
             ids[index++] = value.intValue();
         }
         return ids;
+    }
+
+    private static boolean resolveLegacyShrubBiomeToken(String rawToken, Set<Integer> resolved) {
+        if (rawToken == null) {
+            return false;
+        }
+
+        String token = rawToken.trim();
+        if (token.isEmpty()) {
+            return false;
+        }
+
+        String typeToken = stripLegacyShrubBiomeTypePrefix(token);
+        if (typeToken != null) {
+            return addLegacyShrubBiomeTypeIds(typeToken, resolved);
+        }
+
+        Integer biomeId = resolveLegacyShrubBiomeId(token);
+        if (biomeId != null) {
+            resolved.add(biomeId);
+            return true;
+        }
+
+        return addLegacyShrubBiomeTypeIds(token, resolved);
     }
 
     private static Integer resolveLegacyShrubBiomeId(String rawToken) {
@@ -985,6 +1007,59 @@ public final class LegendGearLegacyContent {
             }
         }
         return null;
+    }
+
+    private static String stripLegacyShrubBiomeTypePrefix(String token) {
+        if (token.regionMatches(true, 0, "type:", 0, 5)) {
+            return token.substring(5).trim();
+        }
+        if (token.regionMatches(true, 0, "biometype:", 0, 10)) {
+            return token.substring(10).trim();
+        }
+        if (token.regionMatches(true, 0, "biome_type:", 0, 11)) {
+            return token.substring(11).trim();
+        }
+        return null;
+    }
+
+    private static boolean addLegacyShrubBiomeTypeIds(String rawTypeName, Set<Integer> resolved) {
+        BiomeDictionary.Type type = findLegacyShrubBiomeType(rawTypeName);
+        if (type == null) {
+            return false;
+        }
+
+        boolean matched = false;
+        BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
+        if (biomes == null) {
+            return false;
+        }
+
+        for (BiomeGenBase biome : biomes) {
+            if (biome != null && BiomeDictionary.isBiomeOfType(biome, type)) {
+                resolved.add(Integer.valueOf(biome.biomeID));
+                matched = true;
+            }
+        }
+        return matched;
+    }
+
+    private static BiomeDictionary.Type findLegacyShrubBiomeType(String rawTypeName) {
+        String target = normalizeLegacyShrubBiomeTypeName(rawTypeName);
+        if (target.length() == 0) {
+            return null;
+        }
+
+        BiomeDictionary.Type[] types = BiomeDictionary.Type.values();
+        for (BiomeDictionary.Type type : types) {
+            if (target.equals(normalizeLegacyShrubBiomeTypeName(type.name()))) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    private static String normalizeLegacyShrubBiomeTypeName(String value) {
+        return value == null ? "" : value.toUpperCase(Locale.ROOT).replace(" ", "").replace("_", "").replace("-", "");
     }
 
     private static String normalizeLegacyShrubBiomeName(String value) {

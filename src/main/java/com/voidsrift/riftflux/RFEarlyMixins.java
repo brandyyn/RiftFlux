@@ -105,6 +105,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.strictMobSpawnsZeroBlockLight) {
             mixins.add("early.MixinEntityMob_ZeroBlockLightSpawn");
         }
+        if (ModConfig.useSpawnTypeForMobCap) {
+            mixins.add("early.MixinEntity_SpawnTypeMobCap");
+        }
         if (ModConfig.wrongUseSingleDurability) {
             mixins.add("early.MixinItemStack_WrongUseDurability");
         }
