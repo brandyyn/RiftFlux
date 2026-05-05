@@ -145,10 +145,16 @@ public class riftflux {
         MinecraftForge.EVENT_BUS.register(syncEventHandler);
         FMLCommonHandler.instance().bus().register(syncEventHandler);
         ChatBubbleColorManager.bootstrapServer();
-        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.ChestLaunchEvents());
+        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.util.RFPlantContextEvents());
+        final com.voidsrift.riftflux.server.ChestLaunchEvents chestLaunchEvents =
+                new com.voidsrift.riftflux.server.ChestLaunchEvents();
+        MinecraftForge.EVENT_BUS.register(chestLaunchEvents);
+        FMLCommonHandler.instance().bus().register(chestLaunchEvents);
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.PlayerHurtSoundEventHandler());
         if (Loader.isModLoaded("Thaumcraft")) {
-            MinecraftForge.EVENT_BUS.register(new ThaumcraftWarpSyncCompat());
+            final ThaumcraftWarpSyncCompat thaumcraftWarpSyncCompat = new ThaumcraftWarpSyncCompat();
+            MinecraftForge.EVENT_BUS.register(thaumcraftWarpSyncCompat);
+            FMLCommonHandler.instance().bus().register(thaumcraftWarpSyncCompat);
         }
 
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.tweaks.ladder.FloatingLadderEvents());

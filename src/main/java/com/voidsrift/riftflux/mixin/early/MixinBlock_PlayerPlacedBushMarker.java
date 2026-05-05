@@ -23,6 +23,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Block.class)
 public abstract class MixinBlock_PlayerPlacedBushMarker {
 
+    @Inject(method = "breakBlock", at = @At("HEAD"))
+    private void riftflux$clearTrackedPlantState(World world, int x, int y, int z,
+                                                 Block block, int meta,
+                                                 CallbackInfo ci) {
+        RFPlantContext.clearPlayerPlaced(world, x, y, z);
+    }
+
     @Inject(method = "onBlockPlacedBy", at = @At("HEAD"))
     private void riftflux$markBushPlayerPlaced(World world, int x, int y, int z,
                                                EntityLivingBase placer, ItemStack stack,

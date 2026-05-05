@@ -136,13 +136,29 @@ public class RFPlantContext {
             Set<Long> set = PLAYER_PLACED.get(world);
             if (set != null) {
                 set.remove(key);
+                if (set.isEmpty()) {
+                    PLAYER_PLACED.remove(world);
+                }
             }
         }
         synchronized (CROSSED_PLANT_FACING) {
             Map<Long, Byte> map = CROSSED_PLANT_FACING.get(world);
             if (map != null) {
                 map.remove(key);
+                if (map.isEmpty()) {
+                    CROSSED_PLANT_FACING.remove(world);
+                }
             }
+        }
+    }
+
+    public static void clearWorld(World world) {
+        if (world == null) return;
+        synchronized (PLAYER_PLACED) {
+            PLAYER_PLACED.remove(world);
+        }
+        synchronized (CROSSED_PLANT_FACING) {
+            CROSSED_PLANT_FACING.remove(world);
         }
     }
 }

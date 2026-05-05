@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.server;
 
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,6 +23,14 @@ public final class ChestLaunchEvents {
 
     // Fire once per open (player, windowId) to avoid double impulses
     private final Map<UUID, Integer> lastWinId = new HashMap<UUID, Integer>();
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event == null || event.player == null) {
+            return;
+        }
+        lastWinId.remove(event.player.getUniqueID());
+    }
 
     @SubscribeEvent
     public void onOpen(PlayerOpenContainerEvent e) {

@@ -3350,7 +3350,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         legendGearLegacyClayJarUndergroundGenEnabled = config.getBoolean(
                 "legacyClayJarUndergroundGenEnabled",
                 "legendgear",
-                false,
+                true,
                 "If true, legacy Clay Jars can generate underground on cave floors."
         );
 
