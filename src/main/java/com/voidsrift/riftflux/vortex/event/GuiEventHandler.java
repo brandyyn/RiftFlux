@@ -27,6 +27,8 @@ import java.util.List;
 
 public class GuiEventHandler {
     private static GuiEventHandler primaryInstance;
+    private static final long RESPAWN_CLICK_UI_SUPPRESS_MS = 2000L;
+    private static long suppressRespawnDelayUiUntilMs;
 
     private static boolean isPrimary(GuiEventHandler instance) {
         if (primaryInstance == null) {
@@ -54,6 +56,14 @@ public class GuiEventHandler {
 
     private static boolean isDeathConfirmScreen(GuiScreen gui) {
         return getDeathConfirmParent(gui) != null;
+    }
+
+    private static boolean isReturningFromDeathChat(GuiScreen current, GuiScreen opening) {
+        if (!(current instanceof GuiDeathOverlayChat)) {
+            return false;
+        }
+        GuiScreen background = ((GuiDeathOverlayChat) current).getBackgroundScreen();
+        return background != null && isRespawnScreen(background) && isRespawnScreen(opening);
     }
 
     private static GuiScreen getDeathConfirmParent(GuiScreen gui) {
@@ -86,6 +96,15 @@ public class GuiEventHandler {
         return ClientRespawnDelayState.getRemainingMs();
     }
 
+    private static void suppressRespawnDelayUiAfterClick() {
+        suppressRespawnDelayUiUntilMs = System.currentTimeMillis() + RESPAWN_CLICK_UI_SUPPRESS_MS;
+        ClientRespawnDelayState.clear();
+    }
+
+    private static boolean isRespawnDelayUiSuppressed() {
+        return suppressRespawnDelayUiUntilMs > System.currentTimeMillis();
+    }
+
     private static String translateOrDefault(String key, String fallback) {
         String translated = StatCollector.translateToLocal(key);
         if (translated == null || translated.isEmpty() || key.equals(translated)) {
@@ -103,7 +122,8 @@ public class GuiEventHandler {
         if (buttonList == null) {
             return;
         }
-        boolean locked = getRemainingRespawnMs() > 0L;
+        repairDeathScreenButtonLabels(gui, buttonList);
+        boolean locked = !isRespawnDelayUiSuppressed() && getRemainingRespawnMs() > 0L;
         for (Object obj : buttonList) {
             if (!(obj instanceof GuiButton)) {
                 continue;
@@ -111,6 +131,28 @@ public class GuiEventHandler {
             GuiButton button = (GuiButton) obj;
             if (button.id == lockedButtonId) {
                 button.enabled = !locked;
+            }
+        }
+    }
+
+    private static void repairDeathScreenButtonLabels(GuiScreen gui, List buttonList) {
+        if (!isRespawnScreen(gui)) {
+            return;
+        }
+
+        Minecraft mc = Minecraft.getMinecraft();
+        boolean integrated = mc != null && mc.isIntegratedServerRunning();
+        String fallback = integrated
+                ? translateOrDefault("deathScreen.titleScreen", "Title screen")
+                : translateOrDefault("deathScreen.leaveServer", "Leave server");
+
+        for (Object obj : buttonList) {
+            if (!(obj instanceof GuiButton)) {
+                continue;
+            }
+            GuiButton button = (GuiButton) obj;
+            if (button.id == 1) {
+                button.displayString = fallback;
             }
         }
     }
@@ -136,6 +178,8 @@ public class GuiEventHandler {
         if (isRespawnScreen(event.gui)
                 && player != null
                 && !player.isEntityAlive()
+                && !isRespawnDelayUiSuppressed()
+                && !isReturningFromDeathChat(mc.currentScreen, event.gui)
                 && ClientRespawnDelayState.getRemainingMs() <= 0L
                 && ModConfig.deathRespawnDelaySeconds > 0) {
             ClientRespawnDelayState.applyRemainingMs(Math.max(0L, ModConfig.deathRespawnDelaySeconds) * 1000L);
@@ -170,6 +214,8 @@ public class GuiEventHandler {
         if (lockedButtonId >= 0 && event.button.id == lockedButtonId && getRemainingRespawnMs() > 0L) {
             event.setCanceled(true);
             applyRespawnLockToButtons(event.gui);
+        } else if (isRespawnScreen(event.gui) && event.button.id == 0) {
+            suppressRespawnDelayUiAfterClick();
         }
     }
 
@@ -183,6 +229,7 @@ public class GuiEventHandler {
         ClientRespawnDelayState.cleanupLegacyFiles();
         Minecraft mc = Minecraft.getMinecraft();
         if (mc != null && mc.thePlayer != null && mc.theWorld != null && mc.thePlayer.isEntityAlive()) {
+            suppressRespawnDelayUiUntilMs = 0L;
             ClientRespawnDelayState.clear();
         }
     }
@@ -200,6 +247,10 @@ public class GuiEventHandler {
         }
 
         applyRespawnLockToButtons(respawnBase);
+        if (isRespawnDelayUiSuppressed()) {
+            return;
+        }
+
         long remainingMs = getRemainingRespawnMs();
         if (remainingMs <= 0L) {
             return;

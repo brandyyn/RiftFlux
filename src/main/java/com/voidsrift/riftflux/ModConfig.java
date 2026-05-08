@@ -48,6 +48,20 @@ public class ModConfig {
     };
     private static final String[] DEFAULT_MOB_SPAWN_WHITELIST_ONLY_BIOMES = new String[0];
     private static final Map<String, String> RIFTFLUX_NATURAL_MOB_CONFIG_IDS = buildRiftFluxNaturalMobConfigIds();
+    private static final String[] DEFAULT_JUKEBOX_TRACK_TIMINGS = new String[]{
+            "13=178",
+            "cat=185",
+            "blocks=345",
+            "chirp=185",
+            "far=174",
+            "mall=197",
+            "mellohi=96",
+            "stal=150",
+            "strad=188",
+            "ward=251",
+            "11=71",
+            "wait=238"
+    };
 
     public static Configuration config;
     private static final int VANILLA_POTION_ID_SLOWNESS = 2;
@@ -79,6 +93,23 @@ public class ModConfig {
     public static boolean optimizeChromatiCraftRenderEventFastPaths;
     public static boolean optimizeChromatiCraftCliffsChunkGeneration;
     public static boolean disableChromatiCraftItemFabricator;
+    public static boolean chromatiCraftNetherBedrockBreakableLikeObsidian;
+    public static boolean chromatiCraftNetherStructureShieldBreakableLikeObsidian;
+    public static boolean chromatiCraftNetherStructureHutEnabled;
+    public static boolean chromatiCraftNetherStructureTempleEnabled;
+    public static boolean chromatiCraftNetherStructureMazeEnabled;
+    public static boolean chromatiCraftNetherStructureSpiralEnabled;
+    public static boolean chromatiCraftNetherStructureDioramaEnabled;
+    public static boolean chromatiCraftNetherHolesEnabled;
+    public static boolean chromatiCraftNetherLavaRiversEnabled;
+    public static int chromatiCraftNetherStructureHutY;
+    public static int chromatiCraftNetherStructureTempleY;
+    public static int chromatiCraftNetherStructureMazeY;
+    public static int chromatiCraftNetherStructureSpiralY;
+    public static int chromatiCraftNetherStructureDioramaY;
+    public static int chromatiCraftNetherHolesY;
+    public static int chromatiCraftNetherLavaRiverMinY;
+    public static int chromatiCraftNetherLavaRiverMaxY;
     public static boolean disableThermalDynamicsFacades;
     public static boolean fixChocolateQuestDivideByZero;
     public static boolean hideChocolateQuestGeneratingStructureOverlay;
@@ -146,6 +177,11 @@ public class ModConfig {
     public static int initialVillageGolems;
 
     public static boolean disableSleepRainClear;
+    public static boolean jukeboxAutoLoopEnabled;
+    public static int jukeboxLoopDelaySeconds;
+    public static int jukeboxUnknownTrackLoopAfterSeconds;
+    public static String[] jukeboxTrackTimings;
+    public static boolean jukeboxRedstoneRestartEnabled;
 
     public static boolean enableBedChill;
 
@@ -425,6 +461,7 @@ public class ModConfig {
     public static boolean enableRiftExplorerModule;
     public static boolean enableMoreBowsModule;
     public static boolean riftExplorerEnablePebbleRecipes;
+    public static boolean riftExplorerPebblesDropFromGrass;
 public static String[] riftExplorerSlingshotAmmoItems;
 public static boolean riftExplorerSlingshotEnableOreDictionaryAmmo;
 public static String[] riftExplorerSlingshotAmmoOreDictionary;
@@ -769,10 +806,17 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "riftflux:star_candy"
     };
 
+    private static final String[] OLD_DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES = new String[]{
+            "heartPickup*1|0.2",
+            "emeraldShard*1|0.2",
+            "minecraft:arrow*1|0.2",
+            "riftflux:star_candy*1|0.01"
+    };
     private static final String[] DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES = new String[]{
             "heartPickup*1|0.2",
             "emeraldShard*1|0.2",
             "minecraft:arrow*1|0.2",
+            "pebble*1|0.2",
             "riftflux:star_candy*1|0.01"
     };
 
@@ -853,6 +897,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int legendGearLegacyMysticShrubRarity;
     public static String[] legendGearLegacyMysticShrubBiomeWhitelist;
     public static String[] legendGearLegacyMysticShrubBiomeBlacklist;
+    public static int[] legendGearLegacyMysticShrubDimensionWhitelist;
+    public static int[] legendGearLegacyBombFlowerDimensionWhitelist;
     public static int legendGearLegacyQuiverMaxCapacity;
     public static boolean legendGearLegacyAllowCandy;
     public static boolean legendGearLegacyBombsAllowed;
@@ -1316,6 +1362,73 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, prevents ChromatiCraft from registering the Item Fabricator casting recipe and its NEI recipe handler. Requires restart."
         );
 
+        chromatiCraftNetherBedrockBreakableLikeObsidian = config.getBoolean(
+                "NetherBedrockBreakableLikeObsidian",
+                "chromaticraft",
+                true,
+                "If true, vanilla bedrock has obsidian hardness in the Nether only. Other dimensions remain unbreakable. Requires restart."
+        );
+
+        chromatiCraftNetherStructureShieldBreakableLikeObsidian = config.getBoolean(
+                "NetherStructureShieldBreakableLikeObsidian",
+                "chromaticraft",
+                true,
+                "If true, ChromatiCraft structure shielding stone has obsidian hardness and is not treated as unbreakable in the Nether only. Requires restart."
+        );
+
+        chromatiCraftNetherStructureHutEnabled = getChromatiCraftNetherStructureEnabled("Hut", true);
+        chromatiCraftNetherStructureTempleEnabled = getChromatiCraftNetherStructureEnabled("Temple", true);
+        chromatiCraftNetherStructureMazeEnabled = getChromatiCraftNetherStructureEnabled("Maze", true);
+        chromatiCraftNetherStructureSpiralEnabled = getChromatiCraftNetherStructureEnabled("Spiral", true);
+        chromatiCraftNetherStructureDioramaEnabled = getChromatiCraftNetherStructureEnabled("Diorama", true);
+        chromatiCraftNetherHolesEnabled = config.getBoolean(
+                "NetherHolesEnabled",
+                "chromaticraft",
+                true,
+                "If false, disables ChromatiCraft's Nether roof holes with kill/hurt/push gate zones. Requires restart."
+        );
+        chromatiCraftNetherLavaRiversEnabled = config.getBoolean(
+                "NetherLavaRiversEnabled",
+                "chromaticraft",
+                true,
+                "If false, disables ChromatiCraft's floating lava/liquid rivers above the Nether roof. Requires restart."
+        );
+
+        chromatiCraftNetherStructureHutY = getChromatiCraftNetherStructureY("Hut", 128);
+        chromatiCraftNetherStructureTempleY = getChromatiCraftNetherStructureY("Temple", 128);
+        chromatiCraftNetherStructureMazeY = getChromatiCraftNetherStructureY("Maze", 128);
+        chromatiCraftNetherStructureSpiralY = getChromatiCraftNetherStructureY("Spiral", 128);
+        chromatiCraftNetherStructureDioramaY = getChromatiCraftNetherStructureY("Diorama", 128);
+        chromatiCraftNetherHolesY = config.getInt(
+                "NetherHolesY",
+                "chromaticraft",
+                127,
+                1,
+                254,
+                "Base Y level for ChromatiCraft's Nether roof holes with kill/hurt/push gate zones. The top bedrock cap is placed one block above this. Requires restart."
+        );
+        chromatiCraftNetherLavaRiverMinY = config.getInt(
+                "NetherLavaRiverMinY",
+                "chromaticraft",
+                127,
+                1,
+                255,
+                "Minimum Y level for ChromatiCraft's floating lava/liquid rivers above the Nether roof. Requires restart."
+        );
+        chromatiCraftNetherLavaRiverMaxY = config.getInt(
+                "NetherLavaRiverMaxY",
+                "chromaticraft",
+                240,
+                1,
+                255,
+                "Maximum Y level for ChromatiCraft's floating lava/liquid rivers above the Nether roof. Requires restart."
+        );
+        if (chromatiCraftNetherLavaRiverMinY > chromatiCraftNetherLavaRiverMaxY) {
+            int swap = chromatiCraftNetherLavaRiverMinY;
+            chromatiCraftNetherLavaRiverMinY = chromatiCraftNetherLavaRiverMaxY;
+            chromatiCraftNetherLavaRiverMaxY = swap;
+        }
+
         disableThermalDynamicsFacades = config.getBoolean(
                 "DisableThermalDynamicsFacades",
                 "general",
@@ -1499,6 +1612,36 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         disableSleepRainClear = config.getBoolean(
                 "DisableSleepRainClear", "general", true,
                 "If true, sleeping no longer clears rain or thunder."
+        );
+
+        jukeboxAutoLoopEnabled = config.getBoolean(
+                "JukeboxAutoLoopEnabled", "general", true,
+                "If true, jukeboxes automatically replay the inserted disc after it finishes."
+        );
+
+        jukeboxLoopDelaySeconds = config.getInt(
+                "JukeboxLoopDelaySeconds", "general", 5, 0, 3600,
+                "Generic seconds to wait after a known/configured disc finishes before a looping jukebox starts it again."
+        );
+
+        jukeboxUnknownTrackLoopAfterSeconds = config.getInt(
+                "JukeboxUnknownTrackLoopAfterSeconds", "general", 150, 1, 7200,
+                "Total seconds after playback starts before replaying records not listed in JukeboxTrackTimings."
+        );
+
+        jukeboxTrackTimings = config.getStringList(
+                "JukeboxTrackTimings",
+                "general",
+                DEFAULT_JUKEBOX_TRACK_TIMINGS,
+                "Known jukebox track timings. Format: name=lengthSeconds or name=lengthSeconds,loopDelaySeconds.\n" +
+                        "Name can be an ItemRecord recordName such as cat, an item registry name such as minecraft:record_cat, or a modded item name.\n" +
+                        "Durations also accept mm:ss, for example minecraft:record_cat=3:05,5.\n" +
+                        "Entries here override built-in vanilla timings and can provide per-track loop delays."
+        );
+
+        jukeboxRedstoneRestartEnabled = config.getBoolean(
+                "JukeboxRedstoneRestartEnabled", "general", true,
+                "If true, a rising redstone signal restarts an inserted jukebox disc from the beginning."
         );
 
         enableBedChill = config.getBoolean(
@@ -3408,6 +3551,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                         "Chance accepts 0.05 or 5 for 5%.\n" +
                         "Examples: riftflux:heartPickup*1|20  or  minecraft:arrow*1-3|0.5."
         );
+        if (Arrays.equals(legendGearLegacyMysticShrubDropEntries, OLD_DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES)) {
+            legendGearLegacyMysticShrubDropEntries = DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES.clone();
+            config.getCategory("legendgear").get("legacyMysticShrubDropEntries").set(legendGearLegacyMysticShrubDropEntries);
+        }
 
         legendGearLegacyMysticShrubChargedPrizeEntries = config.getStringList(
                 "legacyMysticShrubChargedPrizeEntries",
@@ -3463,6 +3610,20 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             legendGearLegacyMysticShrubBiomeBlacklist = DEFAULT_LEGACY_MYSTIC_SHRUB_BIOME_BLACKLIST.clone();
             config.getCategory("legendgear").get("legacyMysticShrubBiomeBlacklist").set(legendGearLegacyMysticShrubBiomeBlacklist);
         }
+
+        legendGearLegacyMysticShrubDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "legacyMysticShrubDimensionWhitelist",
+                "legendgear",
+                new String[]{"0", "7"},
+                "Dimension IDs where legacy Mystic Shrubs may generate. Default: 0 and 7."
+        ));
+
+        legendGearLegacyBombFlowerDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "legacyBombFlowerDimensionWhitelist",
+                "legendgear",
+                new String[]{"0", "-1"},
+                "Dimension IDs where legacy Bomb Flowers may generate. Default: 0 and -1."
+        ));
 
         legendGearLegacyQuiverMaxCapacity = clampInt(
                 config.getInt(
@@ -4979,6 +5140,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "riftexplorer",
                 true,
                 "If true, enables pebble to cobblestone and cobblestone to pebble conversion recipes."
+        );
+        riftExplorerPebblesDropFromGrass = config.getBoolean(
+                "PebblesDropFromGrass",
+                "riftexplorer",
+                true,
+                "If true, Rift Explorer pebbles can drop when tall grass is broken."
         );
         riftExplorerSlingshotAmmoItems = config.getStringList(
                 "SlingshotAmmoItems",
@@ -7910,6 +8077,70 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     private static int getLegendGearPotionId(String key, int defaultId, String comment) {
         return config.getInt(key, "legendgear", defaultId, 0, 255, comment);
+    }
+
+    private static boolean getChromatiCraftNetherStructureEnabled(String structureName, boolean defaultValue) {
+        return config.getBoolean(
+                "NetherStructure" + structureName + "Enabled",
+                "chromaticraft",
+                defaultValue,
+                "If false, ChromatiCraft will not generate the " + structureName + " Nether structure. Requires restart."
+        );
+    }
+
+    private static int getChromatiCraftNetherStructureY(String structureName, int defaultValue) {
+        return config.getInt(
+                "NetherStructure" + structureName + "Y",
+                "chromaticraft",
+                defaultValue,
+                1,
+                255,
+                "Y level used when ChromatiCraft generates the " + structureName + " Nether structure. Requires restart."
+        );
+    }
+
+    public static boolean isChromatiCraftNetherStructureEnabled(String structureName) {
+        String key = normalizeConfigName(structureName);
+        if ("hut".equals(key)) return chromatiCraftNetherStructureHutEnabled;
+        if ("temple".equals(key)) return chromatiCraftNetherStructureTempleEnabled;
+        if ("maze".equals(key)) return chromatiCraftNetherStructureMazeEnabled;
+        if ("spiral".equals(key)) return chromatiCraftNetherStructureSpiralEnabled;
+        if ("diorama".equals(key)) return chromatiCraftNetherStructureDioramaEnabled;
+        return true;
+    }
+
+    public static int getChromatiCraftNetherStructureYLevel(String structureName) {
+        String key = normalizeConfigName(structureName);
+        if ("hut".equals(key)) return chromatiCraftNetherStructureHutY;
+        if ("temple".equals(key)) return chromatiCraftNetherStructureTempleY;
+        if ("maze".equals(key)) return chromatiCraftNetherStructureMazeY;
+        if ("spiral".equals(key)) return chromatiCraftNetherStructureSpiralY;
+        if ("diorama".equals(key)) return chromatiCraftNetherStructureDioramaY;
+        return 128;
+    }
+
+    public static boolean isLegendGearMysticShrubDimensionAllowed(int dimensionId) {
+        return containsInt(legendGearLegacyMysticShrubDimensionWhitelist, dimensionId);
+    }
+
+    public static boolean isLegendGearBombFlowerDimensionAllowed(int dimensionId) {
+        return containsInt(legendGearLegacyBombFlowerDimensionWhitelist, dimensionId);
+    }
+
+    private static boolean containsInt(int[] values, int needle) {
+        if (values == null) {
+            return false;
+        }
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == needle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String normalizeConfigName(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
     }
 
 }

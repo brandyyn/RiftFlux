@@ -73,6 +73,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.disableSleepRainClear) {
             mixins.add("early.DisableSleepRainClear");
         }
+        if (ModConfig.jukeboxAutoLoopEnabled || ModConfig.jukeboxRedstoneRestartEnabled) {
+            mixins.add("early.MixinTileEntityJukebox_LoopState");
+        }
+        if (ModConfig.jukeboxRedstoneRestartEnabled) {
+            mixins.add("early.MixinBlockJukebox_RedstoneRestart");
+        }
         if (ModConfig.enableFullExplosionDrops) {
             mixins.add("early.MixinTNT");
         }
@@ -129,6 +135,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableMeleeDamageTooltip) {
             mixins.add("early.MixinTooltip");
         }
+        if (ModConfig.chromatiCraftNetherBedrockBreakableLikeObsidian) {
+            mixins.add("early.MixinBlock_NetherBedrockHardness");
+        }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             if (ModConfig.fixUnderwaterMobDarkening) {
                 mixins.add("early.MixinEntity_RiftFluxUnderwaterBrightness");
@@ -167,6 +176,19 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (hasClass("Reika.ChromatiCraft.World.IWG.CaveIndicatorGenerator")) {
                 mixins.add("early.chromaticraft.MixinCaveIndicatorGenerator_SkipIrrelevantChunks");
             }
+        }
+        if (hasClass("Reika.ChromatiCraft.Block.Worldgen.BlockStructureShield")
+                && ModConfig.chromatiCraftNetherStructureShieldBreakableLikeObsidian) {
+            mixins.add("early.chromaticraft.MixinBlockStructureShield_NetherBreakable");
+        }
+        if (hasClass("Reika.ChromatiCraft.World.Nether.NetherStructures")) {
+            mixins.add("early.chromaticraft.MixinNetherStructures_Configurable");
+        }
+        if (hasClass("Reika.ChromatiCraft.World.Nether.NetherStructureGenerator")) {
+            mixins.add("early.chromaticraft.MixinNetherStructureGenerator_HolesConfig");
+        }
+        if (hasClass("Reika.ChromatiCraft.World.Nether.LavaRiverGenerator")) {
+            mixins.add("early.chromaticraft.MixinLavaRiverGenerator_Configurable");
         }
         if (ModConfig.enableWheatfieldBiome) {
             mixins.add("early.MixinWorldGenLakes_SkipWheatfield");
@@ -488,6 +510,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.vortex.MixinGuiInventory");
             mixins.add("early.vortex.MixinGuiScreen");
             mixins.add("early.vortex.MixinItemRenderer");
+            mixins.add("early.vortex.MixinModelRendererArmoredArmsGlint");
             if (hasClass("ItemRendererOF")) {
                 mixins.add("early.vortex.MixinItemRendererOF");
             }

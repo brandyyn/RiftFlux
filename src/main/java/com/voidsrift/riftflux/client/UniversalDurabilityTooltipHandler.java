@@ -2,7 +2,9 @@ package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
@@ -22,6 +24,10 @@ public class UniversalDurabilityTooltipHandler {
 
         ItemStack stack = event.itemStack;
         if (stack == null || stack.getItem() == null) {
+            return;
+        }
+
+        if (isTConstructItem(stack)) {
             return;
         }
 
@@ -53,5 +59,22 @@ public class UniversalDurabilityTooltipHandler {
             return "";
         }
         return text.replaceAll("\u00A7[0-9A-FK-ORa-fk-or]", "");
+    }
+
+    private static boolean isTConstructItem(ItemStack stack) {
+        Item item = stack.getItem();
+        if (item == null) {
+            return false;
+        }
+
+        for (Class<?> cls = item.getClass(); cls != null; cls = cls.getSuperclass()) {
+            String className = cls.getName();
+            if (className != null && className.startsWith("tconstruct.")) {
+                return true;
+            }
+        }
+
+        NBTTagCompound tag = stack.getTagCompound();
+        return tag != null && tag.hasKey("InfiTool");
     }
 }

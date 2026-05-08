@@ -129,6 +129,11 @@ public class RFLateMixins implements ILateMixinLoader {
         }
 
         // vortex mixins
+        if (hasAnyMod(loadedMods, "armoredarms", "ArmoredArms") && FMLLaunchHandler.side() == Side.CLIENT) {
+            mixins.add("late.vortex.MixinArmoredArmsItemGlint");
+            mixins.add("late.vortex.MixinArmoredArmsArmorGlintTexture");
+            mixins.add("late.vortex.MixinArmoredArmsArmorModelManager");
+        }
         if (loadedMods.contains("Thaumcraft")) {
             mixins.add("late.vortex.MixinInfusionEnchantmentRecipe");
             mixins.add("late.thaumcraft.MixinThaumcraft_WarpSyncSafeLogin");

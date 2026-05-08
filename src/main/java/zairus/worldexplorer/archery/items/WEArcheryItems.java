@@ -1,5 +1,6 @@
 package zairus.worldexplorer.archery.items;
 
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -60,7 +61,7 @@ public class WEArcheryItems {
         ChestGenHooks.addItem("dungeonChest", new WeightedRandomChestContent(new ItemStack(boomerang), 1, 1, 2));
         ChestGenHooks.addItem("strongholdCorridor", new WeightedRandomChestContent(new ItemStack(boomerang), 1, 1, 2));
 
-        if (SlingshotAmmoHelper.isPebbleAllowed()) {
+        if (ModConfig.riftExplorerPebblesDropFromGrass && SlingshotAmmoHelper.isPebbleAllowed()) {
             MinecraftForge.addGrassSeed(new ItemStack(pebble), 4);
         }
         MinecraftForge.addGrassSeed(new ItemStack(Items.stick), 4);

@@ -1,7 +1,9 @@
 package com.voidsrift.riftflux.client;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
@@ -24,7 +26,7 @@ public class RiftExplorerDurabilityTooltipHandler {
             return;
         }
 
-        if (!isRiftExplorerItem(stack)) {
+        if (!isRiftExplorerItem(stack) || isTConstructItem(stack)) {
             return;
         }
 
@@ -54,6 +56,23 @@ public class RiftExplorerDurabilityTooltipHandler {
     private static boolean isRiftExplorerItem(ItemStack stack) {
         String className = stack.getItem().getClass().getName();
         return className.startsWith("zairus.worldexplorer.");
+    }
+
+    private static boolean isTConstructItem(ItemStack stack) {
+        Item item = stack.getItem();
+        if (item == null) {
+            return false;
+        }
+
+        for (Class<?> cls = item.getClass(); cls != null; cls = cls.getSuperclass()) {
+            String className = cls.getName();
+            if (className != null && className.startsWith("tconstruct.")) {
+                return true;
+            }
+        }
+
+        NBTTagCompound tag = stack.getTagCompound();
+        return tag != null && tag.hasKey("InfiTool");
     }
 
     private static String stripFormatting(String text) {
