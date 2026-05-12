@@ -150,6 +150,7 @@ public class GliderEvents {
         }
         GliderState.removeGlidingPlayerName(playerName, !serverSide);
         ItemGlider.clearLastToggle(playerName);
+        this.forgetGliderSaveFile(player);
     }
 
     @SubscribeEvent
@@ -157,7 +158,6 @@ public class GliderEvents {
         if (event == null || event.entityPlayer == null) {
             return;
         }
-        this.rememberGliderSaveFile(event.playerUUID, event.getPlayerFile(GLIDER_SAVE_SUFFIX));
         boolean restoreGliding = this.shouldRestoreGliding(event.entityPlayer);
         this.writeGliderSave(event.getPlayerFile(GLIDER_SAVE_SUFFIX), restoreGliding);
     }
@@ -275,6 +275,13 @@ public class GliderEvents {
         String normalizedId = this.normalizePlayerId(playerId);
         if (normalizedId != null && file != null) {
             GLIDER_SAVE_FILES.put(normalizedId, file);
+        }
+    }
+
+    private void forgetGliderSaveFile(EntityPlayer player) {
+        String playerId = this.normalizePlayerId(this.playerId(player));
+        if (playerId != null) {
+            GLIDER_SAVE_FILES.remove(playerId);
         }
     }
 

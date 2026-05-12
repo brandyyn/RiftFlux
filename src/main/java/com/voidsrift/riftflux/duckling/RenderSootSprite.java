@@ -28,6 +28,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
+import software.bernie.geckolib3.geo.render.built.GeoCube;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
@@ -38,8 +39,11 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
     private static final RenderBlocks HELD_BLOCK_RENDERER = new RenderBlocks();
     private static final ResourceLocation ENCHANTED_ITEM_GLINT =
             new ResourceLocation("textures/misc/enchanted_item_glint.png");
+    private static final boolean RIFTFLUX_HAS_BEDDIUM =
+            hasClass("com.ventooth.beddium.modules.TerrainRendering.CeleritasWorldRenderer");
 
     private final ModelSootSprite sootModel;
+    private int riftflux$currentBeddiumBrightness = -1;
 
     public RenderSootSprite() {
         this(new ModelSootSprite());
@@ -71,6 +75,9 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
         DucklingRenderState.pushRenderClientAttribs();
         DucklingRenderState.pushRenderMatrices();
         DucklingRenderState.prepareForEntityRender(entity, partialTicks);
+        this.riftflux$currentBeddiumBrightness = RIFTFLUX_HAS_BEDDIUM && entity != null
+                ? DucklingRenderState.resolveEntityBrightness(entity, partialTicks)
+                : -1;
         try {
             super.doRender(entity, x, y, z, yaw, partialTicks);
             if (entity instanceof EntityLiving) {
@@ -82,7 +89,16 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             DucklingRenderState.popRenderClientAttribs();
             DucklingRenderState.popRenderAttribs();
             DucklingRenderState.restoreAfterRender(snapshot);
+            this.riftflux$currentBeddiumBrightness = -1;
         }
+    }
+
+    @Override
+    public void renderCube(Tessellator tessellator, GeoCube cube, float red, float green, float blue, float alpha) {
+        if (this.riftflux$currentBeddiumBrightness >= 0) {
+            tessellator.setBrightness(this.riftflux$currentBeddiumBrightness);
+        }
+        super.renderCube(tessellator, cube, red, green, blue, alpha);
     }
 
     @Override
@@ -157,12 +173,15 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             DucklingRenderState.prepareTexturedLightmap(itemBrightnessX, itemBrightnessY);
             DucklingRenderState.prepareForRender();
             RenderHelper.enableStandardItemLighting();
-            if (blockModel) {
-                this.renderHeldBlockItem(sprite, held, brightness, partialTicks);
-            } else {
-                this.renderFlatHeldItem(sprite, held, brightness, partialTicks);
+            try {
+                if (blockModel) {
+                    this.renderHeldBlockItem(sprite, held, brightness, partialTicks);
+                } else {
+                    this.renderFlatHeldItem(sprite, held, brightness, partialTicks);
+                }
+            } finally {
+                RenderHelper.disableStandardItemLighting();
             }
-            RenderHelper.disableStandardItemLighting();
         } finally {
             DucklingRenderState.popRenderMatrices();
             DucklingRenderState.popRenderClientAttribs();
@@ -383,38 +402,42 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
                 : 1;
 
         GL11.glPushMatrix();
-        GL11.glTranslatef(-0.5F, -0.5F, 0.0F);
-        for (int pass = 0; pass < passes; pass++) {
-            IIcon icon = this.resolveFlatItemIcon(sprite, held, pass);
-            if (icon == null) {
-                continue;
+        try {
+            GL11.glTranslatef(-0.5F, -0.5F, 0.0F);
+            for (int pass = 0; pass < passes; pass++) {
+                IIcon icon = this.resolveFlatItemIcon(sprite, held, pass);
+                if (icon == null) {
+                    continue;
+                }
+
+                int color = held.getItem().getColorFromItemStack(held, pass);
+                float red = (float) (color >> 16 & 255) / 255.0F * sceneBrightness;
+                float green = (float) (color >> 8 & 255) / 255.0F * sceneBrightness;
+                float blue = (float) (color & 255) / 255.0F * sceneBrightness;
+                GL11.glColor4f(red, green, blue, 1.0F);
+                this.renderFlatHeldItemIn2D(
+                        tessellator,
+                        icon.getMaxU(),
+                        icon.getMinV(),
+                        icon.getMinU(),
+                        icon.getMaxV(),
+                        icon.getIconWidth(),
+                        icon.getIconHeight(),
+                        FLAT_ITEM_DEPTH,
+                        brightness
+                );
             }
 
-            int color = held.getItem().getColorFromItemStack(held, pass);
-            float red = (float) (color >> 16 & 255) / 255.0F * sceneBrightness;
-            float green = (float) (color >> 8 & 255) / 255.0F * sceneBrightness;
-            float blue = (float) (color & 255) / 255.0F * sceneBrightness;
-            GL11.glColor4f(red, green, blue, 1.0F);
-            this.renderFlatHeldItemIn2D(
-                    tessellator,
-                    icon.getMaxU(),
-                    icon.getMinV(),
-                    icon.getMinU(),
-                    icon.getMaxV(),
-                    icon.getIconWidth(),
-                    icon.getIconHeight(),
-                    FLAT_ITEM_DEPTH,
-                    brightness
-            );
+            if (held.hasEffect(0)) {
+                this.renderFlatHeldItemGlint(textureManager, tessellator);
+            }
+        } finally {
+            GL11.glPopMatrix();
+            TextureUtil.func_147945_b();
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glDepthFunc(GL11.GL_LEQUAL);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         }
-
-        if (held.hasEffect(0)) {
-            this.renderFlatHeldItemGlint(textureManager, tessellator);
-        }
-
-        GL11.glPopMatrix();
-        TextureUtil.func_147945_b();
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private IIcon resolveFlatItemIcon(EntitySootSprite sprite, ItemStack held, int pass) {
@@ -548,5 +571,14 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             bone = bone.parent;
         }
         return path.toArray(new GeoBone[path.size()]);
+    }
+
+    private static boolean hasClass(String className) {
+        try {
+            ClassLoader loader = RenderSootSprite.class.getClassLoader();
+            return loader.getResource(className.replace('.', '/') + ".class") != null;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }

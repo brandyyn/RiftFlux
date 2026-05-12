@@ -26,8 +26,9 @@ public final class ChatBubbleColorManager {
     private static final String NBT_COLOR = "RiftFluxChatBubbleColor";
     private static final String NBT_HAS_TEXT_COLOR = "RiftFluxChatBubbleTextColorSet";
     private static final String NBT_TEXT_COLOR = "RiftFluxChatBubbleTextColor";
-    private static final Map<String, Integer> CLIENT_COLORS = new HashMap<String, Integer>();
-    private static final Map<String, Integer> CLIENT_TEXT_COLORS = new HashMap<String, Integer>();
+    private static final Map<UUID, Integer> CLIENT_COLORS = new HashMap<UUID, Integer>();
+    private static final Map<UUID, Integer> CLIENT_TEXT_COLORS = new HashMap<UUID, Integer>();
+    private static final Map<UUID, Integer> CLIENT_UUID_COLORS = new HashMap<UUID, Integer>();
     private static final ServerEvents SERVER_EVENTS = new ServerEvents();
 
     private static boolean serverEventsRegistered;
@@ -61,7 +62,7 @@ public final class ChatBubbleColorManager {
         if (localPlayer) {
             return LOCAL_DEFAULT_COLOR;
         }
-        return uuidColor(uuid, player.getCommandSenderName());
+        return cachedUuidColor(uuid, player.getCommandSenderName());
     }
 
     public static int resolveRenderTextColor(EntityPlayer player, boolean localPlayer) {
@@ -79,7 +80,7 @@ public final class ChatBubbleColorManager {
         }
 
         if (ModConfig.chatBubblesRandomizeTextColorByUuid) {
-            return uuidColor(uuid, player.getCommandSenderName());
+            return cachedUuidColor(uuid, player.getCommandSenderName());
         }
         return TEXT_DEFAULT_COLOR;
     }
@@ -87,16 +88,18 @@ public final class ChatBubbleColorManager {
     public static void clearClientColors() {
         CLIENT_COLORS.clear();
         CLIENT_TEXT_COLORS.clear();
+        CLIENT_UUID_COLORS.clear();
     }
 
     public static void applyClientColor(String uuid, boolean hasColor, int color) {
-        if (uuid == null || uuid.trim().isEmpty()) {
+        UUID parsedUuid = parseUuid(uuid);
+        if (parsedUuid == null) {
             return;
         }
         if (hasColor) {
-            CLIENT_COLORS.put(uuid, color & 0xFFFFFF);
+            CLIENT_COLORS.put(parsedUuid, color & 0xFFFFFF);
         } else {
-            CLIENT_COLORS.remove(uuid);
+            CLIENT_COLORS.remove(parsedUuid);
         }
     }
 
@@ -104,17 +107,18 @@ public final class ChatBubbleColorManager {
         if (uuid == null) {
             return null;
         }
-        return CLIENT_COLORS.get(uuid.toString());
+        return CLIENT_COLORS.get(uuid);
     }
 
     public static void applyClientTextColor(String uuid, boolean hasColor, int color) {
-        if (uuid == null || uuid.trim().isEmpty()) {
+        UUID parsedUuid = parseUuid(uuid);
+        if (parsedUuid == null) {
             return;
         }
         if (hasColor) {
-            CLIENT_TEXT_COLORS.put(uuid, color & 0xFFFFFF);
+            CLIENT_TEXT_COLORS.put(parsedUuid, color & 0xFFFFFF);
         } else {
-            CLIENT_TEXT_COLORS.remove(uuid);
+            CLIENT_TEXT_COLORS.remove(parsedUuid);
         }
     }
 
@@ -122,7 +126,7 @@ public final class ChatBubbleColorManager {
         if (uuid == null) {
             return null;
         }
-        return CLIENT_TEXT_COLORS.get(uuid.toString());
+        return CLIENT_TEXT_COLORS.get(uuid);
     }
 
     public static Integer getServerColor(EntityPlayer player) {
@@ -237,6 +241,33 @@ public final class ChatBubbleColorManager {
                 RFNetwork.CH.sendTo(new MsgSyncChatBubbleTextColor(uuid.toString(), true, textColor.intValue()), target);
             }
         }
+    }
+
+    private static UUID parseUuid(String uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        String value = uuid.trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static int cachedUuidColor(UUID uuid, String fallbackName) {
+        if (uuid == null) {
+            return uuidColor(null, fallbackName);
+        }
+        Integer cached = CLIENT_UUID_COLORS.get(uuid);
+        if (cached == null) {
+            cached = Integer.valueOf(uuidColor(uuid, fallbackName));
+            CLIENT_UUID_COLORS.put(uuid, cached);
+        }
+        return cached.intValue();
     }
 
     private static int uuidColor(UUID uuid, String fallbackName) {

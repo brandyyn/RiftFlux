@@ -1641,7 +1641,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
         jukeboxRedstoneRestartEnabled = config.getBoolean(
                 "JukeboxRedstoneRestartEnabled", "general", true,
-                "If true, a rising redstone signal restarts an inserted jukebox disc from the beginning."
+                "If true, a redstone signal restarts an inserted jukebox disc from the beginning."
         );
 
         enableBedChill = config.getBoolean(

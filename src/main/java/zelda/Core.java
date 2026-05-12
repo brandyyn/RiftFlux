@@ -42,7 +42,9 @@ public class Core {
         proxy = createProxy();
         proxy.registerClientStuff();
         FMLCommonHandler.instance().bus().register(new TickHandler());
-        MinecraftForge.EVENT_BUS.register(new ZEventHandler());
+        ZEventHandler eventHandler = new ZEventHandler();
+        FMLCommonHandler.instance().bus().register(eventHandler);
+        MinecraftForge.EVENT_BUS.register(eventHandler);
         CraftingManager.getInstance().addRecipe(
                 new ItemStack(ZItems.heartContainer),
                 "xx",

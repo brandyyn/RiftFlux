@@ -76,8 +76,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.jukeboxAutoLoopEnabled || ModConfig.jukeboxRedstoneRestartEnabled) {
             mixins.add("early.MixinTileEntityJukebox_LoopState");
         }
+        if (ModConfig.jukeboxAutoLoopEnabled) {
+            mixins.add("early.MixinBlockJukebox_LoopTick");
+        }
         if (ModConfig.jukeboxRedstoneRestartEnabled) {
-            mixins.add("early.MixinBlockJukebox_RedstoneRestart");
+            mixins.add("early.MixinWorld_JukeboxRedstoneRestart");
         }
         if (ModConfig.enableFullExplosionDrops) {
             mixins.add("early.MixinTNT");
@@ -142,6 +145,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.fixUnderwaterMobDarkening) {
                 mixins.add("early.MixinEntity_RiftFluxUnderwaterBrightness");
             }
+            if (hasClass("me.kimovoid.tweakimo.Tweakimo")) {
+                mixins.add("early.tweakimo.MixinGuiIngameForge_HideMountPromptOverlay");
+            }
             if (hasClass("Reika.DragonAPI.Instantiable.Event.Client.RenderBlockAtPosEvent")
                     && ModConfig.optimizeDragonAPIBlockRenderFastPaths) {
                 mixins.add("early.dragonapi.MixinRenderBlockAtPosEvent_FastPath");
@@ -180,6 +186,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (hasClass("Reika.ChromatiCraft.Block.Worldgen.BlockStructureShield")
                 && ModConfig.chromatiCraftNetherStructureShieldBreakableLikeObsidian) {
             mixins.add("early.chromaticraft.MixinBlockStructureShield_NetherBreakable");
+            mixins.add("early.chromaticraft.MixinBlock_ChromatiCraftShieldBreakSpeed");
         }
         if (hasClass("Reika.ChromatiCraft.World.Nether.NetherStructures")) {
             mixins.add("early.chromaticraft.MixinNetherStructures_Configurable");

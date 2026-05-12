@@ -1,7 +1,10 @@
 package com.voidsrift.riftflux.client.chatbubbles;
 
+import java.util.regex.Pattern;
+
 public final class ChatParseLine {
     private final String regex;
+    private final Pattern pattern;
     private final int[] nameRefs;
     private final int textRef;
 
@@ -11,6 +14,7 @@ public final class ChatParseLine {
 
     public ChatParseLine(String regex, int nameRef, int textRef) {
         this.regex = regex;
+        this.pattern = Pattern.compile(regex);
         this.nameRefs = new int[]{nameRef};
         this.textRef = textRef;
     }
@@ -21,6 +25,7 @@ public final class ChatParseLine {
 
     public ChatParseLine(String regex, String nameRefs, int textRef) {
         this.regex = regex;
+        this.pattern = Pattern.compile(regex);
         String[] split = nameRefs.split(",");
         this.nameRefs = new int[split.length];
         for (int i = 0; i < split.length; i++) {
@@ -31,6 +36,10 @@ public final class ChatParseLine {
 
     public String getRegex() {
         return regex;
+    }
+
+    public Pattern getPattern() {
+        return pattern;
     }
 
     public int[] getNameRefs() {

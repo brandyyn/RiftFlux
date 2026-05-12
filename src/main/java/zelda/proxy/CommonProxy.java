@@ -23,5 +23,10 @@ public class CommonProxy {
     public static NBTTagCompound getEntityData(String uuid) {
         return extendedPlayerData.remove(uuid);
     }
-}
 
+    public static void clearEntityData(String uuid) {
+        if (uuid != null) {
+            extendedPlayerData.remove(uuid);
+        }
+    }
+}

@@ -129,6 +129,14 @@ public class ZEventHandler {
     }
 
     @SubscribeEvent
+    public void onPlayerLoggedOut(cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent event) {
+        if (!Config.HEARTS_ENABLED || event == null || event.player == null || event.player.worldObj == null || event.player.worldObj.isRemote) {
+            return;
+        }
+        CommonProxy.clearEntityData(event.player.getUniqueID().toString());
+    }
+
+    @SubscribeEvent
     public void onItemPickup(EntityItemPickupEvent event) {
         if (!Config.HEARTS_ENABLED) {
             return;

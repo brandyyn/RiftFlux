@@ -20,7 +20,13 @@ public abstract class MixinTileEntityJukebox_LoopState implements JukeboxLoopSta
     private static final String RIFTFLUX_WAS_POWERED = "RiftFluxWasPowered";
 
     @Unique
+    private static final String RIFTFLUX_SCHEDULED_RECORD_KEY = "RiftFluxScheduledRecordKey";
+
+    @Unique
     private long riftflux$nextLoopTick = JukeboxLoopHelper.NO_LOOP_TICK;
+
+    @Unique
+    private long riftflux$scheduledRecordKey = JukeboxLoopHelper.NO_RECORD_KEY;
 
     @Unique
     private boolean riftflux$wasPowered;
@@ -36,15 +42,13 @@ public abstract class MixinTileEntityJukebox_LoopState implements JukeboxLoopSta
         }
     }
 
-    @Inject(method = "updateEntity", at = @At("HEAD"))
-    private void riftflux$tickLoop(CallbackInfo ci) {
-        JukeboxLoopHelper.tick((BlockJukebox.TileEntityJukebox) (Object) this);
-    }
-
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void riftflux$readLoopState(NBTTagCompound tag, CallbackInfo ci) {
         if (tag.hasKey(RIFTFLUX_NEXT_LOOP_TICK)) {
             this.riftflux$nextLoopTick = tag.getLong(RIFTFLUX_NEXT_LOOP_TICK);
+        }
+        if (tag.hasKey(RIFTFLUX_SCHEDULED_RECORD_KEY)) {
+            this.riftflux$scheduledRecordKey = tag.getLong(RIFTFLUX_SCHEDULED_RECORD_KEY);
         }
         this.riftflux$wasPowered = tag.getBoolean(RIFTFLUX_WAS_POWERED);
     }
@@ -52,6 +56,7 @@ public abstract class MixinTileEntityJukebox_LoopState implements JukeboxLoopSta
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void riftflux$writeLoopState(NBTTagCompound tag, CallbackInfo ci) {
         tag.setLong(RIFTFLUX_NEXT_LOOP_TICK, this.riftflux$nextLoopTick);
+        tag.setLong(RIFTFLUX_SCHEDULED_RECORD_KEY, this.riftflux$scheduledRecordKey);
         tag.setBoolean(RIFTFLUX_WAS_POWERED, this.riftflux$wasPowered);
     }
 
@@ -63,6 +68,16 @@ public abstract class MixinTileEntityJukebox_LoopState implements JukeboxLoopSta
     @Override
     public void riftflux$setNextLoopTick(long tick) {
         this.riftflux$nextLoopTick = tick;
+    }
+
+    @Override
+    public long riftflux$getScheduledRecordKey() {
+        return this.riftflux$scheduledRecordKey;
+    }
+
+    @Override
+    public void riftflux$setScheduledRecordKey(long key) {
+        this.riftflux$scheduledRecordKey = key;
     }
 
     @Override

@@ -5,6 +5,10 @@ public interface JukeboxLoopState {
 
     void riftflux$setNextLoopTick(long tick);
 
+    long riftflux$getScheduledRecordKey();
+
+    void riftflux$setScheduledRecordKey(long key);
+
     boolean riftflux$wasPowered();
 
     void riftflux$setWasPowered(boolean powered);

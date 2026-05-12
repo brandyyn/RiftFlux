@@ -22,6 +22,25 @@ final class DucklingRenderState {
     private static final String DAMAGE_INDICATOR_STACK_TOKEN = "damageindicator";
     private static final ByteBuffer BYTE_BUFFER = BufferUtils.createByteBuffer(16);
     private static final DucklingLightmapCompat LIGHTMAP_COMPAT = createLightmapCompat();
+    private static final int[] TEXTURE_ENV_PARAMS = new int[] {
+            GL11.GL_TEXTURE_ENV_MODE,
+            GL13.GL_COMBINE_RGB,
+            GL13.GL_COMBINE_ALPHA,
+            GL13.GL_SOURCE0_RGB,
+            GL13.GL_SOURCE1_RGB,
+            GL13.GL_SOURCE2_RGB,
+            GL13.GL_SOURCE0_ALPHA,
+            GL13.GL_SOURCE1_ALPHA,
+            GL13.GL_SOURCE2_ALPHA,
+            GL13.GL_OPERAND0_RGB,
+            GL13.GL_OPERAND1_RGB,
+            GL13.GL_OPERAND2_RGB,
+            GL13.GL_OPERAND0_ALPHA,
+            GL13.GL_OPERAND1_ALPHA,
+            GL13.GL_OPERAND2_ALPHA,
+            GL13.GL_RGB_SCALE,
+            GL11.GL_ALPHA_SCALE
+    };
 
     static final class Snapshot {
         private final int matrixMode;
@@ -57,10 +76,10 @@ final class DucklingRenderState {
         private final boolean colorMaskAlpha;
         private final boolean defaultTexture2D;
         private final int defaultTextureBinding;
-        private final int defaultTextureEnvMode;
+        private final int[] defaultTextureEnv;
         private final boolean lightmapTexture2D;
         private final int lightmapTextureBinding;
-        private final int lightmapTextureEnvMode;
+        private final int[] lightmapTextureEnv;
         private final long rpleLightMapRGB64;
 
         private Snapshot(
@@ -97,10 +116,10 @@ final class DucklingRenderState {
                 boolean colorMaskAlpha,
                 boolean defaultTexture2D,
                 int defaultTextureBinding,
-                int defaultTextureEnvMode,
+                int[] defaultTextureEnv,
                 boolean lightmapTexture2D,
                 int lightmapTextureBinding,
-                int lightmapTextureEnvMode,
+                int[] lightmapTextureEnv,
                 long rpleLightMapRGB64
         ) {
             this.matrixMode = matrixMode;
@@ -136,10 +155,10 @@ final class DucklingRenderState {
             this.colorMaskAlpha = colorMaskAlpha;
             this.defaultTexture2D = defaultTexture2D;
             this.defaultTextureBinding = defaultTextureBinding;
-            this.defaultTextureEnvMode = defaultTextureEnvMode;
+            this.defaultTextureEnv = defaultTextureEnv;
             this.lightmapTexture2D = lightmapTexture2D;
             this.lightmapTextureBinding = lightmapTextureBinding;
-            this.lightmapTextureEnvMode = lightmapTextureEnvMode;
+            this.lightmapTextureEnv = lightmapTextureEnv;
             this.rpleLightMapRGB64 = rpleLightMapRGB64;
         }
     }
@@ -147,12 +166,12 @@ final class DucklingRenderState {
     private static final class TextureUnitState {
         private final boolean texture2D;
         private final int textureBinding;
-        private final int textureEnvMode;
+        private final int[] textureEnv;
 
-        private TextureUnitState(boolean texture2D, int textureBinding, int textureEnvMode) {
+        private TextureUnitState(boolean texture2D, int textureBinding, int[] textureEnv) {
             this.texture2D = texture2D;
             this.textureBinding = textureBinding;
-            this.textureEnvMode = textureEnvMode;
+            this.textureEnv = textureEnv;
         }
     }
 
@@ -199,10 +218,10 @@ final class DucklingRenderState {
                 colorMask[3],
                 defaultTexture.texture2D,
                 defaultTexture.textureBinding,
-                defaultTexture.textureEnvMode,
+                defaultTexture.textureEnv,
                 lightmapTexture.texture2D,
                 lightmapTexture.textureBinding,
-                lightmapTexture.textureEnvMode,
+                lightmapTexture.textureEnv,
                 LIGHTMAP_COMPAT.lastLightMapRGB64()
         );
     }
@@ -309,8 +328,8 @@ final class DucklingRenderState {
         restoreGlState(snapshot);
         restoreLightmap(snapshot);
         OpenGlHelper.setClientActiveTexture(snapshot.clientActiveTextureUnit);
-        restoreTextureUnit(OpenGlHelper.defaultTexUnit, snapshot.defaultTexture2D, snapshot.defaultTextureBinding, snapshot.defaultTextureEnvMode);
-        restoreTextureUnit(OpenGlHelper.lightmapTexUnit, snapshot.lightmapTexture2D, snapshot.lightmapTextureBinding, snapshot.lightmapTextureEnvMode);
+        restoreTextureUnit(OpenGlHelper.defaultTexUnit, snapshot.defaultTexture2D, snapshot.defaultTextureBinding, snapshot.defaultTextureEnv);
+        restoreTextureUnit(OpenGlHelper.lightmapTexUnit, snapshot.lightmapTexture2D, snapshot.lightmapTextureBinding, snapshot.lightmapTextureEnv);
         setActiveTextureUnit(snapshot.activeTextureUnit);
         GL11.glMatrixMode(snapshot.matrixMode);
     }
@@ -418,7 +437,7 @@ final class DucklingRenderState {
         GlStateManager.tryBlendFuncSeparate(snapshot.blendSrcRgb, snapshot.blendDstRgb, snapshot.blendSrcAlpha, snapshot.blendDstAlpha);
     }
 
-    private static void restoreTextureUnit(int textureUnit, boolean texture2D, int textureBinding, int textureEnvMode) {
+    private static void restoreTextureUnit(int textureUnit, boolean texture2D, int textureBinding, int[] textureEnv) {
         setActiveTextureUnit(textureUnit);
         restoreBooleanState(GL11.GL_TEXTURE_2D, texture2D);
         if (texture2D) {
@@ -428,8 +447,14 @@ final class DucklingRenderState {
         }
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureBinding);
         GlStateManager.bindTexture(textureBinding);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, textureEnvMode);
-        GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, textureEnvMode);
+        restoreTextureEnv(textureEnv);
+    }
+
+    private static void restoreTextureEnv(int[] textureEnv) {
+        for (int i = 0; i < TEXTURE_ENV_PARAMS.length; i++) {
+            GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, TEXTURE_ENV_PARAMS[i], textureEnv[i]);
+            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, TEXTURE_ENV_PARAMS[i], textureEnv[i]);
+        }
     }
 
     private static void restoreBooleanState(int capability, boolean enabled) {
@@ -445,8 +470,16 @@ final class DucklingRenderState {
         return new TextureUnitState(
                 GL11.glIsEnabled(GL11.GL_TEXTURE_2D),
                 GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D),
-                GL11.glGetTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE)
+                captureTextureEnv()
         );
+    }
+
+    private static int[] captureTextureEnv() {
+        int[] textureEnv = new int[TEXTURE_ENV_PARAMS.length];
+        for (int i = 0; i < TEXTURE_ENV_PARAMS.length; i++) {
+            textureEnv[i] = GL11.glGetTexEnvi(GL11.GL_TEXTURE_ENV, TEXTURE_ENV_PARAMS[i]);
+        }
+        return textureEnv;
     }
 
     private static boolean[] captureColorMask() {

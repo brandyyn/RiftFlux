@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.jukebox;
 import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemRecord;
 import net.minecraft.item.ItemStack;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 public final class JukeboxLoopHelper {
     public static final long NO_LOOP_TICK = -1L;
+    public static final long NO_RECORD_KEY = -1L;
     private static final Map<String, Integer> RECORD_LENGTH_SECONDS = buildRecordLengthSeconds();
     private static String[] cachedTrackTimingEntries;
     private static Map<String, TrackTiming> cachedTrackTimings;
@@ -25,6 +27,7 @@ public final class JukeboxLoopHelper {
     public static void scheduleLoop(BlockJukebox.TileEntityJukebox jukebox, ItemStack record) {
         if (!ModConfig.jukeboxAutoLoopEnabled || jukebox == null || record == null || !(record.getItem() instanceof ItemRecord)) {
             setNextLoopTick(jukebox, NO_LOOP_TICK);
+            setScheduledRecordKey(jukebox, NO_RECORD_KEY);
             return;
         }
 
@@ -43,12 +46,16 @@ public final class JukeboxLoopHelper {
                     : Math.max(0, ModConfig.jukeboxLoopDelaySeconds);
             loopAfterTicks = (long) Math.max(1, timing.lengthSeconds) * 20L + (long) delaySeconds * 20L;
         }
-        setNextLoopTick(jukebox, world.getTotalWorldTime() + loopAfterTicks);
+        long nextLoopTick = world.getTotalWorldTime() + loopAfterTicks;
+        setNextLoopTick(jukebox, nextLoopTick);
+        setScheduledRecordKey(jukebox, getRecordKey(record));
+        world.scheduleBlockUpdate(jukebox.xCoord, jukebox.yCoord, jukebox.zCoord, Blocks.jukebox, toBlockUpdateDelay(loopAfterTicks));
         jukebox.markDirty();
     }
 
     public static void clearLoop(BlockJukebox.TileEntityJukebox jukebox) {
         setNextLoopTick(jukebox, NO_LOOP_TICK);
+        setScheduledRecordKey(jukebox, NO_RECORD_KEY);
         if (jukebox != null && jukebox.getWorldObj() != null && !jukebox.getWorldObj().isRemote) {
             jukebox.markDirty();
         }
@@ -74,9 +81,39 @@ public final class JukeboxLoopHelper {
             clearLoop(jukebox);
             return;
         }
+        long scheduledRecordKey = getScheduledRecordKey(jukebox);
+        if (scheduledRecordKey != NO_RECORD_KEY && scheduledRecordKey != getRecordKey(record)) {
+            clearLoop(jukebox);
+            return;
+        }
 
         playRecord(world, jukebox.xCoord, jukebox.yCoord, jukebox.zCoord, record);
         scheduleLoop(jukebox, record);
+    }
+
+    public static void runScheduledLoop(World world, int x, int y, int z) {
+        if (!ModConfig.jukeboxAutoLoopEnabled || world == null || world.isRemote) {
+            return;
+        }
+
+        TileEntity tile = world.getTileEntity(x, y, z);
+        if (!(tile instanceof BlockJukebox.TileEntityJukebox)) {
+            return;
+        }
+
+        BlockJukebox.TileEntityJukebox jukebox = (BlockJukebox.TileEntityJukebox) tile;
+        long nextLoopTick = getNextLoopTick(jukebox);
+        if (nextLoopTick < 0L) {
+            return;
+        }
+
+        long now = world.getTotalWorldTime();
+        if (now < nextLoopTick) {
+            world.scheduleBlockUpdate(x, y, z, Blocks.jukebox, toBlockUpdateDelay(nextLoopTick - now));
+            return;
+        }
+
+        tick(jukebox);
     }
 
     public static void handleRedstoneChange(World world, int x, int y, int z) {
@@ -136,6 +173,30 @@ public final class JukeboxLoopHelper {
         if (jukebox instanceof JukeboxLoopState) {
             ((JukeboxLoopState) jukebox).riftflux$setNextLoopTick(tick);
         }
+    }
+
+    private static long getScheduledRecordKey(BlockJukebox.TileEntityJukebox jukebox) {
+        return jukebox instanceof JukeboxLoopState ? ((JukeboxLoopState) jukebox).riftflux$getScheduledRecordKey() : NO_RECORD_KEY;
+    }
+
+    private static void setScheduledRecordKey(BlockJukebox.TileEntityJukebox jukebox, long key) {
+        if (jukebox instanceof JukeboxLoopState) {
+            ((JukeboxLoopState) jukebox).riftflux$setScheduledRecordKey(key);
+        }
+    }
+
+    private static long getRecordKey(ItemStack record) {
+        if (record == null || record.getItem() == null) {
+            return NO_RECORD_KEY;
+        }
+        return ((long) Item.getIdFromItem(record.getItem()) << 32) ^ (record.getItemDamage() & 0xFFFFFFFFL);
+    }
+
+    private static int toBlockUpdateDelay(long ticks) {
+        if (ticks <= 0L) {
+            return 1;
+        }
+        return ticks > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) ticks;
     }
 
     private static TrackTiming getRecordTiming(ItemStack record) {

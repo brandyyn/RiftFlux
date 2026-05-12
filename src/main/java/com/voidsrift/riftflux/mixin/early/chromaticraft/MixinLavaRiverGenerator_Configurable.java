@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -28,5 +29,10 @@ public abstract class MixinLavaRiverGenerator_Configurable {
     @ModifyConstant(method = "generate", constant = @Constant(doubleValue = 240.0D), require = 0)
     private double riftflux$useConfiguredNetherLavaRiverMaxY(double original) {
         return ModConfig.chromatiCraftNetherLavaRiverMaxY;
+    }
+
+    @ModifyArg(method = "generate", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlock(IIILnet/minecraft/block/Block;II)Z"), index = 4)
+    private int riftflux$stripProtectedShieldMetadataForBreakableNetherRivers(int meta) {
+        return ModConfig.chromatiCraftNetherStructureShieldBreakableLikeObsidian && meta >= 8 ? meta % 8 : meta;
     }
 }
