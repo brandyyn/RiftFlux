@@ -26,6 +26,7 @@ public abstract class MixinItemStackTagEqual {
 
         // Fast path: same ref (covers both null or same object)
         if (ta == tb) return;
+        if (!hasMarker(ta) && !hasMarker(tb)) return;
 
         NBTTagCompound na = normalize(ta);
         NBTTagCompound nb = normalize(tb);
@@ -38,9 +39,14 @@ public abstract class MixinItemStackTagEqual {
 
     private static NBTTagCompound normalize(NBTTagCompound tag) {
         if (tag == null) return null;
+        if (!hasMarker(tag)) return tag.hasNoTags() ? null : tag;
         NBTTagCompound c = (NBTTagCompound) tag.copy();
         c.removeTag(TAG_NEW);
         
         return c.hasNoTags() ? null : c;
+    }
+
+    private static boolean hasMarker(NBTTagCompound tag) {
+        return tag != null && tag.hasKey(TAG_NEW);
     }
 }

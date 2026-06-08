@@ -435,10 +435,24 @@ public class LegendGear2 {
         }
     }
 
+    public static void ensureCreativeTab() {
+        if (legendgearTab != null || !ModConfig.enableLegendGearModule) {
+            return;
+        }
+        legendgearTab = new CreativeTabs("lgTab"){
+
+            public Item getTabIconItem() {
+                return starDust;
+            }
+        };
+    }
+
     public void preInit(FMLPreInitializationEvent event) {
         if (ModConfig.config != null && !ModConfig.enableLegendGearModule) {
             return;
         }
+
+        ensureCreativeTab();
 
         if (ModConfig.config != null) {
             config = ModConfig.config;
@@ -712,11 +726,5 @@ public class LegendGear2 {
         starglassMaterial = EnumHelper.addToolMaterial((String)"STARGLASS", (int)2, (int)13, (float)16.0f, (float)2.0f, (int)0);
         starsteelMaterial = EnumHelper.addToolMaterial((String)"STARSTEEL", (int)2, (int)512, (float)6.0f, (float)2.0f, (int)18);
         RITUAL_MODE = 1;
-        legendgearTab = new CreativeTabs("lgTab"){
-
-            public Item getTabIconItem() {
-                return starDust;
-            }
-        };
     }
 }

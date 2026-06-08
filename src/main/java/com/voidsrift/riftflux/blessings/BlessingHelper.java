@@ -207,7 +207,10 @@ public final class BlessingHelper {
         if (player == null) {
             return;
         }
-        player.getEntityData().setBoolean(NBT_BLESSING_ACTIVE, active);
+        NBTTagCompound tag = player.getEntityData();
+        if (!tag.hasKey(NBT_BLESSING_ACTIVE) || tag.getBoolean(NBT_BLESSING_ACTIVE) != active) {
+            tag.setBoolean(NBT_BLESSING_ACTIVE, active);
+        }
     }
 
     public static int getCooldown(EntityPlayer player) {
@@ -221,7 +224,11 @@ public final class BlessingHelper {
         if (player == null) {
             return;
         }
-        player.getEntityData().setInteger(NBT_BLESSING_COOLDOWN, Math.max(0, ticks));
+        int value = Math.max(0, ticks);
+        NBTTagCompound tag = player.getEntityData();
+        if (!tag.hasKey(NBT_BLESSING_COOLDOWN) || tag.getInteger(NBT_BLESSING_COOLDOWN) != value) {
+            tag.setInteger(NBT_BLESSING_COOLDOWN, value);
+        }
     }
 
     public static int getCounter(EntityPlayer player) {
@@ -235,7 +242,11 @@ public final class BlessingHelper {
         if (player == null) {
             return;
         }
-        player.getEntityData().setInteger(NBT_BLESSING_COUNTER, Math.max(0, counter));
+        int value = Math.max(0, counter);
+        NBTTagCompound tag = player.getEntityData();
+        if (!tag.hasKey(NBT_BLESSING_COUNTER) || tag.getInteger(NBT_BLESSING_COUNTER) != value) {
+            tag.setInteger(NBT_BLESSING_COUNTER, value);
+        }
     }
 
     public static int getTimer(EntityPlayer player) {
@@ -249,7 +260,11 @@ public final class BlessingHelper {
         if (player == null) {
             return;
         }
-        player.getEntityData().setInteger(NBT_BLESSING_TIMER, Math.max(0, timer));
+        int value = Math.max(0, timer);
+        NBTTagCompound tag = player.getEntityData();
+        if (!tag.hasKey(NBT_BLESSING_TIMER) || tag.getInteger(NBT_BLESSING_TIMER) != value) {
+            tag.setInteger(NBT_BLESSING_TIMER, value);
+        }
     }
 
     public static void ensureBlessingState(EntityPlayer player) {

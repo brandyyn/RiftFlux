@@ -22,6 +22,8 @@ final class DucklingRenderState {
     private static final String DAMAGE_INDICATOR_STACK_TOKEN = "damageindicator";
     private static final ByteBuffer BYTE_BUFFER = BufferUtils.createByteBuffer(16);
     private static final DucklingLightmapCompat LIGHTMAP_COMPAT = createLightmapCompat();
+    private static int entityRenderContextDepth;
+    private static boolean entityPreviewRenderContext;
     private static final int[] TEXTURE_ENV_PARAMS = new int[] {
             GL11.GL_TEXTURE_ENV_MODE,
             GL13.GL_COMBINE_RGB,
@@ -279,7 +281,28 @@ final class DucklingRenderState {
                 && !isEntityPreviewRender();
     }
 
+    static void pushEntityRenderContext() {
+        if (entityRenderContextDepth++ == 0) {
+            entityPreviewRenderContext = scanEntityPreviewRender();
+        }
+    }
+
+    static void popEntityRenderContext() {
+        entityRenderContextDepth--;
+        if (entityRenderContextDepth <= 0) {
+            entityRenderContextDepth = 0;
+            entityPreviewRenderContext = false;
+        }
+    }
+
     private static boolean isEntityPreviewRender() {
+        if (entityRenderContextDepth > 0) {
+            return entityPreviewRenderContext;
+        }
+        return scanEntityPreviewRender();
+    }
+
+    private static boolean scanEntityPreviewRender() {
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
         for (int i = 0; i < stack.length; i++) {
             String className = stack[i].getClassName();

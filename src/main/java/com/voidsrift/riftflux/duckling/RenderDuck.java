@@ -45,6 +45,7 @@ public class RenderDuck extends GeoEntityRenderer<EntityDuck> {
 
     @Override
     public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
+        DucklingRenderState.pushEntityRenderContext();
         DucklingRenderState.Snapshot snapshot = DucklingRenderState.capture();
         DucklingRenderState.pushRenderAttribs();
         DucklingRenderState.pushRenderClientAttribs();
@@ -65,6 +66,7 @@ public class RenderDuck extends GeoEntityRenderer<EntityDuck> {
             DucklingRenderState.popRenderAttribs();
             DucklingRenderState.restoreAfterRender(snapshot);
             this.riftflux$currentBeddiumBrightness = -1;
+            DucklingRenderState.popEntityRenderContext();
         }
     }
 

@@ -23,11 +23,11 @@ public final class PickupStarClientTracker {
     private static final int WINDOW_TICKS = 40; // ~2s
 
     // 36-slot main inv baseline
-    private static ItemStack[] baselineMain = null;
+    private static SlotSnapshot[] baselineMain = null;
     private static int[] recentMainTtl = null;
 
     // Any open container baseline (for modded inventories)
-    private static ItemStack[] baselineCont = null;
+    private static SlotSnapshot[] baselineCont = null;
     private static Container   lastCont     = null;
 
     // recent pickups queue (item+meta, wildcard for damageables)
@@ -44,6 +44,22 @@ public final class PickupStarClientTracker {
             if (s.getItem() != item) return false;
             if (wildcardMeta || s.isItemStackDamageable()) return true; // tools/armor: any damage value
             return s.getItemDamage() == meta;
+        }
+    }
+
+    private static final class SlotSnapshot {
+        final Item item;
+        final int meta;
+        final int size;
+
+        SlotSnapshot(ItemStack stack) {
+            this.item = stack.getItem();
+            this.meta = stack.getItemDamage();
+            this.size = stack.stackSize;
+        }
+
+        boolean sameItem(ItemStack stack) {
+            return stack != null && stack.getItem() == item && stack.getItemDamage() == meta;
         }
     }
 
@@ -99,15 +115,16 @@ public final class PickupStarClientTracker {
         ItemStack[] cur = p.inventory.mainInventory;
         if (cur != null) {
             if (baselineMain == null || baselineMain.length != cur.length || recentMainTtl == null || recentMainTtl.length != cur.length){
-                baselineMain = new ItemStack[cur.length];
+                baselineMain = new SlotSnapshot[cur.length];
                 recentMainTtl = new int[cur.length];
-                for (int i=0;i<cur.length;i++) baselineMain[i] = copy(cur[i]);
+                for (int i=0;i<cur.length;i++) baselineMain[i] = snapshot(cur[i]);
             } else {
                 for (int i=0;i<recentMainTtl.length;i++){
                     if (recentMainTtl[i] > 0) recentMainTtl[i]--;
                 }
                 for (int i=0;i<cur.length;i++){
-                    ItemStack now = cur[i], was = baselineMain[i];
+                    ItemStack now = cur[i];
+                    SlotSnapshot was = baselineMain[i];
 
                     if (now == null) {
                         recentMainTtl[i] = 0;
@@ -115,8 +132,8 @@ public final class PickupStarClientTracker {
                         continue;
                     }
 
-                    boolean sameItem = (now != null && was != null && sameItem(was, now));
-                    boolean grew     = sameItem && now.stackSize > was.stackSize;
+                    boolean sameItem = (was != null && was.sameItem(now));
+                    boolean grew     = sameItem && now.stackSize > was.size;
                     boolean inserted = (now != null && was == null) || (now != null && was != null && !sameItem);
 
                     if (!sameItem) {
@@ -150,7 +167,7 @@ public final class PickupStarClientTracker {
                         }
                     }
 
-                    baselineMain[i] = copy(now);
+                    baselineMain[i] = snapshot(now);
                 }
             }
         }
@@ -163,27 +180,27 @@ public final class PickupStarClientTracker {
                 List slots = cont.inventorySlots;
 
                 if (cont != lastCont || baselineCont == null || baselineCont.length != slots.size()) {
-                    baselineCont = new ItemStack[slots.size()];
+                    baselineCont = new SlotSnapshot[slots.size()];
                     for (int i=0;i<slots.size();i++) {
                         Slot s = (Slot) slots.get(i);
-                        baselineCont[i] = copy(s.getStack());
+                        baselineCont[i] = snapshot(s.getStack());
                     }
                     lastCont = cont;
                 } else {
                     for (int i=0;i<slots.size();i++) {
                         Slot s = (Slot) slots.get(i);
                         ItemStack now = s.getStack();
-                        ItemStack was = baselineCont[i];
+                        SlotSnapshot was = baselineCont[i];
                         boolean isPlayerSlot = isPlayerOwnedSlot(s, p);
 
                         if (!isPlayerSlot && ModConfig.itemPickupStarClearOnLeaveInventory) {
                             clearStarTagLocal(now);
-                            baselineCont[i] = copy(now);
+                            baselineCont[i] = snapshot(now);
                             continue;
                         }
 
-                        boolean sameItem = (now != null && was != null && sameItem(was, now));
-                        boolean grew     = sameItem && now.stackSize > was.stackSize;
+                        boolean sameItem = (was != null && was.sameItem(now));
+                        boolean grew     = sameItem && now.stackSize > was.size;
                         boolean inserted = (now != null && was == null) || (now != null && was != null && !sameItem);
 
                         // Same rule as main inv: no unconditional damageable tagging on insert.
@@ -202,7 +219,7 @@ public final class PickupStarClientTracker {
                             }
                         }
 
-                        baselineCont[i] = copy(now);
+                        baselineCont[i] = snapshot(now);
                     }
                 }
             } else {
@@ -266,9 +283,8 @@ public final class PickupStarClientTracker {
         queue.clear();
     }
 
-    private static ItemStack copy(ItemStack in){ return in!=null ? in.copy() : null; }
-    private static boolean sameItem(ItemStack a, ItemStack b){
-        return a.getItem()==b.getItem() && a.getItemDamage()==b.getItemDamage();
+    private static SlotSnapshot snapshot(ItemStack stack) {
+        return stack != null ? new SlotSnapshot(stack) : null;
     }
 
     private static boolean isPlayerOwnedSlot(Slot s, EntityPlayer p) {

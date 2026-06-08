@@ -160,6 +160,7 @@ public abstract class MixinBlockHighlight {
     /** 12 rectangular prisms centered on original edges, EXTENDED through corners → no seams. */
     private static void drawEdgeBeamsContinuous(AxisAlignedBB a, float thickness) {
         final Tessellator t = Tessellator.instance;
+        t.startDrawingQuads();
 
         double x1=a.minX, y1=a.minY, z1=a.minZ;
         double x2=a.maxX, y2=a.maxY, z2=a.maxZ;
@@ -188,13 +189,13 @@ public abstract class MixinBlockHighlight {
         box(t, x2 - h,      y1 - h - EPS, z1 - h,      x2 + h,      y2 + h + EPS, z1 + h);      // NE vertical
         box(t, x2 - h,      y1 - h - EPS, z2 - h,      x2 + h,      y2 + h + EPS, z2 + h);      // SE vertical
         box(t, x1 - h,      y1 - h - EPS, z2 - h,      x1 + h,      y2 + h + EPS, z2 + h);      // SW vertical
+        t.draw();
     }
 
     /** Simple six-faced rectangular prism. */
     private static void box(Tessellator t,
                             double minX, double minY, double minZ,
                             double maxX, double maxY, double maxZ) {
-        t.startDrawingQuads();
         // -X
         t.addVertex(minX, minY, minZ); t.addVertex(minX, maxY, minZ);
         t.addVertex(minX, maxY, maxZ); t.addVertex(minX, minY, maxZ);
@@ -213,6 +214,5 @@ public abstract class MixinBlockHighlight {
         // +Z
         t.addVertex(minX, minY, maxZ); t.addVertex(minX, maxY, maxZ);
         t.addVertex(maxX, maxY, maxZ); t.addVertex(maxX, minY, maxZ);
-        t.draw();
     }
 }

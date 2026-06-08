@@ -515,7 +515,9 @@ public class BlessingEvents {
         updateBerserkerStats(player, blessing, active);
         if (!"Ninja".equals(blessing)) {
             clearNinjaDamageBoost(player);
-            player.getEntityData().removeTag(BlessingHelper.NBT_NINJA_DAMAGE_BOOST_TICK);
+            if (player.getEntityData().hasKey(BlessingHelper.NBT_NINJA_DAMAGE_BOOST_TICK)) {
+                player.getEntityData().removeTag(BlessingHelper.NBT_NINJA_DAMAGE_BOOST_TICK);
+            }
         } else {
             int boostTick = player.getEntityData().getInteger(BlessingHelper.NBT_NINJA_DAMAGE_BOOST_TICK);
             if (boostTick > 0 && player.ticksExisted > boostTick) {
@@ -528,7 +530,11 @@ public class BlessingEvents {
         BlessingHelper.setCooldown(player, cooldown);
         BlessingHelper.setCounter(player, counter);
         BlessingHelper.setTimer(player, timer);
-        player.getEntityData().setInteger(BlessingHelper.NBT_NINJA_INVIS_COOLDOWN, Math.max(0, ninjaCooldown));
+        int clampedNinjaCooldown = Math.max(0, ninjaCooldown);
+        if (!player.getEntityData().hasKey(BlessingHelper.NBT_NINJA_INVIS_COOLDOWN)
+                || player.getEntityData().getInteger(BlessingHelper.NBT_NINJA_INVIS_COOLDOWN) != clampedNinjaCooldown) {
+            player.getEntityData().setInteger(BlessingHelper.NBT_NINJA_INVIS_COOLDOWN, clampedNinjaCooldown);
+        }
     }
 
     private void applyIncoming(EntityPlayer player, LivingHurtEvent event) {

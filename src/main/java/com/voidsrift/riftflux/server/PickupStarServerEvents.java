@@ -74,9 +74,25 @@ public final class PickupStarServerEvents {
 
     private final Map<UUID, State> states = new HashMap<UUID, State>();
     private final Map<UUID, Deque<StarKey>> starQueues = new HashMap<UUID, Deque<StarKey>>();
-    private final Map<UUID, ItemStack[]> starBaselineMain = new HashMap<UUID, ItemStack[]>();
-    private final Map<UUID, ItemStack[]> starBaselineCont = new HashMap<UUID, ItemStack[]>();
+    private final Map<UUID, SlotSnapshot[]> starBaselineMain = new HashMap<UUID, SlotSnapshot[]>();
+    private final Map<UUID, SlotSnapshot[]> starBaselineCont = new HashMap<UUID, SlotSnapshot[]>();
     private final Map<UUID, Container> starBaselineContRef = new HashMap<UUID, Container>();
+
+    private static final class SlotSnapshot {
+        final Item item;
+        final int meta;
+        final int size;
+
+        SlotSnapshot(ItemStack stack) {
+            this.item = stack.getItem();
+            this.meta = stack.getItemDamage();
+            this.size = stack.stackSize;
+        }
+
+        boolean sameItem(ItemStack stack) {
+            return stack != null && stack.getItem() == item && stack.getItemDamage() == meta;
+        }
+    }
 
     @SubscribeEvent
     public void onPickup(EntityItemPickupEvent e) {
@@ -105,7 +121,7 @@ public final class PickupStarServerEvents {
             } else {
                 // establish baseline from last snapshot, not current inventory
                 st.baseTotals = (st.lastTotals != null)
-                        ? new HashMap<Key, Integer>(st.lastTotals)
+                        ? copyTotalsInto(st.baseTotals, st.lastTotals)
                         : totalsNow(player.openContainer, player);
             }
 
@@ -167,7 +183,12 @@ public final class PickupStarServerEvents {
             State st = states.computeIfAbsent(id, k -> new State());
 
             // Always update lastTotals while the pickup notifier is enabled.
-            final Map<Key, Integer> cur = totalsNow(player.openContainer, player);
+            Map<Key, Integer> cur = st.lastTotals;
+            if (cur == null) {
+                cur = new HashMap<Key, Integer>();
+                st.lastTotals = cur;
+            }
+            totalsNowInto(cur, player.openContainer, player);
 
             if (st.pending) {
                 if (st.baseTotals != null) {
@@ -190,7 +211,7 @@ public final class PickupStarServerEvents {
                     }
 
                     if (changed) {
-                        st.baseTotals = cur; // reset baseline
+                        st.baseTotals = copyTotalsInto(st.baseTotals, cur); // reset baseline
                         st.idleTicks = MAX_IDLE_TICKS;
                     } else {
                         st.idleTicks--;
@@ -202,8 +223,6 @@ public final class PickupStarServerEvents {
                     }
                 }
             }
-
-            st.lastTotals = cur; // always update
         } else {
             states.remove(id);
         }
@@ -253,6 +272,12 @@ public final class PickupStarServerEvents {
 
     private static Map<Key,Integer> totalsNow(Container cur, EntityPlayer p){
         final Map<Key,Integer> m = new HashMap<>();
+        totalsNowInto(m, cur, p);
+        return m;
+    }
+
+    private static void totalsNowInto(Map<Key,Integer> m, Container cur, EntityPlayer p){
+        m.clear();
         addTotals(m, p.inventory.mainInventory);
 
         if (cur != null && cur.inventorySlots != null) {
@@ -266,7 +291,19 @@ public final class PickupStarServerEvents {
                 addOne(m, st);
             }
         }
-        return m;
+    }
+
+    private static Map<Key, Integer> copyTotalsInto(Map<Key, Integer> dest, Map<Key, Integer> source) {
+        if (source == null) {
+            return null;
+        }
+        if (dest == null || dest == source) {
+            dest = new HashMap<Key, Integer>(source.size());
+        } else {
+            dest.clear();
+        }
+        dest.putAll(source);
+        return dest;
     }
 
     private static void addTotals(Map<Key,Integer> m, ItemStack[] arr){
@@ -316,28 +353,28 @@ public final class PickupStarServerEvents {
 
         ItemStack[] cur = player.inventory.mainInventory;
         if (cur != null) {
-            ItemStack[] base = starBaselineMain.get(id);
+            SlotSnapshot[] base = starBaselineMain.get(id);
             if (base == null || base.length != cur.length) {
-                base = new ItemStack[cur.length];
-                for (int i = 0; i < cur.length; i++) base[i] = copy(cur[i]);
+                base = new SlotSnapshot[cur.length];
+                for (int i = 0; i < cur.length; i++) base[i] = snapshot(cur[i]);
                 starBaselineMain.put(id, base);
             } else {
                 for (int i = 0; i < cur.length; i++) {
                     ItemStack now = cur[i];
-                    ItemStack was = base[i];
+                    SlotSnapshot was = base[i];
                     if (now == null) {
                         base[i] = null;
                         continue;
                     }
-                    boolean sameItem = (was != null && sameItem(was, now));
-                    boolean grew = sameItem && now.stackSize > was.stackSize;
+                    boolean sameItem = (was != null && was.sameItem(now));
+                    boolean grew = sameItem && now.stackSize > was.size;
                     boolean inserted = (was == null) || (was != null && !sameItem);
                     if (ModConfig.itemPickupStarOnStackIncrease && grew) {
                         markStarTag(now);
                     } else if (inserted && matchesAny(q, now)) {
                         markStarTag(now);
                     }
-                    base[i] = copy(now);
+                    base[i] = snapshot(now);
                 }
             }
         } else {
@@ -349,12 +386,12 @@ public final class PickupStarServerEvents {
             @SuppressWarnings("rawtypes")
             final List slots = cont.inventorySlots;
             Container last = starBaselineContRef.get(id);
-            ItemStack[] base = starBaselineCont.get(id);
+            SlotSnapshot[] base = starBaselineCont.get(id);
             if (cont != last || base == null || base.length != slots.size()) {
-                base = new ItemStack[slots.size()];
+                base = new SlotSnapshot[slots.size()];
                 for (int i = 0; i < slots.size(); i++) {
                     Slot s = (Slot) slots.get(i);
-                    base[i] = copy(s.getStack());
+                    base[i] = snapshot(s.getStack());
                 }
                 starBaselineCont.put(id, base);
                 starBaselineContRef.put(id, cont);
@@ -362,24 +399,24 @@ public final class PickupStarServerEvents {
                 for (int i = 0; i < slots.size(); i++) {
                     Slot s = (Slot) slots.get(i);
                     ItemStack now = s.getStack();
-                    ItemStack was = base[i];
+                    SlotSnapshot was = base[i];
                     if (!isPlayerOwnedSlot(s, player)) {
-                        base[i] = copy(now);
+                        base[i] = snapshot(now);
                         continue;
                     }
                     if (now == null) {
                         base[i] = null;
                         continue;
                     }
-                    boolean sameItem = (was != null && sameItem(was, now));
-                    boolean grew = sameItem && now.stackSize > was.stackSize;
+                    boolean sameItem = (was != null && was.sameItem(now));
+                    boolean grew = sameItem && now.stackSize > was.size;
                     boolean inserted = (was == null) || (was != null && !sameItem);
                     if (ModConfig.itemPickupStarOnStackIncrease && grew) {
                         markStarTag(now);
                     } else if (inserted && matchesAny(q, now)) {
                         markStarTag(now);
                     }
-                    base[i] = copy(now);
+                    base[i] = snapshot(now);
                 }
             }
         } else {
@@ -408,10 +445,8 @@ public final class PickupStarServerEvents {
         st.setTagCompound(tag);
     }
 
-    private static ItemStack copy(ItemStack in){ return in!=null ? in.copy() : null; }
-
-    private static boolean sameItem(ItemStack a, ItemStack b){
-        return a.getItem()==b.getItem() && a.getItemDamage()==b.getItemDamage();
+    private static SlotSnapshot snapshot(ItemStack stack) {
+        return stack != null ? new SlotSnapshot(stack) : null;
     }
 
     private static boolean isPlayerOwnedSlot(Slot s, EntityPlayer p) {

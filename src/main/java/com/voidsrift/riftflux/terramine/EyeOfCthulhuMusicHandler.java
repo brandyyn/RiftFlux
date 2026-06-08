@@ -10,14 +10,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.boss.BossStatus;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.util.StatCollector;
+import net.minecraft.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @SideOnly(Side.CLIENT)
@@ -29,7 +31,6 @@ public class EyeOfCthulhuMusicHandler {
     private static final ResourceLocation EYE_GROWL = new ResourceLocation("mob.enderdragon.growl");
     private static final Map<Integer, EyeGrowlSound> ACTIVE_GROWLS = new HashMap<Integer, EyeGrowlSound>();
     private EyeThemeSound activeSound;
-    private int trackedEntityId = Integer.MIN_VALUE;
     private Field musicTickerField;
     private Field tickerCurrentSoundField;
     private Field tickerDelayField;
@@ -52,29 +53,26 @@ public class EyeOfCthulhuMusicHandler {
         }
         pruneGrowls();
 
-        EntityEyeOfCthulhu eye = findBestEye(mc.theWorld, mc.thePlayer, mc);
-        if (eye == null) {
-            resetClientAudio(mc);
+        if (!isEyeBossBarActive()) {
+            if (activeSound != null || !ACTIVE_GROWLS.isEmpty()) {
+                resetClientAudio(mc);
+            } else {
+                restoreBackgroundMusic(mc);
+            }
             return;
         }
         suppressBackgroundMusic(mc);
 
         GuiScreen currentScreen = mc.currentScreen;
         if (currentScreen != null && currentScreen.doesGuiPauseGame()) {
-            if (activeSound != null) {
-                activeSound.setTarget(eye);
-            }
             return;
         }
 
         boolean notPlaying = activeSound == null || !isSoundPlaying(mc, activeSound);
-        if (activeSound == null || activeSound.isDonePlaying() || trackedEntityId != eye.getEntityId() || notPlaying) {
+        if (activeSound == null || activeSound.isDonePlaying() || notPlaying) {
             stopCurrent(mc);
-            trackedEntityId = eye.getEntityId();
-            activeSound = new EyeThemeSound(eye);
+            activeSound = new EyeThemeSound();
             mc.getSoundHandler().playSound(activeSound);
-        } else {
-            activeSound.setTarget(eye);
         }
     }
 
@@ -139,7 +137,6 @@ public class EyeOfCthulhuMusicHandler {
     }
 
     private void stopCurrent(Minecraft mc) {
-        trackedEntityId = Integer.MIN_VALUE;
         if (activeSound == null) {
             return;
         }
@@ -319,59 +316,41 @@ public class EyeOfCthulhuMusicHandler {
         }
     }
 
-    private static EntityEyeOfCthulhu findBestEye(World world, EntityPlayer player, Minecraft mc) {
-        if (world == null || player == null) {
-            return null;
-        }
-        List loaded = world.loadedEntityList;
-        if (loaded == null || loaded.isEmpty()) {
-            return null;
-        }
-
-        EntityEyeOfCthulhu best = null;
-        double bestDistanceSq = Double.MAX_VALUE;
-        double maxDistance = getMusicRange(mc);
-        double maxDistanceSq = maxDistance * maxDistance;
-
-        for (Object obj : loaded) {
-            if (!(obj instanceof EntityEyeOfCthulhu)) {
-                continue;
-            }
-            EntityEyeOfCthulhu eye = (EntityEyeOfCthulhu) obj;
-            if (eye.isDead || eye.getHealth() <= 0.0F) {
-                continue;
-            }
-            double distanceSq = eye.getDistanceSqToEntity(player);
-            if (distanceSq > maxDistanceSq) {
-                continue;
-            }
-            if (distanceSq < bestDistanceSq) {
-                bestDistanceSq = distanceSq;
-                best = eye;
-            }
-        }
-        return best;
+    private static boolean isEyeBossBarActive() {
+        return BossStatus.statusBarTime > 0 && isEyeBossBarName(BossStatus.bossName);
     }
 
-    private static double getMusicRange(Minecraft mc) {
-        int chunks = mc != null && mc.gameSettings != null ? mc.gameSettings.renderDistanceChunks : 8;
-        return Math.max(48.0D, chunks * 16.0D + 24.0D);
+    private static boolean isEyeBossBarName(String name) {
+        String current = normalizeBossName(name);
+        if (current.isEmpty()) {
+            return false;
+        }
+        if (current.contains("eye of cthulhu")) {
+            return true;
+        }
+
+        String legacyName = normalizeBossName(StatCollector.translateToLocal("entity.EyeOfCthulhu.name"));
+        if (!legacyName.isEmpty() && current.equals(legacyName)) {
+            return true;
+        }
+
+        String moddedName = normalizeBossName(StatCollector.translateToLocal("entity.riftflux.EyeOfCthulhu.name"));
+        return !moddedName.isEmpty() && current.equals(moddedName);
+    }
+
+    private static String normalizeBossName(String text) {
+        if (text == null) {
+            return "";
+        }
+        return StringUtils.stripControlCodes(text).trim().toLowerCase(Locale.ROOT);
     }
 
     private static final class EyeThemeSound extends MovingSound {
-        private EntityEyeOfCthulhu target;
-
-        private EyeThemeSound(EntityEyeOfCthulhu target) {
+        private EyeThemeSound() {
             super(EYE_THEME);
-            this.target = target;
             this.repeat = true;
             this.volume = 1.0F;
             setNoAttenuation(this);
-            refreshPosition(Minecraft.getMinecraft() != null ? Minecraft.getMinecraft().thePlayer : null);
-        }
-
-        private void setTarget(EntityEyeOfCthulhu target) {
-            this.target = target;
             refreshPosition(Minecraft.getMinecraft() != null ? Minecraft.getMinecraft().thePlayer : null);
         }
 
@@ -383,7 +362,7 @@ public class EyeOfCthulhuMusicHandler {
         public void update() {
             Minecraft mc = Minecraft.getMinecraft();
             EntityPlayer player = mc != null ? mc.thePlayer : null;
-            if (player == null || this.target == null || this.target.isDead || this.target.getHealth() <= 0.0F) {
+            if (player == null || !isEyeBossBarActive()) {
                 this.donePlaying = true;
                 return;
             }
@@ -399,11 +378,9 @@ public class EyeOfCthulhuMusicHandler {
                 this.zPosF = (float) player.posZ;
                 return;
             }
-            if (this.target != null) {
-                this.xPosF = (float) this.target.posX;
-                this.yPosF = (float) this.target.posY;
-                this.zPosF = (float) this.target.posZ;
-            }
+            this.xPosF = 0.0F;
+            this.yPosF = 0.0F;
+            this.zPosF = 0.0F;
         }
     }
 

@@ -56,6 +56,8 @@ public class WitchHouseWorldGenerator implements IWorldGenerator {
     private static final int HOUSE_CORE_MAX_X = 24;
     private static final int HOUSE_CORE_MIN_Z = 2;
     private static final int HOUSE_CORE_MAX_Z = 22;
+    private static final int[] CARDINAL_X = new int[]{1, -1, 0, 0};
+    private static final int[] CARDINAL_Z = new int[]{0, 0, 1, -1};
     private static final TemplateData TEMPLATE = loadTemplate();
 
     @Override
@@ -901,9 +903,9 @@ public class WitchHouseWorldGenerator implements IWorldGenerator {
     private boolean isStableBarleySurface(World world, int x, int y, int z) {
         int levelSupport = 0;
 
-        for (int[] offset : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
-            int neighborX = x + offset[0];
-            int neighborZ = z + offset[1];
+        for (int i = 0; i < CARDINAL_X.length; i++) {
+            int neighborX = x + CARDINAL_X[i];
+            int neighborZ = z + CARDINAL_Z[i];
             int neighborSurfaceY = findTerrainSurfaceY(world, neighborX, neighborZ);
             if (neighborSurfaceY < y - 1) {
                 return false;

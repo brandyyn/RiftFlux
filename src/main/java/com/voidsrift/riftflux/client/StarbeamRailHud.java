@@ -50,11 +50,19 @@ public final class StarbeamRailHud extends Gui {
         }
 
         EntityPlayer player = mc.thePlayer;
+        if (player.ridingEntity == null) {
+            return;
+        }
+
+        boolean canShowJumpPrompt = player.ridingEntity instanceof EntityGrindStar;
+        boolean canShowCustomMountPrompt = ModConfig.dualHotbarUseCustomMountOnboardPrompt;
+        if (!canShowJumpPrompt && !canShowCustomMountPrompt) {
+            return;
+        }
+
         boolean mountPromptVisible = RenderHandler.isMountOnboardOverlayVisible(mc, player);
-        boolean showJumpPrompt = player.ridingEntity instanceof EntityGrindStar && mountPromptVisible;
-        boolean showCustomMountPrompt = ModConfig.dualHotbarUseCustomMountOnboardPrompt
-                && mountPromptVisible
-                && player.ridingEntity != null;
+        boolean showJumpPrompt = canShowJumpPrompt && mountPromptVisible;
+        boolean showCustomMountPrompt = canShowCustomMountPrompt && mountPromptVisible;
         if (!showJumpPrompt && !showCustomMountPrompt) {
             return;
         }

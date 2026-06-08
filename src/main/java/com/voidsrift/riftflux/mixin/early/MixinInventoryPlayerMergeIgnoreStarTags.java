@@ -63,6 +63,7 @@ public abstract class MixinInventoryPlayerMergeIgnoreStarTags {
         NBTTagCompound ta = (a != null) ? a.getTagCompound() : null;
         NBTTagCompound tb = (b != null) ? b.getTagCompound() : null;
         if (ta == tb) return true; // covers both null
+        if (!rf$hasMarker(ta) && !rf$hasMarker(tb)) return false;
 
         NBTTagCompound na = rf$normalize(ta);
         NBTTagCompound nb = rf$normalize(tb);
@@ -73,9 +74,14 @@ public abstract class MixinInventoryPlayerMergeIgnoreStarTags {
 
     private static NBTTagCompound rf$normalize(NBTTagCompound tag) {
         if (tag == null) return null;
+        if (!rf$hasMarker(tag)) return tag.hasNoTags() ? null : tag;
         NBTTagCompound c = (NBTTagCompound) tag.copy();
         c.removeTag(TAG_NEW);
         
         return c.hasNoTags() ? null : c;
+    }
+
+    private static boolean rf$hasMarker(NBTTagCompound tag) {
+        return tag != null && tag.hasKey(TAG_NEW);
     }
 }

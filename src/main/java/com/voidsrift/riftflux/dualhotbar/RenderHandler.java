@@ -199,6 +199,7 @@ public class RenderHandler {
             GL11.glDisable(GL11.GL_BLEND);
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
             RenderHelper.enableGUIStandardItemLighting();
+            RenderItem itemRenderer = new RenderItem();
 
             for (int i = 0; i < 9 * DualHotbarConfig.numHotbars; ++i) {
                 if (DualHotbarConfig.twoLayerRendering) {
@@ -207,21 +208,18 @@ public class RenderHandler {
                     if (!DualHotbarState.installedOnServer) {
                         GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
                     }
-                    renderInventorySlotItem(i, x, z, 1f);
+                    renderInventorySlotItem(itemRenderer, i, x, z, 1f);
                     if (!DualHotbarState.installedOnServer) {
                         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1f);
                     }
                 } else {
                     int x = width / 2 - 90 + (i % 18) * 20 + 2 - 90;
                     int z = height - 16 - 3 - ((i / 18) * offset);
-                    renderInventorySlotItem(i, x, z, 1f);
+                    renderInventorySlotItem(itemRenderer, i, x, z, 1f);
                 }
             }
 
-            if (hasSelector && ModConfig.hotbarSelectorAboveItemText) {
-                drawSelectorAfterItems(mc, selectorX, selectorY);
-            }
-            if (hasSelector && !ModConfig.hotbarSelectorAboveItemText) {
+            if (hasSelector) {
                 drawSelectorAfterItems(mc, selectorX, selectorY);
             }
 
@@ -232,14 +230,14 @@ public class RenderHandler {
                     if (!DualHotbarState.installedOnServer) {
                         GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
                     }
-                    renderInventorySlotOverlay(i, x, z);
+                    renderInventorySlotOverlay(itemRenderer, i, x, z);
                     if (!DualHotbarState.installedOnServer) {
                         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1f);
                     }
                 } else {
                     int x = width / 2 - 90 + (i % 18) * 20 + 2 - 90;
                     int z = height - 16 - 3 - ((i / 18) * offset);
-                    renderInventorySlotOverlay(i, x, z);
+                    renderInventorySlotOverlay(itemRenderer, i, x, z);
                 }
             }
 
@@ -896,13 +894,12 @@ public class RenderHandler {
         return null;
     }
 
-    protected void renderInventorySlotItem(int slotIndex, int x, int y, float partialTicks) {
+    protected void renderInventorySlotItem(RenderItem itemRenderer, int slotIndex, int x, int y, float partialTicks) {
         if (!DualHotbarConfig.enable) {
             return;
         }
 
         Minecraft mc = Minecraft.getMinecraft();
-        RenderItem itemRenderer = new RenderItem();
 
         ItemStack itemstack = mc.thePlayer.inventory.mainInventory[slotIndex];
 
@@ -935,13 +932,12 @@ public class RenderHandler {
         }
     }
 
-    protected void renderInventorySlotOverlay(int slotIndex, int x, int y) {
+    protected void renderInventorySlotOverlay(RenderItem itemRenderer, int slotIndex, int x, int y) {
         if (!DualHotbarConfig.enable) {
             return;
         }
 
         Minecraft mc = Minecraft.getMinecraft();
-        RenderItem itemRenderer = new RenderItem();
         ItemStack itemstack = mc.thePlayer.inventory.mainInventory[slotIndex];
 
         if (itemstack != null) {

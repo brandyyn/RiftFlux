@@ -28,7 +28,10 @@ public final class AsgardShieldState {
         if (data == null) {
             return;
         }
-        data.setInteger(NBT_GUARD_GAUGE, Math.max(0, Math.min(200, value)));
+        int clamped = Math.max(0, Math.min(200, value));
+        if (!data.hasKey(NBT_GUARD_GAUGE) || data.getInteger(NBT_GUARD_GAUGE) != clamped) {
+            data.setInteger(NBT_GUARD_GAUGE, clamped);
+        }
     }
 
     public static boolean isGuardBroken(EntityPlayer player) {
@@ -48,7 +51,9 @@ public final class AsgardShieldState {
         if (data == null) {
             return;
         }
-        data.setBoolean(NBT_GUARD_BROKEN, broken);
+        if (!data.hasKey(NBT_GUARD_BROKEN) || isGuardBroken(player) != broken) {
+            data.setBoolean(NBT_GUARD_BROKEN, broken);
+        }
     }
 
     public static int getVanguardCount(EntityPlayer player) {
@@ -61,7 +66,10 @@ public final class AsgardShieldState {
         if (data == null) {
             return;
         }
-        data.setInteger(NBT_VANGUARD_COUNT, Math.max(0, Math.min(7, value)));
+        int clamped = Math.max(0, Math.min(7, value));
+        if (!data.hasKey(NBT_VANGUARD_COUNT) || data.getInteger(NBT_VANGUARD_COUNT) != clamped) {
+            data.setInteger(NBT_VANGUARD_COUNT, clamped);
+        }
     }
 
     public static int getVanguardTicks(EntityPlayer player) {
@@ -74,7 +82,10 @@ public final class AsgardShieldState {
         if (data == null) {
             return;
         }
-        data.setInteger(NBT_VANGUARD_TICKS, Math.max(0, value));
+        int clamped = Math.max(0, value);
+        if (!data.hasKey(NBT_VANGUARD_TICKS) || data.getInteger(NBT_VANGUARD_TICKS) != clamped) {
+            data.setInteger(NBT_VANGUARD_TICKS, clamped);
+        }
     }
 
     public static int getLivingmetalAura(EntityPlayer player) {
@@ -87,7 +98,10 @@ public final class AsgardShieldState {
         if (data == null) {
             return;
         }
-        data.setInteger(NBT_LIVINGMETAL_AURA, Math.max(0, value));
+        int clamped = Math.max(0, value);
+        if (!data.hasKey(NBT_LIVINGMETAL_AURA) || data.getInteger(NBT_LIVINGMETAL_AURA) != clamped) {
+            data.setInteger(NBT_LIVINGMETAL_AURA, clamped);
+        }
     }
 
     public static int getBiomassAura(EntityPlayer player) {
@@ -100,6 +114,9 @@ public final class AsgardShieldState {
         if (data == null) {
             return;
         }
-        data.setInteger(NBT_BIOMASS_AURA, Math.max(0, value));
+        int clamped = Math.max(0, value);
+        if (!data.hasKey(NBT_BIOMASS_AURA) || data.getInteger(NBT_BIOMASS_AURA) != clamped) {
+            data.setInteger(NBT_BIOMASS_AURA, clamped);
+        }
     }
 }

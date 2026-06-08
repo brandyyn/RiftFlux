@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -24,6 +25,7 @@ public abstract class MixinInventoryPlayerPickupTag {
 
     @Inject(method = "addItemStackToInventory(Lnet/minecraft/item/ItemStack;)Z", at = @At("HEAD"))
     private void rf$captureBefore(ItemStack incoming, CallbackInfoReturnable<Boolean> cir) {
+        if (!ModConfig.enableItemPickupStar) return;
         if (mainInventory == null) return;
         rf$beforeCounts = new int[mainInventory.length];
         for (int i = 0; i < mainInventory.length; i++) {
@@ -34,6 +36,10 @@ public abstract class MixinInventoryPlayerPickupTag {
 
     @Inject(method = "addItemStackToInventory(Lnet/minecraft/item/ItemStack;)Z", at = @At("RETURN"))
     private void rf$tagIncreased(ItemStack incoming, CallbackInfoReturnable<Boolean> cir) {
+        if (!ModConfig.enableItemPickupStar) {
+            rf$beforeCounts = null;
+            return;
+        }
         if (mainInventory == null || rf$beforeCounts == null) return;
 
         for (int i = 0; i < mainInventory.length; i++) {

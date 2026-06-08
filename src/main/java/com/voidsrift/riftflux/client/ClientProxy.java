@@ -160,7 +160,9 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enableChatSelectionCopy) {
             ChatSelectionManager.bootstrap();
         }
-        ChatBubblesClient.bootstrap();
+        if (ModConfig.enableChatBubblesModule) {
+            ChatBubblesClient.bootstrap();
+        }
         if (ModConfig.enableWorldTooltips) {
             WorldTooltipClient.bootstrap();
         }

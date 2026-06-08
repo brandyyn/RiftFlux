@@ -82,7 +82,9 @@ public final class ChatBubblesClient {
         refreshServerState(mc);
         advertiseConfiguredColor(mc);
         advertiseConfiguredTextColor(mc);
-        pruneExpiredMessages(mc.ingameGUI.getUpdateCounter());
+        if (!messages.isEmpty()) {
+            pruneExpiredMessages(mc.ingameGUI.getUpdateCounter());
+        }
     }
 
     @SubscribeEvent
@@ -113,6 +115,9 @@ public final class ChatBubblesClient {
     @SubscribeEvent
     public void onRenderLivingPost(RenderLivingEvent.Post event) {
         if (!ModConfig.enableChatBubblesModule || !(event.entity instanceof EntityPlayer)) {
+            return;
+        }
+        if (messages.isEmpty()) {
             return;
         }
 

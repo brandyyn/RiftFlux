@@ -1,7 +1,5 @@
 package com.voidsrift.riftflux.duckling;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -51,6 +49,7 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
 
     @Override
     public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
+        DucklingRenderState.pushEntityRenderContext();
         DucklingRenderState.Snapshot snapshot = DucklingRenderState.capture();
         DucklingRenderState.pushRenderAttribs();
         DucklingRenderState.pushRenderClientAttribs();
@@ -71,6 +70,7 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
             DucklingRenderState.popRenderAttribs();
             DucklingRenderState.restoreAfterRender(snapshot);
             this.riftflux$currentBeddiumBrightness = -1;
+            DucklingRenderState.popEntityRenderContext();
         }
     }
 
@@ -154,12 +154,15 @@ public class RenderQuackling extends GeoEntityRenderer<EntityQuackling> {
 
     @Override
     public GeoBone[] getPathFromRoot(GeoBone bone) {
-        List<GeoBone> path = new ArrayList<GeoBone>();
-        while (bone != null) {
-            path.add(0, bone);
-            bone = bone.parent;
+        int count = 0;
+        for (GeoBone current = bone; current != null; current = current.parent) {
+            count++;
         }
-        return path.toArray(new GeoBone[path.size()]);
+        GeoBone[] path = new GeoBone[count];
+        for (GeoBone current = bone; current != null; current = current.parent) {
+            path[--count] = current;
+        }
+        return path;
     }
 
     private static boolean hasClass(String className) {

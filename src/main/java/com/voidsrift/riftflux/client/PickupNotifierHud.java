@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -141,7 +140,7 @@ public final class PickupNotifierHud {
 
         enforceEntryCap(cap - 1);
 
-        entries.add(new Entry(display.copy(), add, total, slide));
+        entries.add(new Entry(display, add, total, slide));
         enforceEntryCap(cap);
         if (wasEmpty) firstDelayTicks = FIRST_DELAY_TICKS;
     }
@@ -223,11 +222,6 @@ public final class PickupNotifierHud {
     private static float smootherstep(float t){
         t = clamp01(t);
         return t*t*t * (t*(t*6f - 15f) + 10f);
-    }
-
-    @SubscribeEvent
-    public void onHud(RenderGameOverlayEvent.Post e){
-        return;
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

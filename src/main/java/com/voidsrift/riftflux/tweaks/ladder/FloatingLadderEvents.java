@@ -39,6 +39,7 @@ public class FloatingLadderEvents {
     // rather than inside it. This handler adds ladder-like movement when touching it.
     @SubscribeEvent
     public void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
+        if (!ModConfig.enableHangingLadders) return;
         if (event == null || event.entityLiving == null) return;
 
         final EntityLivingBase ent = event.entityLiving;
@@ -49,8 +50,6 @@ public class FloatingLadderEvents {
         // - No horizontal slowdown ever (do NOT damp motionX/motionZ)
         // - You only climb UP when holding SPACE
         // - "Contact" can be either: vanilla isOnLadder() OR touching the ladder plane (back/sides)
-        if (!ModConfig.enableHangingLadders) return;
-
         // Players only (avoid breaking mob ladder AI).
         if (!(ent instanceof EntityPlayer)) return;
 

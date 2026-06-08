@@ -423,11 +423,11 @@ public class ItemIceRod extends Item {
                 return null;
             }
 
-            double eyeX = interpX;
-            double eyeY = interpY + player.getEyeHeight();
-            double eyeZ = interpZ;
+            Vec3 start = getPlayerPos(player, interpX, interpY, interpZ);
+            double eyeX = start.xCoord;
+            double eyeY = start.yCoord;
+            double eyeZ = start.zCoord;
             double distance = getConfiguredSpawnDistance();
-            Vec3 start = Vec3.createVectorHelper(eyeX, eyeY, eyeZ);
             Vec3 end = start.addVector(look.xCoord * distance, look.yCoord * distance, look.zCoord * distance);
             MovingObjectPosition hit = world.rayTraceBlocks(start, end, false);
             return new AimContext(hit, look, eyeX, eyeY, eyeZ, interpX, interpY, interpZ);
@@ -440,12 +440,22 @@ public class ItemIceRod extends Item {
         double baseX = player.posX;
         double baseY = player.posY;
         double baseZ = player.posZ;
-        double eyeY = baseY + player.getEyeHeight();
-        Vec3 start = Vec3.createVectorHelper(baseX, eyeY, baseZ);
+        Vec3 start = getPlayerPos(player);
+        double eyeY = start.yCoord;
         double distance = getConfiguredSpawnDistance();
         Vec3 end = start.addVector(look.xCoord * distance, look.yCoord * distance, look.zCoord * distance);
         MovingObjectPosition hit = world.rayTraceBlocks(start, end, false);
-        return new AimContext(hit, look, baseX, eyeY, baseZ, baseX, baseY, baseZ);
+        return new AimContext(hit, look, start.xCoord, eyeY, start.zCoord, baseX, baseY, baseZ);
+    }
+
+    public static Vec3 getPlayerPos(EntityPlayer player) {
+        return getPlayerPos(player, player.posX, player.posY, player.posZ);
+    }
+
+    private static Vec3 getPlayerPos(EntityPlayer player, double posX, double posY, double posZ) {
+        // Client player Y is already offset by the default eye height in this MC version.
+        float defaultEyeHeight = player.worldObj != null && player.worldObj.isRemote ? player.getDefaultEyeHeight() : 0.0F;
+        return Vec3.createVectorHelper(posX, posY + (double) (player.getEyeHeight() - defaultEyeHeight), posZ);
     }
 
     private static Vec3 getLookVector(float yaw, float pitch) {

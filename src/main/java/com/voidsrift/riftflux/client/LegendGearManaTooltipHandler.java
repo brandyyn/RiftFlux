@@ -174,7 +174,31 @@ public class LegendGearManaTooltipHandler {
     }
 
     private static String normalizeTooltip(String value) {
-        String stripped = value == null ? "" : value.replaceAll("\u00A7[0-9A-FK-ORa-fk-or]", "");
-        return stripped.trim().toLowerCase(Locale.ROOT);
+        if (value == null) {
+            return "";
+        }
+        StringBuilder out = null;
+        int start = 0;
+        int end = value.length();
+        while (start < end && Character.isWhitespace(value.charAt(start))) {
+            start++;
+        }
+        while (end > start && Character.isWhitespace(value.charAt(end - 1))) {
+            end--;
+        }
+        for (int i = start; i < end; i++) {
+            char c = value.charAt(i);
+            if (c == '\u00A7' && i + 1 < end) {
+                if (out == null) {
+                    out = new StringBuilder(end - start);
+                    out.append(value, start, i);
+                }
+                i++;
+            } else if (out != null) {
+                out.append(c);
+            }
+        }
+        String stripped = out == null ? value.substring(start, end) : out.toString();
+        return stripped.toLowerCase(Locale.ROOT);
     }
 }

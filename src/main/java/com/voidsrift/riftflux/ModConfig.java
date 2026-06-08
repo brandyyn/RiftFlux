@@ -229,6 +229,7 @@ public class ModConfig {
     public static boolean betaStarsEnabled;
     public static int betaStarsCount;
     public static float betaStarsSizeMultiplier;
+    public static boolean betaStarsRandomPatternEveryNight;
     public static boolean betaStarsRandomBlink;
     public static float betaStarsTwinkleSpeedMultiplier;
     public static int betaStarsSunsetFadeStartTick;
@@ -2213,6 +2214,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 0.1F,
                 8.0F,
                 "Size multiplier for beta-style stars. 1.0 = default RiftFlux beta-star size."
+        );
+        betaStarsRandomPatternEveryNight = config.getBoolean(
+                "BetaStarsRandomPatternEveryNight",
+                "celestial",
+                true,
+                "If true, RiftFlux beta stars use a different deterministic star pattern each Minecraft night."
         );
         betaStarsRandomBlink = config.getBoolean(
                 "BetaStarsTwinkle",

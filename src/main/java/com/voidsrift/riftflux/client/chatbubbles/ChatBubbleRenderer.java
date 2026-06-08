@@ -87,8 +87,7 @@ public final class ChatBubbleRenderer {
         int brightnessY = LIGHTMAP_BRIGHT / 65536;
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightnessX, brightnessY);
 
-        int[] lineWidths = getLineWidths(fontRenderer, messageLines);
-        int maxTextWidth = getMaxWidth(lineWidths);
+        int maxTextWidth = getMaxWidth(fontRenderer, messageLines);
         float halfWidth = Math.max(maxTextWidth * 0.5F + HORIZONTAL_PADDING, TAIL_HALF_WIDTH + 2.0F);
         float left = -halfWidth;
         float right = halfWidth;
@@ -133,8 +132,9 @@ public final class ChatBubbleRenderer {
         int shadowAlpha = Math.min(200, Math.max(24, (int) (textAlpha * 0.75F)));
 
         for (int i = messageLines.length - 1; i >= 0; i--) {
+            int lineWidth = fontRenderer.getStringWidth(messageLines[i]);
             int textY = -lines * LINE_HEIGHT;
-            int textX = -lineWidths[i] / 2;
+            int textX = -lineWidth / 2;
 
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
@@ -144,7 +144,7 @@ public final class ChatBubbleRenderer {
                 drawSolidQuad(0.0F, 0.0F, 0.0F, barAlpha,
                         textX - 3.0F,
                         textY - 1.0F,
-                        textX + lineWidths[i] + 3.0F,
+                        textX + lineWidth + 3.0F,
                         textY + LINE_HEIGHT);
                 GL11.glEnable(GL11.GL_TEXTURE_2D);
             }
@@ -225,17 +225,10 @@ public final class ChatBubbleRenderer {
         tessellator.draw();
     }
 
-    private static int[] getLineWidths(FontRenderer fontRenderer, String[] messageLines) {
-        int[] widths = new int[messageLines.length];
-        for (int i = 0; i < messageLines.length; i++) {
-            widths[i] = fontRenderer.getStringWidth(messageLines[i]);
-        }
-        return widths;
-    }
-
-    private static int getMaxWidth(int[] widths) {
+    private static int getMaxWidth(FontRenderer fontRenderer, String[] messageLines) {
         int maxWidth = 0;
-        for (int width : widths) {
+        for (String line : messageLines) {
+            int width = fontRenderer.getStringWidth(line);
             if (width > maxWidth) {
                 maxWidth = width;
             }

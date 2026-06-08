@@ -9,19 +9,22 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 public final class BetaStarsRenderHelper {
     private static final int DEFAULT_STAR_COUNT = 1500;
     private static final float SUNSET_FADE_IN_MAX_BRIGHTNESS = 0.45F;
     private static final float SUNSET_RED_TINT_THRESHOLD = 0.45F;
+    private static final long RANDOM_MULTIPLIER = 0x5DEECE66DL;
+    private static final long RANDOM_ADDEND = 0xBL;
+    private static final long RANDOM_MASK = (1L << 48) - 1L;
     private static boolean renderedThisSkyPass;
     private static boolean betterSkiesReflectionInitialized;
     private static Field betterSkiesLayerTextureField;
     private static Field betterSkiesLayerPropertiesField;
     private static Method propertiesGetResourceMethod;
     private static Method propertiesEntrySetMethod;
+    private static long randomSeedAfterBlink;
 
     private BetaStarsRenderHelper() {
     }
@@ -62,17 +65,21 @@ public final class BetaStarsRenderHelper {
             return;
         }
 
-        Random random = new Random(10842L);
+        long randomSeed = initialRandomSeed(resolveStarSeed());
         Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
         double sizeMultiplier = Math.max(0.1D, (double) ModConfig.betaStarsSizeMultiplier);
         float time = resolveRenderTime(partialTicks);
 
         for (int i = 0; i < starCount; ++i) {
-            double d0 = (double) (random.nextFloat() * 2.0F - 1.0F);
-            double d1 = (double) (random.nextFloat() * 2.0F - 1.0F);
-            double d2 = (double) (random.nextFloat() * 2.0F - 1.0F);
-            double d3 = (0.35D + (double) (random.nextFloat() * 0.25F)) * sizeMultiplier;
+            randomSeed = nextRandomSeed(randomSeed);
+            double d0 = (double) (nextRandomFloat(randomSeed) * 2.0F - 1.0F);
+            randomSeed = nextRandomSeed(randomSeed);
+            double d1 = (double) (nextRandomFloat(randomSeed) * 2.0F - 1.0F);
+            randomSeed = nextRandomSeed(randomSeed);
+            double d2 = (double) (nextRandomFloat(randomSeed) * 2.0F - 1.0F);
+            randomSeed = nextRandomSeed(randomSeed);
+            double d3 = (0.35D + (double) (nextRandomFloat(randomSeed) * 0.25F)) * sizeMultiplier;
             double d4 = d0 * d0 + d1 * d1 + d2 * d2;
 
             if (d4 < 1.0D && d4 > 0.01D) {
@@ -89,10 +96,16 @@ public final class BetaStarsRenderHelper {
                 double d11 = Math.atan2(Math.sqrt(d0 * d0 + d2 * d2), d1);
                 double d12 = Math.sin(d11);
                 double d13 = Math.cos(d11);
-                double d14 = random.nextDouble() * Math.PI * 2.0D;
+                randomSeed = nextRandomSeed(randomSeed);
+                long highBits = randomSeed >>> 22;
+                randomSeed = nextRandomSeed(randomSeed);
+                long lowBits = randomSeed >>> 21;
+                double d14 = (((highBits << 27) + lowBits) / (double) (1L << 53)) * Math.PI * 2.0D;
                 double d15 = Math.sin(d14);
                 double d16 = Math.cos(d14);
-                float starAlpha = clamp01(baseBrightness * resolveBlinkFactor(random, time));
+                float blinkFactor = resolveBlinkFactor(randomSeed, time);
+                randomSeed = randomSeedAfterBlink;
+                float starAlpha = clamp01(baseBrightness * blinkFactor);
                 if (starAlpha <= 0.003F) {
                     continue;
                 }
@@ -299,23 +312,54 @@ public final class BetaStarsRenderHelper {
         return (float) mc.theWorld.getTotalWorldTime() + partialTicks;
     }
 
-    private static float resolveBlinkFactor(Random random, float time) {
+    private static long resolveStarSeed() {
+        if (!ModConfig.betaStarsRandomPatternEveryNight) {
+            return 10842L;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null) {
+            return 10842L;
+        }
+        long day = mc.theWorld.getWorldTime() / 24000L;
+        return 10842L ^ (day * 341873128712L);
+    }
+
+    private static float resolveBlinkFactor(long randomSeed, float time) {
         if (!ModConfig.betaStarsRandomBlink) {
+            randomSeedAfterBlink = randomSeed;
             return 1.0F;
         }
 
-        float phase = random.nextFloat() * ((float) Math.PI * 2.0F);
+        randomSeed = nextRandomSeed(randomSeed);
+        float phase = nextRandomFloat(randomSeed) * ((float) Math.PI * 2.0F);
         float speedMultiplier = Math.max(0.05F, ModConfig.betaStarsTwinkleSpeedMultiplier);
-        float speed = (0.055F + random.nextFloat() * 0.115F) * speedMultiplier;
-        float floor = 0.38F + random.nextFloat() * 0.28F;
+        randomSeed = nextRandomSeed(randomSeed);
+        float speed = (0.055F + nextRandomFloat(randomSeed) * 0.115F) * speedMultiplier;
+        randomSeed = nextRandomSeed(randomSeed);
+        float floor = 0.38F + nextRandomFloat(randomSeed) * 0.28F;
         float slowWave = 0.5F + 0.5F * (float) Math.sin(time * speed + phase);
-        float shimmerWave = 0.5F + 0.5F * (float) Math.sin(time * speed * (2.1F + random.nextFloat() * 1.7F) + phase * 1.73F);
+        randomSeed = nextRandomSeed(randomSeed);
+        float shimmerWave = 0.5F + 0.5F * (float) Math.sin(time * speed * (2.1F + nextRandomFloat(randomSeed) * 1.7F) + phase * 1.73F);
         float shimmer = slowWave * shimmerWave;
-        if (random.nextFloat() < 0.08F) {
+        randomSeed = nextRandomSeed(randomSeed);
+        if (nextRandomFloat(randomSeed) < 0.08F) {
             float accent = 0.5F + 0.5F * (float) Math.sin(time * speed * 2.4F + phase * 2.9F);
             shimmer = Math.max(shimmer, accent * accent);
         }
+        randomSeedAfterBlink = randomSeed;
         return clamp01(floor + (1.0F - floor) * shimmer);
+    }
+
+    private static long initialRandomSeed(long seed) {
+        return (seed ^ RANDOM_MULTIPLIER) & RANDOM_MASK;
+    }
+
+    private static long nextRandomSeed(long seed) {
+        return (seed * RANDOM_MULTIPLIER + RANDOM_ADDEND) & RANDOM_MASK;
+    }
+
+    private static float nextRandomFloat(long seed) {
+        return (float) (seed >>> 24) / (float) (1 << 24);
     }
 
     private static float smoothstep(float value) {
@@ -332,4 +376,5 @@ public final class BetaStarsRenderHelper {
         }
         return value;
     }
+
 }

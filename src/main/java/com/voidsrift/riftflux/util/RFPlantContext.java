@@ -48,6 +48,7 @@ public class RFPlantContext {
             new WeakHashMap<World, Set<Long>>();
     private static final Map<World, Map<Long, Byte>> CROSSED_PLANT_FACING =
             new WeakHashMap<World, Map<Long, Byte>>();
+    private static volatile boolean hasAnyCrossedPlantFacing;
 
     private static long pack(int x, int y, int z) {
         long lx = (long) x & 0x3FFFFFFL; // 26 bits
@@ -94,6 +95,7 @@ public class RFPlantContext {
                 CROSSED_PLANT_FACING.put(world, map);
             }
             map.put(key, value);
+            hasAnyCrossedPlantFacing = true;
         }
         if (!world.isRemote && world.provider != null && RFNetwork.CH != null) {
             RFNetwork.CH.sendToDimension(
@@ -107,7 +109,7 @@ public class RFPlantContext {
      * Returns placed crossed-plant facing (0-3), or fallback when unknown.
      */
     public static int getCrossedPlantFacing(World world, int x, int y, int z, int fallback) {
-        if (world == null) return fallback & 3;
+        if (world == null || !hasAnyCrossedPlantFacing) return fallback & 3;
         long key = pack(x, y, z);
         synchronized (CROSSED_PLANT_FACING) {
             Map<Long, Byte> map = CROSSED_PLANT_FACING.get(world);
@@ -117,6 +119,10 @@ public class RFPlantContext {
             Byte value = map.get(key);
             return value == null ? (fallback & 3) : (value.intValue() & 3);
         }
+    }
+
+    public static boolean hasAnyCrossedPlantFacing() {
+        return hasAnyCrossedPlantFacing;
     }
 
     /** True if this position was previously marked as player-placed. */
@@ -147,6 +153,7 @@ public class RFPlantContext {
                 map.remove(key);
                 if (map.isEmpty()) {
                     CROSSED_PLANT_FACING.remove(world);
+                    refreshHasAnyCrossedPlantFacingLocked();
                 }
             }
         }
@@ -159,6 +166,11 @@ public class RFPlantContext {
         }
         synchronized (CROSSED_PLANT_FACING) {
             CROSSED_PLANT_FACING.remove(world);
+            refreshHasAnyCrossedPlantFacingLocked();
         }
+    }
+
+    private static void refreshHasAnyCrossedPlantFacingLocked() {
+        hasAnyCrossedPlantFacing = !CROSSED_PLANT_FACING.isEmpty();
     }
 }

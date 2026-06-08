@@ -28,14 +28,22 @@ public abstract class MixinArmorProperties {
          return;
       }
 
-      ItemStack[] snapshot = new ItemStack[inventory.length];
+      ItemStack[] snapshot = null;
       for (int i = 0; i < inventory.length; i++) {
-         if (inventory[i] != null) {
-            snapshot[i] = inventory[i].copy();
+         ItemStack stack = inventory[i];
+         if (stack != null && stack.getMaxDamage() > 0) {
+            if (snapshot == null) {
+               snapshot = new ItemStack[inventory.length];
+            }
+            snapshot[i] = stack.copy();
          }
       }
 
-      riftflux$armorSnapshot.set(snapshot);
+      if (snapshot == null) {
+         riftflux$armorSnapshot.remove();
+      } else {
+         riftflux$armorSnapshot.set(snapshot);
+      }
    }
 
    @Inject(

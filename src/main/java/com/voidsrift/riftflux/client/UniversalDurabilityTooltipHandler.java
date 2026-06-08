@@ -9,13 +9,8 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
 
 public class UniversalDurabilityTooltipHandler {
-    private static final Pattern DURABILITY_PATTERN =
-            Pattern.compile("(?i)^durability\\s*[:\\uFF1A]\\s*\\d+\\s*/\\s*\\d+\\s*$");
-
     @SubscribeEvent
     public void onTooltip(ItemTooltipEvent event) {
         if (event == null || !ModConfig.enableUniversalDurabilityTooltip) {
@@ -43,8 +38,7 @@ public class UniversalDurabilityTooltipHandler {
                 if (!(lineObj instanceof String)) {
                     continue;
                 }
-                String line = stripFormatting((String) lineObj).trim().toLowerCase(Locale.ROOT);
-                if (DURABILITY_PATTERN.matcher(line).matches()) {
+                if (isDurabilityLine((String) lineObj)) {
                     return;
                 }
             }
@@ -54,11 +48,65 @@ public class UniversalDurabilityTooltipHandler {
         event.toolTip.add(EnumChatFormatting.GRAY + "Durability: " + remaining + "/" + max);
     }
 
-    private static String stripFormatting(String text) {
+    private static boolean isDurabilityLine(String text) {
         if (text == null) {
-            return "";
+            return false;
         }
-        return text.replaceAll("\u00A7[0-9A-FK-ORa-fk-or]", "");
+        int length = text.length();
+        int i = skipWhitespaceAndFormatting(text, 0, length);
+        String label = "durability";
+        for (int j = 0; j < label.length(); j++) {
+            if (i >= length || Character.toLowerCase(text.charAt(i)) != label.charAt(j)) {
+                return false;
+            }
+            i++;
+        }
+        i = skipWhitespaceAndFormatting(text, i, length);
+        if (i >= length) {
+            return false;
+        }
+        char colon = text.charAt(i);
+        if (colon != ':' && colon != '\uFF1A') {
+            return false;
+        }
+        i = skipWhitespaceAndFormatting(text, i + 1, length);
+        int firstDigits = 0;
+        while (i < length && Character.isDigit(text.charAt(i))) {
+            i++;
+            firstDigits++;
+        }
+        if (firstDigits <= 0) {
+            return false;
+        }
+        i = skipWhitespaceAndFormatting(text, i, length);
+        if (i >= length || text.charAt(i) != '/') {
+            return false;
+        }
+        i = skipWhitespaceAndFormatting(text, i + 1, length);
+        int secondDigits = 0;
+        while (i < length && Character.isDigit(text.charAt(i))) {
+            i++;
+            secondDigits++;
+        }
+        if (secondDigits <= 0) {
+            return false;
+        }
+        return skipWhitespaceAndFormatting(text, i, length) >= length;
+    }
+
+    private static int skipWhitespaceAndFormatting(String text, int index, int length) {
+        int i = index;
+        while (i < length) {
+            char c = text.charAt(i);
+            if (c == '\u00A7' && i + 1 < length) {
+                i += 2;
+            } else if (Character.isWhitespace(c)) {
+                i++;
+            } else {
+                break;
+            }
+        }
+        return i;
     }
 
     private static boolean isTConstructItem(ItemStack stack) {

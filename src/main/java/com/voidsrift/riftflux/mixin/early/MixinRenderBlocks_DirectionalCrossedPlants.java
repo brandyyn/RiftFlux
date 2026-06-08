@@ -39,9 +39,9 @@ public abstract class MixinRenderBlocks_DirectionalCrossedPlants {
         int blockZ = MathHelper.floor_double(z + 0.5D);
         int anchorY = this.riftflux$getFacingAnchorY(blockX, blockY, blockZ);
         int fallbackFacing = (int) (((long) (blockX * 73428767) ^ (long) (anchorY * 912367) ^ (long) (blockZ * 1315423911)) & 3L);
-        World world = this.riftflux$getWorldFromBlockAccess(this.blockAccess);
         int facing = fallbackFacing;
-        if (ModConfig.directionalCrossedPlantFacePlayerOnPlacement) {
+        if (ModConfig.directionalCrossedPlantFacePlayerOnPlacement && RFPlantContext.hasAnyCrossedPlantFacing()) {
+            World world = this.riftflux$getWorldFromBlockAccess(this.blockAccess);
             facing = RFPlantContext.getCrossedPlantFacing(world, blockX, anchorY, blockZ, fallbackFacing);
         }
 

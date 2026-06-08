@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -24,6 +25,7 @@ public abstract class MixinInventoryPlayerPickupTagStorePartial {
 
     @Inject(method = "storePartialItemStack(Lnet/minecraft/item/ItemStack;)I", at = @At("HEAD"))
     private void rf$captureBeforeSP(ItemStack incoming, CallbackInfoReturnable<Integer> cir) {
+        if (!ModConfig.enableItemPickupStar) return;
         if (mainInventory == null) return;
         rf$beforeCountsSP = new int[mainInventory.length];
         for (int i = 0; i < mainInventory.length; i++) {
@@ -34,6 +36,10 @@ public abstract class MixinInventoryPlayerPickupTagStorePartial {
 
     @Inject(method = "storePartialItemStack(Lnet/minecraft/item/ItemStack;)I", at = @At("RETURN"))
     private void rf$tagAfterSP(ItemStack incoming, CallbackInfoReturnable<Integer> cir) {
+        if (!ModConfig.enableItemPickupStar) {
+            rf$beforeCountsSP = null;
+            return;
+        }
         if (mainInventory == null || rf$beforeCountsSP == null) return;
 
         for (int i = 0; i < mainInventory.length; i++) {

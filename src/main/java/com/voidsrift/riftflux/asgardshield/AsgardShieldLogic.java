@@ -26,7 +26,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -684,14 +683,7 @@ public final class AsgardShieldLogic {
         }
 
         AxisAlignedBB box = player.boundingBox.expand(10.0D, 10.0D, 10.0D);
-        List<Entity> entities = player.worldObj.getEntitiesWithinAABB(Entity.class, box);
-        List<EntityCreature> creatures = new ArrayList<EntityCreature>();
-        for (Entity entity : entities) {
-            if (!(entity instanceof EntityCreature) || entity == player) {
-                continue;
-            }
-            creatures.add((EntityCreature) entity);
-        }
+        List<EntityCreature> creatures = player.worldObj.getEntitiesWithinAABB(EntityCreature.class, box);
         if (creatures.size() < 2) {
             return;
         }

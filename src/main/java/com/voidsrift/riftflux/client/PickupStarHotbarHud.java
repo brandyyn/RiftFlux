@@ -39,12 +39,17 @@ public final class PickupStarHotbarHud {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null) return;
 
+        final boolean dualEnabled = DualHotbarConfig.enable;
+        final int numBars = dualEnabled ? DualHotbarConfig.numHotbars : 1;
+        int totalSlots = 9 * numBars;
+        if (!hasStarredHotbarSlot(mc, totalSlots)) {
+            return;
+        }
+
         ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         final int sw = sr.getScaledWidth();
         final int sh = sr.getScaledHeight();
 
-        final boolean dualEnabled = DualHotbarConfig.enable;
-        final int numBars = dualEnabled ? DualHotbarConfig.numHotbars : 1;
         final boolean longHotbar = dualEnabled && !DualHotbarConfig.twoLayerRendering;
         final int columns = longHotbar ? 18 : 9;
         final int baseX = (sw / 2) - 90 + 2 + (longHotbar ? -90 : 0);
@@ -64,7 +69,7 @@ public final class PickupStarHotbarHud {
             GL11.glColor4f(1F, 1F, 1F, 1F);
 
             final Tessellator t = Tessellator.instance;
-            int totalSlots = 9 * numBars;
+            boolean drawing = false;
             for (int i = 0; i < totalSlots; i++) {
                 ItemStack st = mc.thePlayer.inventory.mainInventory[i];
                 if (st == null) continue;
@@ -74,16 +79,43 @@ public final class PickupStarHotbarHud {
                 int x = baseX + (i % columns) * 20;
                 int y = baseY - (i / columns) * offset;
 
-                t.startDrawingQuads();
+                if (!drawing) {
+                    t.startDrawingQuads();
+                    drawing = true;
+                }
                 t.addVertexWithUV(x     , y + 16, 0, 0, 1);
                 t.addVertexWithUV(x + 16, y + 16, 0, 1, 1);
                 t.addVertexWithUV(x + 16, y     , 0, 1, 0);
                 t.addVertexWithUV(x     , y     , 0, 0, 0);
+            }
+            if (drawing) {
                 t.draw();
             }
         } finally {
             GL11.glColor4f(1F, 1F, 1F, 1F);
             GL11.glPopAttrib();
         }
+    }
+
+    private static boolean hasStarredHotbarSlot(Minecraft mc, int totalSlots) {
+        if (mc == null || mc.thePlayer == null || mc.thePlayer.inventory == null) {
+            return false;
+        }
+        ItemStack[] inventory = mc.thePlayer.inventory.mainInventory;
+        if (inventory == null) {
+            return false;
+        }
+        int count = Math.min(totalSlots, inventory.length);
+        for (int i = 0; i < count; i++) {
+            ItemStack stack = inventory[i];
+            if (stack == null) {
+                continue;
+            }
+            NBTTagCompound tag = stack.getTagCompound();
+            if (tag != null && tag.getBoolean(TAG_NEW)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

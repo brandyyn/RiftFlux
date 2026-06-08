@@ -7,8 +7,6 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
@@ -29,11 +27,14 @@ public final class TorchBillboardRenderer {
     private static final int VERTICAL_SCAN_RADIUS = 24;
     private static final int RESCAN_INTERVAL_TICKS = 10;
     private static final int RESCAN_BLOCK_DELTA = 8;
+    private static final int COORD_BITS = 26;
+    private static final int COORD_MASK = (1 << COORD_BITS) - 1;
     private static final TorchBillboardRenderer INSTANCE = new TorchBillboardRenderer();
 
     private static boolean bootstrapped;
 
-    private final List<TorchEntry> torches = new ArrayList<TorchEntry>();
+    private long[] torches = new long[0];
+    private int torchCount;
     private World cachedWorld;
     private int lastScanTick = Integer.MIN_VALUE;
     private int lastScanX = Integer.MIN_VALUE;
@@ -83,7 +84,7 @@ public final class TorchBillboardRenderer {
         }
 
         this.refreshCacheIfNeeded(world, camera);
-        if (this.torches.isEmpty()) {
+        if (this.torchCount <= 0) {
             return;
         }
 
@@ -118,7 +119,7 @@ public final class TorchBillboardRenderer {
     }
 
     private void scanTorches(World world, int centerX, int centerY, int centerZ) {
-        this.torches.clear();
+        this.torchCount = 0;
 
         int minY = Math.max(0, centerY - VERTICAL_SCAN_RADIUS);
         int maxY = Math.min(255, centerY + VERTICAL_SCAN_RADIUS);
@@ -137,7 +138,7 @@ public final class TorchBillboardRenderer {
                     if (!this.shouldRenderBillboard(block, world.getBlockMetadata(x, y, z))) {
                         continue;
                     }
-                    this.torches.add(new TorchEntry(x, y, z));
+                    this.addTorch(x, y, z);
                 }
             }
         }
@@ -167,8 +168,8 @@ public final class TorchBillboardRenderer {
             minecraft.getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
             Tessellator tessellator = Tessellator.instance;
             tessellator.startDrawingQuads();
-            for (int i = 0; i < this.torches.size(); i++) {
-                this.renderTorch(tessellator, world, this.torches.get(i), cameraX, cameraEyeY, cameraZ);
+            for (int i = 0; i < this.torchCount; i++) {
+                this.renderTorch(tessellator, world, this.torches[i], cameraX, cameraEyeY, cameraZ);
             }
             tessellator.draw();
         } finally {
@@ -178,9 +179,12 @@ public final class TorchBillboardRenderer {
         }
     }
 
-    private void renderTorch(Tessellator tessellator, World world, TorchEntry entry, double cameraX, double cameraY, double cameraZ) {
-        Block block = world.getBlock(entry.x, entry.y, entry.z);
-        int meta = world.getBlockMetadata(entry.x, entry.y, entry.z);
+    private void renderTorch(Tessellator tessellator, World world, long packedPos, double cameraX, double cameraY, double cameraZ) {
+        int x = unpackX(packedPos);
+        int y = unpackY(packedPos);
+        int z = unpackZ(packedPos);
+        Block block = world.getBlock(x, y, z);
+        int meta = world.getBlockMetadata(x, y, z);
         if (!this.shouldRenderBillboard(block, meta)) {
             return;
         }
@@ -193,15 +197,15 @@ public final class TorchBillboardRenderer {
         double xTilt = this.getXTilt(meta);
         double zTilt = this.getZTilt(meta);
         boolean wallMounted = this.isWallMounted(meta);
-        double centerX = entry.x + 0.5D;
-        double centerZ = entry.z + 0.5D;
+        double centerX = x + 0.5D;
+        double centerZ = z + 0.5D;
         double originX = wallMounted ? centerX + xTilt * 0.25D : centerX;
         double originZ = wallMounted ? centerZ + zTilt * 0.25D : centerZ;
         double bottomX = originX + xTilt;
-        double bottomY = entry.y + (wallMounted ? 0.2D : 0.0D);
+        double bottomY = y + (wallMounted ? 0.2D : 0.0D);
         double bottomZ = originZ + zTilt;
         double topX = originX;
-        double topY = entry.y + (wallMounted ? 1.2D : 1.0D);
+        double topY = y + (wallMounted ? 1.2D : 1.0D);
         double topZ = originZ;
         double billboardCenterX = (bottomX + topX) * 0.5D;
         double billboardCenterY = (bottomY + topY) * 0.5D;
@@ -234,7 +238,7 @@ public final class TorchBillboardRenderer {
             }
         }
 
-        tessellator.setBrightness(block.getMixedBrightnessForBlock(world, entry.x, entry.y, entry.z));
+        tessellator.setBrightness(block.getMixedBrightnessForBlock(world, x, y, z));
         tessellator.setColorOpaque_F(1.0F, 1.0F, 1.0F);
         this.addDoubleSidedQuad(
                 tessellator,
@@ -290,22 +294,44 @@ public final class TorchBillboardRenderer {
 
     private void clearCache() {
         this.cachedWorld = null;
-        this.torches.clear();
+        this.torches = new long[0];
+        this.torchCount = 0;
         this.lastScanTick = Integer.MIN_VALUE;
         this.lastScanX = Integer.MIN_VALUE;
         this.lastScanY = Integer.MIN_VALUE;
         this.lastScanZ = Integer.MIN_VALUE;
     }
 
-    private static final class TorchEntry {
-        private final int x;
-        private final int y;
-        private final int z;
-
-        private TorchEntry(int x, int y, int z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
+    private void addTorch(int x, int y, int z) {
+        if (this.torchCount >= this.torches.length) {
+            int newSize = this.torches.length == 0 ? 64 : this.torches.length << 1;
+            long[] grown = new long[newSize];
+            System.arraycopy(this.torches, 0, grown, 0, this.torchCount);
+            this.torches = grown;
         }
+        this.torches[this.torchCount++] = packPos(x, y, z);
+    }
+
+    private static long packPos(int x, int y, int z) {
+        return ((long) (x & COORD_MASK) << 38)
+                | ((long) (z & COORD_MASK) << 12)
+                | (long) (y & 4095);
+    }
+
+    private static int unpackX(long packed) {
+        return signExtend26((int) (packed >> 38));
+    }
+
+    private static int unpackY(long packed) {
+        return (int) (packed & 4095L);
+    }
+
+    private static int unpackZ(long packed) {
+        return signExtend26((int) ((packed >> 12) & COORD_MASK));
+    }
+
+    private static int signExtend26(int value) {
+        int signBit = 1 << (COORD_BITS - 1);
+        return (value ^ signBit) - signBit;
     }
 }

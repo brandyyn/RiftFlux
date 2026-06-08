@@ -1,7 +1,5 @@
 package com.voidsrift.riftflux.duckling;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockGrass;
@@ -24,6 +22,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.MinecraftForgeClient;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import software.bernie.geckolib3.core.util.Color;
@@ -70,6 +69,7 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
 
     @Override
     public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
+        DucklingRenderState.pushEntityRenderContext();
         DucklingRenderState.Snapshot snapshot = DucklingRenderState.capture();
         DucklingRenderState.pushRenderAttribs();
         DucklingRenderState.pushRenderClientAttribs();
@@ -90,6 +90,7 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             DucklingRenderState.popRenderAttribs();
             DucklingRenderState.restoreAfterRender(snapshot);
             this.riftflux$currentBeddiumBrightness = -1;
+            DucklingRenderState.popEntityRenderContext();
         }
     }
 
@@ -176,6 +177,8 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             try {
                 if (blockModel) {
                     this.renderHeldBlockItem(sprite, held, brightness, partialTicks);
+                } else if (this.hasCustomEntityItemRenderer(held)) {
+                    this.renderStandardHeldItem(sprite, held);
                 } else {
                     this.renderFlatHeldItem(sprite, held, brightness, partialTicks);
                 }
@@ -200,9 +203,14 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
     }
 
     private void renderHeldBlockItem(EntitySootSprite sprite, ItemStack held, int brightness, float partialTicks) {
+        if (this.hasCustomEntityItemRenderer(held)) {
+            this.renderStandardHeldItem(sprite, held);
+            return;
+        }
+
         Block block = Block.getBlockFromItem(held.getItem());
         if (block == null || block == Blocks.air) {
-            RenderManager.instance.itemRenderer.renderItem(sprite, held, 0, IItemRenderer.ItemRenderType.ENTITY);
+            this.renderStandardHeldItem(sprite, held);
             return;
         }
 
@@ -211,7 +219,21 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
             return;
         }
 
+        this.renderStandardHeldItem(sprite, held);
+    }
+
+    private boolean hasCustomEntityItemRenderer(ItemStack held) {
+        return held != null
+                && held.getItem() != null
+                && MinecraftForgeClient.getItemRenderer(held, IItemRenderer.ItemRenderType.ENTITY) != null;
+    }
+
+    private void renderStandardHeldItem(EntitySootSprite sprite, ItemStack held) {
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         RenderManager.instance.itemRenderer.renderItem(sprite, held, 0, IItemRenderer.ItemRenderType.ENTITY);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glDepthFunc(GL11.GL_LEQUAL);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private boolean shouldRenderLitCubeBlockItem(Block block) {
@@ -565,12 +587,15 @@ public class RenderSootSprite extends GeoEntityRenderer<EntitySootSprite> {
     }
 
     public GeoBone[] getPathFromRoot(GeoBone bone) {
-        List<GeoBone> path = new ArrayList<GeoBone>();
-        while (bone != null) {
-            path.add(0, bone);
-            bone = bone.parent;
+        int count = 0;
+        for (GeoBone current = bone; current != null; current = current.parent) {
+            count++;
         }
-        return path.toArray(new GeoBone[path.size()]);
+        GeoBone[] path = new GeoBone[count];
+        for (GeoBone current = bone; current != null; current = current.parent) {
+            path[--count] = current;
+        }
+        return path;
     }
 
     private static boolean hasClass(String className) {

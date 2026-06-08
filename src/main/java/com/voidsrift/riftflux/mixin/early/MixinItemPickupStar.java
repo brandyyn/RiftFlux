@@ -192,6 +192,7 @@ public abstract class MixinItemPickupStar {
         @SuppressWarnings("rawtypes")
         final java.util.List slots = inventorySlots.inventorySlots;
         if (slots.isEmpty()) return;
+        if (!rf$hasStarredSlot(slots)) return;
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(TEX);
 
@@ -207,6 +208,7 @@ public abstract class MixinItemPickupStar {
             GL11.glColor4f(1F, 1F, 1F, 1F);
 
             final Tessellator t = Tessellator.instance;
+            boolean drawing = false;
             for (Object o : slots) {
                 final Slot s = (Slot) o;
                 final ItemStack st = s.getStack();
@@ -217,11 +219,16 @@ public abstract class MixinItemPickupStar {
                 final int x = guiLeft + s.xDisplayPosition; // absolute coords here
                 final int y = guiTop  + s.yDisplayPosition;
 
-                t.startDrawingQuads();
+                if (!drawing) {
+                    t.startDrawingQuads();
+                    drawing = true;
+                }
                 t.addVertexWithUV(x    , y+16, 0, 0, 1);
                 t.addVertexWithUV(x+16 , y+16, 0, 1, 1);
                 t.addVertexWithUV(x+16 , y   , 0, 1, 0);
                 t.addVertexWithUV(x    , y   , 0, 0, 0);
+            }
+            if (drawing) {
                 t.draw();
             }
         } finally {
@@ -229,5 +236,19 @@ public abstract class MixinItemPickupStar {
             GL11.glColor4f(1F, 1F, 1F, 1F);
             GL11.glPopAttrib();
         }
+    }
+
+    @Unique
+    private static boolean rf$hasStarredSlot(java.util.List slots) {
+        for (Object o : slots) {
+            final Slot s = (Slot) o;
+            final ItemStack st = s.getStack();
+            if (st == null) continue;
+            final NBTTagCompound tag = st.getTagCompound();
+            if (tag != null && tag.getBoolean(TAG_NEW)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
