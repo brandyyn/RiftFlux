@@ -30,10 +30,12 @@ public final class TerrariaContent {
     public static Item blackLens;
     public static Item suspiciousLookingEye;
     public static Item iceRod;
+    public static Item caneOfSomaria;
     public static Item demonEyeSpawnEgg;
     public static Item whoopieCushion;
     public static Block magicIceBlock;
     public static Block iceRodBlock;
+    public static Block somariaBlock;
     public static Block terraMushroomBlock;
     public static Block daybloomBlock;
     public static Block blinkrootBlock;
@@ -66,10 +68,12 @@ public final class TerrariaContent {
         blackLens = new ItemBlackLens().setUnlocalizedName("black_lens");
         suspiciousLookingEye = new ItemSuspiciousLookingEye().setUnlocalizedName("suspicious_looking_eye");
         iceRod = new ItemIceRod().setUnlocalizedName("ice_rod");
+        caneOfSomaria = new ItemCaneOfSomaria().setUnlocalizedName("cane_of_somaria");
         demonEyeSpawnEgg = new ItemDemonEyeSpawnEgg(0xFFFFFF, 0xB52525).setUnlocalizedName("demon_eye_spawn_egg");
         whoopieCushion = new ItemWhoopieCushion().setUnlocalizedName("whoopie_cushion");
         magicIceBlock = new BlockMagicIce();
         iceRodBlock = new BlockIceRodIce();
+        somariaBlock = new BlockSomariaBlock();
         terraMushroomBlock = new BlockTerraPlant("terra_mushroom", "terra_mushroom", BlockTerraPlant.PlacementRule.SURFACE_ONLY);
         daybloomBlock = new BlockTerraPlant("daybloom", "daybloom", BlockTerraPlant.PlacementRule.SURFACE_ONLY);
         blinkrootBlock = new BlockTerraPlant("blinkroot", "blinkroot", BlockTerraPlant.PlacementRule.ANY_SOLID);
@@ -85,10 +89,12 @@ public final class TerrariaContent {
         GameRegistry.registerItem(blackLens, "black_lens");
         GameRegistry.registerItem(suspiciousLookingEye, "suspicious_looking_eye");
         GameRegistry.registerItem(iceRod, "ice_rod");
+        GameRegistry.registerItem(caneOfSomaria, "cane_of_somaria");
         GameRegistry.registerItem(demonEyeSpawnEgg, "demon_eye_spawn_egg");
         GameRegistry.registerItem(whoopieCushion, "whoopie_cushion");
         GameRegistry.registerBlock(magicIceBlock, "magic_ice");
         GameRegistry.registerBlock(iceRodBlock, "ice_rod_block");
+        GameRegistry.registerBlock(somariaBlock, "somaria_block");
         GameRegistry.registerBlock(terraMushroomBlock, "terra_mushroom");
         GameRegistry.registerBlock(daybloomBlock, "daybloom");
         GameRegistry.registerBlock(blinkrootBlock, "blinkroot");
@@ -102,6 +108,7 @@ public final class TerrariaContent {
         GameRegistry.registerTileEntity(TileEntityDemonAltar.class, Constants.MODID + ":demon_altar");
         GameRegistry.registerTileEntity(TileEntityHellForge.class, Constants.MODID + ":hellforge");
         iceRod.setHarvestLevel("sword", 0);
+        caneOfSomaria.setHarvestLevel("sword", 0);
 
         registerEntities();
         registerRecipes();
@@ -184,6 +191,10 @@ public final class TerrariaContent {
 
     public static int getIceRodLifetimeTicks() {
         return Math.max(1, Math.round(ModConfig.iceRodBlockLifetimeSeconds * 20.0F));
+    }
+
+    public static int getSomariaBlockLifetimeTicks() {
+        return Math.max(1, Math.round(ModConfig.caneOfSomariaBlockLifetimeSeconds * 20.0F));
     }
 
     public static void dropConfiguredEyeLoot(Entity source, Random rand) {

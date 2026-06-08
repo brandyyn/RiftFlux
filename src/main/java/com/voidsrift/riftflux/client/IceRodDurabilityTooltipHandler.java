@@ -1,6 +1,6 @@
 package com.voidsrift.riftflux.client;
 
-import com.voidsrift.riftflux.terramine.TerrariaContent;
+import com.voidsrift.riftflux.terramine.ItemIceRod;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
@@ -21,10 +21,10 @@ public class IceRodDurabilityTooltipHandler {
         }
 
         ItemStack stack = event.itemStack;
-        if (stack == null || stack.getItem() == null || TerrariaContent.iceRod == null) {
+        if (stack == null || stack.getItem() == null) {
             return;
         }
-        if (stack.getItem() != TerrariaContent.iceRod) {
+        if (!(stack.getItem() instanceof ItemIceRod)) {
             return;
         }
 

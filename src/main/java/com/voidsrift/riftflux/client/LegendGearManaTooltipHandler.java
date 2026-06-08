@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.terramine.ItemIceRod;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.item.ModItems;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -33,8 +34,8 @@ public class LegendGearManaTooltipHandler {
             this.addNumericTooltip(event.toolTip, "Mana Cost", ModConfig.whoopieCushionLegendGearManaCost);
         }
 
-        if (item == TerrariaContent.iceRod && ModConfig.iceRodUseLegendGearMana) {
-            this.addNumericTooltip(event.toolTip, "Mana Cost", ModConfig.iceRodLegendGearManaCost);
+        if (item instanceof ItemIceRod && ((ItemIceRod) item).isLegendGearManaEnabled()) {
+            this.addNumericTooltip(event.toolTip, "Mana Cost", ((ItemIceRod) item).getConfiguredLegendGearManaCost());
         }
 
         if (item == ModItems.poptart) {

@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.legendgear;
 import baubles.api.BaublesApi;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.compat.BackhandCompat;
+import com.voidsrift.riftflux.terramine.ItemIceRod;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -61,14 +62,15 @@ public final class LegendGearClientState {
     }
 
     public static boolean isHoldingIceRodWithLegendGearManaDisabled(EntityPlayer player) {
-        if (player == null || ModConfig.iceRodUseLegendGearMana) {
+        if (player == null) {
             return false;
         }
-        if (isIceRod(player.getItemInUse()) || isIceRod(player.getHeldItem())) {
+        if (isIceRodWithLegendGearManaDisabled(player.getItemInUse())
+                || isIceRodWithLegendGearManaDisabled(player.getHeldItem())) {
             return true;
         }
         if (BackhandCompat.isAvailable()) {
-            return isIceRod(BackhandCompat.getOffhandItem(player));
+            return isIceRodWithLegendGearManaDisabled(BackhandCompat.getOffhandItem(player));
         }
         return false;
     }
@@ -81,8 +83,8 @@ public final class LegendGearClientState {
         if (isWhoopieCushion(stack)) {
             return ModConfig.enableLegendGearModule && Math.max(0.0F, ModConfig.whoopieCushionLegendGearManaCost) > 0.0F;
         }
-        if (isIceRod(stack)) {
-            return ModConfig.iceRodUseLegendGearMana;
+        if (item instanceof ItemIceRod) {
+            return ((ItemIceRod) item).isLegendGearManaEnabled();
         }
         if (item instanceof IMana) {
             return true;
@@ -90,8 +92,11 @@ public final class LegendGearClientState {
         return item == LegendGear2.magicRing || item == LegendGear2.charmPendant;
     }
 
-    private static boolean isIceRod(ItemStack stack) {
-        return stack != null && stack.getItem() == TerrariaContent.iceRod;
+    private static boolean isIceRodWithLegendGearManaDisabled(ItemStack stack) {
+        if (stack == null || !(stack.getItem() instanceof ItemIceRod)) {
+            return false;
+        }
+        return !((ItemIceRod) stack.getItem()).isLegendGearManaEnabled();
     }
 
     private static boolean isWhoopieCushion(ItemStack stack) {

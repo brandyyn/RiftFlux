@@ -19,10 +19,18 @@ public class ItemIceRod extends Item {
     private static final int AIR_SEARCH_RADIUS = 1;
 
     public ItemIceRod() {
+        this("riftflux:ice_rod", Math.max(0, ModConfig.iceRodDurability));
+    }
+
+    protected ItemIceRod(String textureName) {
+        this(textureName, Math.max(0, ModConfig.iceRodDurability));
+    }
+
+    protected ItemIceRod(String textureName, int maxDamage) {
         this.setMaxStackSize(1);
-        this.setMaxDamage(Math.max(0, ModConfig.iceRodDurability));
+        this.setMaxDamage(Math.max(0, maxDamage));
         this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabCombat);
-        this.setTextureName("riftflux:ice_rod");
+        this.setTextureName(textureName);
         this.setFull3D();
     }
 
@@ -85,8 +93,13 @@ public class ItemIceRod extends Item {
             return stack;
         }
 
-        if (world.setBlock(placePos[0], placePos[1], placePos[2], TerrariaContent.iceRodBlock, 0, 3)) {
-            world.playAuxSFX(2001, placePos[0], placePos[1], placePos[2], Block.getIdFromBlock(TerrariaContent.magicIceBlock));
+        Block placementBlock = getPlacementBlock();
+        if (placementBlock == null) {
+            return stack;
+        }
+
+        if (world.setBlock(placePos[0], placePos[1], placePos[2], placementBlock, 0, 3)) {
+            playPlacementEffect(world, placePos[0], placePos[1], placePos[2]);
             if (!player.capabilities.isCreativeMode && getConfiguredDurability() > 0) {
                 stack.damageItem(1, player);
             }
@@ -98,15 +111,38 @@ public class ItemIceRod extends Item {
         return stack;
     }
 
-    private static int getConfiguredDurability() {
+    protected Block getPlacementBlock() {
+        return TerrariaContent.iceRodBlock;
+    }
+
+    protected Block getPlacementEffectBlock() {
+        return TerrariaContent.magicIceBlock;
+    }
+
+    protected void playPlacementEffect(World world, int x, int y, int z) {
+        Block effectBlock = getPlacementEffectBlock();
+        if (effectBlock != null) {
+            world.playAuxSFX(2001, x, y, z, Block.getIdFromBlock(effectBlock));
+        }
+    }
+
+    protected int getConfiguredDurability() {
         return Math.max(0, ModConfig.iceRodDurability);
     }
 
-    private static double getConfiguredSpawnDistance() {
+    protected double getConfiguredSpawnDistance() {
         return Math.max(1.0D, (double) ModConfig.iceRodSpawnDistance);
     }
 
-    private static float getConfiguredLegendGearManaCost() {
+    public boolean isPlacementPreviewEnabled() {
+        return ModConfig.iceRodPlacementPreviewEnabled;
+    }
+
+    public boolean isLegendGearManaEnabled() {
+        return ModConfig.iceRodUseLegendGearMana;
+    }
+
+    public float getConfiguredLegendGearManaCost() {
         return Math.max(0.0F, ModConfig.iceRodLegendGearManaCost);
     }
 
@@ -251,14 +287,14 @@ public class ItemIceRod extends Item {
         return null;
     }
 
-    private static boolean shouldUseLegendGearMana(EntityPlayer player) {
+    protected boolean shouldUseLegendGearMana(EntityPlayer player) {
         return player != null
                 && !player.capabilities.isCreativeMode
-                && ModConfig.iceRodUseLegendGearMana
+                && isLegendGearManaEnabled()
                 && LegendGearContent.isEnabled();
     }
 
-    private static boolean hasEnoughLegendGearMana(EntityPlayer player) {
+    protected boolean hasEnoughLegendGearMana(EntityPlayer player) {
         if (player == null || player.capabilities.isCreativeMode) {
             return true;
         }
@@ -273,7 +309,7 @@ public class ItemIceRod extends Item {
         return PlayerStarstatsExtension.availableMana(player) + 1.0e-4f >= manaCost;
     }
 
-    private static void spendLegendGearMana(ItemStack stack, EntityPlayer player) {
+    protected void spendLegendGearMana(ItemStack stack, EntityPlayer player) {
         if (player == null || player.capabilities.isCreativeMode) {
             return;
         }

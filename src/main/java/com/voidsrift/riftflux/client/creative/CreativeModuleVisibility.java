@@ -24,9 +24,9 @@ public final class CreativeModuleVisibility {
     };
     private static final String[] TERRA_PATHS = {
             "lens", "black_lens", "suspicious_looking_eye", "ice_rod", "demon_eye_spawn_egg",
-            "whoopie_cushion", "magic_ice", "ice_rod_block", "terra_mushroom", "daybloom",
-            "blinkroot", "waterleaf", "deathweed", "fireblossom", "jungle_spore", "moonglow",
-            "demon_altar", "hellforge"
+            "cane_of_somaria", "whoopie_cushion", "magic_ice", "ice_rod_block", "somaria_block",
+            "terra_mushroom", "daybloom", "blinkroot", "waterleaf", "deathweed", "fireblossom",
+            "jungle_spore", "moonglow", "demon_altar", "hellforge"
     };
     private static final String[] WAM_PATHS = {
             "cyclops_spawn_egg", "flower_man_spawn_egg", "ender_troll_spawn_egg", "jaxx_spawn_egg",

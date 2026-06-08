@@ -20,13 +20,20 @@ public class BlockIceRodIce extends Block {
     private static final Map<String, CrackState> CRACK_STATES = new HashMap<String, CrackState>();
     private static long lastPruneTick = Long.MIN_VALUE;
 
+    private final String iconName;
+
     @SideOnly(Side.CLIENT)
     private IIcon normalIcon;
 
     public BlockIceRodIce() {
+        this("magic_ice_temp", "magic_ice");
+    }
+
+    protected BlockIceRodIce(String blockName, String iconName) {
         super(Material.ice);
-        this.setBlockName("magic_ice_temp");
-        this.setBlockTextureName("riftflux:magic_ice");
+        this.iconName = iconName;
+        this.setBlockName(blockName);
+        this.setBlockTextureName("riftflux:" + iconName);
         this.setHardness(0.4F);
         this.setStepSound(soundTypeGlass);
         this.setLightOpacity(0);
@@ -38,7 +45,7 @@ public class BlockIceRodIce extends Block {
     @Override
     @SideOnly(Side.CLIENT)
     public void registerBlockIcons(IIconRegister iconRegister) {
-        this.normalIcon = iconRegister.registerIcon("riftflux:magic_ice");
+        this.normalIcon = iconRegister.registerIcon("riftflux:" + this.iconName);
         this.blockIcon = this.normalIcon;
     }
 
@@ -73,7 +80,7 @@ public class BlockIceRodIce extends Block {
         if (now >= state.expireTick) {
             clearCrackProgress(world, x, y, z);
             removeCrackState(world, x, y, z);
-            world.playAuxSFX(2001, x, y, z, Block.getIdFromBlock(TerrariaContent.magicIceBlock));
+            playExpireEffect(world, x, y, z);
             world.setBlockToAir(x, y, z);
             return;
         }
@@ -96,6 +103,7 @@ public class BlockIceRodIce extends Block {
         if (!world.isRemote) {
             clearCrackProgress(world, x, y, z);
             removeCrackState(world, x, y, z);
+            playBreakSound(world, x, y, z);
         }
         super.breakBlock(world, x, y, z, block, meta);
     }
@@ -118,10 +126,11 @@ public class BlockIceRodIce extends Block {
 
     @Override
     public Item getItemDropped(int meta, Random rand, int fortune) {
-        if (ModConfig.magicIceRequireSilkTouch) {
+        if (requiresSilkTouchToDrop()) {
             return null;
         }
-        return Item.getItemFromBlock(TerrariaContent.magicIceBlock);
+        Block dropBlock = getDropBlock();
+        return dropBlock == null ? null : Item.getItemFromBlock(dropBlock);
     }
 
     @Override
@@ -136,14 +145,49 @@ public class BlockIceRodIce extends Block {
 
     @Override
     protected ItemStack createStackedBlock(int meta) {
-        return new ItemStack(TerrariaContent.magicIceBlock, 1, 0);
+        Block dropBlock = getDropBlock();
+        return dropBlock == null ? null : new ItemStack(dropBlock, 1, 0);
     }
 
-    private static void initializeCrackState(World world, int x, int y, int z) {
+    protected boolean requiresSilkTouchToDrop() {
+        return ModConfig.magicIceRequireSilkTouch;
+    }
+
+    protected Block getDropBlock() {
+        return TerrariaContent.magicIceBlock;
+    }
+
+    protected Block getExpireEffectBlock() {
+        return TerrariaContent.magicIceBlock;
+    }
+
+    protected String getBreakSound() {
+        return null;
+    }
+
+    protected void playExpireEffect(World world, int x, int y, int z) {
+        Block effectBlock = getExpireEffectBlock();
+        if (effectBlock != null) {
+            world.playAuxSFX(2001, x, y, z, Block.getIdFromBlock(effectBlock));
+        }
+    }
+
+    protected int getLifetimeTicks() {
+        return TerrariaContent.getIceRodLifetimeTicks();
+    }
+
+    private void playBreakSound(World world, int x, int y, int z) {
+        String sound = getBreakSound();
+        if (sound != null && !sound.isEmpty()) {
+            world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, sound, 1.0F, 1.0F);
+        }
+    }
+
+    private void initializeCrackState(World world, int x, int y, int z) {
         pruneExpiredStates(world);
         clearCrackProgress(world, x, y, z);
         long now = world.getTotalWorldTime();
-        int total = TerrariaContent.getIceRodLifetimeTicks();
+        int total = getLifetimeTicks();
         int crackDuration = Math.max(1, total / 3);
         int crackStartDelay = Math.max(1, total - crackDuration);
         CrackState state = new CrackState(now + crackStartDelay, now + total);
@@ -151,13 +195,13 @@ public class BlockIceRodIce extends Block {
         world.scheduleBlockUpdate(x, y, z, world.getBlock(x, y, z), crackStartDelay);
     }
 
-    private static CrackState getOrCreateCrackState(World world, int x, int y, int z) {
+    private CrackState getOrCreateCrackState(World world, int x, int y, int z) {
         pruneExpiredStates(world);
         String key = getStateKey(world, x, y, z);
         CrackState state = CRACK_STATES.get(key);
         if (state == null) {
             long now = world.getTotalWorldTime();
-            int total = TerrariaContent.getIceRodLifetimeTicks();
+            int total = getLifetimeTicks();
             int crackDuration = Math.max(1, total / 3);
             int crackStartDelay = Math.max(1, total - crackDuration);
             state = new CrackState(now + crackStartDelay, now + total);

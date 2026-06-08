@@ -20,7 +20,7 @@ public class IceRodPlacementPreviewRenderer {
 
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        if (!ModConfig.enableTerraModule || !ModConfig.iceRodPlacementPreviewEnabled) {
+        if (!ModConfig.enableTerraModule) {
             return;
         }
 
@@ -48,6 +48,10 @@ public class IceRodPlacementPreviewRenderer {
         }
 
         ItemIceRod iceRod = (ItemIceRod) activeStack.getItem();
+        if (!iceRod.isPlacementPreviewEnabled()) {
+            return;
+        }
+
         int[] placePos = iceRod.findPlacementForPlayer(mc.theWorld, player);
         if (placePos == null) {
             return;
@@ -69,6 +73,15 @@ public class IceRodPlacementPreviewRenderer {
 
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LINE_BIT | GL11.GL_DEPTH_BUFFER_BIT);
         try {
+            boolean somariaPreview = iceRod instanceof ItemCaneOfSomaria;
+            float fillRed = somariaPreview ? 0.82F : 0.45F;
+            float fillGreen = somariaPreview ? 0.16F : 0.80F;
+            float fillBlue = somariaPreview ? 0.03F : 1.0F;
+            float outlineRed = somariaPreview ? 0.93F : 0.70F;
+            float outlineGreen = somariaPreview ? 0.25F : 0.90F;
+            float outlineBlue = somariaPreview ? 0.05F : 1.0F;
+            int outlineColor = somariaPreview ? 0xD64012 : 0xB2E8FF;
+
             GL11.glDisable(GL11.GL_TEXTURE_2D);
             GL11.glDisable(GL11.GL_LIGHTING);
             GL11.glDisable(GL11.GL_CULL_FACE);
@@ -78,11 +91,11 @@ public class IceRodPlacementPreviewRenderer {
             GL11.glDepthMask(false);
             GL11.glLineWidth(2.0F);
 
-            GL11.glColor4f(0.45F, 0.80F, 1.0F, 0.15F);
+            GL11.glColor4f(fillRed, fillGreen, fillBlue, 0.15F);
             drawFilledBox(box);
 
-            GL11.glColor4f(0.70F, 0.90F, 1.0F, 0.90F);
-            RenderGlobal.drawOutlinedBoundingBox(box, 0xB2E8FF);
+            GL11.glColor4f(outlineRed, outlineGreen, outlineBlue, 0.90F);
+            RenderGlobal.drawOutlinedBoundingBox(box, outlineColor);
         } finally {
             GL11.glDepthMask(true);
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);

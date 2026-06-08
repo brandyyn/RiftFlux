@@ -137,6 +137,13 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 FMLLog.severe("[RiftFlux] Failed to hide temporary magic ice block in NEI: %s", t);
             }
         }
+        if (TerrariaContent.somariaBlock != null) {
+            try {
+                API.hideItem(new ItemStack(TerrariaContent.somariaBlock));
+            } catch (Throwable t) {
+                FMLLog.severe("[RiftFlux] Failed to hide temporary Somaria block in NEI: %s", t);
+            }
+        }
         if (LegendGear2.starPieceBlock != null) {
             try {
                 API.hideItem(new ItemStack(LegendGear2.starPieceBlock));

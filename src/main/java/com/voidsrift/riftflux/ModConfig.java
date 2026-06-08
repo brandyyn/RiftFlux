@@ -365,6 +365,14 @@ public class ModConfig {
     public static boolean iceRodUseLegendGearMana;
     public static float iceRodLegendGearManaCost;
     public static boolean magicIceRequireSilkTouch;
+    public static int caneOfSomariaDurability;
+    public static float caneOfSomariaBlockLifetimeSeconds;
+    public static float caneOfSomariaSpawnDistance;
+    public static boolean caneOfSomariaPlacementPreviewEnabled;
+    public static boolean caneOfSomariaUseLegendGearMana;
+    public static float caneOfSomariaLegendGearManaCost;
+    public static boolean somariaBlockRequireSilkTouch;
+    public static boolean somariaBlockRequirePickaxeToDrop;
     public static boolean whoopieCushionKnockbackEnabled;
     public static float whoopieCushionKnockbackRadius;
     public static float whoopieCushionKnockbackStrength;
@@ -3181,6 +3189,70 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "terraria",
                 true,
                 "If true, temporary Magic Ice only drops permanent Magic Ice when broken with Silk Touch."
+        );
+
+        caneOfSomariaBlockLifetimeSeconds = config.getFloat(
+                "CaneOfSomariaBlockLifetimeSeconds",
+                "terraria",
+                16.0F,
+                0.05F,
+                300.0F,
+                "How long Cane of Somaria summoned blocks last before disappearing."
+        );
+
+        caneOfSomariaDurability = config.getInt(
+                "CaneOfSomariaDurability",
+                "terraria",
+                1024,
+                0,
+                32767,
+                "Max durability for Cane of Somaria. Set to 0 for infinite durability."
+        );
+
+        caneOfSomariaSpawnDistance = config.getFloat(
+                "CaneOfSomariaSpawnDistance",
+                "terraria",
+                3.0F,
+                1.0F,
+                16.0F,
+                "Distance in blocks in front of the player where Cane of Somaria places Somaria Blocks when no block is targeted. Supports decimals (for example 2.5)."
+        );
+
+        caneOfSomariaPlacementPreviewEnabled = config.getBoolean(
+                "CaneOfSomariaPlacementPreviewEnabled",
+                "terraria",
+                true,
+                "If true, holding the Cane of Somaria shows a preview box of the block position that will be placed."
+        );
+
+        caneOfSomariaUseLegendGearMana = config.getBoolean(
+                "CaneOfSomariaUseLegendGearMana",
+                "terraria",
+                true,
+                "If true, Cane of Somaria uses LegendGear mana (shows mana HUD while held and consumes CaneOfSomariaLegendGearManaCost mana units per cast)."
+        );
+
+        caneOfSomariaLegendGearManaCost = config.getFloat(
+                "CaneOfSomariaLegendGearManaCost",
+                "terraria",
+                0.25F,
+                0.0F,
+                40.0F,
+                "LegendGear mana consumed per Cane of Somaria cast when CaneOfSomariaUseLegendGearMana is enabled. 1.0 = half a mana star."
+        );
+
+        somariaBlockRequireSilkTouch = config.getBoolean(
+                "SomariaBlockRequireSilkTouch",
+                "terraria",
+                true,
+                "If true, temporary Somaria Blocks only drop Somaria Blocks when broken with Silk Touch."
+        );
+
+        somariaBlockRequirePickaxeToDrop = config.getBoolean(
+                "SomariaBlockRequirePickaxeToDrop",
+                "terraria",
+                true,
+                "If true, temporary Somaria Blocks require a pickaxe to drop as an item when mined."
         );
 
         whoopieCushionKnockbackEnabled = config.getBoolean(

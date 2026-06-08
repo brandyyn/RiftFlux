@@ -113,6 +113,26 @@
   ]
 },
 
+  "somaria_place": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "somaria_place",
+      "stream": false
+    }
+  ]
+},
+
+  "somaria_break": {
+  "category": "master",
+  "sounds": [
+    {
+      "name": "somaria_break",
+      "stream": false
+    }
+  ]
+},
+
   "eyeofcthulu": {
   "category": "music",
   "sounds": [
