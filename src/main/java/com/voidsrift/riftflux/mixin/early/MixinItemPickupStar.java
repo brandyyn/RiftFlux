@@ -130,7 +130,8 @@ public abstract class MixinItemPickupStar {
         } else {
             st.setTagCompound(copy);
         }
-        if (hoveredSlot.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null && mc.thePlayer != null && hoveredSlot.inventory == mc.thePlayer.inventory) {
             PickupStarClientTracker.clearRecentMain(hoveredSlot.getSlotIndex());
         }
 
@@ -144,6 +145,9 @@ public abstract class MixinItemPickupStar {
         if (!ModConfig.enableItemPickupStar) return;
         if (!ModConfig.itemPickupStarClearOnInventoryClose) return;
         if (inventorySlots == null || inventorySlots.inventorySlots == null) return;
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || RFNetwork.CH == null) return;
 
         @SuppressWarnings("rawtypes")
         final java.util.List slots = inventorySlots.inventorySlots;
@@ -166,7 +170,7 @@ public abstract class MixinItemPickupStar {
             } else {
                 st.setTagCompound(copy);
             }
-            if (s.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
+            if (s.inventory == mc.thePlayer.inventory) {
                 PickupStarClientTracker.clearRecentMain(s.getSlotIndex());
             }
         }

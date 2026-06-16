@@ -175,6 +175,7 @@ public class ModConfig {
 
     public static boolean reworkVillageGolems;
     public static int initialVillageGolems;
+    public static boolean disableWitchingGadgetsVillageHouseGeneration;
 
     public static boolean disableSleepRainClear;
     public static boolean jukeboxAutoLoopEnabled;
@@ -1194,6 +1195,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static String[] modernTorchRenderingWhitelist;
     public static boolean asyncWorldSelection;
     public static boolean saveWorldBeforeWindowClose;
+    public static boolean preventBlockBreakingResetOnHeldItemChange;
     public static float movementSpeedFovFactorMax;
 
     public static boolean strictMobSpawnsZeroBlockLight;
@@ -1297,6 +1299,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         enableChromatiCraftMixin = config.getBoolean("ChromatiCraftMixin","general",true,"Toggles the progression effects");
 
         DisableAether2Portal = config.getBoolean("MixinAetherPortal","general",true,"Disables Aether 2 Portal, used for Aether Legacy Departure");
+
+        disableWitchingGadgetsVillageHouseGeneration = config.getBoolean(
+                "DisableWitchingGadgetsVillageHouseGeneration",
+                "general",
+                false,
+                "If true, prevents Witching Gadgets' Photographer's Workshop house from being added to villages. Requires restart."
+        );
 
         hasSound = config.getBoolean("SoundEffect","general",true,"Toggles progression's sound effects");
 
@@ -3194,7 +3203,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         caneOfSomariaBlockLifetimeSeconds = config.getFloat(
                 "CaneOfSomariaBlockLifetimeSeconds",
                 "terraria",
-                16.0F,
+                24.0F,
                 0.05F,
                 300.0F,
                 "How long Cane of Somaria summoned blocks last before disappearing."
@@ -3212,7 +3221,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         caneOfSomariaSpawnDistance = config.getFloat(
                 "CaneOfSomariaSpawnDistance",
                 "terraria",
-                3.0F,
+                4.0F,
                 1.0F,
                 16.0F,
                 "Distance in blocks in front of the player where Cane of Somaria places Somaria Blocks when no block is targeted. Supports decimals (for example 2.5)."
@@ -3235,7 +3244,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         caneOfSomariaLegendGearManaCost = config.getFloat(
                 "CaneOfSomariaLegendGearManaCost",
                 "terraria",
-                0.25F,
+                0.5F,
                 0.0F,
                 40.0F,
                 "LegendGear mana consumed per Cane of Somaria cast when CaneOfSomariaUseLegendGearMana is enabled. 1.0 = half a mana star."
@@ -6763,6 +6772,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "client",
                 true,
                 "If true, clicking the game window X waits for the integrated server to save and stop before the client exits."
+        );
+        preventBlockBreakingResetOnHeldItemChange = config.getBoolean(
+                "PreventBlockBreakingResetOnHeldItemChange",
+                "general",
+                true,
+                "If true, changing held item while mining the same block keeps the accumulated block-breaking progress on both the client and server. Requires restart."
         );
         movementSpeedFovFactorMax = config.getFloat(
                 "MovementSpeedFovFactorMax",

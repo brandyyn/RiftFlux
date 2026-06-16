@@ -70,6 +70,10 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinVillageGolemBlock");
             mixins.add("early.MixinStructureStartVillageSpawn");
         }
+        if (ModConfig.disableWitchingGadgetsVillageHouseGeneration
+                && hasClass("witchinggadgets.WitchingGadgets")) {
+            mixins.add("early.witchinggadgets.MixinWitchingGadgets_DisableVillageHouse");
+        }
         if (ModConfig.disableSleepRainClear) {
             mixins.add("early.DisableSleepRainClear");
         }
@@ -140,6 +144,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.chromatiCraftNetherBedrockBreakableLikeObsidian) {
             mixins.add("early.MixinBlock_NetherBedrockHardness");
+        }
+        if (ModConfig.preventBlockBreakingResetOnHeldItemChange) {
+            mixins.add("early.MixinItemInWorldManager_LegacyBreakProgress");
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
             if (ModConfig.fixUnderwaterMobDarkening) {
@@ -344,6 +351,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             }
             if (ModConfig.saveWorldBeforeWindowClose) {
                 mixins.add("early.MixinMinecraft_SaveBeforeWindowClose");
+            }
+            if (ModConfig.preventBlockBreakingResetOnHeldItemChange) {
+                mixins.add("early.MixinPlayerControllerMP_NoBreakResetOnHeldItemChange");
             }
             if (ModConfig.asyncWorldSelection) {
                 mixins.add("early.MixinGuiSelectWorld_AsyncLoad");
