@@ -63,7 +63,7 @@ public class RenderGlowCarpet implements ISimpleBlockRenderingHandler {
             return false;
         }
 
-        int rotation = getRotation(x, y, z);
+        int rotation = world.getBlockMetadata(x, y, z) & 3;
         int oldEast = renderer.uvRotateEast;
         int oldWest = renderer.uvRotateWest;
         int oldSouth = renderer.uvRotateSouth;
@@ -87,12 +87,6 @@ public class RenderGlowCarpet implements ISimpleBlockRenderingHandler {
         renderer.uvRotateTop = oldTop;
         renderer.uvRotateBottom = oldBottom;
         return rendered;
-    }
-
-    private static int getRotation(int x, int y, int z) {
-        int hash = x * 73428767 ^ y * 912931 ^ z * 42317861;
-        hash ^= hash >>> 16;
-        return hash & 3;
     }
 
     @Override

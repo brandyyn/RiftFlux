@@ -17,6 +17,7 @@ import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.placeditem.PlacedItemContent;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
+import com.voidsrift.riftflux.vortex.block.ModBlocks;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.legacy.LegendGear;
 
@@ -128,6 +129,16 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 API.hideItem(new ItemStack(GlowstoneDustContent.glowstoneDustBlock));
             } catch (Throwable t) {
                 FMLLog.severe("[RiftFlux] Failed to hide placeable glowstone dust block in NEI: %s", t);
+            }
+        }
+        // Hide hidden Glow Carpet block-id variants; the base item places these randomly.
+        for (int i = 1; i < ModBlocks.glowCarpets.length; ++i) {
+            if (ModBlocks.glowCarpets[i] != null) {
+                try {
+                    API.hideItem(new ItemStack(ModBlocks.glowCarpets[i]));
+                } catch (Throwable t) {
+                    FMLLog.severe("[RiftFlux] Failed to hide Glow Carpet variant %d in NEI: %s", i, t);
+                }
             }
         }
         if (TerrariaContent.iceRodBlock != null) {

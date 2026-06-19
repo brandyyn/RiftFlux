@@ -5,17 +5,16 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.util.IIcon;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import java.util.Random;
+
 public class BlockGlowCarpet extends Block {
-
-    private static final int TEXTURE_VARIANTS = 9;
-
-    @SideOnly(Side.CLIENT)
-    private IIcon[] icons;
 
     public BlockGlowCarpet() {
         super(Material.cloth);
@@ -23,10 +22,15 @@ public class BlockGlowCarpet extends Block {
 
     @Override
     public int onBlockPlaced(World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, int meta) {
-        if (!ModConfig.randomizeGlowCarpetTextureOnPlacement) {
+        if (!ModConfig.randomizeGlowCarpetRotation) {
             return 0;
         }
-        return world.rand.nextInt(TEXTURE_VARIANTS);
+        return world.rand.nextInt(4);
+    }
+
+    @Override
+    public Item getItemDropped(int meta, Random rand, int fortune) {
+        return Item.getItemFromBlock(ModBlocks.glowCarpet);
     }
 
     @Override
@@ -36,20 +40,13 @@ public class BlockGlowCarpet extends Block {
 
     @SideOnly(Side.CLIENT)
     @Override
-    public IIcon getIcon(int side, int meta) {
-        int variant = meta >= 0 && meta < TEXTURE_VARIANTS ? meta : 0;
-        return this.icons == null ? this.blockIcon : this.icons[variant];
+    public Item getItem(World world, int x, int y, int z) {
+        return Item.getItemFromBlock(ModBlocks.glowCarpet);
     }
 
-    @SideOnly(Side.CLIENT)
     @Override
-    public void registerBlockIcons(IIconRegister iconRegister) {
-        this.icons = new IIcon[TEXTURE_VARIANTS];
-        this.icons[0] = iconRegister.registerIcon(this.getTextureName());
-        for (int i = 1; i < TEXTURE_VARIANTS; ++i) {
-            this.icons[i] = iconRegister.registerIcon(this.getTextureName() + i);
-        }
-        this.blockIcon = this.icons[0];
+    public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z, EntityPlayer player) {
+        return new ItemStack(ModBlocks.glowCarpet);
     }
 
     @Override

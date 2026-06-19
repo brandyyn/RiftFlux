@@ -7354,14 +7354,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "RandomizeGlowCarpetTextureOnPlacement",
                 "vortex",
                 true,
-                "If true, newly placed Glow Carpet randomly chooses one of glow_carpet through glow_carpet8. If false, new placements use glow_carpet."
+                "If true, newly placed Glow Carpet randomly chooses one of the hidden glow_carpet block variants. If false, new placements use glow_carpet."
         );
 
         randomizeGlowCarpetRotation = config.getBoolean(
                 "RandomizeGlowCarpetRotation",
                 "vortex",
                 true,
-                "If true, Glow Carpet texture UVs are randomly rotated per block position."
+                "If true, newly placed Glow Carpet randomly chooses and stores one of four texture rotations."
         );
 
         voidFluxLightLevel = config.getInt(
