@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.vortex;
 
 import com.voidsrift.riftflux.riftflux;
+import com.voidsrift.riftflux.vortex.block.ModBlocks;
 import com.voidsrift.riftflux.vortex.event.EntityEventHandler;
 import com.voidsrift.riftflux.vortex.event.KeyEventHandler;
 import com.voidsrift.riftflux.vortex.event.ModEvents;
@@ -33,6 +34,7 @@ public final class vortexContent {
         // Potions are referenced by several items (e.g. Highland Spirit). If this isn't
         // initialized, those items will NPE on the server.
         com.voidsrift.riftflux.vortex.potion.ModPotions.init();
+        ModBlocks.init();
         ModItems.init();
         ModPackets.init();
         ModHelpers.init();
@@ -75,6 +77,7 @@ public final class vortexContent {
             KeyEventHandler.registerKeyBindings();
         } catch (Throwable ignored) {
         }
+        ModBlocks.initClient();
         try {
             com.voidsrift.riftflux.vortex.client.render.ModRenderers.init();
         } catch (Throwable ignored) {

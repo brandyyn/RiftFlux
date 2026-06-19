@@ -1269,6 +1269,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean enablePlaceableGunpowder;
     public static boolean enableGlowstoneDust;
     public static int glowstoneDustLightLevel;
+    public static int glowCarpetLightLevel;
+    public static boolean randomizeGlowCarpetTextureOnPlacement;
+    public static boolean randomizeGlowCarpetRotation;
+    public static int voidFluxLightLevel;
     public static boolean placeableGunpowderSetsFireBelow;
     public static boolean placeableGunpowderEmitsRedstone;
     public static boolean placeableGunpowderIgnitesHbmBarrels;
@@ -7335,6 +7339,38 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 0,
                 15,
                 "Light level emitted by placed Glowstone Dust. Vanilla torch is 14 and glowstone block is 15."
+        );
+
+        glowCarpetLightLevel = config.getInt(
+                "GlowCarpetLightLevel",
+                "vortex",
+                6,
+                0,
+                15,
+                "Light level emitted by Glow Carpet. Vanilla torch is 14 and glowstone block is 15."
+        );
+
+        randomizeGlowCarpetTextureOnPlacement = config.getBoolean(
+                "RandomizeGlowCarpetTextureOnPlacement",
+                "vortex",
+                true,
+                "If true, newly placed Glow Carpet randomly chooses one of glow_carpet through glow_carpet8. If false, new placements use glow_carpet."
+        );
+
+        randomizeGlowCarpetRotation = config.getBoolean(
+                "RandomizeGlowCarpetRotation",
+                "vortex",
+                true,
+                "If true, Glow Carpet texture UVs are randomly rotated per block position."
+        );
+
+        voidFluxLightLevel = config.getInt(
+                "VoidFluxLightLevel",
+                "vortex",
+                6,
+                0,
+                15,
+                "Light level emitted by Void Flux. Vanilla torch is 14 and glowstone block is 15."
         );
 
         placeableGunpowderSetsFireBelow = config.getBoolean(

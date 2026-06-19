@@ -247,6 +247,8 @@ public class RenderHandler {
 
             renderBotaniaManaBarFallback(res, mc);
             renderBattlegearOverlayIfPresent(event);
+            // Keep later HUD text, including chat, from being depth-occluded by hotbar items.
+            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
             event.setCanceled(true);
             } finally {
                 if (pushed) {
