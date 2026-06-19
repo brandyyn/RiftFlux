@@ -133,6 +133,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.preventLeashedMobFallDamage) {
             mixins.add("early.MixinEntityLivingBase_LeashedFallDamage");
         }
+        if (ModConfig.unsilenceCoveredNoteBlocks) {
+            mixins.add("early.MixinTileEntityNote_UncoveredSound");
+        }
         mixins.add("early.MixinEntityArrow_NoRandomSpread");
         if (ModConfig.enableThornsArmorTweaks) {
             mixins.add("early.MixinEnchantmentThorns_NoExtraDurability");
@@ -248,7 +251,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.disableSpecificPotions) {
             mixins.add("early.MixinEntityLivingBase_DisablePotions");
         }
-        if (ModConfig.disableTintedSugarcane) {
+        if (ModConfig.disableTintedSugarcane
+                || ModConfig.allowSugarcaneOnAnyBlock
+                || ModConfig.allowHangingSugarcane
+                || ModConfig.hangingSugarcaneGrowsWithWaterAboveSupport
+                || ModConfig.sugarcaneGrowsWhenSupportHasBlockBelow) {
             mixins.add("early.MixinBlockReed");
         }
         if (ModConfig.enableNetherrackTweak) {
@@ -478,6 +485,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.MixinEffectRenderer_PlacedItemDestroyParticles");
             }
             mixins.add("early.MixinNetHandlerPlayClient_WindowItemsClamp");
+            mixins.add("early.MixinEffectRenderer_GeoStrataDecoGenParticles");
             boolean hasBackhand = loadedCoreMods.contains("xonin.backhand.coremod.BackhandLoadingPlugin")
                     || hasBackhandClass();
             if (hasBackhand) {

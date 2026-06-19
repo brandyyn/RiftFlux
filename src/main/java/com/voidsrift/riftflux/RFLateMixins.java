@@ -29,6 +29,16 @@ public class RFLateMixins implements ILateMixinLoader {
         if(loadedMods.contains("GeoStrata") && loadedMods.contains("DragonAPI")) {
             mixins.add("late.MixinGeoOptions");
             mixins.add("late.MixinRetroGenController");
+            mixins.add("late.geostrata.MixinBlockDecoGen_CrystalSpikeOrientation");
+            mixins.add("late.geostrata.MixinMetadataItemBlock_DecoGenItems");
+            if (FMLLaunchHandler.side() == Side.CLIENT) {
+                if (ModConfig.stabilizeGeoStrataDecoGenShapes) {
+                    mixins.add("late.geostrata.MixinDecoGenRenderer_DeterministicShapes");
+                }
+                mixins.add("late.geostrata.MixinDecoGenRenderer_CrystalSpikeWater");
+                mixins.add("late.geostrata.MixinGeoClient_DecoGenItemRenderer");
+                mixins.add("late.geostrata.MixinBlockDecoGen_ParticleIcons");
+            }
         }
         if(loadedMods.contains("DragonAPI")) {
             mixins.add("late.FixNullCrash");

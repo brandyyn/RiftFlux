@@ -46,6 +46,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ClientProxy extends CommonProxy {
+    private static boolean clientPreInitFeaturesInitialized;
     private static boolean clientFeaturesInitialized;
 
     @Override
@@ -135,6 +136,15 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
+    public void preInitClientFeatures() {
+        if (clientPreInitFeaturesInitialized) {
+            return;
+        }
+        clientPreInitFeaturesInitialized = true;
+        com.voidsrift.riftflux.geostrata.client.GeoStrataDecoGenTextureEvents.bootstrap();
+    }
+
+    @Override
     public void initClientFeatures() {
         if (clientFeaturesInitialized) {
             return;
@@ -217,6 +227,7 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new UniversalDurabilityTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new RiftExplorerSlingshotAmmoTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodPlacementPreviewRenderer());
+        com.voidsrift.riftflux.geostrata.client.GeoStrataDecoGenTextureEvents.bootstrap();
         FMLCommonHandler.instance().bus().register(new EyeOfCthulhuMusicHandler());
 
     }

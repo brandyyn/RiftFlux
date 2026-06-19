@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux;
 
 public class CommonProxy {
+    public void preInitClientFeatures() { /* no-op on server */ }
+
     public void initClientFeatures() { /* no-op on server */ }
     
     public boolean isJumpKeyDown() {

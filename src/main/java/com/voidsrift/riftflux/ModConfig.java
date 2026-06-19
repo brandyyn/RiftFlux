@@ -21,7 +21,7 @@ public class ModConfig {
     private static final String MOB_SPAWNING_CATEGORY = "mobspawning";
     private static final String[] DEFAULT_MOB_SPAWN_WHITELIST = new String[]{
             "riftflux.DemonEye|300|1-3|0",
-            "riftflux.Cyclops|150|1|0",
+            "riftflux.Cyclops|77|1|0",
             "riftflux.FlowerMan|330|1-2|0|forest,magical,river|Flower Forest,Forest,wheatfield",
             "riftflux.EnderTroll|150|1|0|forest,coniferous|wheatfield",
             "riftflux.Jaxx|150|1|0|forest,coniferous|wheatfield",
@@ -33,7 +33,7 @@ public class ModConfig {
             "riftflux.RaptorChicken|150|4-6|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
             "riftflux.Cowasaurus|150|2-3|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
             "riftflux.EnderWalker|150|2-5|0,1",
-            "riftflux.Nimatin|200|1|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
+            "riftflux.Nimatin|88|1|0||Extreme Hills,Extreme Hills Edge,Jungle,JungleHills",
             "riftflux.EnderRaptorChicken|150|1|1,0||Sky",
             "riftflux.MagmaRaptorChicken|150|1|-1",
             "riftflux.Axolotl|330|1-3|0|swamp,river",
@@ -86,6 +86,14 @@ public class ModConfig {
     public static boolean disableStrataVents;
 
     public static boolean disableStrataOreVeins;
+    public static boolean fixGeoStrataCrystalSpikeWaterlogging;
+    public static boolean enableGeoStrataCeilingCrystalSpikes;
+    public static boolean enableGeoStrataWallCrystalSpikes;
+    public static boolean enableGeoStrataCrystalSpikeMatchedHitboxes;
+    public static boolean stabilizeGeoStrataDecoGenShapes;
+    public static boolean disableGeoStrataCrystalSpikeHeightDarkening;
+    public static int geoStrataCrystalSpikeTextureBrightnessPercent;
+    public static boolean disableGeoStrataCrystalSpikeFullbright;
     public static boolean disableDragonAPILogging;
     public static boolean optimizeDragonAPIBlockRenderFastPaths;
     public static boolean optimizeDragonAPIEntityRenderLoopFastPaths;
@@ -1183,6 +1191,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static double bonemealFlowerChance;
 
     public static boolean allowPlantsOnAnyBlock;
+    public static boolean allowSugarcaneOnAnyBlock;
+    public static boolean allowHangingSugarcane;
+    public static boolean hangingSugarcaneGrowsWithWaterAboveSupport;
+    public static boolean sugarcaneGrowsWhenSupportHasBlockBelow;
     public static boolean directionalCrossedPlantRenderingByPlacement;
     public static boolean directionalCrossedPlantFacePlayerOnPlacement;
     public static boolean doubleSidedTorchRendering;
@@ -1213,6 +1225,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean preventLeadsBreaking;
     public static boolean preventLeashedMobFallDamage;
 
+    public static boolean unsilenceCoveredNoteBlocks;
     public static boolean disableTintedSugarcane;
 
     public static boolean enableNetherrackTweak;
@@ -1330,6 +1343,64 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         disableStrataVents = config.getBoolean("DisableStrataVents","general",false,"Toggles GeoStrata's vent spawn");
 
         disableStrataOreVeins = config.getBoolean("DisableStrataOreVeins","general",false,"Toggles GeoStrata's ore vein spawn");
+
+        fixGeoStrataCrystalSpikeWaterlogging = config.getBoolean(
+                "FixCrystalSpikeWaterlogging",
+                "geostrata",
+                true,
+                "If true, GeoStrata crystal spikes render a waterlogged surface while adjacent to water instead of cutting the water texture off at the surface. Requires restart."
+        );
+
+        enableGeoStrataCeilingCrystalSpikes = config.getBoolean(
+                "EnableCeilingCrystalSpikes",
+                "geostrata",
+                true,
+                "If true, GeoStrata crystal spikes placed against the underside of a block render downward from the ceiling. Requires restart."
+        );
+
+        enableGeoStrataWallCrystalSpikes = config.getBoolean(
+                "EnableWallCrystalSpikes",
+                "geostrata",
+                true,
+                "If true, GeoStrata crystal spikes placed against the side of a block render sideways out from the wall. Requires restart."
+        );
+
+        enableGeoStrataCrystalSpikeMatchedHitboxes = config.getBoolean(
+                "EnableCrystalSpikeMatchedHitboxes",
+                "geostrata",
+                true,
+                "If true, GeoStrata crystal spike collision and selection boxes are narrowed and oriented to match the rendered spike shape. If false, they use the original full-block bounds. Requires restart."
+        );
+
+        stabilizeGeoStrataDecoGenShapes = config.getBoolean(
+                "StabilizeDecoGenShapes",
+                "geostrata",
+                true,
+                "If true, GeoStrata decorative generation shapes use a deterministic startup seed so crystal spikes do not change their model shape between game reloads. Requires restart."
+        );
+
+        disableGeoStrataCrystalSpikeHeightDarkening = config.getBoolean(
+                "DisableCrystalSpikeHeightDarkening",
+                "geostrata",
+                true,
+                "If true, GeoStrata crystal spikes keep the same texture brightness along a stack instead of getting darker near the base as they get taller. Requires restart."
+        );
+
+        geoStrataCrystalSpikeTextureBrightnessPercent = config.getInt(
+                "CrystalSpikeTextureBrightnessPercent",
+                "geostrata",
+                100,
+                0,
+                300,
+                "Texture brightness multiplier for GeoStrata crystal spikes. 100 is vanilla, 0 is black, 200 is twice as bright, clamped to white. Requires restart."
+        );
+
+        disableGeoStrataCrystalSpikeFullbright = config.getBoolean(
+                "DisableCrystalSpikeFullbright",
+                "geostrata",
+                true,
+                "If true, GeoStrata crystal spikes use normal block lighting instead of rendering fullbright. Requires restart."
+        );
 
         disableDragonAPILogging = config.getBoolean(
                 "DisableDragonAPILogging",
@@ -6697,6 +6768,34 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, tall grass and all BlockBush-based plants can be placed on any block instead of only on grass/dirt/farmland."
         );
 
+        allowSugarcaneOnAnyBlock = config.getBoolean(
+                "AllowSugarcaneOnAnyBlock",
+                "general",
+                true,
+                "If true, sugar cane can be placed on and stay on any non-air block, but it only grows upward when the root block has adjacent water like vanilla. Requires restart."
+        );
+
+        allowHangingSugarcane = config.getBoolean(
+                "AllowHangingSugarcane",
+                "general",
+                true,
+                "If true, sugar cane can hang from blocks above it. Requires restart."
+        );
+
+        hangingSugarcaneGrowsWithWaterAboveSupport = config.getBoolean(
+                "HangingSugarcaneGrowsWithWaterAboveSupport",
+                "general",
+                true,
+                "If true, hanging sugar cane can grow downward when water is one block above the block it is hanging from. Requires AllowHangingSugarcane. Requires restart."
+        );
+
+        sugarcaneGrowsWhenSupportHasBlockBelow = config.getBoolean(
+                "SugarcaneGrowsWhenSupportHasBlockBelow",
+                "general",
+                true,
+                "If true, standing sugar cane can grow upward when there is a non-air block underneath the block it is standing on, even without adjacent water. Requires restart."
+        );
+
         directionalCrossedPlantRenderingByPlacement = config.getBoolean(
                 "DirectionalCrossedPlantRenderingByPlacement",
                 "client",
@@ -6859,6 +6958,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "general",
                 true,
                 "If true, leashed EntityLiving mobs ignore fall damage while attached to a live leash holder."
+        );
+
+        unsilenceCoveredNoteBlocks = config.getBoolean(
+                "UnsilenceCoveredNoteBlocks",
+                "general",
+                true,
+                "If true, note blocks can play even when a solid block is above them. Requires restart."
         );
 
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,

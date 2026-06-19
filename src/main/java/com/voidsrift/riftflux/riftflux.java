@@ -90,6 +90,7 @@ public class riftflux {
         }
         if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             ZyinHUD.preInit(event);
+            proxy.preInitClientFeatures();
         }
         BlessingContent.preInit(event);
         FurnitureContent.preInit(event);
