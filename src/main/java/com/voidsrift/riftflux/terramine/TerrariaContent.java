@@ -32,6 +32,7 @@ public final class TerrariaContent {
     public static Item iceRod;
     public static Item caneOfSomaria;
     public static Item demonEyeSpawnEgg;
+    public static Item destroyerSpawnEgg;
     public static Item whoopieCushion;
     public static Block magicIceBlock;
     public static Block iceRodBlock;
@@ -70,6 +71,7 @@ public final class TerrariaContent {
         iceRod = new ItemIceRod().setUnlocalizedName("ice_rod");
         caneOfSomaria = new ItemCaneOfSomaria().setUnlocalizedName("cane_of_somaria");
         demonEyeSpawnEgg = new ItemDemonEyeSpawnEgg(0xFFFFFF, 0xB52525).setUnlocalizedName("demon_eye_spawn_egg");
+        destroyerSpawnEgg = new ItemDestroyerSpawnEgg(0x4D4D4D, 0xD8B237).setUnlocalizedName("destroyer_spawn_egg");
         whoopieCushion = new ItemWhoopieCushion().setUnlocalizedName("whoopie_cushion");
         magicIceBlock = new BlockMagicIce();
         iceRodBlock = new BlockIceRodIce();
@@ -91,6 +93,7 @@ public final class TerrariaContent {
         GameRegistry.registerItem(iceRod, "ice_rod");
         GameRegistry.registerItem(caneOfSomaria, "cane_of_somaria");
         GameRegistry.registerItem(demonEyeSpawnEgg, "demon_eye_spawn_egg");
+        GameRegistry.registerItem(destroyerSpawnEgg, "destroyer_spawn_egg");
         GameRegistry.registerItem(whoopieCushion, "whoopie_cushion");
         GameRegistry.registerBlock(magicIceBlock, "magic_ice");
         GameRegistry.registerBlock(iceRodBlock, "ice_rod_block");
@@ -144,6 +147,9 @@ public final class TerrariaContent {
 
         RenderingRegistry.registerEntityRenderingHandler(EntityDemonEye.class, new RenderDemonEye(new ModelDemonEye(), 0.5F));
         RenderingRegistry.registerEntityRenderingHandler(EntityEyeOfCthulhu.class, new RenderEyeOfCthulhu(new ModelEyeOfCthulhu(), 0.5F));
+        RenderingRegistry.registerEntityRenderingHandler(EntityDestroyerBase.class, new RenderDestroyerSegment(new ModelDestroyer(true), 2.0F));
+        RenderingRegistry.registerEntityRenderingHandler(EntityDestroyerProbe.class, new RenderDestroyerSegment(new ModelDestroyer(false), 1.5F));
+        RenderingRegistry.registerEntityRenderingHandler(EntityDestroyerLaser.class, new RenderDestroyerLaser());
 
         ResourceLocation demonAltarTexture = new ResourceLocation(Constants.MODID, "textures/models/demon_altar.png");
         ResourceLocation hellForgeTexture = new ResourceLocation(Constants.MODID, "textures/models/hellforge.png");
@@ -174,6 +180,10 @@ public final class TerrariaContent {
     private static void registerEntities() {
         RiftFluxEntityRegistry.registerModEntity(EntityDemonEye.class, "DemonEye", riftflux.instance, 80, 3, true);
         RiftFluxEntityRegistry.registerModEntity(EntityEyeOfCthulhu.class, "EyeOfCthulhu", riftflux.instance, 128, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityDestroyerHead.class, "DestroyerHead", riftflux.instance, 160, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityDestroyerBody.class, "DestroyerBody", riftflux.instance, 160, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityDestroyerProbe.class, "DestroyerProbe", riftflux.instance, 96, 3, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityDestroyerLaser.class, "DestroyerLaser", riftflux.instance, 96, 10, true);
     }
 
     private static void registerRecipes() {
@@ -202,6 +212,22 @@ public final class TerrariaContent {
             return;
         }
         List<EyeDrop> drops = parseEyeDrops(ModConfig.eyeOfCthulhuDrops);
+        for (EyeDrop drop : drops) {
+            if (drop == null) {
+                continue;
+            }
+            if (rand.nextFloat() > drop.chance) {
+                continue;
+            }
+            dropStack(source, drop.stack.copy());
+        }
+    }
+
+    public static void dropConfiguredDestroyerLoot(Entity source, Random rand) {
+        if (source == null || source.worldObj == null || source.worldObj.isRemote) {
+            return;
+        }
+        List<EyeDrop> drops = parseEyeDrops(ModConfig.destroyerDrops);
         for (EyeDrop drop : drops) {
             if (drop == null) {
                 continue;

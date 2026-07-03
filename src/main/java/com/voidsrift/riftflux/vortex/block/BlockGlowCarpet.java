@@ -22,10 +22,25 @@ public class BlockGlowCarpet extends Block {
 
     @Override
     public int onBlockPlaced(World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, int meta) {
-        if (!ModConfig.randomizeGlowCarpetRotation) {
-            return 0;
+        return 0;
+    }
+
+    @Override
+    public void onBlockAdded(World world, int x, int y, int z) {
+        super.onBlockAdded(world, x, y, z);
+        if (world.isRemote || world.getBlock(x, y, z) != this || this != ModBlocks.glowCarpet) {
+            return;
         }
-        return world.rand.nextInt(4);
+
+        Block block = ModConfig.randomizeGlowCarpetTextureOnPlacement
+                ? ModBlocks.getRandomGlowCarpetVariant(world.rand)
+                : this;
+        int metadata = ModConfig.randomizeGlowCarpetRotation ? world.rand.nextInt(4) : 0;
+        if (block != this) {
+            world.setBlock(x, y, z, block, metadata, 3);
+        } else if (world.getBlockMetadata(x, y, z) != metadata) {
+            world.setBlockMetadataWithNotify(x, y, z, metadata, 3);
+        }
     }
 
     @Override

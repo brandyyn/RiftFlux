@@ -52,9 +52,9 @@ public abstract class MixinBlockHighlight {
 
         b.setBlockBoundsBasedOnState(w, bx, by, bz);
 
-        double px = player.prevPosX + (player.posX - player.prevPosX) * pt;
-        double py = player.prevPosY + (player.posY - player.prevPosY) * pt;
-        double pz = player.prevPosZ + (player.posZ - player.prevPosZ) * pt;
+        double px = player.lastTickPosX + (player.posX - player.lastTickPosX) * pt;
+        double py = player.lastTickPosY + (player.posY - player.lastTickPosY) * pt;
+        double pz = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * pt;
 
         AxisAlignedBB box = b.getSelectedBoundingBoxFromPool(w, bx, by, bz);
         if (box == null) return;

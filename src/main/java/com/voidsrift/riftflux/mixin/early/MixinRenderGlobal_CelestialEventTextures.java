@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -205,7 +207,8 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
                 return false;
             }
             in = resource.getInputStream();
-            return true;
+            BufferedImage image = ImageIO.read(in);
+            return image != null && image.getWidth() > 0 && image.getHeight() > 0;
         } catch (IOException ignored) {
             return false;
         } catch (Throwable ignored) {

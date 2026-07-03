@@ -7,15 +7,14 @@ import Reika.DragonAPI.Libraries.Rendering.ReikaColorAPI;
 import Reika.GeoStrata.Blocks.BlockDecoGen;
 import Reika.GeoStrata.Rendering.DecoGenRenderer;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.client.render.FullWaterBlockRenderer;
+import com.voidsrift.riftflux.client.render.WaterloggingRenderDebug;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraftforge.common.util.ForgeDirection;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -94,13 +93,8 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
             return;
         }
 
-        IBlockAccess originalAccess = renderer.blockAccess;
-        renderer.blockAccess = new CrystalSpikeWaterAccess(world, block);
-        try {
-            renderer.renderBlockLiquid(Blocks.water, x, y, z);
-        } finally {
-            renderer.blockAccess = originalAccess;
-        }
+        WaterloggingRenderDebug.crystalRenderHook(x, y, z);
+        FullWaterBlockRenderer.render(renderer, new CrystalSpikeWaterAccess(world, block), x, y, z);
     }
 
     @Unique
@@ -523,72 +517,26 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
     }
 
     @Unique
-    private static class CrystalSpikeWaterAccess implements IBlockAccess {
-        private final IBlockAccess delegate;
+    private static class CrystalSpikeWaterAccess extends FullWaterBlockRenderer.WaterloggedBlockAccess {
         private final Block decoBlock;
 
         private CrystalSpikeWaterAccess(IBlockAccess delegate, Block decoBlock) {
-            this.delegate = delegate;
+            super(delegate);
             this.decoBlock = decoBlock;
         }
 
-        public Block getBlock(int x, int y, int z) {
-            return this.riftflux$isCrystalSpikeAt(x, y, z) ? Blocks.water : this.delegate.getBlock(x, y, z);
-        }
-
-        public TileEntity getTileEntity(int x, int y, int z) {
-            return this.delegate.getTileEntity(x, y, z);
-        }
-
-        public int getLightBrightnessForSkyBlocks(int x, int y, int z, int defaultLight) {
-            return this.delegate.getLightBrightnessForSkyBlocks(x, y, z, defaultLight);
-        }
-
-        public int getBlockMetadata(int x, int y, int z) {
-            return this.riftflux$isCrystalSpikeAt(x, y, z) ? 0 : this.delegate.getBlockMetadata(x, y, z);
-        }
-
-        public int isBlockProvidingPowerTo(int x, int y, int z, int side) {
-            return this.delegate.isBlockProvidingPowerTo(x, y, z, side);
-        }
-
-        public boolean isAirBlock(int x, int y, int z) {
-            return !this.riftflux$isCrystalSpikeAt(x, y, z) && this.delegate.isAirBlock(x, y, z);
-        }
-
-        public BiomeGenBase getBiomeGenForCoords(int x, int z) {
-            return this.delegate.getBiomeGenForCoords(x, z);
-        }
-
-        public int getHeight() {
-            return this.delegate.getHeight();
-        }
-
-        public boolean extendedLevelsInChunkCache() {
-            return this.delegate.extendedLevelsInChunkCache();
-        }
-
-        public boolean isSideSolid(int x, int y, int z, ForgeDirection side, boolean defaultValue) {
-            return this.delegate.isSideSolid(x, y, z, side, defaultValue);
-        }
-
-        private boolean riftflux$isCrystalSpikeAt(int x, int y, int z) {
+        protected boolean isWaterloggedAt(int x, int y, int z) {
             return this.delegate.getBlock(x, y, z) == this.decoBlock
                     && riftflux$getBaseMeta(this.delegate.getBlockMetadata(x, y, z)) == 0
                     && this.riftflux$hasWaterloggingSource(x, y, z);
         }
 
         private boolean riftflux$hasWaterloggingSource(int x, int y, int z) {
-            return this.riftflux$isRealWater(x, y + 1, z)
-                    || this.riftflux$isRealWater(x - 1, y, z)
-                    || this.riftflux$isRealWater(x + 1, y, z)
-                    || this.riftflux$isRealWater(x, y, z - 1)
-                    || this.riftflux$isRealWater(x, y, z + 1);
-        }
-
-        private boolean riftflux$isRealWater(int x, int y, int z) {
-            Block block = this.delegate.getBlock(x, y, z);
-            return block == Blocks.water || block == Blocks.flowing_water;
+            return this.isRealWaterAt(x, y + 1, z)
+                    || this.isRealWaterAt(x - 1, y, z)
+                    || this.isRealWaterAt(x + 1, y, z)
+                    || this.isRealWaterAt(x, y, z - 1)
+                    || this.isRealWaterAt(x, y, z + 1);
         }
     }
 

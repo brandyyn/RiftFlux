@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.terramine;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
@@ -54,9 +55,9 @@ public class RenderTerraModelItem implements IItemRenderer {
     @Override
     public void renderItem(ItemRenderType type, ItemStack item, Object... data) {
         GL11.glPushMatrix();
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-
         try {
+            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 
@@ -87,10 +88,11 @@ public class RenderTerraModelItem implements IItemRenderer {
                 Minecraft.getMinecraft().getTextureManager().bindTexture(this.texture);
                 this.model.renderAll();
             }
-
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         } finally {
-            GL11.glPopAttrib();
+            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             GL11.glPopMatrix();
         }
     }

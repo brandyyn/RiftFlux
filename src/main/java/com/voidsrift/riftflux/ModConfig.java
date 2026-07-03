@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.util.ConfigResolver;
+import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import java.util.HashMap;
@@ -191,6 +192,7 @@ public class ModConfig {
     public static int jukeboxUnknownTrackLoopAfterSeconds;
     public static String[] jukeboxTrackTimings;
     public static boolean jukeboxRedstoneRestartEnabled;
+    public static boolean pulseLockedHoppers;
 
     public static boolean enableBedChill;
 
@@ -211,6 +213,19 @@ public class ModConfig {
     public static boolean disablePumpkinOverlay;
     public static boolean disableUnderwaterOverlay;
     public static boolean fixUnderwaterMobDarkening;
+    public static boolean enablePostProcessing;
+    public static boolean postProcessConfigHotSwap;
+    public static float postProcessDesaturationPercent;
+    public static float postProcessGamma;
+    public static float postProcessBloomStrengthPercent;
+    public static float postProcessBloomThreshold;
+    public static float postProcessBloomRadiusPixels;
+    public static boolean postProcessBloomAffectsHeldItem;
+    public static float postProcessCelestialBloomStrengthPercent;
+    public static float postProcessCelestialBloomThreshold;
+    public static float postProcessCelestialBloomRadiusPixels;
+    public static int postProcessCelestialBloomStartTime;
+    public static int postProcessCelestialBloomEndTime;
     public static boolean enableCelestialEventTextures;
     public static float celestialSunEventChance;
     public static float celestialMoonEventChance;
@@ -367,6 +382,38 @@ public class ModConfig {
     public static int eyeOfCthulhuDespawnNoPlayerDelaySeconds;
     public static int eyeOfCthulhuDespawnNoPlayerChunkRadius;
     public static int eyeOfCthulhuDespawnNoPlayerRadius;
+    public static boolean destroyerEnabled;
+    public static boolean destroyerMusicEnabled;
+    public static float destroyerHealth;
+    public static int destroyerExperience;
+    public static int destroyerSegmentCount;
+    public static float destroyerSegmentDistance;
+    public static float destroyerDiveDepth;
+    public static int destroyerDiveCycleTicks;
+    public static float destroyerArmoredHealthThreshold;
+    public static float destroyerHeadContactDamage;
+    public static float destroyerHeadContactHealthPercent;
+    public static float destroyerBodyContactDamage;
+    public static float destroyerBodyContactHealthPercent;
+    public static float destroyerProbeContactDamage;
+    public static float destroyerProbeContactHealthPercent;
+    public static float destroyerHeadLaserDamage;
+    public static float destroyerHeadLaserMaxHealthPercent;
+    public static float destroyerBodyLaserDamage;
+    public static float destroyerProbeLaserDamage;
+    public static int destroyerHeadLaserCooldownTicks;
+    public static int destroyerBodyLaserCooldownTicks;
+    public static int destroyerProbeLaserCooldownTicks;
+    public static int destroyerBodyLaserEverySegments;
+    public static int destroyerLaserLifetimeTicks;
+    public static boolean destroyerProbesEnabled;
+    public static float destroyerProbeHealth;
+    public static int destroyerProbeChance;
+    public static int destroyerProbeCooldownTicks;
+    public static int destroyerProbeLifetimeTicks;
+    public static int destroyerDespawnNoPlayerDelaySeconds;
+    public static int destroyerDespawnNoPlayerChunkRadius;
+    public static String[] destroyerDrops;
     public static int iceRodDurability;
     public static float iceRodBlockLifetimeSeconds;
     public static float iceRodSpawnDistance;
@@ -412,6 +459,9 @@ public class ModConfig {
     public static int wheatfieldPumpkinChunkChance;
     public static int wheatfieldBarleyFistDropChancePercent;
     public static boolean wheatfieldBarleyOnlyDropsWhenSheared;
+    public static boolean configurableWaterLakeYLevels;
+    public static int waterLakeMinY;
+    public static int waterLakeMaxY;
 
     // Witches and More ports
     public static boolean enableWitchesAndMoreModule;
@@ -1192,6 +1242,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     public static boolean allowPlantsOnAnyBlock;
     public static boolean allowSugarcaneOnAnyBlock;
+    public static boolean allowSugarcaneInWater;
+    public static boolean sugarcaneGeneratesOnRiverFloors;
+    public static int sugarcaneRiverFloorRarity;
+    public static int sugarcaneRiverFloorMinHeightAboveWater;
+    public static int sugarcaneRiverFloorMaxHeightAboveWater;
+    public static int sugarcaneMaxHeight;
+    public static int sugarcaneMaxHeightAboveTopWaterBlock;
     public static boolean allowHangingSugarcane;
     public static boolean hangingSugarcaneGrowsWithWaterAboveSupport;
     public static boolean sugarcaneGrowsWhenSupportHasBlockBelow;
@@ -1736,6 +1793,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "JukeboxRedstoneRestartEnabled", "general", true,
                 "If true, a redstone signal restarts an inserted jukebox disc from the beginning."
         );
+        pulseLockedHoppers = config.getBoolean(
+                "PulseLockedHoppers", "general", true,
+                "If true, hoppers do not tick or transfer items normally. Each rising redstone pulse lets the hopper pull once and then push once. A constant signal only triggers once until it turns off and on again. Requires restart."
+        );
 
         enableBedChill = config.getBoolean(
                 "EnableBedChill", "general", true,
@@ -1823,6 +1884,106 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, living entities use water-surface light while underwater so mobs do not become unusually dark when submerged."
         );
+
+        enablePostProcessing = config.getBoolean(
+                "EnablePostProcessing",
+                "client",
+                legacyBooleanDefault("client", "EnableBtaPostProcessing", true),
+                "If true, applies configurable post processing to the 3D scene after world and hand rendering. HUDs and menus are left untouched."
+        );
+        postProcessConfigHotSwap = config.getBoolean(
+                "EnablePostProcessingConfigHotSwap",
+                "client",
+                false,
+                "If true, post processing checks riftflux.cfg during play and reloads changed values without a restart."
+        );
+        postProcessDesaturationPercent = config.getFloat(
+                "PostProcessDesaturationPercent",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessDesaturationPercent", 0.0F),
+                0.0F,
+                100.0F,
+                "Percent desaturation for the post process. 0 keeps vanilla color saturation."
+        );
+        postProcessGamma = config.getFloat(
+                "PostProcessGamma",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessGamma", 1.0F),
+                0.25F,
+                4.0F,
+                "Gamma adjustment for the post process. 1.0 is unchanged; values above 1.0 brighten midtones."
+        );
+        postProcessBloomStrengthPercent = config.getFloat(
+                "PostProcessBloomStrengthPercent",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessBloomStrengthPercent", 66.0F),
+                0.0F,
+                100.0F,
+                "Strength of the subtle bright-pass bloom, in percent. 0 disables bloom while leaving desaturation/gamma active."
+        );
+        postProcessBloomThreshold = config.getFloat(
+                "PostProcessBloomThreshold",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessBloomThreshold", 0.0F),
+                0.0F,
+                1.0F,
+                "Brightness threshold where bloom starts. Lower values bloom more of the scene; higher values restrict bloom to brighter pixels."
+        );
+        postProcessBloomRadiusPixels = config.getFloat(
+                "PostProcessBloomRadiusPixels",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessBloomRadiusPixels", 6.6F),
+                0.25F,
+                16.0F,
+                "Approximate bloom sample radius in screen pixels."
+        );
+        postProcessBloomAffectsHeldItem = config.getBoolean(
+                "PostProcessBloomAffectsHeldItem",
+                "client",
+                legacyBooleanDefault("client", "BtaPostProcessBloomAffectsHeldItem", false),
+                "If true, bloom is applied after first-person hand and held item rendering. If false, bloom is applied before the hand renders so held items do not glow."
+        );
+        postProcessCelestialBloomStrengthPercent = config.getFloat(
+                "PostProcessCelestialBloomStrengthPercent",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessCelestialBloomStrengthPercent", 66.0F),
+                0.0F,
+                800.0F,
+                "Extra bloom strength for bright non-blue sky objects like the sun, moon, and stars. This sky-only pass is separate from normal world bloom."
+        );
+        postProcessCelestialBloomThreshold = config.getFloat(
+                "PostProcessCelestialBloomThreshold",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessCelestialBloomThreshold", 0.0F),
+                0.0F,
+                100.0F,
+                "Sky bloom inclusion, in percent. 0 blooms only small star-like points; higher values gradually include broader bright sun, moon, and sky pixels."
+        );
+        postProcessCelestialBloomRadiusPixels = config.getFloat(
+                "PostProcessCelestialBloomRadiusPixels",
+                "client",
+                legacyFloatDefault("client", "BtaPostProcessCelestialBloomRadiusPixels", 2.5F),
+                0.25F,
+                32.0F,
+                "Approximate sky-only bloom radius in screen pixels for sun, moon, and stars. Separate from normal world bloom radius."
+        );
+        postProcessCelestialBloomStartTime = config.getInt(
+                "PostProcessCelestialBloomStartTime",
+                "client",
+                12500,
+                0,
+                23999,
+                "World time tick when sky-only bloom starts. No sky bloom is applied before this time unless the window wraps past midnight."
+        );
+        postProcessCelestialBloomEndTime = config.getInt(
+                "PostProcessCelestialBloomEndTime",
+                "client",
+                21500,
+                0,
+                23999,
+                "World time tick when sky-only bloom ends. No sky bloom is applied after this time unless the window wraps past midnight."
+        );
+        removeLegacyPostProcessKeys();
 
         deathRespawnDelaySeconds = config.getInt(
                 "DeathRespawnDelaySeconds",
@@ -3096,7 +3257,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "EnableTerraModule",
                 "terraria",
                 true,
-                "Master switch for the Terraria module (Demon Eye, Eye of Cthulhu, Suspicious Looking Eye, lenses, and Ice Rod)."
+                "Master switch for the Terraria module (Demon Eye, Eye of Cthulhu, Destroyer, Suspicious Looking Eye, lenses, and Ice Rod)."
         );
 
         demonEyeHealth = config.getFloat(
@@ -3216,6 +3377,291 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 16,
                 512,
                 "Deprecated fallback block radius for Eye of Cthulhu despawn distance when chunk radius is not set."
+        );
+
+        destroyerEnabled = config.getBoolean(
+                "DestroyerEnabled",
+                "terraria",
+                true,
+                "If false, disables spawning and keeping The Destroyer alive while leaving the rest of the Terraria module enabled."
+        );
+
+        destroyerMusicEnabled = config.getBoolean(
+                "DestroyerMusicEnabled",
+                "terraria",
+                true,
+                "If true, plays riftflux:destroyer while The Destroyer boss bar is active."
+        );
+
+        destroyerHealth = config.getFloat(
+                "DestroyerHealth",
+                "terraria",
+                2000.0F,
+                1.0F,
+                100000.0F,
+                "Max health for The Destroyer. Body segment hits are forwarded to this shared health pool."
+        );
+
+        destroyerExperience = config.getInt(
+                "DestroyerExperience",
+                "terraria",
+                6000,
+                0,
+                100000,
+                "Total XP dropped by The Destroyer on death."
+        );
+
+        destroyerSegmentCount = config.getInt(
+                "DestroyerSegmentCount",
+                "terraria",
+                119,
+                1,
+                160,
+                "Number of body segments spawned behind The Destroyer head."
+        );
+
+        destroyerSegmentDistance = config.getFloat(
+                "DestroyerSegmentDistance",
+                "terraria",
+                1.9F,
+                0.5F,
+                8.0F,
+                "Target spacing in blocks between Destroyer segments."
+        );
+
+        destroyerDiveDepth = config.getFloat(
+                "DestroyerDiveDepth",
+                "terraria",
+                10.0F,
+                1.0F,
+                80.0F,
+                "Y level The Destroyer dives toward during its burrowing cycle. The original Destroyer uses Y=10."
+        );
+
+        destroyerDiveCycleTicks = config.getInt(
+                "DestroyerDiveCycleTicks",
+                "terraria",
+                160,
+                40,
+                1200,
+                "Length of The Destroyer dive/surface attack cycle in ticks."
+        );
+
+        destroyerArmoredHealthThreshold = config.getFloat(
+                "DestroyerArmoredHealthThreshold",
+                "terraria",
+                400.0F,
+                0.0F,
+                100000.0F,
+                "The Destroyer uses its gold armored texture and reduced projectile damage at or below this health."
+        );
+
+        destroyerHeadContactDamage = config.getFloat(
+                "DestroyerHeadContactDamage",
+                "terraria",
+                100.0F,
+                0.0F,
+                10000.0F,
+                "Contact damage dealt by The Destroyer head."
+        );
+
+        destroyerHeadContactHealthPercent = config.getFloat(
+                "DestroyerHeadContactHealthPercent",
+                "terraria",
+                0.10F,
+                0.0F,
+                100.0F,
+                "Extra head contact damage as a fraction of the target current health. Original value is 0.10 for 10%."
+        );
+
+        destroyerBodyContactDamage = config.getFloat(
+                "DestroyerBodyContactDamage",
+                "terraria",
+                16.0F,
+                0.0F,
+                10000.0F,
+                "Contact damage dealt by each Destroyer body segment."
+        );
+
+        destroyerBodyContactHealthPercent = config.getFloat(
+                "DestroyerBodyContactHealthPercent",
+                "terraria",
+                0.04F,
+                0.0F,
+                100.0F,
+                "Extra body segment contact damage as a fraction of the target current health. Original value is 0.04 for 4%."
+        );
+
+        destroyerProbeContactDamage = config.getFloat(
+                "DestroyerProbeContactDamage",
+                "terraria",
+                12.0F,
+                0.0F,
+                10000.0F,
+                "Contact damage dealt by Destroyer Probes."
+        );
+
+        destroyerProbeContactHealthPercent = config.getFloat(
+                "DestroyerProbeContactHealthPercent",
+                "terraria",
+                0.03333334F,
+                0.0F,
+                100.0F,
+                "Extra probe contact damage as a fraction of the target current health. Original value is 0.03333334 for 1/30."
+        );
+
+        destroyerHeadLaserDamage = config.getFloat(
+                "DestroyerHeadLaserDamage",
+                "terraria",
+                6.0F,
+                0.0F,
+                10000.0F,
+                "Damage dealt by The Destroyer head laser."
+        );
+
+        destroyerHeadLaserMaxHealthPercent = config.getFloat(
+                "DestroyerHeadLaserMaxHealthPercent",
+                "terraria",
+                0.0F,
+                0.0F,
+                100.0F,
+                "Extra head laser damage as a fraction of target max health. Original Destroyer laser damage is flat, so default is 0."
+        );
+
+        destroyerBodyLaserDamage = config.getFloat(
+                "DestroyerBodyLaserDamage",
+                "terraria",
+                4.5F,
+                0.0F,
+                10000.0F,
+                "Damage dealt by body segment lasers."
+        );
+
+        destroyerProbeLaserDamage = config.getFloat(
+                "DestroyerProbeLaserDamage",
+                "terraria",
+                4.0F,
+                0.0F,
+                10000.0F,
+                "Damage dealt by Destroyer Probe lasers."
+        );
+
+        destroyerHeadLaserCooldownTicks = config.getInt(
+                "DestroyerHeadLaserCooldownTicks",
+                "terraria",
+                30,
+                1,
+                1200,
+                "Ticks between head laser shots."
+        );
+
+        destroyerBodyLaserCooldownTicks = config.getInt(
+                "DestroyerBodyLaserCooldownTicks",
+                "terraria",
+                30,
+                1,
+                1200,
+                "Ticks between laser shots for body segments that can fire."
+        );
+
+        destroyerProbeLaserCooldownTicks = config.getInt(
+                "DestroyerProbeLaserCooldownTicks",
+                "terraria",
+                40,
+                1,
+                1200,
+                "Ticks between Destroyer Probe laser shots."
+        );
+
+        destroyerBodyLaserEverySegments = config.getInt(
+                "DestroyerBodyLaserEverySegments",
+                "terraria",
+                1,
+                1,
+                160,
+                "Only every Nth body segment can fire body lasers. The original Destroyer allows every segment to fire."
+        );
+
+        destroyerLaserLifetimeTicks = config.getInt(
+                "DestroyerLaserLifetimeTicks",
+                "terraria",
+                100,
+                20,
+                600,
+                "Maximum lifetime for Destroyer laser projectiles in ticks."
+        );
+
+        destroyerProbesEnabled = config.getBoolean(
+                "DestroyerProbesEnabled",
+                "terraria",
+                true,
+                "If true, The Destroyer can spawn Probe adds during the fight."
+        );
+
+        destroyerProbeHealth = config.getFloat(
+                "DestroyerProbeHealth",
+                "terraria",
+                32.0F,
+                1.0F,
+                10000.0F,
+                "Max health for Destroyer Probes."
+        );
+
+        destroyerProbeChance = config.getInt(
+                "DestroyerProbeChance",
+                "terraria",
+                110,
+                1,
+                100000,
+                "One-in-N chance for the head to spawn a Probe after firing a head laser."
+        );
+
+        destroyerProbeCooldownTicks = config.getInt(
+                "DestroyerProbeCooldownTicks",
+                "terraria",
+                0,
+                0,
+                12000,
+                "Minimum ticks between Probe spawns. Original behavior has no separate cooldown beyond the spawn chance."
+        );
+
+        destroyerProbeLifetimeTicks = config.getInt(
+                "DestroyerProbeLifetimeTicks",
+                "terraria",
+                1200,
+                20,
+                24000,
+                "Maximum lifetime for Destroyer Probes in ticks."
+        );
+
+        destroyerDespawnNoPlayerDelaySeconds = config.getInt(
+                "DestroyerDespawnNoPlayerDelaySeconds",
+                "terraria",
+                6,
+                0,
+                120,
+                "Delay in seconds before The Destroyer despawns after no alive player remains in range. Set to 0 for instant despawn."
+        );
+
+        destroyerDespawnNoPlayerChunkRadius = config.getInt(
+                "DestroyerDespawnNoPlayerChunkRadius",
+                "terraria",
+                10,
+                1,
+                64,
+                "The Destroyer despawns if no alive player is within this many chunks."
+        );
+
+        destroyerDrops = config.getStringList(
+                "DestroyerDrops",
+                "terraria",
+                new String[]{
+                        "minecraft:diamond*8|1.0",
+                        "minecraft:redstone*32|1.0",
+                        "minecraft:gold_ingot*16|0.75"
+                },
+                "Drops for The Destroyer.\n" +
+                        "Format: modid:item[@meta][*count]|chance (chance can be 0-1 or percent)."
         );
 
         iceRodBlockLifetimeSeconds = config.getFloat(
@@ -3750,7 +4196,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         legendGearLegacyMysticShrubRarity = config.getInt(
                 "legacyMysticShrubRarity",
                 "legendgear",
-                16,
+                48,
                 1,
                 1024,
                 "Average chunk rarity for legacy Mystic Shrub generation. 1 means every chunk."
@@ -4958,6 +5404,31 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "wheatfield",
                 false,
                 "If true, barley only drops when harvested with shears."
+        );
+
+        configurableWaterLakeYLevels = config.getBoolean(
+                "ConfigurableWaterLakeYLevels",
+                "worldgen",
+                false,
+                "If true, vanilla overworld water lake attempts use the configured Y range instead of vanilla Y selection. Requires restart."
+        );
+
+        waterLakeMinY = config.getInt(
+                "WaterLakeMinY",
+                "worldgen",
+                5,
+                5,
+                255,
+                "Minimum Y level passed to vanilla overworld water lake generation when ConfigurableWaterLakeYLevels is enabled. Values below 5 cannot generate vanilla lakes. Requires restart."
+        );
+
+        waterLakeMaxY = config.getInt(
+                "WaterLakeMaxY",
+                "worldgen",
+                255,
+                5,
+                255,
+                "Maximum Y level passed to vanilla overworld water lake generation when ConfigurableWaterLakeYLevels is enabled. If this is below WaterLakeMinY, the mixin swaps them at runtime. Requires restart."
         );
 
         enableWitchesAndMoreModule = config.getBoolean(
@@ -6779,6 +7250,65 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, sugar cane can be placed on and stay on any non-air block, but it only grows upward when the root block has adjacent water like vanilla. Requires restart."
         );
 
+        allowSugarcaneInWater = config.getBoolean(
+                "AllowSugarcaneInWater",
+                "general",
+                true,
+                "If true, sugar cane can be placed into water blocks and grow into water blocks. Requires restart."
+        );
+
+        sugarcaneGeneratesOnRiverFloors = config.getBoolean(
+                "SugarcaneGeneratesOnRiverFloors",
+                "general",
+                true,
+                "If true, natural sugar cane generation can start on vanilla-valid or compatible modded river/lake floor blocks underwater and grow up through the water surface. If false, natural sugar cane generation follows vanilla surface rules. Requires AllowSugarcaneInWater for underwater generation. Requires restart."
+        );
+
+        sugarcaneRiverFloorRarity = config.getInt(
+                "SugarcaneRiverFloorRarity",
+                "general",
+                4,
+                1,
+                1000000,
+                "1 in N chance for each underwater river/lake floor sugar cane generation attempt. 1 = every valid attempt, 4 = four times rarer than the original water generation. Requires SugarcaneGeneratesOnRiverFloors. Requires restart."
+        );
+
+        sugarcaneRiverFloorMinHeightAboveWater = config.getInt(
+                "SugarcaneRiverFloorMinHeightAboveWater",
+                "general",
+                0,
+                0,
+                255,
+                "Minimum number of generated sugar cane blocks above the top water block when SugarcaneGeneratesOnRiverFloors is enabled. Default is 0. Requires restart."
+        );
+
+        sugarcaneRiverFloorMaxHeightAboveWater = config.getInt(
+                "SugarcaneRiverFloorMaxHeightAboveWater",
+                "general",
+                2,
+                0,
+                255,
+                "Maximum number of generated sugar cane blocks above the top water block when SugarcaneGeneratesOnRiverFloors is enabled. Default is 2. Values below the minimum are clamped up at runtime. Requires restart."
+        );
+
+        sugarcaneMaxHeight = config.getInt(
+                "SugarcaneMaxHeight",
+                "general",
+                3,
+                1,
+                255,
+                "Maximum total height sugar cane can naturally grow to. Vanilla is 3. Requires restart."
+        );
+
+        sugarcaneMaxHeightAboveTopWaterBlock = config.getInt(
+                "SugarcaneMaxHeightAboveTopWaterBlock",
+                "general",
+                3,
+                0,
+                255,
+                "Maximum number of sugar cane blocks that can grow above the highest nearby water block in the cane column. 0 keeps growth at or below the water surface. Vanilla-like default is 3. Requires AllowSugarcaneInWater for water-column growth. Requires restart."
+        );
+
         allowHangingSugarcane = config.getBoolean(
                 "AllowHangingSugarcane",
                 "general",
@@ -7354,14 +7884,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "RandomizeGlowCarpetTextureOnPlacement",
                 "vortex",
                 true,
-                "If true, newly placed Glow Carpet randomly chooses one of the hidden glow_carpet block variants. If false, new placements use glow_carpet."
+                "If true, newly added Glow Carpet randomizes into one of the hidden glow_carpet block variants. If false, new placements stay glow_carpet."
         );
 
         randomizeGlowCarpetRotation = config.getBoolean(
                 "RandomizeGlowCarpetRotation",
                 "vortex",
                 true,
-                "If true, newly placed Glow Carpet randomly chooses and stores one of four texture rotations."
+                "If true, newly added Glow Carpet randomly chooses and stores one of four texture rotations."
         );
 
         voidFluxLightLevel = config.getInt(
@@ -8379,5 +8909,41 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
     }
 
-}
+    private static boolean legacyBooleanDefault(String category, String key, boolean fallback) {
+        return config != null && config.hasKey(category, key)
+                ? config.getCategory(category).get(key).getBoolean(fallback)
+                : fallback;
+    }
 
+    private static float legacyFloatDefault(String category, String key, float fallback) {
+        return config != null && config.hasKey(category, key)
+                ? (float)config.getCategory(category).get(key).getDouble(fallback)
+                : fallback;
+    }
+
+    private static void removeLegacyPostProcessKeys() {
+        if (config == null || !config.hasCategory("client")) {
+            return;
+        }
+        ConfigCategory client = config.getCategory("client");
+        client.remove("EnableBtaPostProcessing");
+        client.remove("BtaPostProcessDesaturationPercent");
+        client.remove("BtaPostProcessGamma");
+        client.remove("BtaPostProcessBloomStrengthPercent");
+        client.remove("BtaPostProcessBloomThreshold");
+        client.remove("BtaPostProcessBloomRadiusPixels");
+        client.remove("BtaPostProcessBloomAffectsHeldItem");
+        client.remove("BtaPostProcessCelestialBloomStrengthPercent");
+        client.remove("BtaPostProcessCelestialBloomThreshold");
+        client.remove("BtaPostProcessCelestialBloomRadiusPixels");
+    }
+
+    public static boolean isPostProcessingActive() {
+        return enablePostProcessing && (
+                postProcessDesaturationPercent > 0.0F
+                        || postProcessGamma != 1.0F
+                        || postProcessBloomStrengthPercent > 0.0F
+        );
+    }
+
+}

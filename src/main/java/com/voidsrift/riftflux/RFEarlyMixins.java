@@ -86,6 +86,10 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.jukeboxRedstoneRestartEnabled) {
             mixins.add("early.MixinWorld_JukeboxRedstoneRestart");
         }
+        if (ModConfig.pulseLockedHoppers) {
+            mixins.add("early.MixinTileEntityHopper_PulseLocked");
+            mixins.add("early.MixinBlockHopper_PulseLocked");
+        }
         if (ModConfig.enableFullExplosionDrops) {
             mixins.add("early.MixinTNT");
         }
@@ -155,6 +159,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.fixUnderwaterMobDarkening) {
                 mixins.add("early.MixinEntity_RiftFluxUnderwaterBrightness");
             }
+            mixins.add("early.MixinEntityRenderer_PostProcessBeforeHud");
             if (hasClass("me.kimovoid.tweakimo.Tweakimo")) {
                 mixins.add("early.tweakimo.MixinGuiIngameForge_HideMountPromptOverlay");
             }
@@ -207,6 +212,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (hasClass("Reika.ChromatiCraft.World.Nether.LavaRiverGenerator")) {
             mixins.add("early.chromaticraft.MixinLavaRiverGenerator_Configurable");
         }
+        if (ModConfig.configurableWaterLakeYLevels) {
+            mixins.add("early.MixinChunkProviderGenerate_ConfigurableWaterLakeY");
+        }
         if (ModConfig.enableWheatfieldBiome) {
             mixins.add("early.MixinWorldGenLakes_SkipWheatfield");
             mixins.add("early.MixinMapGenStructure_NoWheatfieldStructures");
@@ -253,10 +261,20 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         if (ModConfig.disableTintedSugarcane
                 || ModConfig.allowSugarcaneOnAnyBlock
+                || ModConfig.allowSugarcaneInWater
+                || ModConfig.sugarcaneMaxHeight != 3
+                || ModConfig.sugarcaneMaxHeightAboveTopWaterBlock != 3
                 || ModConfig.allowHangingSugarcane
                 || ModConfig.hangingSugarcaneGrowsWithWaterAboveSupport
                 || ModConfig.sugarcaneGrowsWhenSupportHasBlockBelow) {
             mixins.add("early.MixinBlockReed");
+        }
+        if (ModConfig.allowSugarcaneOnAnyBlock
+                || ModConfig.allowSugarcaneInWater
+                || ModConfig.sugarcaneGeneratesOnRiverFloors
+                || ModConfig.allowHangingSugarcane
+                || ModConfig.sugarcaneGrowsWhenSupportHasBlockBelow) {
+            mixins.add("early.MixinWorldGenReed_VanillaRules");
         }
         if (ModConfig.enableNetherrackTweak) {
             mixins.add("early.MixinBlock_NoNetherrackDropsOutsideNether");
@@ -338,6 +356,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinCreativeTabs_DisabledModuleItems");
             if (ModConfig.directionalCrossedPlantRenderingByPlacement) {
                 mixins.add("early.MixinRenderBlocks_DirectionalCrossedPlants");
+            }
+            if (ModConfig.allowSugarcaneInWater) {
+                mixins.add("early.MixinBlock_SugarcaneWaterRenderPass");
+                mixins.add("early.MixinWorldRenderer_SugarcaneWaterRenderPass");
+                mixins.add("early.MixinRenderBlocks_SugarcaneWaterlogging");
+                mixins.add("early.MixinWorld_SugarcaneWaterPhysics");
             }
             mixins.add("early.MixinRenderBlocks_TorchAllFaces");
             if (ModConfig.betterTorchTexture) {
@@ -478,6 +502,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.mcpatcherforge.MixinSkyRenderer_BetaStars");
                 mixins.add("early.mcpatcherforge.MixinSkyRendererLayer_BetaStars");
             }
+            mixins.add("early.MixinRenderGlobal_PostProcessSkyBloom");
             if (ModConfig.enablePlacedItem) {
                 mixins.add("early.MixinWorld_NoPlacedItemParticles");
                 mixins.add("early.MixinWorldClient_NoPlacedItemParticles");

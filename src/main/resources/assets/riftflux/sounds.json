@@ -143,6 +143,15 @@
   ]
 },
 
+  "destroyer": {
+  "category": "music",
+  "sounds": [
+    {
+      "name": "destroyer",
+      "stream": true
+    }
+  ]
+},
   "static": {
   "category": "master",
   "sounds": [
@@ -394,4 +403,40 @@
       { "name": "palaria/ender_raptor_chicken/hurt7", "stream": false }
     ]
   }
-}
+,
+  "destroyer_dig": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "destroyer/dig", "stream": false }
+    ]
+  },
+  "destroyer_explode": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "destroyer/explode", "stream": false }
+    ]
+  },
+  "destroyer_hurt": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "destroyer/hurt", "stream": false }
+    ]
+  },
+  "destroyer_laser": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "destroyer/laser", "stream": false }
+    ]
+  },
+  "destroyer_lasersmall": {
+    "category": "hostile",
+    "sounds": [
+      { "name": "destroyer/lasersmall", "stream": false }
+    ]
+  },
+  "destroyer_laserhit": {
+    "category": "neutral",
+    "sounds": [
+      { "name": "destroyer/laserHit", "stream": false }
+    ]
+  }}

@@ -17,7 +17,7 @@ public abstract class MixinEnchantmentHelper {
       method = {"mapEnchantmentData"},
       at = @At(
    value = "INVOKE",
-   target = "canApplyAtEnchantingTable",
+   target = "Lnet/minecraft/enchantment/Enchantment;canApplyAtEnchantingTable(Lnet/minecraft/item/ItemStack;)Z",
    remap = false
 )
    )

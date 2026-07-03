@@ -35,6 +35,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.MinecraftForge;
 import theoldone822.ArmorDamageRecalc.API.ExtendedHandler;
 import theoldone822.ArmorOverlay.ArmorOverlay;
@@ -65,7 +66,7 @@ public class HUDOverlayHandler {
         ScaledResolution scale = event.resolution != null ? event.resolution : new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         int left = scale.getScaledWidth() / 2 - 91;
         int top = HUDOverlayHandler.getArmorOverlayTop(scale, player);
-        int stats = !Loader.isModLoaded((String)"ArmorDamageRecalc") ? player.getTotalArmorValue() : (int)Math.floor(ExtendedHandler.getExtendedArmorValue((EntityLivingBase)player));
+        int stats = !Loader.isModLoaded((String)"ArmorDamageRecalc") ? ForgeHooks.getTotalArmorValue(player) : (int)Math.floor(ExtendedHandler.getExtendedArmorValue((EntityLivingBase)player));
         if (ArmorOverlay.overlayLevels == 3 && ArmorOverlay.armorPices == 2 && !Loader.isModLoaded((String)"ArmorDamageRecalc")) {
             HUDOverlayHandler.drawAromrOverlay(stats, mc, left, top);
         } else {

@@ -28,18 +28,23 @@ public abstract class MixinBlockReed {
     @Inject(method = "canPlaceBlockAt", at = @At("HEAD"), cancellable = true)
     private void riftflux$allowSugarcanePlacement(World world, int x, int y, int z,
                                                   CallbackInfoReturnable<Boolean> cir) {
-        if (!ModConfig.allowSugarcaneOnAnyBlock && !ModConfig.allowHangingSugarcane) {
+        if (!ModConfig.allowSugarcaneOnAnyBlock && !ModConfig.allowSugarcaneInWater && !ModConfig.allowHangingSugarcane) {
             return;
         }
 
         Block below = world.getBlock(x, y - 1, z);
-        if (ModConfig.allowSugarcaneOnAnyBlock && below != null && below != Blocks.air) {
+        if (ModConfig.allowSugarcaneInWater && this.riftflux$isWater(world.getBlock(x, y, z))
+                && (below == Blocks.reeds || this.riftflux$isValidSugarcaneSupport(below))) {
             cir.setReturnValue(true);
             return;
         }
 
-        Block above = world.getBlock(x, y + 1, z);
-        if (ModConfig.allowHangingSugarcane && above != null && above != Blocks.air) {
+        if (ModConfig.allowSugarcaneOnAnyBlock && this.riftflux$isValidSugarcaneSupport(below)) {
+            cir.setReturnValue(true);
+            return;
+        }
+
+        if (this.riftflux$isSupportedHangingCane(world, x, y, z)) {
             cir.setReturnValue(true);
         }
     }
@@ -47,7 +52,7 @@ public abstract class MixinBlockReed {
     @Inject(method = "canBlockStay", at = @At("HEAD"), cancellable = true)
     private void riftflux$allowSugarcaneStay(World world, int x, int y, int z,
                                              CallbackInfoReturnable<Boolean> cir) {
-        if (!ModConfig.allowSugarcaneOnAnyBlock && !ModConfig.allowHangingSugarcane) {
+        if (!ModConfig.allowSugarcaneOnAnyBlock && !ModConfig.allowSugarcaneInWater && !ModConfig.allowHangingSugarcane) {
             return;
         }
 
@@ -56,13 +61,17 @@ public abstract class MixinBlockReed {
             cir.setReturnValue(true);
             return;
         }
-        if (ModConfig.allowSugarcaneOnAnyBlock && below != null && below != Blocks.air) {
+        if (ModConfig.allowSugarcaneInWater && this.riftflux$isValidSugarcaneSupport(below)
+                && this.riftflux$hasWaterBesideColumn(world, x, y, y, z)) {
+            cir.setReturnValue(true);
+            return;
+        }
+        if (ModConfig.allowSugarcaneOnAnyBlock && this.riftflux$isValidSugarcaneSupport(below)) {
             cir.setReturnValue(true);
             return;
         }
 
-        Block above = world.getBlock(x, y + 1, z);
-        if (ModConfig.allowHangingSugarcane && above != null && above != Blocks.air) {
+        if (this.riftflux$isSupportedHangingCane(world, x, y, z)) {
             cir.setReturnValue(true);
         }
     }
@@ -87,7 +96,8 @@ public abstract class MixinBlockReed {
     }
 
     private void riftflux$tryGrowUpwardCane(World world, int x, int y, int z) {
-        if (!world.isAirBlock(x, y + 1, z)) {
+        int targetY = y + 1;
+        if (!this.riftflux$canGrowInto(world, x, targetY, z)) {
             return;
         }
 
@@ -95,24 +105,23 @@ public abstract class MixinBlockReed {
         while (world.getBlock(x, rootY - 1, z) == Blocks.reeds) {
             --rootY;
         }
-        if (!this.riftflux$hasVanillaAdjacentWater(world, x, rootY - 1, z)
-                && !this.riftflux$canGrowFromBlockBelowSupport(world, x, rootY, z)) {
+        if (!this.riftflux$hasUpwardGrowthWater(world, x, rootY, targetY, z)) {
             return;
         }
 
-        int height = 1;
-        while (world.getBlock(x, y - height, z) == Blocks.reeds) {
-            ++height;
+        if (this.riftflux$countCaneDownward(world, x, y, z) >= this.riftflux$getMaxTotalHeight()) {
+            return;
         }
-        if (height >= 3) {
+        if (!this.riftflux$canGrowAboveTopWater(world, x, rootY, targetY, z)) {
             return;
         }
 
-        this.riftflux$growAt(world, x, y, z, x, y + 1, z);
+        this.riftflux$growAt(world, x, y, z, x, targetY, z);
     }
 
     private void riftflux$tryGrowHangingCane(World world, int x, int y, int z) {
-        if (!world.isAirBlock(x, y - 1, z)) {
+        int targetY = y - 1;
+        if (!this.riftflux$canGrowInto(world, x, targetY, z)) {
             return;
         }
 
@@ -129,26 +138,57 @@ public abstract class MixinBlockReed {
             return;
         }
 
-        int height = 1;
-        while (world.getBlock(x, y + height, z) == Blocks.reeds) {
-            ++height;
-        }
-        if (height >= 3) {
+        if (this.riftflux$countCaneUpward(world, x, y, z) >= this.riftflux$getMaxTotalHeight()) {
             return;
         }
 
-        this.riftflux$growAt(world, x, y, z, x, y - 1, z);
+        this.riftflux$growAt(world, x, y, z, x, targetY, z);
     }
 
     private boolean riftflux$isHangingCane(World world, int x, int y, int z) {
-        Block above = world.getBlock(x, y + 1, z);
-        return above == Blocks.reeds || (above != null && above != Blocks.air && world.getBlock(x, y - 1, z) != Blocks.reeds);
+        return world.getBlock(x, y - 1, z) != Blocks.reeds && this.riftflux$isSupportedHangingCane(world, x, y, z);
+    }
+
+    private boolean riftflux$isSupportedHangingCane(World world, int x, int y, int z) {
+        if (!ModConfig.allowHangingSugarcane) {
+            return false;
+        }
+
+        int supportY = y + 1;
+        while (world.getBlock(x, supportY, z) == Blocks.reeds) {
+            ++supportY;
+        }
+
+        Block support = world.getBlock(x, supportY, z);
+        return support != Blocks.reeds && this.riftflux$isValidSugarcaneSupport(support);
     }
 
     private boolean riftflux$hasSugarcaneGrowthTweaks() {
         return ModConfig.allowSugarcaneOnAnyBlock
+                || ModConfig.allowSugarcaneInWater
+                || ModConfig.sugarcaneMaxHeight != 3
+                || ModConfig.sugarcaneMaxHeightAboveTopWaterBlock != 3
                 || ModConfig.allowHangingSugarcane
                 || ModConfig.sugarcaneGrowsWhenSupportHasBlockBelow;
+    }
+
+    private boolean riftflux$hasUpwardGrowthWater(World world, int x, int rootY, int targetY, int z) {
+        return this.riftflux$hasVanillaAdjacentWater(world, x, rootY - 1, z)
+                || this.riftflux$canGrowFromBlockBelowSupport(world, x, rootY, z)
+                || (ModConfig.allowSugarcaneInWater && this.riftflux$hasWaterBesideColumn(world, x, rootY, targetY, z));
+    }
+
+    private boolean riftflux$canGrowAboveTopWater(World world, int x, int rootY, int targetY, int z) {
+        if (!ModConfig.allowSugarcaneInWater) {
+            return true;
+        }
+
+        int topWaterY = this.riftflux$getTopWaterYBesideColumn(world, x, rootY - 1, targetY, z);
+        if (topWaterY == Integer.MIN_VALUE) {
+            return true;
+        }
+
+        return Math.max(0, targetY - topWaterY) <= this.riftflux$getMaxHeightAboveTopWaterBlock();
     }
 
     private boolean riftflux$canGrowFromBlockBelowSupport(World world, int x, int rootY, int z) {
@@ -157,7 +197,39 @@ public abstract class MixinBlockReed {
         }
 
         Block blockBelowSupport = world.getBlock(x, rootY - 2, z);
-        return blockBelowSupport != null && blockBelowSupport != Blocks.air;
+        return this.riftflux$isValidSugarcaneSupport(blockBelowSupport);
+    }
+
+    private boolean riftflux$isValidSugarcaneSupport(Block block) {
+        return block != null && block != Blocks.air && !block.getMaterial().isLiquid();
+    }
+
+    private boolean riftflux$canGrowInto(World world, int x, int y, int z) {
+        return world.isAirBlock(x, y, z) || (ModConfig.allowSugarcaneInWater && this.riftflux$isWater(world.getBlock(x, y, z)));
+    }
+
+    private int riftflux$countCaneDownward(World world, int x, int y, int z) {
+        int height = 1;
+        while (world.getBlock(x, y - height, z) == Blocks.reeds) {
+            ++height;
+        }
+        return height;
+    }
+
+    private int riftflux$countCaneUpward(World world, int x, int y, int z) {
+        int height = 1;
+        while (world.getBlock(x, y + height, z) == Blocks.reeds) {
+            ++height;
+        }
+        return height;
+    }
+
+    private int riftflux$getMaxTotalHeight() {
+        return Math.max(1, ModConfig.sugarcaneMaxHeight);
+    }
+
+    private int riftflux$getMaxHeightAboveTopWaterBlock() {
+        return Math.max(0, ModConfig.sugarcaneMaxHeightAboveTopWaterBlock);
     }
 
     private void riftflux$growAt(World world, int sourceX, int sourceY, int sourceZ, int targetX, int targetY, int targetZ) {
@@ -175,6 +247,25 @@ public abstract class MixinBlockReed {
                 || this.riftflux$isWater(world.getBlock(x + 1, y, z))
                 || this.riftflux$isWater(world.getBlock(x, y, z - 1))
                 || this.riftflux$isWater(world.getBlock(x, y, z + 1));
+    }
+
+    private boolean riftflux$hasWaterBesideColumn(World world, int x, int minY, int maxY, int z) {
+        for (int y = minY; y <= maxY; ++y) {
+            if (this.riftflux$isWater(world.getBlock(x, y, z)) || this.riftflux$hasVanillaAdjacentWater(world, x, y, z)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int riftflux$getTopWaterYBesideColumn(World world, int x, int minY, int maxY, int z) {
+        int topWaterY = Integer.MIN_VALUE;
+        for (int y = minY; y <= maxY; ++y) {
+            if (this.riftflux$isWater(world.getBlock(x, y, z)) || this.riftflux$hasVanillaAdjacentWater(world, x, y, z)) {
+                topWaterY = y;
+            }
+        }
+        return topWaterY;
     }
 
     private boolean riftflux$isWater(Block block) {

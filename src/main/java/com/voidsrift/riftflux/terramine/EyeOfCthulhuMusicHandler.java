@@ -25,6 +25,7 @@ import java.util.Map;
 @SideOnly(Side.CLIENT)
 public class EyeOfCthulhuMusicHandler {
     private static final ResourceLocation EYE_THEME = new ResourceLocation("riftflux", "eyeofcthulu");
+    private static final ResourceLocation DESTROYER_THEME = new ResourceLocation("riftflux", "destroyer");
     private static final String[] MC_MUSIC_TICKER_FIELD_NAMES = {"mcMusicTicker", "field_147126_aw"};
     private static final String[] TICKER_CURRENT_SOUND_FIELD_NAMES = {"field_147678_c", "currentMusic"};
     private static final String[] TICKER_DELAY_FIELD_NAMES = {"field_147676_d", "timeUntilNextMusic"};
@@ -43,7 +44,7 @@ public class EyeOfCthulhuMusicHandler {
         }
 
         Minecraft mc = Minecraft.getMinecraft();
-        if (!ModConfig.enableTerraModule || !ModConfig.eyeOfCthulhuMusicEnabled) {
+        if (!ModConfig.enableTerraModule || (!ModConfig.eyeOfCthulhuMusicEnabled && !ModConfig.destroyerMusicEnabled)) {
             resetClientAudio(mc);
             return;
         }
@@ -53,7 +54,8 @@ public class EyeOfCthulhuMusicHandler {
         }
         pruneGrowls();
 
-        if (!isEyeBossBarActive()) {
+        ResourceLocation theme = getActiveBossTheme();
+        if (theme == null) {
             if (activeSound != null || !ACTIVE_GROWLS.isEmpty()) {
                 resetClientAudio(mc);
             } else {
@@ -68,10 +70,10 @@ public class EyeOfCthulhuMusicHandler {
             return;
         }
 
-        boolean notPlaying = activeSound == null || !isSoundPlaying(mc, activeSound);
+        boolean notPlaying = activeSound == null || !activeSound.isTheme(theme) || !isSoundPlaying(mc, activeSound);
         if (activeSound == null || activeSound.isDonePlaying() || notPlaying) {
             stopCurrent(mc);
-            activeSound = new EyeThemeSound();
+            activeSound = new EyeThemeSound(theme);
             mc.getSoundHandler().playSound(activeSound);
         }
     }
@@ -316,6 +318,19 @@ public class EyeOfCthulhuMusicHandler {
         }
     }
 
+    private static ResourceLocation getActiveBossTheme() {
+        if (BossStatus.statusBarTime <= 0) {
+            return null;
+        }
+        String bossName = BossStatus.bossName;
+        if (ModConfig.eyeOfCthulhuMusicEnabled && isEyeBossBarName(bossName)) {
+            return EYE_THEME;
+        }
+        if (ModConfig.destroyerMusicEnabled && isDestroyerBossBarName(bossName)) {
+            return DESTROYER_THEME;
+        }
+        return null;
+    }
     private static boolean isEyeBossBarActive() {
         return BossStatus.statusBarTime > 0 && isEyeBossBarName(BossStatus.bossName);
     }
@@ -338,6 +353,24 @@ public class EyeOfCthulhuMusicHandler {
         return !moddedName.isEmpty() && current.equals(moddedName);
     }
 
+    private static boolean isDestroyerBossBarName(String name) {
+        String current = normalizeBossName(name);
+        if (current.isEmpty()) {
+            return false;
+        }
+        if (current.contains("destroyer")) {
+            return true;
+        }
+
+        String legacyName = normalizeBossName(StatCollector.translateToLocal("entity.DestroyerHead.name"));
+        if (!legacyName.isEmpty() && current.equals(legacyName)) {
+            return true;
+        }
+
+        String moddedName = normalizeBossName(StatCollector.translateToLocal("entity.riftflux.DestroyerHead.name"));
+        return !moddedName.isEmpty() && current.equals(moddedName);
+    }
+
     private static String normalizeBossName(String text) {
         if (text == null) {
             return "";
@@ -346,12 +379,19 @@ public class EyeOfCthulhuMusicHandler {
     }
 
     private static final class EyeThemeSound extends MovingSound {
-        private EyeThemeSound() {
-            super(EYE_THEME);
+        private final ResourceLocation theme;
+
+        private EyeThemeSound(ResourceLocation theme) {
+            super(theme);
+            this.theme = theme;
             this.repeat = true;
             this.volume = 1.0F;
             setNoAttenuation(this);
             refreshPosition(Minecraft.getMinecraft() != null ? Minecraft.getMinecraft().thePlayer : null);
+        }
+
+        private boolean isTheme(ResourceLocation theme) {
+            return this.theme != null && this.theme.equals(theme);
         }
 
         private void stop() {
@@ -362,7 +402,8 @@ public class EyeOfCthulhuMusicHandler {
         public void update() {
             Minecraft mc = Minecraft.getMinecraft();
             EntityPlayer player = mc != null ? mc.thePlayer : null;
-            if (player == null || !isEyeBossBarActive()) {
+            ResourceLocation activeTheme = getActiveBossTheme();
+            if (player == null || activeTheme == null || !this.isTheme(activeTheme)) {
                 this.donePlaying = true;
                 return;
             }
