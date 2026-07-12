@@ -19,7 +19,7 @@ public abstract class MixinBlockLiquid {
         Block fluid = RiftFluxFluidloggedLookup.getSupportedFluidBlock(world, x, y, z);
         if (fluid != null) {
             Material material = ((Block) (Object) this).getMaterial();
-            if (fluid.getMaterial() == material) {
+            if (fluid.getMaterial() == material && side != 1) {
                 cir.setReturnValue(false);
             }
         }

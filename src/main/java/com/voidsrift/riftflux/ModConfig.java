@@ -215,6 +215,8 @@ public class ModConfig {
     public static boolean fixUnderwaterMobDarkening;
     public static boolean enablePostProcessing;
     public static boolean postProcessConfigHotSwap;
+    public static int[] postProcessDimensionWhitelist;
+    public static int[] postProcessDimensionBlacklist;
     public static float postProcessGamma;
     public static float postProcessBrightness;
     public static float postProcessContrast;
@@ -231,6 +233,10 @@ public class ModConfig {
     public static float postProcessBloomStrengthPercent;
     public static float postProcessBloomThreshold;
     public static float postProcessBloomRadiusPixels;
+    public static float postProcessBloomResolutionPercent;
+    public static boolean enablePostProcessWorldBloomCache;
+    public static boolean enablePostProcessCelestialBloomCache;
+    public static boolean postProcessBloomCacheHighPrecision;
     public static boolean postProcessBloomAffectsHeldItem;
     public static float postProcessCelestialBloomStrengthPercent;
     public static float postProcessCelestialBloomThreshold;
@@ -1915,6 +1921,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 false,
                 "If true, post processing checks riftflux.cfg during play and reloads changed values without a restart."
         );
+        postProcessDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "PostProcessDimensionWhitelist",
+                POST_PROCESSING_CATEGORY,
+                new String[0],
+                "Dimension IDs where post processing may render. Leave empty to allow every dimension unless blacklisted."
+        ));
+        postProcessDimensionBlacklist = ConfigResolver.parseIntegerList(config.getStringList(
+                "PostProcessDimensionBlacklist",
+                POST_PROCESSING_CATEGORY,
+                new String[0],
+                "Dimension IDs where post processing must not render. Blacklist takes precedence over whitelist."
+        ));
         postProcessGamma = config.getFloat(
                 "PostProcessGamma",
                 POST_PROCESSING_CATEGORY,
@@ -2042,6 +2060,32 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 0.25F,
                 16.0F,
                 "Approximate bloom sample radius in screen pixels."
+        );
+        postProcessBloomResolutionPercent = config.getFloat(
+                "PostProcessBloomResolutionPercent",
+                POST_PROCESSING_CATEGORY,
+                100.0F,
+                25.0F,
+                100.0F,
+                "Internal bloom buffer resolution, in percent of screen resolution. 100 preserves current bloom rendering; lower values reduce bloom GPU cost and soften/reduce detail. Requires EnablePostProcessingConfigHotSwap for live changes."
+        );
+        enablePostProcessWorldBloomCache = config.getBoolean(
+                "EnablePostProcessWorldBloomCache",
+                POST_PROCESSING_CATEGORY,
+                false,
+                "If true, world bloom precomputes its full-resolution bright pass once per pixel and reuses it for blur samples. Falls back to direct bloom if framebuffer caching is unavailable."
+        );
+        enablePostProcessCelestialBloomCache = config.getBoolean(
+                "EnablePostProcessCelestialBloomCache",
+                POST_PROCESSING_CATEGORY,
+                false,
+                "If true, celestial bloom precomputes its full-resolution bright pass once per pixel and reuses it for blur samples. Falls back to direct bloom if framebuffer caching is unavailable."
+        );
+        postProcessBloomCacheHighPrecision = config.getBoolean(
+                "PostProcessBloomCacheHighPrecision",
+                POST_PROCESSING_CATEGORY,
+                true,
+                "If true, bloom caches prefer a 16-bit-per-channel texture to minimize interpolation and banding differences. Automatically falls back to RGBA8 if unsupported."
         );
         postProcessBloomAffectsHeldItem = config.getBoolean(
                 "PostProcessBloomAffectsHeldItem",
@@ -9009,6 +9053,15 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     public static boolean isLegendGearBombFlowerDimensionAllowed(int dimensionId) {
         return containsInt(legendGearLegacyBombFlowerDimensionWhitelist, dimensionId);
+    }
+
+    public static boolean isPostProcessingDimensionAllowed(int dimensionId) {
+        if (containsInt(postProcessDimensionBlacklist, dimensionId)) {
+            return false;
+        }
+        return postProcessDimensionWhitelist == null
+                || postProcessDimensionWhitelist.length == 0
+                || containsInt(postProcessDimensionWhitelist, dimensionId);
     }
 
     private static boolean containsInt(int[] values, int needle) {

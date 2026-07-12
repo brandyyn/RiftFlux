@@ -20,15 +20,26 @@ public final class PostProcessRenderer {
     private static final File CONFIG_FILE = new File("config/riftflux.cfg");
     private static final int GL_FRAMEBUFFER_BINDING = 36006;
     private static final int GL_COLOR_ATTACHMENT0 = 36064;
+    private static final int GL_FRAMEBUFFER_COMPLETE = 36053;
+    private static final int GL_RGBA16_INTERNAL_FORMAT = 32859;
+    private static final int BLOOM_TEXTURE_UNIT_INDEX = 1;
+    private static final int BLOOM_TEXTURE_UNIT = GL13.GL_TEXTURE0 + BLOOM_TEXTURE_UNIT_INDEX;
     private static final int DEPTH_TEXTURE_UNIT_INDEX = 2;
     private static final int DEPTH_TEXTURE_UNIT = GL13.GL_TEXTURE0 + DEPTH_TEXTURE_UNIT_INDEX;
 
     private int sceneTexture = -1;
+    private int bloomTexture = -1;
+    private int bloomFramebuffer = -1;
     private int depthTexture = -1;
     private int textureWidth = -1;
     private int textureHeight = -1;
+    private int bloomTextureWidth = -1;
+    private int bloomTextureHeight = -1;
+    private boolean bloomTextureHighPrecision;
+    private boolean bloomHighPrecisionUnsupported;
     private int shaderProgram = -1;
     private int uniformScene = -1;
+    private int uniformBloomTexture = -1;
     private int uniformDepth = -1;
     private int uniformTexelSize = -1;
     private int uniformGamma = -1;
@@ -51,12 +62,15 @@ public final class PostProcessRenderer {
     private int uniformApplyColorGrade = -1;
     private int uniformApplyBloom = -1;
     private int uniformCelestialOnly = -1;
+    private int uniformBloomPass = -1;
+    private int uniformUseBloomTexture = -1;
     private long lastConfigCheckMillis;
     private long lastConfigModified = Long.MIN_VALUE;
     private boolean shaderFailed;
     private boolean warnedNoShaderSupport;
     private boolean warnedShaderFailure;
     private boolean warnedConfigReloadFailure;
+    private boolean warnedBloomCacheFailure;
     private boolean loggedHookReached;
     private boolean loggedFirstRender;
 
@@ -64,7 +78,20 @@ public final class PostProcessRenderer {
     }
 
     public static void renderSkyBloomAfterSky(float partialTicks) {
-        INSTANCE.renderFrame(partialTicks, false, true, true, "after sky");
+        INSTANCE.refreshConfigIfChanged();
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null || !ModConfig.enablePostProcessing || INSTANCE.shaderFailed
+                || !ModConfig.isPostProcessingDimensionAllowed(mc.theWorld.provider.dimensionId)
+                || ModConfig.postProcessBloomStrengthPercent <= 0.0F
+                || ModConfig.postProcessCelestialBloomStrengthPercent <= 0.0F) {
+            return;
+        }
+        if (ModConfig.postProcessCelestialBloomThreshold <= 0.0F) {
+            if (INSTANCE.computeStarOnlyGate(mc, partialTicks) <= 0.0F) {
+                return;
+            }
+        }
+        INSTANCE.renderFrame(partialTicks, false, true, true, "after sky", true);
     }
 
     public static void renderWorldBloomBeforeHand(float partialTicks) {
@@ -78,6 +105,10 @@ public final class PostProcessRenderer {
     }
 
     private void renderFrame(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, String stageName) {
+        renderFrame(partialTicks, applyColorGrade, applyBloom, celestialOnly, stageName, false);
+    }
+
+    private void renderFrame(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, String stageName, boolean configRefreshed) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.renderViewEntity == null || mc.displayWidth <= 0 || mc.displayHeight <= 0) {
             return;
@@ -87,11 +118,17 @@ public final class PostProcessRenderer {
             FMLLog.info("[RiftFlux] Post processing hook reached world frame %s.", stageName);
         }
 
-        refreshConfigIfChanged();
+        if (!configRefreshed) {
+            refreshConfigIfChanged();
+        }
+        if (!ModConfig.isPostProcessingDimensionAllowed(mc.theWorld.provider.dimensionId)) {
+            return;
+        }
+        releaseBloomCacheIfUnused();
         if (!shouldRender(applyColorGrade, applyBloom, celestialOnly)) {
             return;
         }
-        if (!GLContext.getCapabilities().OpenGL20) {
+        if (shaderProgram <= 0 && !GLContext.getCapabilities().OpenGL20) {
             shaderFailed = true;
             if (!warnedNoShaderSupport) {
                 warnedNoShaderSupport = true;
@@ -107,8 +144,20 @@ public final class PostProcessRenderer {
 
         ensureSceneTexture(mc.displayWidth, mc.displayHeight);
         copySceneTexture(mc.displayWidth, mc.displayHeight);
-        copyDepthTexture(mc.displayWidth, mc.displayHeight);
-        renderFullscreen(program, mc.displayWidth, mc.displayHeight, partialTicks, applyColorGrade, applyBloom, celestialOnly);
+        boolean bloomActive = isBloomActive(applyBloom, celestialOnly);
+        boolean cacheEnabled = celestialOnly
+                ? ModConfig.enablePostProcessCelestialBloomCache
+                : ModConfig.enablePostProcessWorldBloomCache;
+        boolean cacheRequested = bloomActive && (cacheEnabled || getBloomResolutionScale() < 0.9999F);
+        boolean needsDepth = bloomActive && !celestialOnly;
+        if (needsDepth) {
+            copyDepthTexture(mc.displayWidth, mc.displayHeight);
+        }
+        boolean cachedBloom = cacheRequested && ensureBloomFramebuffer(mc.displayWidth, mc.displayHeight);
+        if (cachedBloom) {
+            renderBloomPass(partialTicks, celestialOnly);
+        }
+        renderFullscreen(program, mc.displayWidth, mc.displayHeight, partialTicks, applyColorGrade, applyBloom, celestialOnly, cachedBloom, false);
         if (!loggedFirstRender) {
             loggedFirstRender = true;
             FMLLog.info("[RiftFlux] Post processing rendered first frame %s.", stageName);
@@ -152,9 +201,33 @@ public final class PostProcessRenderer {
                         || Math.abs(ModConfig.postProcessRedMultiplier - 1.0F) > 0.001F
                         || Math.abs(ModConfig.postProcessGreenMultiplier - 1.0F) > 0.001F
                         || Math.abs(ModConfig.postProcessBlueMultiplier - 1.0F) > 0.001F);
-        boolean bloomActive = applyBloom && ModConfig.postProcessBloomStrengthPercent > 0.0F
+        return colorGradeActive || isBloomActive(applyBloom, celestialOnly);
+    }
+
+    private boolean isBloomActive(boolean applyBloom, boolean celestialOnly) {
+        return applyBloom && ModConfig.postProcessBloomStrengthPercent > 0.0F
                 && (!celestialOnly || ModConfig.postProcessCelestialBloomStrengthPercent > 0.0F);
-        return colorGradeActive || bloomActive;
+    }
+
+    private float getBloomResolutionScale() {
+        return clamp(ModConfig.postProcessBloomResolutionPercent / 100.0F, 0.25F, 1.0F);
+    }
+
+    private void releaseBloomCacheIfUnused() {
+        if (ModConfig.enablePostProcessWorldBloomCache || ModConfig.enablePostProcessCelestialBloomCache
+                || getBloomResolutionScale() < 0.9999F) {
+            return;
+        }
+        if (bloomFramebuffer > 0) {
+            OpenGlHelper.func_153174_h(bloomFramebuffer);
+            bloomFramebuffer = -1;
+        }
+        if (bloomTexture > 0) {
+            GL11.glDeleteTextures(bloomTexture);
+            bloomTexture = -1;
+        }
+        bloomTextureWidth = -1;
+        bloomTextureHeight = -1;
     }
 
     private void ensureSceneTexture(int width, int height) {
@@ -189,6 +262,71 @@ public final class PostProcessRenderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
     }
 
+    private boolean ensureBloomFramebuffer(int width, int height) {
+        if (!OpenGlHelper.framebufferSupported) {
+            warnBloomCacheFailure("framebuffer objects are unavailable");
+            return false;
+        }
+
+        int scaledWidth = Math.max(1, Math.round(width * getBloomResolutionScale()));
+        int scaledHeight = Math.max(1, Math.round(height * getBloomResolutionScale()));
+        boolean highPrecision = ModConfig.postProcessBloomCacheHighPrecision && !bloomHighPrecisionUnsupported;
+        if (bloomTexture <= 0 || bloomTextureWidth != scaledWidth || bloomTextureHeight != scaledHeight
+                || bloomTextureHighPrecision != highPrecision) {
+            createBloomTexture(scaledWidth, scaledHeight, highPrecision);
+        }
+        if (bloomFramebuffer <= 0) {
+            bloomFramebuffer = OpenGlHelper.func_153165_e();
+        }
+        if (bloomFramebuffer <= 0 || !attachAndValidateBloomFramebuffer()) {
+            if (highPrecision) {
+                bloomHighPrecisionUnsupported = true;
+                createBloomTexture(scaledWidth, scaledHeight, false);
+                if (bloomFramebuffer > 0 && attachAndValidateBloomFramebuffer()) {
+                    return true;
+                }
+            }
+            warnBloomCacheFailure("cache framebuffer is incomplete");
+            return false;
+        }
+        return true;
+    }
+
+    private void createBloomTexture(int width, int height, boolean highPrecision) {
+        if (bloomTexture > 0) {
+            GL11.glDeleteTextures(bloomTexture);
+        }
+
+        bloomTextureWidth = width;
+        bloomTextureHeight = height;
+        bloomTextureHighPrecision = highPrecision;
+        bloomTexture = GL11.glGenTextures();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, bloomTexture);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        int internalFormat = highPrecision ? GL_RGBA16_INTERNAL_FORMAT : GL11.GL_RGBA8;
+        int pixelType = highPrecision ? GL11.GL_UNSIGNED_SHORT : GL11.GL_UNSIGNED_BYTE;
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL11.GL_RGBA, pixelType, (ByteBuffer) null);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+    }
+
+    private boolean attachAndValidateBloomFramebuffer() {
+        int previousFramebuffer = GL11.glGetInteger(GL_FRAMEBUFFER_BINDING);
+        int previousReadBuffer = GL11.glGetInteger(GL11.GL_READ_BUFFER);
+        int previousDrawBuffer = GL11.glGetInteger(GL11.GL_DRAW_BUFFER);
+        OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, bloomFramebuffer);
+        GL11.glReadBuffer(GL_COLOR_ATTACHMENT0);
+        GL11.glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153200_g, GL11.GL_TEXTURE_2D, bloomTexture, 0);
+        int status = OpenGlHelper.func_153167_i(OpenGlHelper.field_153198_e);
+        OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, previousFramebuffer);
+        GL11.glReadBuffer(previousReadBuffer);
+        GL11.glDrawBuffer(previousDrawBuffer);
+        return status == GL_FRAMEBUFFER_COMPLETE;
+    }
+
     private void copySceneTexture(int width, int height) {
         int previousReadBuffer = GL11.glGetInteger(GL11.GL_READ_BUFFER);
         int currentFramebuffer = GL11.glGetInteger(GL_FRAMEBUFFER_BINDING);
@@ -205,7 +343,33 @@ public final class PostProcessRenderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
     }
 
-    private void renderFullscreen(int program, int width, int height, float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly) {
+    private void renderBloomPass(float partialTicks, boolean celestialOnly) {
+        int program = getBloomProgram();
+        if (program > 0) {
+            int previousFramebuffer = GL11.glGetInteger(GL_FRAMEBUFFER_BINDING);
+            int previousReadBuffer = GL11.glGetInteger(GL11.GL_READ_BUFFER);
+            int previousDrawBuffer = GL11.glGetInteger(GL11.GL_DRAW_BUFFER);
+            OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, bloomFramebuffer);
+            GL11.glReadBuffer(GL_COLOR_ATTACHMENT0);
+            GL11.glDrawBuffer(GL_COLOR_ATTACHMENT0);
+            try {
+                renderFullscreen(program, bloomTextureWidth, bloomTextureHeight, partialTicks, false, true, celestialOnly, false, true);
+            } finally {
+                OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, previousFramebuffer);
+                GL11.glReadBuffer(previousReadBuffer);
+                GL11.glDrawBuffer(previousDrawBuffer);
+            }
+        }
+    }
+
+    private void warnBloomCacheFailure(String reason) {
+        if (!warnedBloomCacheFailure) {
+            warnedBloomCacheFailure = true;
+            FMLLog.warning("[RiftFlux] Bloom cache disabled: %s. Falling back to direct bloom.", reason);
+        }
+    }
+
+    private void renderFullscreen(int program, int width, int height, float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, boolean useBloomTexture, boolean bloomPass) {
         int previousProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         int previousActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
         int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
@@ -231,13 +395,21 @@ public final class PostProcessRenderer {
             OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
             GL11.glEnable(GL11.GL_TEXTURE_2D);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, sceneTexture);
-            OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture);
+            if (useBloomTexture) {
+                OpenGlHelper.setActiveTexture(BLOOM_TEXTURE_UNIT);
+                GL11.glEnable(GL11.GL_TEXTURE_2D);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, bloomTexture);
+            }
+            if (applyBloom && !celestialOnly) {
+                OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
+                GL11.glEnable(GL11.GL_TEXTURE_2D);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture);
+            }
             OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
 
             GL20.glUseProgram(program);
             GL20.glUniform1i(uniformScene, 0);
+            GL20.glUniform1i(uniformBloomTexture, BLOOM_TEXTURE_UNIT_INDEX);
             GL20.glUniform1i(uniformDepth, DEPTH_TEXTURE_UNIT_INDEX);
             GL20.glUniform2f(uniformTexelSize, 1.0F / (float) width, 1.0F / (float) height);
             GL20.glUniform1f(uniformGamma, clamp01(ModConfig.postProcessGamma));
@@ -262,6 +434,8 @@ public final class PostProcessRenderer {
             GL20.glUniform1f(uniformApplyColorGrade, applyColorGrade ? 1.0F : 0.0F);
             GL20.glUniform1f(uniformApplyBloom, applyBloom ? 1.0F : 0.0F);
             GL20.glUniform1f(uniformCelestialOnly, celestialOnly ? 1.0F : 0.0F);
+            GL20.glUniform1f(uniformUseBloomTexture, useBloomTexture ? 1.0F : 0.0F);
+            GL20.glUniform1f(uniformBloomPass, bloomPass ? 1.0F : 0.0F);
 
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             GL11.glBegin(GL11.GL_QUADS);
@@ -276,6 +450,9 @@ public final class PostProcessRenderer {
             GL11.glEnd();
         } finally {
             GL20.glUseProgram(previousProgram);
+            OpenGlHelper.setActiveTexture(BLOOM_TEXTURE_UNIT);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+            GL11.glDisable(GL11.GL_TEXTURE_2D);
             OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
             GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -306,6 +483,7 @@ public final class PostProcessRenderer {
         int fragment = compileShader(GL20.GL_FRAGMENT_SHADER,
                         "#version 120\n" +
                         "uniform sampler2D uScene;\n" +
+                        "uniform sampler2D uBloomTexture;\n" +
                         "uniform sampler2D uDepth;\n" +
                         "uniform vec2 uTexelSize;\n" +
                         "uniform float uGamma;\n" +
@@ -328,15 +506,20 @@ public final class PostProcessRenderer {
                         "uniform float uApplyColorGrade;\n" +
                         "uniform float uApplyBloom;\n" +
                         "uniform float uCelestialOnly;\n" +
+                        "uniform float uUseBloomTexture;\n" +
+                        "uniform float uBloomPass;\n" +
                         "varying vec2 vTexCoord;\n" +
                         "float luma(vec3 color) {\n" +
                         "    return dot(color, vec3(0.2126, 0.7152, 0.0722));\n" +
                         "}\n" +
                         "vec3 graded(vec2 uv) {\n" +
                         "    vec3 original = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0))).rgb;\n" +
+                        "    if (uApplyColorGrade <= 0.5) {\n" +
+                        "        return original;\n" +
+                        "    }\n" +
                         "    float grey = luma(original);\n" +
                         "    float protect = clamp(uColorGradeShadowProtection, 0.0, 1.0);\n" +
-                        "    float gradeMask = smoothstep(protect * 0.35, max(protect, 0.001), grey) * uApplyColorGrade;\n" +
+                        "    float gradeMask = smoothstep(protect * 0.35, max(protect, 0.001), grey);\n" +
                         "    vec3 color = pow(max(original, vec3(0.0)), vec3(1.5 - clamp(uGamma, 0.0, 1.0)));\n" +
                         "    color += vec3(uBrightness);\n" +
                         "    color = 0.5 + (1.0 + uContrast) * (color - 0.5);\n" +
@@ -348,10 +531,13 @@ public final class PostProcessRenderer {
                         "vec3 bloomSample(vec2 uv) {\n" +
                         "    vec3 raw = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0))).rgb;\n" +
                         "    float bright = max(max(raw.r, raw.g), raw.b);\n" +
-                        "    float depth = texture2D(uDepth, clamp(uv, vec2(0.0), vec2(1.0))).r;\n" +
-                        "    float closeAmount = 1.0 - smoothstep(0.985, 0.9998, depth);\n" +
-                        "    closeAmount = closeAmount * closeAmount * (3.0 - 2.0 * closeAmount);\n" +
-                        "    float depthBoost = mix(1.0, 7.0, closeAmount);\n" +
+                        "    float depthBoost = 1.0;\n" +
+                        "    if (uCelestialOnly < 0.5) {\n" +
+                        "        float depth = texture2D(uDepth, clamp(uv, vec2(0.0), vec2(1.0))).r;\n" +
+                        "        float closeAmount = 1.0 - smoothstep(0.985, 0.9998, depth);\n" +
+                        "        closeAmount = closeAmount * closeAmount * (3.0 - 2.0 * closeAmount);\n" +
+                        "        depthBoost = mix(1.0, 7.0, closeAmount);\n" +
+                        "    }\n" +
                         "    float gate = smoothstep(uBloomThreshold, 1.0, bright);\n" +
                         "    gate *= gate;\n" +
                         "    vec3 excess = max(raw - vec3(uBloomThreshold), vec3(0.0)) / max(1.0 - uBloomThreshold, 0.001);\n" +
@@ -371,27 +557,53 @@ public final class PostProcessRenderer {
                         "}\n" +
                         "void main() {\n" +
                         "    vec2 uv = vTexCoord;\n" +
-                        "    float activeBloomRadius = mix(uBloomRadius, uCelestialBloomRadius, uCelestialOnly);\n" +
-                        "    vec2 step1 = uTexelSize * max(activeBloomRadius, 0.25);\n" +
-                        "    vec2 step2 = step1 * 2.0;\n" +
-                        "    vec3 color = graded(uv);\n" +
-                        "    vec3 bloom = bloomSample(uv) * 0.12;\n" +
-                        "    bloom += bloomSample(uv + vec2(step1.x, 0.0)) * 0.11;\n" +
-                        "    bloom += bloomSample(uv - vec2(step1.x, 0.0)) * 0.11;\n" +
-                        "    bloom += bloomSample(uv + vec2(0.0, step1.y)) * 0.11;\n" +
-                        "    bloom += bloomSample(uv - vec2(0.0, step1.y)) * 0.11;\n" +
-                        "    bloom += bloomSample(uv + step1) * 0.075;\n" +
-                        "    bloom += bloomSample(uv - step1) * 0.075;\n" +
-                        "    bloom += bloomSample(uv + vec2(step1.x, -step1.y)) * 0.075;\n" +
-                        "    bloom += bloomSample(uv + vec2(-step1.x, step1.y)) * 0.075;\n" +
-                        "    bloom += bloomSample(uv + vec2(step2.x, 0.0)) * 0.035;\n" +
-                        "    bloom += bloomSample(uv - vec2(step2.x, 0.0)) * 0.035;\n" +
-                        "    bloom += bloomSample(uv + vec2(0.0, step2.y)) * 0.035;\n" +
-                        "    bloom += bloomSample(uv - vec2(0.0, step2.y)) * 0.035;\n" +
-                        "    bloom = pow(max(bloom, vec3(0.0)), vec3(1.0 / 2.2));\n" +
-                        "    float outputBloomStrength = mix(uBloomStrength * 0.22, 1.15, uCelestialOnly);\n" +
-                        "    color += bloom * uApplyBloom * outputBloomStrength;\n" +
-                        "    gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);\n" +
+                        "    if (uBloomPass > 0.5) {\n" +
+                        "        gl_FragColor = vec4(bloomSample(uv), 1.0);\n" +
+                        "        return;\n" +
+                        "    }\n" +
+                        "    if (uApplyBloom > 0.5) {\n" +
+                        "        float activeBloomRadius = mix(uBloomRadius, uCelestialBloomRadius, uCelestialOnly);\n" +
+                        "        vec2 step1 = uTexelSize * max(activeBloomRadius, 0.25);\n" +
+                        "        vec2 step2 = step1 * 2.0;\n" +
+                        "        vec3 bloom;\n" +
+                        "        if (uUseBloomTexture > 0.5) {\n" +
+                        "            bloom = texture2D(uBloomTexture, clamp(uv, vec2(0.0), vec2(1.0))).rgb * 0.12;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv + vec2(step1.x, 0.0), vec2(0.0), vec2(1.0))).rgb * 0.11;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv - vec2(step1.x, 0.0), vec2(0.0), vec2(1.0))).rgb * 0.11;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv + vec2(0.0, step1.y), vec2(0.0), vec2(1.0))).rgb * 0.11;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv - vec2(0.0, step1.y), vec2(0.0), vec2(1.0))).rgb * 0.11;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv + step1, vec2(0.0), vec2(1.0))).rgb * 0.075;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv - step1, vec2(0.0), vec2(1.0))).rgb * 0.075;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv + vec2(step1.x, -step1.y), vec2(0.0), vec2(1.0))).rgb * 0.075;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv + vec2(-step1.x, step1.y), vec2(0.0), vec2(1.0))).rgb * 0.075;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv + vec2(step2.x, 0.0), vec2(0.0), vec2(1.0))).rgb * 0.035;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv - vec2(step2.x, 0.0), vec2(0.0), vec2(1.0))).rgb * 0.035;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv + vec2(0.0, step2.y), vec2(0.0), vec2(1.0))).rgb * 0.035;\n" +
+                        "            bloom += texture2D(uBloomTexture, clamp(uv - vec2(0.0, step2.y), vec2(0.0), vec2(1.0))).rgb * 0.035;\n" +
+                        "            bloom = pow(max(bloom, vec3(0.0)), vec3(1.0 / 2.2));\n" +
+                        "        } else {\n" +
+                        "            bloom = bloomSample(uv) * 0.12;\n" +
+                        "            bloom += bloomSample(uv + vec2(step1.x, 0.0)) * 0.11;\n" +
+                        "            bloom += bloomSample(uv - vec2(step1.x, 0.0)) * 0.11;\n" +
+                        "            bloom += bloomSample(uv + vec2(0.0, step1.y)) * 0.11;\n" +
+                        "            bloom += bloomSample(uv - vec2(0.0, step1.y)) * 0.11;\n" +
+                        "            bloom += bloomSample(uv + step1) * 0.075;\n" +
+                        "            bloom += bloomSample(uv - step1) * 0.075;\n" +
+                        "            bloom += bloomSample(uv + vec2(step1.x, -step1.y)) * 0.075;\n" +
+                        "            bloom += bloomSample(uv + vec2(-step1.x, step1.y)) * 0.075;\n" +
+                        "            bloom += bloomSample(uv + vec2(step2.x, 0.0)) * 0.035;\n" +
+                        "            bloom += bloomSample(uv - vec2(step2.x, 0.0)) * 0.035;\n" +
+                        "            bloom += bloomSample(uv + vec2(0.0, step2.y)) * 0.035;\n" +
+                        "            bloom += bloomSample(uv - vec2(0.0, step2.y)) * 0.035;\n" +
+                        "            bloom = pow(max(bloom, vec3(0.0)), vec3(1.0 / 2.2));\n" +
+                        "        }\n" +
+                        "        vec3 color = graded(uv);\n" +
+                        "        float outputBloomStrength = mix(uBloomStrength * 0.22, 1.15, uCelestialOnly);\n" +
+                        "        color += bloom * uApplyBloom * outputBloomStrength;\n" +
+                        "        gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);\n" +
+                        "        return;\n" +
+                        "    }\n" +
+                        "    gl_FragColor = vec4(clamp(graded(uv), 0.0, 1.0), 1.0);\n" +
                         "}\n");
 
         if (vertex <= 0 || fragment <= 0) {
@@ -420,6 +632,7 @@ public final class PostProcessRenderer {
 
     private void cacheUniforms(int program) {
         uniformScene = GL20.glGetUniformLocation(program, "uScene");
+        uniformBloomTexture = GL20.glGetUniformLocation(program, "uBloomTexture");
         uniformDepth = GL20.glGetUniformLocation(program, "uDepth");
         uniformTexelSize = GL20.glGetUniformLocation(program, "uTexelSize");
         uniformGamma = GL20.glGetUniformLocation(program, "uGamma");
@@ -442,6 +655,12 @@ public final class PostProcessRenderer {
         uniformApplyColorGrade = GL20.glGetUniformLocation(program, "uApplyColorGrade");
         uniformApplyBloom = GL20.glGetUniformLocation(program, "uApplyBloom");
         uniformCelestialOnly = GL20.glGetUniformLocation(program, "uCelestialOnly");
+        uniformUseBloomTexture = GL20.glGetUniformLocation(program, "uUseBloomTexture");
+        uniformBloomPass = GL20.glGetUniformLocation(program, "uBloomPass");
+    }
+
+    private int getBloomProgram() {
+        return getShaderProgram();
     }
 
     private int compileShader(int type, String source) {
