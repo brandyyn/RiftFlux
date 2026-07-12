@@ -7,6 +7,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import java.io.File;
 import java.nio.ByteBuffer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -19,6 +20,8 @@ public final class PostProcessRenderer {
     private static final File CONFIG_FILE = new File("config/riftflux.cfg");
     private static final int GL_FRAMEBUFFER_BINDING = 36006;
     private static final int GL_COLOR_ATTACHMENT0 = 36064;
+    private static final int DEPTH_TEXTURE_UNIT_INDEX = 2;
+    private static final int DEPTH_TEXTURE_UNIT = GL13.GL_TEXTURE0 + DEPTH_TEXTURE_UNIT_INDEX;
 
     private int sceneTexture = -1;
     private int depthTexture = -1;
@@ -28,8 +31,15 @@ public final class PostProcessRenderer {
     private int uniformScene = -1;
     private int uniformDepth = -1;
     private int uniformTexelSize = -1;
-    private int uniformDesaturation = -1;
     private int uniformGamma = -1;
+    private int uniformBrightness = -1;
+    private int uniformContrast = -1;
+    private int uniformExposure = -1;
+    private int uniformSaturation = -1;
+    private int uniformRedMultiplier = -1;
+    private int uniformGreenMultiplier = -1;
+    private int uniformBlueMultiplier = -1;
+    private int uniformColorGradeShadowProtection = -1;
     private int uniformBloomStrength = -1;
     private int uniformBloomThreshold = -1;
     private int uniformBloomRadius = -1;
@@ -46,6 +56,7 @@ public final class PostProcessRenderer {
     private boolean shaderFailed;
     private boolean warnedNoShaderSupport;
     private boolean warnedShaderFailure;
+    private boolean warnedConfigReloadFailure;
     private boolean loggedHookReached;
     private boolean loggedFirstRender;
 
@@ -119,7 +130,12 @@ public final class PostProcessRenderer {
         long modified = CONFIG_FILE.lastModified();
         if (modified != lastConfigModified) {
             lastConfigModified = modified;
-            ModConfig.reload();
+            if (ModConfig.reload()) {
+                warnedConfigReloadFailure = false;
+            } else if (!warnedConfigReloadFailure) {
+                warnedConfigReloadFailure = true;
+                FMLLog.warning("[RiftFlux] Post processing config hot-swap ignored invalid config/riftflux.cfg. Keeping previous config values.");
+            }
         }
     }
 
@@ -128,8 +144,14 @@ public final class PostProcessRenderer {
             return false;
         }
         boolean colorGradeActive = applyColorGrade
-                && (ModConfig.postProcessDesaturationPercent > 0.0F
-                        || Math.abs(ModConfig.postProcessGamma - 1.0F) > 0.001F);
+                && (Math.abs(ModConfig.postProcessGamma - 0.5F) > 0.001F
+                        || Math.abs(ModConfig.postProcessBrightness) > 0.001F
+                        || Math.abs(ModConfig.postProcessContrast) > 0.001F
+                        || Math.abs(ModConfig.postProcessExposure) > 0.001F
+                        || Math.abs(ModConfig.postProcessSaturationPercent) > 0.001F
+                        || Math.abs(ModConfig.postProcessRedMultiplier - 1.0F) > 0.001F
+                        || Math.abs(ModConfig.postProcessGreenMultiplier - 1.0F) > 0.001F
+                        || Math.abs(ModConfig.postProcessBlueMultiplier - 1.0F) > 0.001F);
         boolean bloomActive = applyBloom && ModConfig.postProcessBloomStrengthPercent > 0.0F
                 && (!celestialOnly || ModConfig.postProcessCelestialBloomStrengthPercent > 0.0F);
         return colorGradeActive || bloomActive;
@@ -186,6 +208,7 @@ public final class PostProcessRenderer {
     private void renderFullscreen(int program, int width, int height, float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly) {
         int previousProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         int previousActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
 
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_TEXTURE_BIT | GL11.GL_CURRENT_BIT | GL11.GL_VIEWPORT_BIT);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -205,20 +228,27 @@ public final class PostProcessRenderer {
         GL11.glLoadIdentity();
 
         try {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
             GL11.glEnable(GL11.GL_TEXTURE_2D);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, sceneTexture);
-            GL13.glActiveTexture(GL13.GL_TEXTURE1);
+            OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
             GL11.glEnable(GL11.GL_TEXTURE_2D);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture);
-            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
 
             GL20.glUseProgram(program);
             GL20.glUniform1i(uniformScene, 0);
-            GL20.glUniform1i(uniformDepth, 1);
+            GL20.glUniform1i(uniformDepth, DEPTH_TEXTURE_UNIT_INDEX);
             GL20.glUniform2f(uniformTexelSize, 1.0F / (float) width, 1.0F / (float) height);
-            GL20.glUniform1f(uniformDesaturation, clamp01(ModConfig.postProcessDesaturationPercent / 100.0F));
-            GL20.glUniform1f(uniformGamma, Math.max(0.01F, ModConfig.postProcessGamma));
+            GL20.glUniform1f(uniformGamma, clamp01(ModConfig.postProcessGamma));
+            GL20.glUniform1f(uniformBrightness, clamp(ModConfig.postProcessBrightness, -1.0F, 1.0F));
+            GL20.glUniform1f(uniformContrast, clamp(ModConfig.postProcessContrast, -1.0F, 1.0F));
+            GL20.glUniform1f(uniformExposure, clamp(ModConfig.postProcessExposure, -1.0F, 1.0F));
+            GL20.glUniform1f(uniformSaturation, clamp(ModConfig.postProcessSaturationPercent / 100.0F, -1.0F, 1.0F));
+            GL20.glUniform1f(uniformRedMultiplier, clamp(ModConfig.postProcessRedMultiplier, 0.0F, 3.0F));
+            GL20.glUniform1f(uniformGreenMultiplier, clamp(ModConfig.postProcessGreenMultiplier, 0.0F, 3.0F));
+            GL20.glUniform1f(uniformBlueMultiplier, clamp(ModConfig.postProcessBlueMultiplier, 0.0F, 3.0F));
+            GL20.glUniform1f(uniformColorGradeShadowProtection, clamp01(ModConfig.postProcessColorGradeShadowProtection / 100.0F));
             GL20.glUniform1f(uniformBloomStrength, clamp01(ModConfig.postProcessBloomStrengthPercent / 100.0F));
             GL20.glUniform1f(uniformBloomThreshold, clamp01(ModConfig.postProcessBloomThreshold));
             GL20.glUniform1f(uniformBloomRadius, Math.max(0.25F, ModConfig.postProcessBloomRadiusPixels));
@@ -246,17 +276,17 @@ public final class PostProcessRenderer {
             GL11.glEnd();
         } finally {
             GL20.glUseProgram(previousProgram);
-            GL13.glActiveTexture(GL13.GL_TEXTURE1);
+            OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-            GL13.glActiveTexture(previousActiveTexture);
+            OpenGlHelper.setActiveTexture(previousActiveTexture);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPopMatrix();
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPopMatrix();
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            GL11.glDepthMask(true);
+            GL11.glMatrixMode(previousMatrixMode);
             GL11.glPopAttrib();
         }
     }
@@ -278,8 +308,15 @@ public final class PostProcessRenderer {
                         "uniform sampler2D uScene;\n" +
                         "uniform sampler2D uDepth;\n" +
                         "uniform vec2 uTexelSize;\n" +
-                        "uniform float uDesaturation;\n" +
                         "uniform float uGamma;\n" +
+                        "uniform float uBrightness;\n" +
+                        "uniform float uContrast;\n" +
+                        "uniform float uExposure;\n" +
+                        "uniform float uSaturation;\n" +
+                        "uniform float uRedMultiplier;\n" +
+                        "uniform float uGreenMultiplier;\n" +
+                        "uniform float uBlueMultiplier;\n" +
+                        "uniform float uColorGradeShadowProtection;\n" +
                         "uniform float uBloomStrength;\n" +
                         "uniform float uBloomThreshold;\n" +
                         "uniform float uBloomRadius;\n" +
@@ -296,11 +333,17 @@ public final class PostProcessRenderer {
                         "    return dot(color, vec3(0.2126, 0.7152, 0.0722));\n" +
                         "}\n" +
                         "vec3 graded(vec2 uv) {\n" +
-                        "    vec3 color = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0))).rgb;\n" +
-                        "    float grey = luma(color);\n" +
-                        "    color = mix(color, vec3(grey), uDesaturation * uApplyColorGrade);\n" +
-                        "    color = mix(color, pow(max(color, vec3(0.0)), vec3(1.0 / max(uGamma, 0.01))), uApplyColorGrade);\n" +
-                        "    return color;\n" +
+                        "    vec3 original = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0))).rgb;\n" +
+                        "    float grey = luma(original);\n" +
+                        "    float protect = clamp(uColorGradeShadowProtection, 0.0, 1.0);\n" +
+                        "    float gradeMask = smoothstep(protect * 0.35, max(protect, 0.001), grey) * uApplyColorGrade;\n" +
+                        "    vec3 color = pow(max(original, vec3(0.0)), vec3(1.5 - clamp(uGamma, 0.0, 1.0)));\n" +
+                        "    color += vec3(uBrightness);\n" +
+                        "    color = 0.5 + (1.0 + uContrast) * (color - 0.5);\n" +
+                        "    color *= 1.0 + uExposure;\n" +
+                        "    color = mix(vec3(luma(color)), color, 1.0 + uSaturation);\n" +
+                        "    color *= vec3(uRedMultiplier, uGreenMultiplier, uBlueMultiplier);\n" +
+                        "    return mix(original, color, gradeMask);\n" +
                         "}\n" +
                         "vec3 bloomSample(vec2 uv) {\n" +
                         "    vec3 raw = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0))).rgb;\n" +
@@ -379,8 +422,15 @@ public final class PostProcessRenderer {
         uniformScene = GL20.glGetUniformLocation(program, "uScene");
         uniformDepth = GL20.glGetUniformLocation(program, "uDepth");
         uniformTexelSize = GL20.glGetUniformLocation(program, "uTexelSize");
-        uniformDesaturation = GL20.glGetUniformLocation(program, "uDesaturation");
         uniformGamma = GL20.glGetUniformLocation(program, "uGamma");
+        uniformBrightness = GL20.glGetUniformLocation(program, "uBrightness");
+        uniformContrast = GL20.glGetUniformLocation(program, "uContrast");
+        uniformExposure = GL20.glGetUniformLocation(program, "uExposure");
+        uniformSaturation = GL20.glGetUniformLocation(program, "uSaturation");
+        uniformRedMultiplier = GL20.glGetUniformLocation(program, "uRedMultiplier");
+        uniformGreenMultiplier = GL20.glGetUniformLocation(program, "uGreenMultiplier");
+        uniformBlueMultiplier = GL20.glGetUniformLocation(program, "uBlueMultiplier");
+        uniformColorGradeShadowProtection = GL20.glGetUniformLocation(program, "uColorGradeShadowProtection");
         uniformBloomStrength = GL20.glGetUniformLocation(program, "uBloomStrength");
         uniformBloomThreshold = GL20.glGetUniformLocation(program, "uBloomThreshold");
         uniformBloomRadius = GL20.glGetUniformLocation(program, "uBloomRadius");
@@ -415,11 +465,15 @@ public final class PostProcessRenderer {
     }
 
     private static float clamp01(float value) {
-        if (value < 0.0F) {
-            return 0.0F;
+        return clamp(value, 0.0F, 1.0F);
+    }
+
+    private static float clamp(float value, float min, float max) {
+        if (value < min) {
+            return min;
         }
-        if (value > 1.0F) {
-            return 1.0F;
+        if (value > max) {
+            return max;
         }
         return value;
     }

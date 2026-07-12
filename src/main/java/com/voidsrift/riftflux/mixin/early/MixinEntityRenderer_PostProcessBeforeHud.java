@@ -23,15 +23,15 @@ public abstract class MixinEntityRenderer_PostProcessBeforeHud {
     }
 
     @Inject(
-            method = "updateCameraAndRender(F)V",
+            method = "renderWorld(FJ)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiIngame;renderGameOverlay(FZII)V",
-                    shift = At.Shift.BEFORE
+                    target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand(FI)V",
+                    shift = At.Shift.AFTER
             ),
             require = 0
     )
-    private void riftflux$renderPostProcessBeforeHud(float partialTicks, CallbackInfo ci) {
+    private void riftflux$renderPostProcessAfterHand(float partialTicks, long finishTimeNano, CallbackInfo ci) {
         PostProcessRenderer.renderBeforeHud(partialTicks);
     }
 }

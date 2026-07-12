@@ -8,11 +8,10 @@ import Reika.GeoStrata.Blocks.BlockDecoGen;
 import Reika.GeoStrata.Rendering.DecoGenRenderer;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.render.FullWaterBlockRenderer;
-import com.voidsrift.riftflux.client.render.WaterloggingRenderDebug;
+import com.voidsrift.riftflux.client.render.WaterloggedBlockRenderAccess;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import org.spongepowered.asm.mixin.Mixin;
@@ -89,12 +88,12 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
     @Unique
     private void riftflux$renderWaterloggedCrystalSpike(IBlockAccess world, int x, int y, int z, Block block,
                                                        RenderBlocks renderer) {
-        if (!this.riftflux$isWaterloggedCrystalSpike(world, x, y, z, block)) {
+        WaterloggedBlockRenderAccess waterAccess = new WaterloggedBlockRenderAccess(world);
+        if (!waterAccess.isWaterloggedAt(x, y, z)) {
             return;
         }
 
-        WaterloggingRenderDebug.crystalRenderHook(x, y, z);
-        FullWaterBlockRenderer.render(renderer, new CrystalSpikeWaterAccess(world, block), x, y, z);
+        FullWaterBlockRenderer.render(renderer, waterAccess, x, y, z);
     }
 
     @Unique
@@ -449,27 +448,6 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
     }
 
     @Unique
-    private boolean riftflux$isWaterloggedCrystalSpike(IBlockAccess world, int x, int y, int z, Block decoBlock) {
-        return world.getBlock(x, y, z) == decoBlock
-                && riftflux$getBaseMeta(world.getBlockMetadata(x, y, z)) == 0
-                && this.riftflux$hasWaterloggingSource(world, x, y, z);
-    }
-
-    @Unique
-    private boolean riftflux$hasWaterloggingSource(IBlockAccess world, int x, int y, int z) {
-        return this.riftflux$isWater(world.getBlock(x, y + 1, z))
-                || this.riftflux$isWater(world.getBlock(x - 1, y, z))
-                || this.riftflux$isWater(world.getBlock(x + 1, y, z))
-                || this.riftflux$isWater(world.getBlock(x, y, z - 1))
-                || this.riftflux$isWater(world.getBlock(x, y, z + 1));
-    }
-
-    @Unique
-    private boolean riftflux$isWater(Block block) {
-        return block == Blocks.water || block == Blocks.flowing_water;
-    }
-
-    @Unique
     private boolean riftflux$usesCustomCrystalSpikeRender() {
         return ModConfig.disableGeoStrataCrystalSpikeHeightDarkening
                 || ModConfig.geoStrataCrystalSpikeTextureBrightnessPercent != 100
@@ -513,30 +491,6 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
             return riftflux$renderPassField.getInt(this);
         } catch (Throwable ignored) {
             return -1;
-        }
-    }
-
-    @Unique
-    private static class CrystalSpikeWaterAccess extends FullWaterBlockRenderer.WaterloggedBlockAccess {
-        private final Block decoBlock;
-
-        private CrystalSpikeWaterAccess(IBlockAccess delegate, Block decoBlock) {
-            super(delegate);
-            this.decoBlock = decoBlock;
-        }
-
-        protected boolean isWaterloggedAt(int x, int y, int z) {
-            return this.delegate.getBlock(x, y, z) == this.decoBlock
-                    && riftflux$getBaseMeta(this.delegate.getBlockMetadata(x, y, z)) == 0
-                    && this.riftflux$hasWaterloggingSource(x, y, z);
-        }
-
-        private boolean riftflux$hasWaterloggingSource(int x, int y, int z) {
-            return this.isRealWaterAt(x, y + 1, z)
-                    || this.isRealWaterAt(x - 1, y, z)
-                    || this.isRealWaterAt(x + 1, y, z)
-                    || this.isRealWaterAt(x, y, z - 1)
-                    || this.isRealWaterAt(x, y, z + 1);
         }
     }
 

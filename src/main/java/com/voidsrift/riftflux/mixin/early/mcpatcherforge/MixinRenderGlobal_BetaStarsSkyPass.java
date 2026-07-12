@@ -40,14 +40,20 @@ public abstract class MixinRenderGlobal_BetaStarsSkyPass {
         if (BetaStarsRenderHelper.hasRenderedThisSkyPass()) {
             return;
         }
+        riftflux$renderBetaStarsInCurrentSkyMatrix(riftflux$currentSkyPartialTicks);
+    }
 
+    private void riftflux$renderBetaStarsInCurrentSkyMatrix(float partialTicks) {
+        if (BetaStarsRenderHelper.hasRenderedThisSkyPass()) {
+            return;
+        }
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null) {
             return;
         }
 
         int starCount = BetaStarsRenderHelper.resolvePreferredStarCount();
-        float starBrightness = BetaStarsRenderHelper.computeStarBrightness(mc, riftflux$currentSkyPartialTicks);
+        float starBrightness = BetaStarsRenderHelper.computeStarBrightness(mc, partialTicks);
         if (starCount <= 0 || starBrightness <= 0.0F) {
             return;
         }
@@ -58,7 +64,12 @@ public abstract class MixinRenderGlobal_BetaStarsSkyPass {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glDepthMask(false);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        BetaStarsRenderHelper.renderBetaStars(starCount, starBrightness, riftflux$currentSkyPartialTicks);
+        GL11.glPushMatrix();
+        if (!ModConfig.betaStarsSpinWithSunMoon) {
+            BetaStarsRenderHelper.undoSunMoonRotation(partialTicks);
+        }
+        BetaStarsRenderHelper.renderBetaStars(starCount, starBrightness, partialTicks);
+        GL11.glPopMatrix();
         BetaStarsRenderHelper.markRenderedThisSkyPass();
         GL11.glDepthMask(true);
         GL11.glPopAttrib();
@@ -66,7 +77,7 @@ public abstract class MixinRenderGlobal_BetaStarsSkyPass {
 
     @Inject(method = "renderSky(F)V", at = @At("RETURN"))
     private void riftflux$renderBetaStarsAtSkyEnd(float partialTicks, CallbackInfo ci) {
-        if (!ModConfig.betaStarsEnabled || ModConfig.betaStarsRenderBehindSunMoon) {
+        if (!ModConfig.betaStarsEnabled) {
             return;
         }
         if (BetaStarsRenderHelper.hasRenderedThisSkyPass()) {
@@ -97,7 +108,12 @@ public abstract class MixinRenderGlobal_BetaStarsSkyPass {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glDepthMask(false);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glPushMatrix();
+        if (ModConfig.betaStarsSpinWithSunMoon) {
+            BetaStarsRenderHelper.applySunMoonRotation(partialTicks);
+        }
         BetaStarsRenderHelper.renderBetaStars(starCount, starBrightness, partialTicks);
+        GL11.glPopMatrix();
         BetaStarsRenderHelper.markRenderedThisSkyPass();
         GL11.glDepthMask(true);
         GL11.glPopAttrib();

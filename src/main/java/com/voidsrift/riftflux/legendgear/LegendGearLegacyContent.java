@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.legendgear;
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
+import com.voidsrift.riftflux.util.EnchantmentIdGuard;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -450,14 +451,16 @@ public final class LegendGearLegacyContent {
                 "net.nmccoy.legendgear.legacy.enchantments.EnchantmentFocus",
                 LegendGear.enchantmentFocusID,
                 5,
-                "Focus"
+                "Focus",
+                "legendgear.legacyFocusEnchantmentId"
         );
         LegendGear.enchantmentSoulTether = ModConfig.legendGearSoulTetherEnabled
                 ? createLegacyEnchantment(
                         "net.nmccoy.legendgear.legacy.enchantments.EnchantmentSoulTether",
                         LegendGear.enchantmentSoulTetherID,
                         1,
-                        "Soul Tether"
+                        "Soul Tether",
+                        "legendgear.legacySoulTetherEnchantmentId"
                 )
                 : null;
     }
@@ -466,8 +469,15 @@ public final class LegendGearLegacyContent {
             String className,
             int enchantmentId,
             int rarity,
-            String displayName
+            String displayName,
+            String configKey
     ) {
+        String conflict = EnchantmentIdGuard.describeConflict(enchantmentId, "legacy LegendGear " + displayName, configKey);
+        if (conflict != null) {
+            FMLLog.warning("[RiftFlux] Skipping legacy %s enchantment: %s", displayName, conflict);
+            return null;
+        }
+
         try {
             Class<?> enchantmentClass = Class.forName(
                     className,

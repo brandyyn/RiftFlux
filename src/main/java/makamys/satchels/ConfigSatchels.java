@@ -56,8 +56,9 @@ public class ConfigSatchels {
     }
     
     public static void reload() {
-        ModConfig.reload();
-        reparse();
+        if(ModConfig.reload()) {
+            reparse();
+        }
     }
     
     public static void reloadIfChanged() {

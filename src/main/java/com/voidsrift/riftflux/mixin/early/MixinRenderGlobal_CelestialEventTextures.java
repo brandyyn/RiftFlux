@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.lwjgl.opengl.GL11;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -43,8 +44,34 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
     @Unique
     private static final Map<String, Long> rf$missingTextureCheckedDay = new HashMap<String, Long>();
 
+    @Unique
+    private float rf$celestialSkyAlpha = 1.0F;
+    @Unique
+    private ResourceLocation rf$cachedSunTexture;
+
     @Shadow
     private WorldClient theWorld;
+
+    @Redirect(
+            method = "renderSky(F)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/opengl/GL11;glColor4f(FFFF)V",
+                    ordinal = 0,
+                    remap = false
+            ),
+            require = 0
+    )
+    private void rf$applySunExposurePreColor(float red, float green, float blue, float alpha) {
+        this.rf$celestialSkyAlpha = alpha;
+        ResourceLocation sunTexture = this.rf$resolveSunTexture();
+        this.rf$cachedSunTexture = sunTexture;
+        float compensation = rf$isEventTexture(sunTexture, rf$defaultSun)
+                ? ModConfig.postProcessSunEventExposureCompensationPercent
+                : ModConfig.postProcessSunExposureCompensationPercent;
+        float multiplier = rf$exposureCompensationMultiplier(compensation);
+        GL11.glColor4f(red * multiplier, green * multiplier, blue * multiplier, alpha);
+    }
 
     @Redirect(
             method = "renderSky(F)V",
@@ -54,6 +81,30 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
             )
     )
     private ResourceLocation rf$redirectSunTexture() {
+        ResourceLocation texture = this.rf$cachedSunTexture != null ? this.rf$cachedSunTexture : this.rf$resolveSunTexture();
+        this.rf$cachedSunTexture = null;
+        return texture;
+    }
+
+    @Redirect(
+            method = "renderSky(F)V",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/renderer/RenderGlobal;locationMoonPhasesPng:Lnet/minecraft/util/ResourceLocation;"
+            )
+    )
+    private ResourceLocation rf$redirectMoonTexture() {
+        ResourceLocation moonTexture = this.rf$resolveMoonTexture();
+        float compensation = rf$isEventTexture(moonTexture, rf$defaultMoon)
+                ? ModConfig.postProcessMoonEventExposureCompensationPercent
+                : ModConfig.postProcessMoonExposureCompensationPercent;
+        float multiplier = rf$exposureCompensationMultiplier(compensation);
+        GL11.glColor4f(multiplier, multiplier, multiplier, this.rf$celestialSkyAlpha);
+        return moonTexture;
+    }
+
+    @Unique
+    private ResourceLocation rf$resolveSunTexture() {
         if (!ModConfig.enableCelestialEventTextures) {
             return rf$defaultSun;
         }
@@ -68,14 +119,8 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
         );
     }
 
-    @Redirect(
-            method = "renderSky(F)V",
-            at = @At(
-                    value = "FIELD",
-                    target = "Lnet/minecraft/client/renderer/RenderGlobal;locationMoonPhasesPng:Lnet/minecraft/util/ResourceLocation;"
-            )
-    )
-    private ResourceLocation rf$redirectMoonTexture() {
+    @Unique
+    private ResourceLocation rf$resolveMoonTexture() {
         if (!ModConfig.enableCelestialEventTextures) {
             return rf$defaultMoon;
         }
@@ -88,6 +133,38 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
                 rf$defaultMoon,
                 rf$moonPickSalt
         );
+    }
+
+    @Unique
+    private static boolean rf$isEventTexture(ResourceLocation texture, ResourceLocation fallback) {
+        return texture != null
+                && (!texture.getResourceDomain().equals(fallback.getResourceDomain())
+                || !texture.getResourcePath().equals(fallback.getResourcePath()));
+    }
+
+    @Unique
+    private static float rf$exposureCompensationMultiplier(float compensationPercent) {
+        if (!ModConfig.enablePostProcessing) {
+            return 1.0F;
+        }
+        float compensation = rf$clamp(compensationPercent / 100.0F, 0.0F, 10.0F);
+        if (compensation <= 0.0F) {
+            return 1.0F;
+        }
+        float exposureScale = Math.max(0.001F, 1.0F + rf$clamp(ModConfig.postProcessExposure, -1.0F, 1.0F));
+        float inverseExposure = 1.0F / exposureScale;
+        return 1.0F + (inverseExposure - 1.0F) * compensation;
+    }
+
+    @Unique
+    private static float rf$clamp(float value, float min, float max) {
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return value;
     }
 
     @Unique

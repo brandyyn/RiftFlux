@@ -1,7 +1,6 @@
 package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.util.ConfigResolver;
-import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import java.util.HashMap;
@@ -20,6 +19,7 @@ import com.voidsrift.riftflux.dualhotbar.DualHotbarConfig;
 public class ModConfig {
     private static final String PALARIA_CATEGORY = "palaria";
     private static final String MOB_SPAWNING_CATEGORY = "mobspawning";
+    private static final String POST_PROCESSING_CATEGORY = "post processing";
     private static final String[] DEFAULT_MOB_SPAWN_WHITELIST = new String[]{
             "riftflux.DemonEye|300|1-3|0",
             "riftflux.Cyclops|77|1|0",
@@ -215,8 +215,19 @@ public class ModConfig {
     public static boolean fixUnderwaterMobDarkening;
     public static boolean enablePostProcessing;
     public static boolean postProcessConfigHotSwap;
-    public static float postProcessDesaturationPercent;
     public static float postProcessGamma;
+    public static float postProcessBrightness;
+    public static float postProcessContrast;
+    public static float postProcessExposure;
+    public static float postProcessSunExposureCompensationPercent;
+    public static float postProcessMoonExposureCompensationPercent;
+    public static float postProcessSunEventExposureCompensationPercent;
+    public static float postProcessMoonEventExposureCompensationPercent;
+    public static float postProcessSaturationPercent;
+    public static float postProcessRedMultiplier;
+    public static float postProcessGreenMultiplier;
+    public static float postProcessBlueMultiplier;
+    public static float postProcessColorGradeShadowProtection;
     public static float postProcessBloomStrengthPercent;
     public static float postProcessBloomThreshold;
     public static float postProcessBloomRadiusPixels;
@@ -258,7 +269,7 @@ public class ModConfig {
     public static float betaStarsTwinkleSpeedMultiplier;
     public static int betaStarsSunsetFadeStartTick;
     public static int betaStarsSunsetFadeEndTick;
-    public static boolean betaStarsRenderBehindSunMoon;
+    public static boolean betaStarsSpinWithSunMoon;
     public static boolean betaStarsDisableBetterSkiesStars;
 
     // Zelda
@@ -1254,6 +1265,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean sugarcaneGrowsWhenSupportHasBlockBelow;
     public static boolean directionalCrossedPlantRenderingByPlacement;
     public static boolean directionalCrossedPlantFacePlayerOnPlacement;
+    public static boolean allowTorchesOnAnyBlock;
     public static boolean doubleSidedTorchRendering;
     public static boolean billboardTorchRendering;
     public static String[] billboardTorchRenderingBlacklist;
@@ -1289,6 +1301,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int netherliciousBigNetherTopY;
     public static boolean enableDoorAirPlacement;
     public static boolean protectCircuitryFromWater;
+    public static boolean preventWaterGrassDecay;
     public static boolean enablePodzolDirtTexture;
     public static boolean enableCustomPaintings;
     public static boolean enablePaintingSelection;
@@ -1361,12 +1374,17 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         syncConfig();
     }
 
-    public static void reload() {
+    public static boolean reload() {
         if (config == null) {
-            return;
+            return false;
         }
-        config.load();
-        syncConfig();
+        try {
+            config.load();
+            syncConfig();
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     public static void syncConfig(){
@@ -1887,89 +1905,177 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
         enablePostProcessing = config.getBoolean(
                 "EnablePostProcessing",
-                "client",
-                legacyBooleanDefault("client", "EnableBtaPostProcessing", true),
+                POST_PROCESSING_CATEGORY,
+                true,
                 "If true, applies configurable post processing to the 3D scene after world and hand rendering. HUDs and menus are left untouched."
         );
         postProcessConfigHotSwap = config.getBoolean(
                 "EnablePostProcessingConfigHotSwap",
-                "client",
+                POST_PROCESSING_CATEGORY,
                 false,
                 "If true, post processing checks riftflux.cfg during play and reloads changed values without a restart."
         );
-        postProcessDesaturationPercent = config.getFloat(
-                "PostProcessDesaturationPercent",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessDesaturationPercent", 0.0F),
-                0.0F,
-                100.0F,
-                "Percent desaturation for the post process. 0 keeps vanilla color saturation."
-        );
         postProcessGamma = config.getFloat(
                 "PostProcessGamma",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessGamma", 1.0F),
+                POST_PROCESSING_CATEGORY,
+                0.525F,
+                0.0F,
+                1.0F,
+                "Gamma adjustment using the reference final-shader curve. 0.5 is unchanged; higher values brighten, lower values darken."
+        );
+        postProcessBrightness = config.getFloat(
+                "PostProcessBrightness",
+                POST_PROCESSING_CATEGORY,
+                0.0F,
+                -1.0F,
+                1.0F,
+                "Flat brightness offset added to RGB after gamma. 0 is unchanged; negative values darken, positive values brighten."
+        );
+        postProcessContrast = config.getFloat(
+                "PostProcessContrast",
+                POST_PROCESSING_CATEGORY,
+                -0.033F,
+                -1.0F,
+                1.0F,
+                "Contrast adjustment around mid-gray. 0 is unchanged; negative values flatten, positive values increase contrast."
+        );
+        postProcessExposure = config.getFloat(
+                "PostProcessExposure",
+                POST_PROCESSING_CATEGORY,
                 0.25F,
-                4.0F,
-                "Gamma adjustment for the post process. 1.0 is unchanged; values above 1.0 brighten midtones."
+                -1.0F,
+                1.0F,
+                "Exposure multiplier adjustment. 0 is unchanged; positive values brighten, negative values darken."
+        );
+        postProcessSunExposureCompensationPercent = config.getFloat(
+                "PostProcessSunExposureCompensationPercent",
+                POST_PROCESSING_CATEGORY,
+                333.0F,
+                0.0F,
+                1000.0F,
+                "How much the sun is pre-compensated against PostProcessExposure before color grading. 100 roughly cancels exposure; higher values darken it further before post processing; 0 lets exposure affect it normally."
+        );
+        postProcessSunEventExposureCompensationPercent = config.getFloat(
+                "PostProcessSunEventExposureCompensationPercent",
+                POST_PROCESSING_CATEGORY,
+                369.0F,
+                0.0F,
+                1000.0F,
+                "How much custom/random sun event textures are pre-compensated against PostProcessExposure before color grading. 100 roughly cancels exposure; higher values darken them further before post processing; 0 lets exposure affect them normally."
+        );
+        postProcessMoonExposureCompensationPercent = config.getFloat(
+                "PostProcessMoonExposureCompensationPercent",
+                POST_PROCESSING_CATEGORY,
+                369.0F,
+                0.0F,
+                1000.0F,
+                "How much the moon is pre-compensated against PostProcessExposure before color grading. 100 roughly cancels exposure; higher values darken it further before post processing; 0 lets exposure affect it normally."
+        );
+        postProcessMoonEventExposureCompensationPercent = config.getFloat(
+                "PostProcessMoonEventExposureCompensationPercent",
+                POST_PROCESSING_CATEGORY,
+                369.0F,
+                0.0F,
+                1000.0F,
+                "How much custom/random moon event textures are pre-compensated against PostProcessExposure before color grading. 100 roughly cancels exposure; higher values darken them further before post processing; 0 lets exposure affect them normally."
+        );
+        postProcessSaturationPercent = config.getFloat(
+                "PostProcessSaturationPercent",
+                POST_PROCESSING_CATEGORY,
+                7.5F,
+                -100.0F,
+                100.0F,
+                "Saturation adjustment using the reference final-shader math. 0 is unchanged; negative values desaturate, positive values oversaturate."
+        );
+        postProcessRedMultiplier = config.getFloat(
+                "PostProcessRedMultiplier",
+                POST_PROCESSING_CATEGORY,
+                1.1F,
+                0.0F,
+                3.0F,
+                "Red channel multiplier applied after saturation. 1 is unchanged."
+        );
+        postProcessGreenMultiplier = config.getFloat(
+                "PostProcessGreenMultiplier",
+                POST_PROCESSING_CATEGORY,
+                1.0F,
+                0.0F,
+                3.0F,
+                "Green channel multiplier applied after saturation. 1 is unchanged."
+        );
+        postProcessBlueMultiplier = config.getFloat(
+                "PostProcessBlueMultiplier",
+                POST_PROCESSING_CATEGORY,
+                1.1F,
+                0.0F,
+                3.0F,
+                "Blue channel multiplier applied after saturation. 1 is unchanged."
+        );
+        postProcessColorGradeShadowProtection = config.getFloat(
+                "PostProcessColorGradeShadowProtection",
+                POST_PROCESSING_CATEGORY,
+                25.0F,
+                0.0F,
+                100.0F,
+                "Protects dark pixels from desaturation and gamma, in percent. 0 affects all brightness levels; higher values preserve more shadows and darkness."
         );
         postProcessBloomStrengthPercent = config.getFloat(
                 "PostProcessBloomStrengthPercent",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessBloomStrengthPercent", 66.0F),
+                POST_PROCESSING_CATEGORY,
+                66.0F,
                 0.0F,
                 100.0F,
                 "Strength of the subtle bright-pass bloom, in percent. 0 disables bloom while leaving desaturation/gamma active."
         );
         postProcessBloomThreshold = config.getFloat(
                 "PostProcessBloomThreshold",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessBloomThreshold", 0.0F),
+                POST_PROCESSING_CATEGORY,
+                0.0F,
                 0.0F,
                 1.0F,
                 "Brightness threshold where bloom starts. Lower values bloom more of the scene; higher values restrict bloom to brighter pixels."
         );
         postProcessBloomRadiusPixels = config.getFloat(
                 "PostProcessBloomRadiusPixels",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessBloomRadiusPixels", 6.6F),
+                POST_PROCESSING_CATEGORY,
+                6.6F,
                 0.25F,
                 16.0F,
                 "Approximate bloom sample radius in screen pixels."
         );
         postProcessBloomAffectsHeldItem = config.getBoolean(
                 "PostProcessBloomAffectsHeldItem",
-                "client",
-                legacyBooleanDefault("client", "BtaPostProcessBloomAffectsHeldItem", false),
+                POST_PROCESSING_CATEGORY,
+                false,
                 "If true, bloom is applied after first-person hand and held item rendering. If false, bloom is applied before the hand renders so held items do not glow."
         );
         postProcessCelestialBloomStrengthPercent = config.getFloat(
                 "PostProcessCelestialBloomStrengthPercent",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessCelestialBloomStrengthPercent", 66.0F),
+                POST_PROCESSING_CATEGORY,
+                66.0F,
                 0.0F,
                 800.0F,
                 "Extra bloom strength for bright non-blue sky objects like the sun, moon, and stars. This sky-only pass is separate from normal world bloom."
         );
         postProcessCelestialBloomThreshold = config.getFloat(
                 "PostProcessCelestialBloomThreshold",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessCelestialBloomThreshold", 0.0F),
+                POST_PROCESSING_CATEGORY,
+                0.0F,
                 0.0F,
                 100.0F,
                 "Sky bloom inclusion, in percent. 0 blooms only small star-like points; higher values gradually include broader bright sun, moon, and sky pixels."
         );
         postProcessCelestialBloomRadiusPixels = config.getFloat(
                 "PostProcessCelestialBloomRadiusPixels",
-                "client",
-                legacyFloatDefault("client", "BtaPostProcessCelestialBloomRadiusPixels", 2.5F),
+                POST_PROCESSING_CATEGORY,
+                2.5F,
                 0.25F,
                 32.0F,
                 "Approximate sky-only bloom radius in screen pixels for sun, moon, and stars. Separate from normal world bloom radius."
         );
         postProcessCelestialBloomStartTime = config.getInt(
                 "PostProcessCelestialBloomStartTime",
-                "client",
+                POST_PROCESSING_CATEGORY,
                 12500,
                 0,
                 23999,
@@ -1977,13 +2083,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         );
         postProcessCelestialBloomEndTime = config.getInt(
                 "PostProcessCelestialBloomEndTime",
-                "client",
+                POST_PROCESSING_CATEGORY,
                 21500,
                 0,
                 23999,
                 "World time tick when sky-only bloom ends. No sky bloom is applied after this time unless the window wraps past midnight."
         );
-        removeLegacyPostProcessKeys();
 
         deathRespawnDelaySeconds = config.getInt(
                 "DeathRespawnDelaySeconds",
@@ -2509,11 +2614,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             betaStarsSunsetFadeEndTick = betaStarsSunsetFadeStartTick + 1;
         }
 
-        betaStarsRenderBehindSunMoon = config.getBoolean(
-                "BetaStarsRenderBehindSunMoon",
+        betaStarsSpinWithSunMoon = config.getBoolean(
+                "BetaStarsSpinWithSunMoon",
                 "celestial",
                 true,
-                "If true, renders RiftFlux beta stars behind the vanilla/custom sun and moon where the sky pipeline allows it. If false, fallback star rendering can draw after sun/moon for compatibility."
+                "If true, RiftFlux beta stars use the same celestial rotation as the sun and moon. If false, they stay fixed."
         );
 
         betaStarsDisableBetterSkiesStars = config.getBoolean(
@@ -6808,6 +6913,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, water will not wash away redstone dust, repeaters, comparators, buttons, rails, and similar circuitry."
         );
 
+        preventWaterGrassDecay = config.getBoolean(
+                "PreventWaterGrassDecay",
+                "general",
+                true,
+                "If true, grass blocks with water directly above them skip vanilla grass update ticks, so water does not turn them into dirt. Requires restart."
+        );
+
         enableArmorOverlayModule = config.getBoolean(
                 "EnableArmorOverlayModule",
                 "armoroverlay",
@@ -7341,6 +7453,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "client",
                 true,
                 "If true, player-placed crossed plants store and use the player's facing direction at placement time. If false, directional crossed-plant rendering falls back to deterministic position-based orientation."
+        );
+        allowTorchesOnAnyBlock = config.getBoolean(
+                "AllowTorchesOnAnyBlock",
+                "general",
+                true,
+                "If true, vanilla torches and blocks extending BlockTorch can be placed on any non-air block, including leaves. Requires restart."
         );
         doubleSidedTorchRendering = config.getBoolean(
                 "DoubleSidedTorchRendering",
@@ -8909,39 +9027,16 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
     }
 
-    private static boolean legacyBooleanDefault(String category, String key, boolean fallback) {
-        return config != null && config.hasKey(category, key)
-                ? config.getCategory(category).get(key).getBoolean(fallback)
-                : fallback;
-    }
-
-    private static float legacyFloatDefault(String category, String key, float fallback) {
-        return config != null && config.hasKey(category, key)
-                ? (float)config.getCategory(category).get(key).getDouble(fallback)
-                : fallback;
-    }
-
-    private static void removeLegacyPostProcessKeys() {
-        if (config == null || !config.hasCategory("client")) {
-            return;
-        }
-        ConfigCategory client = config.getCategory("client");
-        client.remove("EnableBtaPostProcessing");
-        client.remove("BtaPostProcessDesaturationPercent");
-        client.remove("BtaPostProcessGamma");
-        client.remove("BtaPostProcessBloomStrengthPercent");
-        client.remove("BtaPostProcessBloomThreshold");
-        client.remove("BtaPostProcessBloomRadiusPixels");
-        client.remove("BtaPostProcessBloomAffectsHeldItem");
-        client.remove("BtaPostProcessCelestialBloomStrengthPercent");
-        client.remove("BtaPostProcessCelestialBloomThreshold");
-        client.remove("BtaPostProcessCelestialBloomRadiusPixels");
-    }
-
     public static boolean isPostProcessingActive() {
         return enablePostProcessing && (
-                postProcessDesaturationPercent > 0.0F
-                        || postProcessGamma != 1.0F
+                postProcessSaturationPercent != 0.0F
+                        || postProcessGamma != 0.5F
+                        || postProcessBrightness != 0.0F
+                        || postProcessContrast != 0.0F
+                        || postProcessExposure != 0.0F
+                        || postProcessRedMultiplier != 1.0F
+                        || postProcessGreenMultiplier != 1.0F
+                        || postProcessBlueMultiplier != 1.0F
                         || postProcessBloomStrengthPercent > 0.0F
         );
     }

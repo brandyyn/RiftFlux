@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -127,6 +128,24 @@ public final class BetaStarsRenderHelper {
         }
 
         tessellator.draw();
+    }
+
+    public static void applySunMoonRotation(float partialTicks) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null) {
+            return;
+        }
+        GL11.glRotatef(-90.0F, 0.0F, 1.0F, 0.0F);
+        GL11.glRotatef(mc.theWorld.getCelestialAngle(partialTicks) * 360.0F, 1.0F, 0.0F, 0.0F);
+    }
+
+    public static void undoSunMoonRotation(float partialTicks) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null) {
+            return;
+        }
+        GL11.glRotatef(-mc.theWorld.getCelestialAngle(partialTicks) * 360.0F, 1.0F, 0.0F, 0.0F);
+        GL11.glRotatef(90.0F, 0.0F, 1.0F, 0.0F);
     }
 
     public static void beginSkyRenderPass() {

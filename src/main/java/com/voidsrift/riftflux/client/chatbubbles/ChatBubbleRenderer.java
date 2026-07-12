@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.client.chatbubbles;
 import com.voidsrift.riftflux.Constants;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.chatbubbles.ChatBubbleColorManager;
+import com.voidsrift.riftflux.client.chatbubbles.ChatBubblesClient.ChatBubbleMessage;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;

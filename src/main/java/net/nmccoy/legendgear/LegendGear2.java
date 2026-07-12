@@ -37,6 +37,7 @@ package net.nmccoy.legendgear;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.ConfigResolver;
+import com.voidsrift.riftflux.util.EnchantmentIdGuard;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -510,9 +511,13 @@ public class LegendGear2 {
         if (FMLCommonHandler.instance().getSide().isClient()) {
             snw.registerMessage(StarwellMessageHandler.class, StarwellMessage.class, 0, Side.CLIENT);
         }
+        EnchantmentIdGuard.requireFree(enchMagicProtectionID, "LegendGear Magic Protection", "legendgear.magicProtectionID");
         enchMagicProtection = new EnchantmentMagicProtection(enchMagicProtectionID, 3);
+        EnchantmentIdGuard.requireFree(enchSpellArmoredID, "LegendGear Fortitude", "legendgear.spellArmoredID");
         enchSpellArmored = new EnchantmentSpellArmored(enchSpellArmoredID, 2);
+        EnchantmentIdGuard.requireFree(enchSpellReachID, "LegendGear Reach", "legendgear.spellReachID");
         enchSpellReach = new EnchantmentSpellReach(enchSpellReachID, 5);
+        EnchantmentIdGuard.requireFree(enchSpellSpreadID, "LegendGear Spread", "legendgear.spellSpreadID");
         enchSpellSpread = new EnchantmentSpellSpread(enchSpellSpreadID, 5);
         fortunes = new Fortunes();
         PlayerEventHandler peh = new PlayerEventHandler();

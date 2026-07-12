@@ -42,7 +42,7 @@ public class EntityDemonEye extends EntityMob implements IEntitySyncData {
 
     @Override
     protected String getLivingSound() {
-        return "mob.ghast.moan";
+        return null;
     }
 
     @Override

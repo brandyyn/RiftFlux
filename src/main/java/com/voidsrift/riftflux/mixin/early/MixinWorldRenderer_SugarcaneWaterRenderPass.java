@@ -20,7 +20,7 @@ public abstract class MixinWorldRenderer_SugarcaneWaterRenderPass {
     )
     private int riftflux$getSugarcaneRenderBlockPass(Block block) {
         if (ModConfig.allowSugarcaneInWater && block == Blocks.reeds) {
-            return 0;
+            return 1;
         }
         return block.getRenderBlockPass();
     }

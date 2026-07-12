@@ -77,7 +77,7 @@ public class EntityNimatin extends EntityTameable implements IEntitySyncData {
         tasks.addTask(1, aiSit);
         tasks.addTask(2, new EntityAILeapAtTarget(this, 0.4F));
         tasks.addTask(3, new EntityAIAttackOnCollide(this, 0.4D, true));
-        tasks.addTask(4, new EntityAINimatinTempt(this, 0.4D, 8.0F));
+        tasks.addTask(4, new EntityAINimatinBeg(this, 8.0F, 0.4D, true));
         tasks.addTask(5, new EntityAINimatinFollowOwner(this, 0.4D, 10.0F, 4.0F));
         tasks.addTask(6, new EntityAIMate(this, 0.4D));
         tasks.addTask(7, new EntityAIWander(this, 0.4D));

@@ -366,8 +366,11 @@ public class EntityBlackWidow extends EntitySpider implements IEntitySyncData {
             return;
         }
 
+        getNavigator().clearPathEntity();
+        double desiredX = threadAnchorX + 0.5D;
         double desiredY = threadAnchorY - height - 0.05D;
-        setPosition(posX, desiredY, posZ);
+        double desiredZ = threadAnchorZ + 0.5D;
+        setPosition(desiredX, desiredY, desiredZ);
         motionX = 0.0D;
         motionZ = 0.0D;
         motionY = 0.0D;

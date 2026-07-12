@@ -444,6 +444,30 @@ public final class ChatBubblesClient {
         return nameRefs.toString();
     }
 
+    static final class ChatBubbleMessage {
+        private final int updateCounterCreated;
+        private final String author;
+        private final String[] messageLines;
+
+        private ChatBubbleMessage(String author, String[] messageLines, int updateCounterCreated) {
+            this.author = author;
+            this.messageLines = messageLines;
+            this.updateCounterCreated = updateCounterCreated;
+        }
+
+        String getAuthor() {
+            return author;
+        }
+
+        String[] getMessageLines() {
+            return messageLines;
+        }
+
+        int getUpdateCounterCreated() {
+            return updateCounterCreated;
+        }
+    }
+
     private static final class ParsedChatLine {
         private String author = "";
         private String text = "";

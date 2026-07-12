@@ -1,116 +1,55 @@
 package com.voidsrift.riftflux.client.render;
 
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedAccess;
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedLookup;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public final class FullWaterBlockRenderer {
-    private static final double STILL_WATER_TOP = 8.0D / 9.0D;
-    private static final double LIQUID_TOP_EPSILON = 0.0010000000474974513D;
-
     private FullWaterBlockRenderer() {
     }
 
     public static boolean render(RenderBlocks renderer, WaterloggedBlockAccess waterAccess, int x, int y, int z) {
         IBlockAccess previous = renderer.blockAccess;
+        boolean previousRenderAllFaces = renderer.renderAllFaces;
+        boolean previousRenderFromInside = renderer.renderFromInside;
         renderer.blockAccess = waterAccess;
+        renderer.renderAllFaces = false;
+        renderer.renderFromInside = false;
         waterAccess.setRenderTarget(x, y, z);
         try {
-            return renderer.renderBlockLiquid(Blocks.water, x, y, z);
+            if (!hasVisibleWaterFace(waterAccess, x, y, z)) {
+                return false;
+            }
+            return renderer.renderBlockByRenderType(waterAccess.getRenderWaterBlock(x, y, z), x, y, z);
         } finally {
             waterAccess.clearRenderTarget();
+            renderer.renderFromInside = previousRenderFromInside;
+            renderer.renderAllFaces = previousRenderAllFaces;
             renderer.blockAccess = previous;
         }
     }
 
-    public static boolean renderStillSurface(WaterloggedBlockAccess waterAccess, int x, int y, int z) {
-        waterAccess.setRenderTarget(x, y, z);
-        try {
-            if (!waterAccess.isWaterloggedAt(x, y, z)
-                    || waterAccess.isRealWaterAt(x, y + 1, z)
-                    || waterAccess.isWaterloggedAt(x, y + 1, z)) {
-                return false;
-            }
-
-            int[] source = waterAccess.findNearestRealWater(x, y, z);
-            int colorX = source == null ? x : source[0];
-            int colorY = source == null ? y : source[1];
-            int colorZ = source == null ? z : source[2];
-            Block water = Blocks.water;
-            int color = water.colorMultiplier(waterAccess, colorX, colorY, colorZ);
-            float red = (float) (color >> 16 & 255) / 255.0F;
-            float green = (float) (color >> 8 & 255) / 255.0F;
-            float blue = (float) (color & 255) / 255.0F;
-
-            IIcon icon = BlockLiquid.getLiquidIcon("water_still");
-            double minU = icon.getInterpolatedU(0.0D);
-            double maxU = icon.getInterpolatedU(16.0D);
-            double minV = icon.getInterpolatedV(0.0D);
-            double maxV = icon.getInterpolatedV(16.0D);
-            double top00 = getCornerWaterSurfaceTop(waterAccess, x, y, z, 0, 0);
-            double top01 = getCornerWaterSurfaceTop(waterAccess, x, y, z, 0, 1);
-            double top11 = getCornerWaterSurfaceTop(waterAccess, x, y, z, 1, 1);
-            double top10 = getCornerWaterSurfaceTop(waterAccess, x, y, z, 1, 0);
-
-            Tessellator tessellator = Tessellator.instance;
-            tessellator.setBrightness(water.getMixedBrightnessForBlock(waterAccess, colorX, colorY, colorZ));
-            tessellator.setColorOpaque_F(red, green, blue);
-            tessellator.addVertexWithUV((double) x, top00, (double) z, minU, minV);
-            tessellator.addVertexWithUV((double) x, top01, (double) (z + 1), minU, maxV);
-            tessellator.addVertexWithUV((double) (x + 1), top11, (double) (z + 1), maxU, maxV);
-            tessellator.addVertexWithUV((double) (x + 1), top10, (double) z, maxU, minV);
-            tessellator.addVertexWithUV((double) (x + 1), top10, (double) z, maxU, minV);
-            tessellator.addVertexWithUV((double) (x + 1), top11, (double) (z + 1), maxU, maxV);
-            tessellator.addVertexWithUV((double) x, top01, (double) (z + 1), minU, maxV);
-            tessellator.addVertexWithUV((double) x, top00, (double) z, minU, minV);
-            return true;
-        } finally {
-            waterAccess.clearRenderTarget();
-        }
+    private static boolean hasVisibleWaterFace(WaterloggedBlockAccess waterAccess, int x, int y, int z) {
+        return !isWaterForRender(waterAccess, x, y + 1, z)
+                || !isWaterForRender(waterAccess, x, y, z - 1)
+                || !isWaterForRender(waterAccess, x, y, z + 1)
+                || !isWaterForRender(waterAccess, x - 1, y, z)
+                || !isWaterForRender(waterAccess, x + 1, y, z);
     }
 
-    private static double getCornerWaterSurfaceTop(WaterloggedBlockAccess waterAccess, int x, int y, int z,
-                                                   int offsetX, int offsetZ) {
-        return (double) y + getVanillaCornerWaterHeight(waterAccess, x + offsetX, y, z + offsetZ) - LIQUID_TOP_EPSILON;
+    private static boolean isWaterForRender(WaterloggedBlockAccess waterAccess, int x, int y, int z) {
+        Block block = waterAccess.getBlock(x, y, z);
+        return block != null && block.getMaterial() == Material.water;
     }
 
-    private static double getVanillaCornerWaterHeight(WaterloggedBlockAccess waterAccess, int x, int y, int z) {
-        int count = 0;
-        double total = 0.0D;
-        for (int corner = 0; corner < 4; ++corner) {
-            int sampleX = x - (corner & 1);
-            int sampleZ = z - (corner >> 1 & 1);
-            if (waterAccess.isRealWaterAt(sampleX, y + 1, sampleZ)
-                    || waterAccess.isWaterloggedAsWater(sampleX, y + 1, sampleZ)) {
-                return 1.0D;
-            }
-
-            Material material = waterAccess.getBlock(sampleX, y, sampleZ).getMaterial();
-            if (material == Material.water) {
-                int meta = waterAccess.getBlockMetadata(sampleX, y, sampleZ);
-                if (meta >= 8 || meta == 0) {
-                    total += (double) BlockLiquid.getLiquidHeightPercent(meta) * 10.0D;
-                    count += 10;
-                }
-                total += BlockLiquid.getLiquidHeightPercent(meta);
-                ++count;
-            } else if (!material.isSolid()) {
-                total += 1.0D;
-                ++count;
-            }
-        }
-        return count == 0 ? STILL_WATER_TOP : 1.0D - total / (double) count;
-    }
-
-    public static abstract class WaterloggedBlockAccess implements IBlockAccess {
+    public static abstract class WaterloggedBlockAccess implements IBlockAccess, RiftFluxFluidloggedAccess {
         protected final IBlockAccess delegate;
         protected int renderX;
         protected int renderY;
@@ -145,9 +84,11 @@ public final class FullWaterBlockRenderer {
         }
 
         public int getLightBrightnessForSkyBlocks(int x, int y, int z, int defaultLight) {
-            int[] source = this.findNearestRealWater(x, y, z);
-            if (source != null) {
-                return this.delegate.getLightBrightnessForSkyBlocks(source[0], source[1], source[2], defaultLight);
+            if (this.isWaterloggedAsWater(x, y, z)) {
+                int[] source = this.findNearestRealWater(x, y, z);
+                if (source != null) {
+                    return this.delegate.getLightBrightnessForSkyBlocks(source[0], source[1], source[2], defaultLight);
+                }
             }
             return this.delegate.getLightBrightnessForSkyBlocks(x, y, z, defaultLight);
         }
@@ -223,7 +164,7 @@ public final class FullWaterBlockRenderer {
         }
 
         protected boolean isWaterloggedAsWater(int x, int y, int z) {
-            return this.isWaterloggedAt(x, y, z);
+            return this.riftflux$getFluidBlock(x, y, z) == Blocks.water;
         }
 
         protected int getWaterloggedMetadata(int x, int y, int z) {
@@ -231,7 +172,23 @@ public final class FullWaterBlockRenderer {
         }
 
         protected int getRealWaterMetadata(int x, int y, int z) {
-            return 0;
+            return this.delegate.getBlockMetadata(x, y, z);
+        }
+
+        protected Block getRenderWaterBlock(int x, int y, int z) {
+            int[] source = this.findNearestRealWater(x, y, z);
+            if (source == null) {
+                return Blocks.water;
+            }
+            Block block = this.delegate.getBlock(source[0], source[1], source[2]);
+            return isRealWater(block) ? block : Blocks.water;
+        }
+
+        public Block riftflux$getFluidBlock(int x, int y, int z) {
+            if (this.isWaterloggedAt(x, y, z)) {
+                return Blocks.water;
+            }
+            return RiftFluxFluidloggedLookup.getSupportedFluidBlock(this.delegate, x, y, z);
         }
 
         protected abstract boolean isWaterloggedAt(int x, int y, int z);
