@@ -15,6 +15,9 @@ public final class CreativeModuleVisibility {
     private static final String[] AXOLOTL_PATHS = {
             "axolotl_bucket", "axolotl_spawn_egg"
     };
+    private static final String[] CHESTER_PATHS = {
+            "chester_spawn_egg"
+    };
     private static final String[] DUCKLING_NAMESPACES = {
             "ghibli", "duckling", "sootspritecraft"
     };
@@ -143,6 +146,9 @@ public final class CreativeModuleVisibility {
         String path = normalizePath(name.path);
 
         if (!ModConfig.enableAxolotlModule && matchesRiftFluxPath(namespace, path, AXOLOTL_PATHS)) {
+            return false;
+        }
+        if (!ModConfig.enableChesterModule && matchesRiftFluxPath(namespace, path, CHESTER_PATHS)) {
             return false;
         }
         if (!ModConfig.enableDucklingModule && (matches(namespace, DUCKLING_NAMESPACES) || matchesRiftFluxPath(namespace, path, DUCKLING_PATHS))) {

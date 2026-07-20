@@ -10,7 +10,9 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemShears;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
@@ -194,13 +196,33 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
 
     @Override
     public boolean isShearable(ItemStack item, IBlockAccess world, int x, int y, int z) {
-        int meta = world.getBlockMetadata(x, y, z);
-        return BlockDoublePlant.func_149887_c(meta);
+        return true;
     }
 
     @Override
     public ArrayList<ItemStack> onSheared(ItemStack item, IBlockAccess world, int x, int y, int z, int fortune) {
-        return new ArrayList<ItemStack>();
+        ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
+        drops.add(new ItemStack(this, 1, 1));
+        return drops;
+    }
+
+    @Override
+    public void harvestBlock(World world, EntityPlayer player, int x, int y, int z, int meta) {
+        ItemStack held = player != null ? player.getCurrentEquippedItem() : null;
+        if (held != null && held.getItem() instanceof ItemShears) {
+            return;
+        }
+        super.harvestBlock(world, player, x, y, z, meta);
+    }
+
+    @Override
+    public void onBlockHarvested(World world, int x, int y, int z, int meta, EntityPlayer player) {
+        ItemStack held = player != null ? player.getCurrentEquippedItem() : null;
+        boolean sheared = held != null && held.getItem() instanceof ItemShears;
+        if (sheared && BlockDoublePlant.func_149887_c(meta) && world.getBlock(x, y - 1, z) == this) {
+            world.setBlockToAir(x, y - 1, z);
+        }
+        super.onBlockHarvested(world, x, y, z, meta, player);
     }
 
     private static boolean canPlaceOnBeanstalk(World world, int x, int y, int z) {

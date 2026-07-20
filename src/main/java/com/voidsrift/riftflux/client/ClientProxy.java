@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.CommonProxy;
 import com.voidsrift.riftflux.combat.torohealth.client.particle.DamageParticles;
 import com.voidsrift.riftflux.combat.torohealth.mixins.EntityLivingBaseExt;
+import com.voidsrift.riftflux.chester.ChesterContent;
 import com.voidsrift.riftflux.compat.hats.HatsKeybinds;
 import com.voidsrift.riftflux.compat.chromaticraft.ChromatiCraftItemFabricatorTooltipHandler;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarClient;
@@ -200,6 +201,7 @@ public class ClientProxy extends CommonProxy {
         AsgardShieldContent.initClient();
         BlessingContent.initClient();
         FurnitureContent.initClient();
+        ChesterContent.initClient();
         AxolotlContent.initClient();
         DucklingContent.initClient();
         WheatfieldContent.initClient();

@@ -294,3 +294,6 @@ entity.RiftFluxPumpkinCreeper.name=Pumpkin Creeper
 entity.riftflux.PumpkinZombie.name=Pumpkin Zombie
 entity.riftflux.PumpkinSkeleton.name=Pumpkin Skeleton
 entity.riftflux.PumpkinCreeper.name=Pumpkin Creeper
+item.chester_spawn_egg.name=Chester Spawn Egg
+entity.riftflux.Chester.name=Chester
+entity.riftflux.ShadowChester.name=Shadow Chester

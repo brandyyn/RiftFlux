@@ -316,8 +316,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         mixins.add("early.MixinEntity_NoUnderwaterLivingDismount");
         if (ModConfig.playerOnlyHurtSound) {
-            mixins.add("early.MixinEntityPlayer_CustomHurtSound");
-            mixins.add("early.MixinEntityLivingBase_DrownPlayerHurtSoundFix");
+            mixins.add("early.MixinEntityLivingBase_CustomPlayerHurtSoundServer");
             if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
                 mixins.add("early.MixinEntityLivingBase_CustomPlayerHurtSound");
             }

@@ -1,5 +1,7 @@
 package com.voidsrift.riftflux.vortex.proxy;
 
+import com.voidsrift.riftflux.chester.ChesterContent;
+import com.voidsrift.riftflux.chester.ChesterGuiHandler;
 import com.voidsrift.riftflux.furniture.FurnitureGuiIds;
 import com.voidsrift.riftflux.furniture.client.gui.GuiBedsideCabinet;
 import com.voidsrift.riftflux.furniture.client.gui.GuiCabinet;
@@ -31,6 +33,7 @@ public class GuiProxy implements IGuiHandler {
    public static final int toolbeltId = 0;
    public static final int backpackId = 1;
    public static final int gluttonyCharmId = 2;
+   private static final ChesterGuiHandler CHESTER_GUI_HANDLER = new ChesterGuiHandler();
 
    public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
       switch(id) {
@@ -64,6 +67,8 @@ public class GuiProxy implements IGuiHandler {
                  ? new ContainerStudyDesk(player.inventory, (TileEntityDesk) tileEntity, world)
                  : null;
       }
+      case ChesterContent.GUI_ID:
+         return CHESTER_GUI_HANDLER.getServerGuiElement(id, player, world, x, y, z);
       default:
          return null;
       }
@@ -101,6 +106,8 @@ public class GuiProxy implements IGuiHandler {
                  ? new GuiStudyDesk(player.inventory, (TileEntityDesk) tileEntity, world)
                  : null;
       }
+      case ChesterContent.GUI_ID:
+         return CHESTER_GUI_HANDLER.getClientGuiElement(id, player, world, x, y, z);
       default:
          return null;
       }

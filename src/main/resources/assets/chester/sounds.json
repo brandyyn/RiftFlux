@@ -1,0 +1,7 @@
+{
+"chesterbreathe": {"category": "master","sounds": [{"name": "chesterbreathe","stream": false}]},
+"chesteropen": {"category": "master","sounds": [{"name": "chesteropen","stream": false}]},
+"chesterclose": {"category": "master","sounds": [{"name": "chesterclose","stream": false}]},
+"chesterclose2": {"category": "master","sounds": [{"name": "chesterclose2","stream": false}]}
+
+}

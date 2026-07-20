@@ -48,6 +48,12 @@ public class ItemOffLawnSunSeed extends Item {
             return false;
         }
 
+        // Placement and the variant roll must only happen on the server. Rolling on both sides
+        // lets the client briefly show one variant before the server replaces it with its result.
+        if (world.isRemote) {
+            return true;
+        }
+
         net.minecraft.block.Block plantedSunflower = OffLawnContent.sunflowerBush;
         if (OffLawnContent.brightSunflower != null
                 && world.rand.nextFloat() < ModConfig.offLawnBrightSunflowerSeedChance) {

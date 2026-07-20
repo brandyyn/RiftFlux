@@ -2,6 +2,7 @@ package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.combat.StickTooltipHandler;
 import com.voidsrift.riftflux.chatbubbles.ChatBubbleColorManager;
+import com.voidsrift.riftflux.chester.ChesterContent;
 import com.voidsrift.riftflux.command.CommandRiftFlux;
 import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
 import com.voidsrift.riftflux.compat.waila.RiftFluxWailaCompat;
@@ -94,6 +95,7 @@ public class riftflux {
         }
         BlessingContent.preInit(event);
         FurnitureContent.preInit(event);
+        ChesterContent.preInit();
         AxolotlContent.preInit(event);
         DucklingContent.preInit(event);
         TerrariaContent.preInit(event);
@@ -124,6 +126,7 @@ public class riftflux {
         ToroHealthContent.init(event);
         BlessingContent.init();
         FurnitureContent.init();
+        ChesterContent.init();
         AxolotlContent.init(event);
         DucklingContent.init(event);
 
@@ -151,7 +154,6 @@ public class riftflux {
                 new com.voidsrift.riftflux.server.ChestLaunchEvents();
         MinecraftForge.EVENT_BUS.register(chestLaunchEvents);
         FMLCommonHandler.instance().bus().register(chestLaunchEvents);
-        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.server.PlayerHurtSoundEventHandler());
         if (Loader.isModLoaded("Thaumcraft")) {
             final ThaumcraftWarpSyncCompat thaumcraftWarpSyncCompat = new ThaumcraftWarpSyncCompat();
             MinecraftForge.EVENT_BUS.register(thaumcraftWarpSyncCompat);

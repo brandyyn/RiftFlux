@@ -951,6 +951,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "sandy"
     };
 
+    // Chester module
+    public static boolean enableChesterModule;
+    public static String chesterInventoryColor;
+    public static String shadowChesterInventoryColor;
+
     // Axolotl module
     public static boolean enableAxolotlModule;
     public static float axolotlMaxHealth;
@@ -7032,6 +7037,29 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "furniture",
                 true,
                 "Master switch for integrated furniture content."
+        );
+
+        enableChesterModule = config.getBoolean(
+                "EnableChesterModule",
+                "chester",
+                true,
+                "Master switch for integrated Chester content."
+        );
+
+        chesterInventoryColor = config.getString(
+                "InventoryColor",
+                "chester",
+                "5A3825",
+                "Normal Chester inventory tint. Use a six-digit RGB hex value, optional #/0x prefix, or a supported color name.\n" +
+                        "Leave empty to use the default Minecraft inventory color."
+        );
+
+        shadowChesterInventoryColor = config.getString(
+                "ShadowInventoryColor",
+                "chester",
+                "51485C",
+                "Shadow Chester inventory tint. Use a six-digit RGB hex value, optional #/0x prefix, or a supported color name.\n" +
+                        "Leave empty to use the default Minecraft inventory color."
         );
 
         enableAxolotlModule = config.getBoolean(

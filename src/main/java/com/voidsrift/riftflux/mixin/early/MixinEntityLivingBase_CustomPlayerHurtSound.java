@@ -1,6 +1,8 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.sound.PlayerHurtSoundResolver;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +21,12 @@ public abstract class MixinEntityLivingBase_CustomPlayerHurtSound {
     )
     private void riftflux$redirectPlayerHurtSound(EntityLivingBase self, String sound, float volume, float pitch) {
         if (ModConfig.playerOnlyHurtSound && self instanceof EntityPlayer && self.worldObj != null && self.worldObj.isRemote) {
+            Minecraft minecraft = Minecraft.getMinecraft();
+            boolean localPlayer = minecraft != null && self == minecraft.thePlayer;
+            String playerHurtSound = PlayerHurtSoundResolver.resolvePlayerHurtSoundKey(
+                    localPlayer || ModConfig.otherPlayersOOF
+            );
+            self.playSound(playerHurtSound, volume, pitch);
             return;
         }
 

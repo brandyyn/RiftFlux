@@ -104,5 +104,6 @@ public final class RFNetwork {
 
         // Dash ring air jump (ID 26)
         CH.registerMessage(MsgDashRingJump.Handler.class, MsgDashRingJump.class, 26, Side.SERVER);
+
     }
 }

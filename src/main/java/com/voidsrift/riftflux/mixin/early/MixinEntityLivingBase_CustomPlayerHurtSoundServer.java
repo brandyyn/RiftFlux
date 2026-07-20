@@ -9,8 +9,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Suppresses vanilla's server sound packet for players. The accepted-hit entity status packet
+ * remains authoritative and the client mixin replaces its hurt sound with RiftFlux's sound.
+ */
 @Mixin(EntityLivingBase.class)
-public abstract class MixinEntityLivingBase_DrownPlayerHurtSoundFix {
+public abstract class MixinEntityLivingBase_CustomPlayerHurtSoundServer {
     @Shadow
     protected abstract String getHurtSound();
 
@@ -21,8 +25,8 @@ public abstract class MixinEntityLivingBase_DrownPlayerHurtSoundFix {
                     target = "Lnet/minecraft/entity/EntityLivingBase;getHurtSound()Ljava/lang/String;"
             )
     )
-    private String riftflux$suppressVanillaDrownHurtSound(EntityLivingBase self, DamageSource source, float amount) {
-        if (ModConfig.playerOnlyHurtSound && self instanceof EntityPlayer && source == DamageSource.drown) {
+    private String riftflux$suppressServerPlayerHurtSound(EntityLivingBase self, DamageSource source, float amount) {
+        if (ModConfig.playerOnlyHurtSound && self instanceof EntityPlayer) {
             return null;
         }
         return this.getHurtSound();
