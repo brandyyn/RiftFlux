@@ -53,8 +53,8 @@ public final class BiomeGenHotSprings extends BiomeGenBase {
 
         for (int i = 0; i < ModConfig.hotSpringsSpringLakesPerChunk; i++) {
             int x = chunkX + random.nextInt(16) + 8;
-            int y = nestedLakeY(random);
             int z = chunkZ + random.nextInt(16) + 8;
+            int y = world.getHeightValue(x, z);
             new WorldGenLakes(HotSpringsContent.springWaterBlock).generate(world, random, x, y, z);
         }
     }

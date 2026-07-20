@@ -5819,7 +5819,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 32,
                 0,
                 32,
-                "Spring-water lake attempts per Hot Springs chunk."
+                "Visible surface spring-water lake attempts per Hot Springs chunk. Higher values create a much wetter biome."
         );
 
         hotSpringsLavaLakesPerChunk = config.getInt(
