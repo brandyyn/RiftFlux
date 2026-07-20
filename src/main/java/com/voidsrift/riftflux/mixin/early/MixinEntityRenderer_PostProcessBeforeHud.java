@@ -9,6 +9,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
 public abstract class MixinEntityRenderer_PostProcessBeforeHud {
+    @Inject(method = "renderWorld(FJ)V", at = @At("HEAD"), require = 0)
+    private void riftflux$beginPersistentPostProcessTarget(float partialTicks, long finishTimeNano, CallbackInfo ci) {
+        PostProcessRenderer.beginWorldRender(partialTicks);
+    }
+
     @Inject(
             method = "renderWorld(FJ)V",
             at = @At(
@@ -33,5 +38,10 @@ public abstract class MixinEntityRenderer_PostProcessBeforeHud {
     )
     private void riftflux$renderPostProcessAfterHand(float partialTicks, long finishTimeNano, CallbackInfo ci) {
         PostProcessRenderer.renderBeforeHud(partialTicks);
+    }
+
+    @Inject(method = "renderWorld(FJ)V", at = @At("RETURN"), require = 0)
+    private void riftflux$finishPersistentPostProcessTarget(float partialTicks, long finishTimeNano, CallbackInfo ci) {
+        PostProcessRenderer.finishWorldRender(partialTicks);
     }
 }

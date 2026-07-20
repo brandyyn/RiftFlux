@@ -137,6 +137,9 @@ public class RFLateMixins implements ILateMixinLoader {
                 && hasAnyMod(loadedMods, "Forestry", "forestry")) {
             mixins.add("late.forestry.MixinRenderFenceItem_FenceTextures");
         }
+        if (loadedMods.contains("TwilightForest") && FMLLaunchHandler.side() == Side.CLIENT) {
+            mixins.add("late.twilightforest.MixinTFSkyRenderer_SuppressStars");
+        }
 
         // vortex mixins
         if (hasAnyMod(loadedMods, "armoredarms", "ArmoredArms") && FMLLaunchHandler.side() == Side.CLIENT) {

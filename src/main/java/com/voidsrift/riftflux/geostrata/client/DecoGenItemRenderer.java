@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.geostrata.client;
 
+import com.voidsrift.riftflux.waterlogging.RiftFluxCrystalSpikeAccess;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemRenderer;
@@ -40,7 +41,7 @@ public class DecoGenItemRenderer implements IItemRenderer {
     }
 
     public static IIcon getParticleIcon(Block block, int meta) {
-        if (block == null || !"Reika.GeoStrata.Blocks.BlockDecoGen".equals(block.getClass().getName())) {
+        if (!(block instanceof RiftFluxCrystalSpikeAccess)) {
             return null;
         }
 

@@ -23,7 +23,9 @@ public final class SunriseSkyTintHelper {
     }
 
     public static float[] blendSkyTint(WorldClient world, Minecraft mc, float partialTicks, float red, float green, float blue) {
-        if (!ModConfig.celestialFullSunriseSunsetTint || world == null || mc == null || world.provider == null) {
+        if (!ModConfig.celestialFullSunriseSunsetTint
+                || !isFogHorizonDimensionAllowed(world)
+                || mc == null) {
             return new float[] { red, green, blue };
         }
 
@@ -57,7 +59,9 @@ public final class SunriseSkyTintHelper {
     }
 
     public static boolean shouldForceFullSunriseTint(WorldClient world, float partialTicks) {
-        return ModConfig.celestialFullSunriseSunsetTint && isSunriseOrSunsetActive(world, partialTicks);
+        return ModConfig.celestialFullSunriseSunsetTint
+                && isFogHorizonDimensionAllowed(world)
+                && isSunriseOrSunsetActive(world, partialTicks);
     }
 
     public static boolean shouldMatchFogToSky(WorldClient world) {
@@ -80,7 +84,7 @@ public final class SunriseSkyTintHelper {
     }
 
     public static float getBetaStyleBiomeFogStrength(WorldClient world, float partialTicks) {
-        if (world == null || world.provider == null || world.provider.hasNoSky) {
+        if (!isFogHorizonDimensionAllowed(world) || world.provider.hasNoSky) {
             return 0.0F;
         }
         if (ModConfig.celestialBetaStyleFogBiomeTint) {
@@ -94,7 +98,7 @@ public final class SunriseSkyTintHelper {
     }
 
     public static float getSkyMatchingFogStrength(WorldClient world, float partialTicks) {
-        if (world == null || world.provider == null || world.provider.hasNoSky) {
+        if (!isFogHorizonDimensionAllowed(world) || world.provider.hasNoSky) {
             return 0.0F;
         }
         if (ModConfig.celestialBetaStyleFogBiomeTint) {
@@ -110,7 +114,9 @@ public final class SunriseSkyTintHelper {
     }
 
     public static float getFogChanceEventStrength(WorldClient world, float partialTicks) {
-        if (world == null || world.provider == null || world.provider.hasNoSky) {
+        if (!isFogHorizonDimensionAllowed(world)
+                || !isFogChanceEventDimensionAllowed(world)
+                || world.provider.hasNoSky) {
             return 0.0F;
         }
         if (!CelestialFogEventClientState.hasSync(world)) {
@@ -136,9 +142,9 @@ public final class SunriseSkyTintHelper {
     }
 
     public static float getBetaStyleBiomeFogWeatherEventStrength(WorldClient world, float partialTicks) {
-        if (!CelestialFogEventClientState.isWeatherFogActive(world)
-                || world == null
-                || world.provider == null
+        if (!isFogHorizonDimensionAllowed(world)
+                || !isFogChanceEventDimensionAllowed(world)
+                || !CelestialFogEventClientState.isWeatherFogActive(world)
                 || world.provider.hasNoSky) {
             return 0.0F;
         }
@@ -359,8 +365,7 @@ public final class SunriseSkyTintHelper {
     public static boolean shouldUseFogDistanceGradient(WorldClient world) {
         return ModConfig.celestialFogDistanceGradient
                 && ModConfig.celestialFogDistanceGradientStrengthPercent > 0.0F
-                && world != null
-                && world.provider != null
+                && isFogHorizonDimensionAllowed(world)
                 && !world.provider.hasNoSky;
     }
 
@@ -485,8 +490,7 @@ public final class SunriseSkyTintHelper {
     private static boolean shouldUseBlackNightFogIgnoringBeta(WorldClient world, float partialTicks) {
         if (!ModConfig.celestialBlackNightFog
                 || ModConfig.celestialFogMatchesSky
-                || world == null
-                || world.provider == null
+                || !isFogHorizonDimensionAllowed(world)
                 || world.provider.hasNoSky
                 || isSunriseOrSunsetActive(world, partialTicks)) {
             return false;
@@ -507,7 +511,7 @@ public final class SunriseSkyTintHelper {
     }
 
     private static float getDenseFogDistanceStrength(WorldClient world, float partialTicks) {
-        if (world == null || world.provider == null || world.provider.hasNoSky) {
+        if (!isFogHorizonDimensionAllowed(world) || world.provider.hasNoSky) {
             return 0.0F;
         }
         if (ModConfig.celestialBetaStyleFogBiomeTint) {
@@ -520,6 +524,18 @@ public final class SunriseSkyTintHelper {
         }
 
         return shouldUseBlackNightFog(world, partialTicks) ? 1.0F : 0.0F;
+    }
+
+    private static boolean isFogHorizonDimensionAllowed(WorldClient world) {
+        return world != null
+                && world.provider != null
+                && ModConfig.isCelestialFogHorizonDimensionAllowed(world.provider.dimensionId);
+    }
+
+    private static boolean isFogChanceEventDimensionAllowed(WorldClient world) {
+        return world != null
+                && world.provider != null
+                && ModConfig.isCelestialFogChanceEventDimensionAllowed(world.provider.dimensionId);
     }
 
     public static float[] resolveVanillaFogDistance(WorldClient world, EntityLivingBase view, float farPlaneDistance, boolean negativeFogMode) {

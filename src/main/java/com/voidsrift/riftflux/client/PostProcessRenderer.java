@@ -2,12 +2,17 @@ package com.voidsrift.riftflux.client;
 
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.io.File;
 import java.nio.ByteBuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -22,6 +27,8 @@ public final class PostProcessRenderer {
     private static final int GL_COLOR_ATTACHMENT0 = 36064;
     private static final int GL_FRAMEBUFFER_COMPLETE = 36053;
     private static final int GL_RGBA16_INTERNAL_FORMAT = 32859;
+    private static final int GL_RGB10_A2_INTERNAL_FORMAT = 32857;
+    private static final int GL_UNSIGNED_INT_2_10_10_10_REV = 33640;
     private static final int BLOOM_TEXTURE_UNIT_INDEX = 1;
     private static final int BLOOM_TEXTURE_UNIT = GL13.GL_TEXTURE0 + BLOOM_TEXTURE_UNIT_INDEX;
     private static final int DEPTH_TEXTURE_UNIT_INDEX = 2;
@@ -30,13 +37,30 @@ public final class PostProcessRenderer {
     private int sceneTexture = -1;
     private int bloomTexture = -1;
     private int bloomFramebuffer = -1;
+    private int worldFramebuffer = -1;
+    private final int[] worldColorTextures = new int[]{-1, -1};
+    private int worldDepthTexture = -1;
+    private int worldTextureWidth = -1;
+    private int worldTextureHeight = -1;
+    private int worldColorIndex;
+    private int originalFramebuffer;
+    private int originalReadBuffer;
+    private int originalDrawBuffer;
+    private int activeRenderSceneTexture = -1;
+    private int activeRenderDepthTexture = -1;
+    private boolean persistentWorldRenderActive;
+    private boolean persistentWorldPresented;
+    private boolean persistentWorldBloomApplied;
+    private boolean persistentWorldFailed;
     private int depthTexture = -1;
     private int textureWidth = -1;
     private int textureHeight = -1;
     private int bloomTextureWidth = -1;
     private int bloomTextureHeight = -1;
     private boolean bloomTextureHighPrecision;
+    private boolean bloomTexturePacked;
     private boolean bloomHighPrecisionUnsupported;
+    private boolean bloomPackedUnsupported;
     private int shaderProgram = -1;
     private int uniformScene = -1;
     private int uniformBloomTexture = -1;
@@ -64,6 +88,31 @@ public final class PostProcessRenderer {
     private int uniformCelestialOnly = -1;
     private int uniformBloomPass = -1;
     private int uniformUseBloomTexture = -1;
+    private boolean samplerUniformsUploaded;
+    private int cachedUniformWidth = -1;
+    private int cachedUniformHeight = -1;
+    private float cachedGamma = Float.NaN;
+    private float cachedBrightness = Float.NaN;
+    private float cachedContrast = Float.NaN;
+    private float cachedExposure = Float.NaN;
+    private float cachedSaturation = Float.NaN;
+    private float cachedRedMultiplier = Float.NaN;
+    private float cachedGreenMultiplier = Float.NaN;
+    private float cachedBlueMultiplier = Float.NaN;
+    private float cachedColorGradeShadowProtection = Float.NaN;
+    private float cachedBloomStrength = Float.NaN;
+    private float cachedBloomThreshold = Float.NaN;
+    private float cachedBloomRadius = Float.NaN;
+    private float cachedCelestialBloomStrength = Float.NaN;
+    private float cachedCelestialBloomThreshold = Float.NaN;
+    private float cachedCelestialBloomRadius = Float.NaN;
+    private float cachedSkyStarBrightness = Float.NaN;
+    private float cachedSkyStarOnlyGate = Float.NaN;
+    private float cachedApplyColorGrade = Float.NaN;
+    private float cachedApplyBloom = Float.NaN;
+    private float cachedCelestialOnly = Float.NaN;
+    private float cachedUseBloomTexture = Float.NaN;
+    private float cachedBloomPass = Float.NaN;
     private long lastConfigCheckMillis;
     private long lastConfigModified = Long.MIN_VALUE;
     private boolean shaderFailed;
@@ -71,10 +120,92 @@ public final class PostProcessRenderer {
     private boolean warnedShaderFailure;
     private boolean warnedConfigReloadFailure;
     private boolean warnedBloomCacheFailure;
+    private boolean warnedPersistentWorldFailure;
     private boolean loggedHookReached;
     private boolean loggedFirstRender;
+    private boolean lifecycleRegistered;
 
     private PostProcessRenderer() {
+    }
+
+    public static void bootstrap() {
+        if (!INSTANCE.lifecycleRegistered) {
+            INSTANCE.lifecycleRegistered = true;
+            MinecraftForge.EVENT_BUS.register(INSTANCE);
+        }
+    }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload event) {
+        if (event != null && event.world != null && event.world.isRemote) {
+            this.releaseClientResources();
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        this.releaseClientResources();
+    }
+
+    public static void beginWorldRender(float partialTicks) {
+        INSTANCE.beginPersistentWorldRender(partialTicks);
+    }
+
+    public static void finishWorldRender(float partialTicks) {
+        INSTANCE.finishPersistentWorldRender(partialTicks);
+    }
+
+    private void beginPersistentWorldRender(float partialTicks) {
+        if (persistentWorldRenderActive) {
+            finishPersistentWorldRender(partialTicks);
+        }
+        refreshConfigIfChanged();
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!ModConfig.enablePostProcessPersistentRenderTarget || persistentWorldFailed
+                || mc == null || mc.theWorld == null
+                || mc.displayWidth <= 0 || mc.displayHeight <= 0 || mc.gameSettings.anaglyph
+                || !ModConfig.isPostProcessingDimensionAllowed(mc.theWorld.provider.dimensionId)
+                || !ModConfig.isPostProcessingActive() || !OpenGlHelper.framebufferSupported
+                || MinecraftForgeClient.getStencilBits() != 0 || !GLContext.getCapabilities().OpenGL20) {
+            return;
+        }
+        if (getShaderProgram() <= 0 || !ensurePersistentWorldFramebuffer(mc.displayWidth, mc.displayHeight)) {
+            return;
+        }
+
+        originalFramebuffer = GL11.glGetInteger(GL_FRAMEBUFFER_BINDING);
+        originalReadBuffer = GL11.glGetInteger(GL11.GL_READ_BUFFER);
+        originalDrawBuffer = GL11.glGetInteger(GL11.GL_DRAW_BUFFER);
+        worldColorIndex = 0;
+        persistentWorldPresented = false;
+        persistentWorldBloomApplied = false;
+        bindPersistentWorldTarget(worldColorIndex);
+        GL11.glViewport(0, 0, mc.displayWidth, mc.displayHeight);
+        persistentWorldRenderActive = true;
+    }
+
+    private void finishPersistentWorldRender(float partialTicks) {
+        if (!persistentWorldRenderActive) {
+            return;
+        }
+        try {
+            if (!persistentWorldPresented) {
+                if (!ModConfig.postProcessBloomAffectsHeldItem && !persistentWorldBloomApplied) {
+                    renderPersistentWorldPass(partialTicks, false, true, false, false);
+                }
+                if (persistentWorldRenderActive) {
+                    renderPersistentWorldPass(partialTicks, true, ModConfig.postProcessBloomAffectsHeldItem, false, true);
+                }
+            }
+        } finally {
+            if (persistentWorldRenderActive) {
+                restoreOriginalFramebuffer();
+            }
+            persistentWorldRenderActive = false;
+            persistentWorldPresented = false;
+            activeRenderSceneTexture = -1;
+            activeRenderDepthTexture = -1;
+        }
     }
 
     public static void renderSkyBloomAfterSky(float partialTicks) {
@@ -82,6 +213,7 @@ public final class PostProcessRenderer {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || !ModConfig.enablePostProcessing || INSTANCE.shaderFailed
                 || !ModConfig.isPostProcessingDimensionAllowed(mc.theWorld.provider.dimensionId)
+                || !ModConfig.isPostProcessCelestialBloomDimensionAllowed(mc.theWorld.provider.dimensionId)
                 || ModConfig.postProcessBloomStrengthPercent <= 0.0F
                 || ModConfig.postProcessCelestialBloomStrengthPercent <= 0.0F) {
             return;
@@ -91,7 +223,7 @@ public final class PostProcessRenderer {
                 return;
             }
         }
-        INSTANCE.renderFrame(partialTicks, false, true, true, "after sky", true);
+        INSTANCE.renderFrame(partialTicks, false, true, true, "after sky", true, false);
     }
 
     public static void renderWorldBloomBeforeHand(float partialTicks) {
@@ -101,14 +233,14 @@ public final class PostProcessRenderer {
     }
 
     public static void renderBeforeHud(float partialTicks) {
-        INSTANCE.renderFrame(partialTicks, true, ModConfig.postProcessBloomAffectsHeldItem, false, "before GUI overlay");
+        INSTANCE.renderFrame(partialTicks, true, ModConfig.postProcessBloomAffectsHeldItem, false, "before GUI overlay", false, true);
     }
 
     private void renderFrame(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, String stageName) {
-        renderFrame(partialTicks, applyColorGrade, applyBloom, celestialOnly, stageName, false);
+        renderFrame(partialTicks, applyColorGrade, applyBloom, celestialOnly, stageName, false, false);
     }
 
-    private void renderFrame(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, String stageName, boolean configRefreshed) {
+    private void renderFrame(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, String stageName, boolean configRefreshed, boolean finalOutput) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.renderViewEntity == null || mc.displayWidth <= 0 || mc.displayHeight <= 0) {
             return;
@@ -122,6 +254,13 @@ public final class PostProcessRenderer {
             refreshConfigIfChanged();
         }
         if (!ModConfig.isPostProcessingDimensionAllowed(mc.theWorld.provider.dimensionId)) {
+            return;
+        }
+        if (celestialOnly && !ModConfig.isPostProcessCelestialBloomDimensionAllowed(mc.theWorld.provider.dimensionId)) {
+            return;
+        }
+        if (persistentWorldRenderActive) {
+            renderPersistentWorldPass(partialTicks, applyColorGrade, applyBloom, celestialOnly, finalOutput);
             return;
         }
         releaseBloomCacheIfUnused();
@@ -192,7 +331,11 @@ public final class PostProcessRenderer {
         if (!ModConfig.enablePostProcessing || shaderFailed) {
             return false;
         }
-        boolean colorGradeActive = applyColorGrade
+        return isColorGradeActive(applyColorGrade) || isBloomActive(applyBloom, celestialOnly);
+    }
+
+    private boolean isColorGradeActive(boolean applyColorGrade) {
+        return applyColorGrade
                 && (Math.abs(ModConfig.postProcessGamma - 0.5F) > 0.001F
                         || Math.abs(ModConfig.postProcessBrightness) > 0.001F
                         || Math.abs(ModConfig.postProcessContrast) > 0.001F
@@ -201,7 +344,6 @@ public final class PostProcessRenderer {
                         || Math.abs(ModConfig.postProcessRedMultiplier - 1.0F) > 0.001F
                         || Math.abs(ModConfig.postProcessGreenMultiplier - 1.0F) > 0.001F
                         || Math.abs(ModConfig.postProcessBlueMultiplier - 1.0F) > 0.001F);
-        return colorGradeActive || isBloomActive(applyBloom, celestialOnly);
     }
 
     private boolean isBloomActive(boolean applyBloom, boolean celestialOnly) {
@@ -213,11 +355,76 @@ public final class PostProcessRenderer {
         return clamp(ModConfig.postProcessBloomResolutionPercent / 100.0F, 0.25F, 1.0F);
     }
 
+    private void renderPersistentWorldPass(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, boolean finalOutput) {
+        if (persistentWorldPresented) {
+            return;
+        }
+        if (GL11.glGetInteger(GL_FRAMEBUFFER_BINDING) != worldFramebuffer) {
+            persistentWorldFailed = true;
+            restoreOriginalFramebuffer();
+            persistentWorldRenderActive = false;
+            warnPersistentWorldFailure("another renderer changed framebuffer ownership during renderWorld");
+            renderFrame(partialTicks, applyColorGrade, applyBloom, celestialOnly, "persistent fallback", true, finalOutput);
+            return;
+        }
+
+        boolean colorGradeActive = isColorGradeActive(applyColorGrade);
+        boolean bloomActive = isBloomActive(applyBloom, celestialOnly);
+        if (!colorGradeActive && !bloomActive && !finalOutput) {
+            return;
+        }
+        int program = getShaderProgram();
+        if (program <= 0) {
+            return;
+        }
+
+        activeRenderSceneTexture = worldColorTextures[worldColorIndex];
+        activeRenderDepthTexture = worldDepthTexture;
+        boolean cacheEnabled = celestialOnly
+                ? ModConfig.enablePostProcessCelestialBloomCache
+                : ModConfig.enablePostProcessWorldBloomCache;
+        boolean cacheRequested = bloomActive && (cacheEnabled || getBloomResolutionScale() < 0.9999F);
+        boolean cachedBloom = cacheRequested && ensureBloomFramebuffer(worldTextureWidth, worldTextureHeight);
+        if (cachedBloom) {
+            renderBloomPass(partialTicks, celestialOnly);
+        }
+
+        int nextColorIndex = 1 - worldColorIndex;
+        if (finalOutput) {
+            restoreOriginalFramebuffer();
+        } else {
+            bindPersistentWorldTarget(nextColorIndex);
+            OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153201_h, GL11.GL_TEXTURE_2D, 0, 0);
+        }
+        try {
+            renderFullscreen(program, worldTextureWidth, worldTextureHeight, partialTicks,
+                    colorGradeActive, bloomActive, celestialOnly, cachedBloom, false);
+        } finally {
+            if (!finalOutput) {
+                OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153201_h, GL11.GL_TEXTURE_2D, worldDepthTexture, 0);
+            }
+            activeRenderSceneTexture = -1;
+            activeRenderDepthTexture = -1;
+        }
+        if (finalOutput) {
+            persistentWorldPresented = true;
+        } else {
+            worldColorIndex = nextColorIndex;
+            if (!celestialOnly && bloomActive) {
+                persistentWorldBloomApplied = true;
+            }
+        }
+    }
+
     private void releaseBloomCacheIfUnused() {
         if (ModConfig.enablePostProcessWorldBloomCache || ModConfig.enablePostProcessCelestialBloomCache
                 || getBloomResolutionScale() < 0.9999F) {
             return;
         }
+        this.releaseBloomResources();
+    }
+
+    private void releaseBloomResources() {
         if (bloomFramebuffer > 0) {
             OpenGlHelper.func_153174_h(bloomFramebuffer);
             bloomFramebuffer = -1;
@@ -228,6 +435,124 @@ public final class PostProcessRenderer {
         }
         bloomTextureWidth = -1;
         bloomTextureHeight = -1;
+        bloomTextureHighPrecision = false;
+        bloomTexturePacked = false;
+    }
+
+    private void releaseClientResources() {
+        if (persistentWorldRenderActive) {
+            restoreOriginalFramebuffer();
+        }
+        persistentWorldRenderActive = false;
+        persistentWorldPresented = false;
+        persistentWorldBloomApplied = false;
+        activeRenderSceneTexture = -1;
+        activeRenderDepthTexture = -1;
+        releasePersistentWorldFramebuffer();
+        releaseBloomResources();
+        if (sceneTexture > 0) {
+            GL11.glDeleteTextures(sceneTexture);
+            sceneTexture = -1;
+        }
+        if (depthTexture > 0) {
+            GL11.glDeleteTextures(depthTexture);
+            depthTexture = -1;
+        }
+        textureWidth = -1;
+        textureHeight = -1;
+    }
+
+    private boolean ensurePersistentWorldFramebuffer(int width, int height) {
+        if (worldFramebuffer > 0 && worldTextureWidth == width && worldTextureHeight == height) {
+            return true;
+        }
+        releasePersistentWorldFramebuffer();
+
+        int previousFramebuffer = GL11.glGetInteger(GL_FRAMEBUFFER_BINDING);
+        int previousReadBuffer = GL11.glGetInteger(GL11.GL_READ_BUFFER);
+        int previousDrawBuffer = GL11.glGetInteger(GL11.GL_DRAW_BUFFER);
+        worldTextureWidth = width;
+        worldTextureHeight = height;
+        worldFramebuffer = OpenGlHelper.func_153165_e();
+        worldColorTextures[0] = createPersistentColorTexture(width, height);
+        worldColorTextures[1] = createPersistentColorTexture(width, height);
+        worldDepthTexture = GL11.glGenTextures();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, worldDepthTexture);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, 33190, width, height, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_UNSIGNED_INT, (ByteBuffer) null);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+
+        OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, worldFramebuffer);
+        GL11.glReadBuffer(GL_COLOR_ATTACHMENT0);
+        GL11.glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153200_g, GL11.GL_TEXTURE_2D, worldColorTextures[0], 0);
+        OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153201_h, GL11.GL_TEXTURE_2D, worldDepthTexture, 0);
+        int status = OpenGlHelper.func_153167_i(OpenGlHelper.field_153198_e);
+        OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, previousFramebuffer);
+        GL11.glReadBuffer(previousReadBuffer);
+        GL11.glDrawBuffer(previousDrawBuffer);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            releasePersistentWorldFramebuffer();
+            persistentWorldFailed = true;
+            warnPersistentWorldFailure("scene framebuffer is incomplete (status " + status + ")");
+            return false;
+        }
+        return true;
+    }
+
+    private int createPersistentColorTexture(int width, int height) {
+        int texture = GL11.glGenTextures();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        return texture;
+    }
+
+    private void bindPersistentWorldTarget(int colorIndex) {
+        OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, worldFramebuffer);
+        GL11.glReadBuffer(GL_COLOR_ATTACHMENT0);
+        GL11.glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153200_g, GL11.GL_TEXTURE_2D, worldColorTextures[colorIndex], 0);
+        OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153201_h, GL11.GL_TEXTURE_2D, worldDepthTexture, 0);
+    }
+
+    private void restoreOriginalFramebuffer() {
+        OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, originalFramebuffer);
+        GL11.glReadBuffer(originalReadBuffer);
+        GL11.glDrawBuffer(originalDrawBuffer);
+    }
+
+    private void releasePersistentWorldFramebuffer() {
+        if (worldFramebuffer > 0) {
+            OpenGlHelper.func_153174_h(worldFramebuffer);
+            worldFramebuffer = -1;
+        }
+        for (int i = 0; i < worldColorTextures.length; ++i) {
+            if (worldColorTextures[i] > 0) {
+                GL11.glDeleteTextures(worldColorTextures[i]);
+                worldColorTextures[i] = -1;
+            }
+        }
+        if (worldDepthTexture > 0) {
+            GL11.glDeleteTextures(worldDepthTexture);
+            worldDepthTexture = -1;
+        }
+        worldTextureWidth = -1;
+        worldTextureHeight = -1;
+    }
+
+    private void warnPersistentWorldFailure(String reason) {
+        if (!warnedPersistentWorldFailure) {
+            warnedPersistentWorldFailure = true;
+            FMLLog.warning("[RiftFlux] Persistent post-process render target disabled: %s. Falling back to framebuffer copies.", reason);
+        }
     }
 
     private void ensureSceneTexture(int width, int height) {
@@ -270,18 +595,27 @@ public final class PostProcessRenderer {
 
         int scaledWidth = Math.max(1, Math.round(width * getBloomResolutionScale()));
         int scaledHeight = Math.max(1, Math.round(height * getBloomResolutionScale()));
-        boolean highPrecision = ModConfig.postProcessBloomCacheHighPrecision && !bloomHighPrecisionUnsupported;
+        boolean packed = ModConfig.postProcessBloomCacheUsePackedFormat && !bloomPackedUnsupported;
+        boolean highPrecision = !packed && ModConfig.postProcessBloomCacheHighPrecision && !bloomHighPrecisionUnsupported;
         if (bloomTexture <= 0 || bloomTextureWidth != scaledWidth || bloomTextureHeight != scaledHeight
-                || bloomTextureHighPrecision != highPrecision) {
-            createBloomTexture(scaledWidth, scaledHeight, highPrecision);
+                || bloomTextureHighPrecision != highPrecision || bloomTexturePacked != packed) {
+            createBloomTexture(scaledWidth, scaledHeight, highPrecision, packed);
         }
         if (bloomFramebuffer <= 0) {
             bloomFramebuffer = OpenGlHelper.func_153165_e();
         }
         if (bloomFramebuffer <= 0 || !attachAndValidateBloomFramebuffer()) {
+            if (packed) {
+                bloomPackedUnsupported = true;
+                highPrecision = ModConfig.postProcessBloomCacheHighPrecision && !bloomHighPrecisionUnsupported;
+                createBloomTexture(scaledWidth, scaledHeight, highPrecision, false);
+                if (bloomFramebuffer > 0 && attachAndValidateBloomFramebuffer()) {
+                    return true;
+                }
+            }
             if (highPrecision) {
                 bloomHighPrecisionUnsupported = true;
-                createBloomTexture(scaledWidth, scaledHeight, false);
+                createBloomTexture(scaledWidth, scaledHeight, false, false);
                 if (bloomFramebuffer > 0 && attachAndValidateBloomFramebuffer()) {
                     return true;
                 }
@@ -292,7 +626,7 @@ public final class PostProcessRenderer {
         return true;
     }
 
-    private void createBloomTexture(int width, int height, boolean highPrecision) {
+    private void createBloomTexture(int width, int height, boolean highPrecision, boolean packed) {
         if (bloomTexture > 0) {
             GL11.glDeleteTextures(bloomTexture);
         }
@@ -300,14 +634,15 @@ public final class PostProcessRenderer {
         bloomTextureWidth = width;
         bloomTextureHeight = height;
         bloomTextureHighPrecision = highPrecision;
+        bloomTexturePacked = packed;
         bloomTexture = GL11.glGenTextures();
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, bloomTexture);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        int internalFormat = highPrecision ? GL_RGBA16_INTERNAL_FORMAT : GL11.GL_RGBA8;
-        int pixelType = highPrecision ? GL11.GL_UNSIGNED_SHORT : GL11.GL_UNSIGNED_BYTE;
+        int internalFormat = packed ? GL_RGB10_A2_INTERNAL_FORMAT : highPrecision ? GL_RGBA16_INTERNAL_FORMAT : GL11.GL_RGBA8;
+        int pixelType = packed ? GL_UNSIGNED_INT_2_10_10_10_REV : highPrecision ? GL11.GL_UNSIGNED_SHORT : GL11.GL_UNSIGNED_BYTE;
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL11.GL_RGBA, pixelType, (ByteBuffer) null);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
     }
@@ -391,51 +726,61 @@ public final class PostProcessRenderer {
         GL11.glPushMatrix();
         GL11.glLoadIdentity();
 
+        boolean depthTextureBound = applyBloom && !celestialOnly;
         try {
             OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
             GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, sceneTexture);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, activeRenderSceneTexture > 0 ? activeRenderSceneTexture : sceneTexture);
             if (useBloomTexture) {
                 OpenGlHelper.setActiveTexture(BLOOM_TEXTURE_UNIT);
                 GL11.glEnable(GL11.GL_TEXTURE_2D);
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, bloomTexture);
             }
-            if (applyBloom && !celestialOnly) {
+            if (depthTextureBound) {
                 OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
                 GL11.glEnable(GL11.GL_TEXTURE_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, activeRenderDepthTexture > 0 ? activeRenderDepthTexture : depthTexture);
             }
-            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            if (useBloomTexture || depthTextureBound) {
+                OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            }
 
             GL20.glUseProgram(program);
-            GL20.glUniform1i(uniformScene, 0);
-            GL20.glUniform1i(uniformBloomTexture, BLOOM_TEXTURE_UNIT_INDEX);
-            GL20.glUniform1i(uniformDepth, DEPTH_TEXTURE_UNIT_INDEX);
-            GL20.glUniform2f(uniformTexelSize, 1.0F / (float) width, 1.0F / (float) height);
-            GL20.glUniform1f(uniformGamma, clamp01(ModConfig.postProcessGamma));
-            GL20.glUniform1f(uniformBrightness, clamp(ModConfig.postProcessBrightness, -1.0F, 1.0F));
-            GL20.glUniform1f(uniformContrast, clamp(ModConfig.postProcessContrast, -1.0F, 1.0F));
-            GL20.glUniform1f(uniformExposure, clamp(ModConfig.postProcessExposure, -1.0F, 1.0F));
-            GL20.glUniform1f(uniformSaturation, clamp(ModConfig.postProcessSaturationPercent / 100.0F, -1.0F, 1.0F));
-            GL20.glUniform1f(uniformRedMultiplier, clamp(ModConfig.postProcessRedMultiplier, 0.0F, 3.0F));
-            GL20.glUniform1f(uniformGreenMultiplier, clamp(ModConfig.postProcessGreenMultiplier, 0.0F, 3.0F));
-            GL20.glUniform1f(uniformBlueMultiplier, clamp(ModConfig.postProcessBlueMultiplier, 0.0F, 3.0F));
-            GL20.glUniform1f(uniformColorGradeShadowProtection, clamp01(ModConfig.postProcessColorGradeShadowProtection / 100.0F));
-            GL20.glUniform1f(uniformBloomStrength, clamp01(ModConfig.postProcessBloomStrengthPercent / 100.0F));
-            GL20.glUniform1f(uniformBloomThreshold, clamp01(ModConfig.postProcessBloomThreshold));
-            GL20.glUniform1f(uniformBloomRadius, Math.max(0.25F, ModConfig.postProcessBloomRadiusPixels));
-            GL20.glUniform1f(uniformCelestialBloomStrength, Math.max(0.0F, ModConfig.postProcessCelestialBloomStrengthPercent / 100.0F));
-            GL20.glUniform1f(uniformCelestialBloomThreshold, clamp01(ModConfig.postProcessCelestialBloomThreshold / 100.0F));
-            GL20.glUniform1f(uniformCelestialBloomRadius, Math.max(0.25F, ModConfig.postProcessCelestialBloomRadiusPixels));
+            if (!samplerUniformsUploaded) {
+                GL20.glUniform1i(uniformScene, 0);
+                GL20.glUniform1i(uniformBloomTexture, BLOOM_TEXTURE_UNIT_INDEX);
+                GL20.glUniform1i(uniformDepth, DEPTH_TEXTURE_UNIT_INDEX);
+                samplerUniformsUploaded = true;
+            }
+            if (cachedUniformWidth != width || cachedUniformHeight != height) {
+                GL20.glUniform2f(uniformTexelSize, 1.0F / (float) width, 1.0F / (float) height);
+                cachedUniformWidth = width;
+                cachedUniformHeight = height;
+            }
+            cachedGamma = uploadUniformIfChanged(uniformGamma, clamp01(ModConfig.postProcessGamma), cachedGamma);
+            cachedBrightness = uploadUniformIfChanged(uniformBrightness, clamp(ModConfig.postProcessBrightness, -1.0F, 1.0F), cachedBrightness);
+            cachedContrast = uploadUniformIfChanged(uniformContrast, clamp(ModConfig.postProcessContrast, -1.0F, 1.0F), cachedContrast);
+            cachedExposure = uploadUniformIfChanged(uniformExposure, clamp(ModConfig.postProcessExposure, -1.0F, 1.0F), cachedExposure);
+            cachedSaturation = uploadUniformIfChanged(uniformSaturation, clamp(ModConfig.postProcessSaturationPercent / 100.0F, -1.0F, 1.0F), cachedSaturation);
+            cachedRedMultiplier = uploadUniformIfChanged(uniformRedMultiplier, clamp(ModConfig.postProcessRedMultiplier, 0.0F, 3.0F), cachedRedMultiplier);
+            cachedGreenMultiplier = uploadUniformIfChanged(uniformGreenMultiplier, clamp(ModConfig.postProcessGreenMultiplier, 0.0F, 3.0F), cachedGreenMultiplier);
+            cachedBlueMultiplier = uploadUniformIfChanged(uniformBlueMultiplier, clamp(ModConfig.postProcessBlueMultiplier, 0.0F, 3.0F), cachedBlueMultiplier);
+            cachedColorGradeShadowProtection = uploadUniformIfChanged(uniformColorGradeShadowProtection, clamp01(ModConfig.postProcessColorGradeShadowProtection / 100.0F), cachedColorGradeShadowProtection);
+            cachedBloomStrength = uploadUniformIfChanged(uniformBloomStrength, clamp01(ModConfig.postProcessBloomStrengthPercent / 100.0F), cachedBloomStrength);
+            cachedBloomThreshold = uploadUniformIfChanged(uniformBloomThreshold, clamp01(ModConfig.postProcessBloomThreshold), cachedBloomThreshold);
+            cachedBloomRadius = uploadUniformIfChanged(uniformBloomRadius, Math.max(0.25F, ModConfig.postProcessBloomRadiusPixels), cachedBloomRadius);
+            cachedCelestialBloomStrength = uploadUniformIfChanged(uniformCelestialBloomStrength, Math.max(0.0F, ModConfig.postProcessCelestialBloomStrengthPercent / 100.0F), cachedCelestialBloomStrength);
+            cachedCelestialBloomThreshold = uploadUniformIfChanged(uniformCelestialBloomThreshold, clamp01(ModConfig.postProcessCelestialBloomThreshold / 100.0F), cachedCelestialBloomThreshold);
+            cachedCelestialBloomRadius = uploadUniformIfChanged(uniformCelestialBloomRadius, Math.max(0.25F, ModConfig.postProcessCelestialBloomRadiusPixels), cachedCelestialBloomRadius);
             Minecraft mc = Minecraft.getMinecraft();
-            float starBrightness = mc != null && mc.theWorld != null ? mc.theWorld.getStarBrightness(partialTicks) : 0.0F;
-            GL20.glUniform1f(uniformSkyStarBrightness, clamp01(starBrightness));
-            GL20.glUniform1f(uniformSkyStarOnlyGate, mc != null && mc.theWorld != null ? computeStarOnlyGate(mc, partialTicks) : 0.0F);
-            GL20.glUniform1f(uniformApplyColorGrade, applyColorGrade ? 1.0F : 0.0F);
-            GL20.glUniform1f(uniformApplyBloom, applyBloom ? 1.0F : 0.0F);
-            GL20.glUniform1f(uniformCelestialOnly, celestialOnly ? 1.0F : 0.0F);
-            GL20.glUniform1f(uniformUseBloomTexture, useBloomTexture ? 1.0F : 0.0F);
-            GL20.glUniform1f(uniformBloomPass, bloomPass ? 1.0F : 0.0F);
+            float starBrightness = resolveSkyStarBrightness(mc, partialTicks);
+            cachedSkyStarBrightness = uploadUniformIfChanged(uniformSkyStarBrightness, clamp01(starBrightness), cachedSkyStarBrightness);
+            cachedSkyStarOnlyGate = uploadUniformIfChanged(uniformSkyStarOnlyGate, mc != null && mc.theWorld != null ? computeStarOnlyGate(mc, partialTicks) : 0.0F, cachedSkyStarOnlyGate);
+            cachedApplyColorGrade = uploadUniformIfChanged(uniformApplyColorGrade, applyColorGrade ? 1.0F : 0.0F, cachedApplyColorGrade);
+            cachedApplyBloom = uploadUniformIfChanged(uniformApplyBloom, applyBloom ? 1.0F : 0.0F, cachedApplyBloom);
+            cachedCelestialOnly = uploadUniformIfChanged(uniformCelestialOnly, celestialOnly ? 1.0F : 0.0F, cachedCelestialOnly);
+            cachedUseBloomTexture = uploadUniformIfChanged(uniformUseBloomTexture, useBloomTexture ? 1.0F : 0.0F, cachedUseBloomTexture);
+            cachedBloomPass = uploadUniformIfChanged(uniformBloomPass, bloomPass ? 1.0F : 0.0F, cachedBloomPass);
 
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             GL11.glBegin(GL11.GL_QUADS);
@@ -450,12 +795,16 @@ public final class PostProcessRenderer {
             GL11.glEnd();
         } finally {
             GL20.glUseProgram(previousProgram);
-            OpenGlHelper.setActiveTexture(BLOOM_TEXTURE_UNIT);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
-            OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            if (useBloomTexture) {
+                OpenGlHelper.setActiveTexture(BLOOM_TEXTURE_UNIT);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+                GL11.glDisable(GL11.GL_TEXTURE_2D);
+            }
+            if (depthTextureBound) {
+                OpenGlHelper.setActiveTexture(DEPTH_TEXTURE_UNIT);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+                GL11.glDisable(GL11.GL_TEXTURE_2D);
+            }
             OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
             OpenGlHelper.setActiveTexture(previousActiveTexture);
@@ -466,6 +815,14 @@ public final class PostProcessRenderer {
             GL11.glMatrixMode(previousMatrixMode);
             GL11.glPopAttrib();
         }
+    }
+
+    private float uploadUniformIfChanged(int location, float value, float cachedValue) {
+        if (Float.floatToIntBits(value) != Float.floatToIntBits(cachedValue)) {
+            GL20.glUniform1f(location, value);
+            return value;
+        }
+        return cachedValue;
     }
 
     private int getShaderProgram() {
@@ -480,8 +837,7 @@ public final class PostProcessRenderer {
                         "    vTexCoord = gl_MultiTexCoord0.xy;\n" +
                         "    gl_Position = ftransform();\n" +
                         "}\n");
-        int fragment = compileShader(GL20.GL_FRAGMENT_SHADER,
-                        "#version 120\n" +
+        String fragmentSource = "#version 120\n" +
                         "uniform sampler2D uScene;\n" +
                         "uniform sampler2D uBloomTexture;\n" +
                         "uniform sampler2D uDepth;\n" +
@@ -531,29 +887,28 @@ public final class PostProcessRenderer {
                         "vec3 bloomSample(vec2 uv) {\n" +
                         "    vec3 raw = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0))).rgb;\n" +
                         "    float bright = max(max(raw.r, raw.g), raw.b);\n" +
-                        "    float depthBoost = 1.0;\n" +
-                        "    if (uCelestialOnly < 0.5) {\n" +
-                        "        float depth = texture2D(uDepth, clamp(uv, vec2(0.0), vec2(1.0))).r;\n" +
-                        "        float closeAmount = 1.0 - smoothstep(0.985, 0.9998, depth);\n" +
-                        "        closeAmount = closeAmount * closeAmount * (3.0 - 2.0 * closeAmount);\n" +
-                        "        depthBoost = mix(1.0, 7.0, closeAmount);\n" +
+                        "    if (uCelestialOnly > 0.5) {\n" +
+                        "        float blueLead = raw.b - max(raw.r, raw.g);\n" +
+                        "        float notBlueSky = 1.0 - smoothstep(0.03, 0.18, blueLead);\n" +
+                        "        float warmOrWhite = smoothstep(-0.12, 0.18, raw.r - raw.b) * smoothstep(-0.12, 0.18, raw.g - raw.b);\n" +
+                        "        float starVisibility = smoothstep(0.04, 0.22, uSkyStarBrightness) * uSkyStarOnlyGate;\n" +
+                        "        float starMask = smoothstep(0.006, 0.09, bright) * warmOrWhite * mix(starVisibility, 1.0, uCelestialBloomThreshold);\n" +
+                        "        float broadThreshold = mix(1.05, 0.48, uCelestialBloomThreshold);\n" +
+                        "        float broadMask = smoothstep(broadThreshold, 1.0, bright) * mix(notBlueSky, 1.0, uCelestialBloomThreshold) * warmOrWhite;\n" +
+                        "        float celestialMask = max(starMask, broadMask * uCelestialBloomThreshold);\n" +
+                        "        return clamp(raw * celestialMask * uCelestialBloomStrength, vec3(0.0), vec3(1.0));\n" +
                         "    }\n" +
+                        "    float depth = texture2D(uDepth, clamp(uv, vec2(0.0), vec2(1.0))).r;\n" +
+                        "    float closeAmount = 1.0 - smoothstep(0.985, 0.9998, depth);\n" +
+                        "    closeAmount = closeAmount * closeAmount * (3.0 - 2.0 * closeAmount);\n" +
+                        "    float depthBoost = mix(1.0, 7.0, closeAmount);\n" +
                         "    float gate = smoothstep(uBloomThreshold, 1.0, bright);\n" +
                         "    gate *= gate;\n" +
                         "    vec3 excess = max(raw - vec3(uBloomThreshold), vec3(0.0)) / max(1.0 - uBloomThreshold, 0.001);\n" +
                         "    excess *= excess;\n" +
-                        "    float blueLead = raw.b - max(raw.r, raw.g);\n" +
-                        "    float notBlueSky = 1.0 - smoothstep(0.03, 0.18, blueLead);\n" +
-                        "    float warmOrWhite = smoothstep(-0.12, 0.18, raw.r - raw.b) * smoothstep(-0.12, 0.18, raw.g - raw.b);\n" +
-                        "    float starVisibility = smoothstep(0.04, 0.22, uSkyStarBrightness) * uSkyStarOnlyGate;\n" +
-                        "    float starMask = smoothstep(0.006, 0.09, bright) * warmOrWhite * mix(starVisibility, 1.0, uCelestialBloomThreshold);\n" +
-                        "    float broadThreshold = mix(1.05, 0.48, uCelestialBloomThreshold);\n" +
-                        "    float broadMask = smoothstep(broadThreshold, 1.0, bright) * mix(notBlueSky, 1.0, uCelestialBloomThreshold) * warmOrWhite;\n" +
-                        "    float celestialMask = max(starMask, broadMask * uCelestialBloomThreshold);\n" +
-                        "    vec3 celestialBloom = raw * celestialMask * uCelestialBloomStrength * uCelestialOnly;\n" +
-                        "    vec3 normalBloom = excess * gate * depthBoost * (1.0 - uCelestialOnly);\n" +
+                        "    vec3 normalBloom = excess * gate * depthBoost;\n" +
                         "    vec3 normalLinear = pow(clamp(normalBloom, vec3(0.0), vec3(1.0)), vec3(2.2));\n" +
-                        "    return clamp(normalLinear + celestialBloom, vec3(0.0), vec3(1.0));\n" +
+                        "    return clamp(normalLinear, vec3(0.0), vec3(1.0));\n" +
                         "}\n" +
                         "void main() {\n" +
                         "    vec2 uv = vTexCoord;\n" +
@@ -604,8 +959,9 @@ public final class PostProcessRenderer {
                         "        return;\n" +
                         "    }\n" +
                         "    gl_FragColor = vec4(clamp(graded(uv), 0.0, 1.0), 1.0);\n" +
-                        "}\n");
+                        "}\n";
 
+        int fragment = compileShader(GL20.GL_FRAGMENT_SHADER, fragmentSource);
         if (vertex <= 0 || fragment <= 0) {
             shaderFailed = true;
             warnShaderFailure("compile");
@@ -698,6 +1054,9 @@ public final class PostProcessRenderer {
     }
 
     private static float computeStarOnlyGate(Minecraft mc, float partialTicks) {
+        if (isTwilightForestSky(mc) && ModConfig.suppressTwilightForestStars) {
+            return 1.0F;
+        }
         long worldTime = mc.theWorld.getWorldTime() % 24000L;
         float time = (float) worldTime + partialTicks;
         if (time < 0.0F) {
@@ -722,6 +1081,25 @@ public final class PostProcessRenderer {
         float nightIn = smoothstep(elapsed / fadeTicks);
         float nightOut = smoothstep((windowLength - elapsed) / fadeTicks);
         return clamp01(nightIn * nightOut);
+    }
+
+    private static float resolveSkyStarBrightness(Minecraft mc, float partialTicks) {
+        if (mc == null || mc.theWorld == null) {
+            return 0.0F;
+        }
+        float brightness = mc.theWorld.getStarBrightness(partialTicks);
+        if (isTwilightForestSky(mc) && ModConfig.suppressTwilightForestStars) {
+            brightness = Math.max(brightness, 1.0F - mc.theWorld.getRainStrength(partialTicks));
+        }
+        return clamp01(brightness);
+    }
+
+    private static boolean isTwilightForestSky(Minecraft mc) {
+        return mc != null
+                && mc.theWorld != null
+                && mc.theWorld.provider != null
+                && "twilightforest.world.WorldProviderTwilightForest".equals(
+                        mc.theWorld.provider.getClass().getName());
     }
 
     private static float clampTime(int time) {

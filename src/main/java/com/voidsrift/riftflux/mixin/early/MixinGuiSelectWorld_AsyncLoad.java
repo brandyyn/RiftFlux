@@ -57,7 +57,7 @@ public abstract class MixinGuiSelectWorld_AsyncLoad extends GuiScreen {
 
     @Inject(method = "func_146615_e", at = @At("HEAD"))
     private void riftflux$finishWorldListRefreshBeforeLoad(int selectedWorld, CallbackInfo ci) {
-        WorldSelectionCache.cancelAndWaitForIdle();
+        WorldSelectionCache.cancelRefresh();
     }
 
     @Inject(method = "drawScreen", at = @At("HEAD"))

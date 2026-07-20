@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux;
 
 import com.voidsrift.riftflux.util.ConfigResolver;
+import com.voidsrift.riftflux.world.MoonPhaseHelper;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import java.util.HashMap;
@@ -211,12 +212,15 @@ public class ModConfig {
     public static boolean dualHotbarUseCustomMountOnboardPrompt;
     public static boolean enableJackOLanternHelmet;
     public static boolean disablePumpkinOverlay;
+    public static boolean centerCrosshair;
     public static boolean disableUnderwaterOverlay;
     public static boolean fixUnderwaterMobDarkening;
     public static boolean enablePostProcessing;
     public static boolean postProcessConfigHotSwap;
     public static int[] postProcessDimensionWhitelist;
     public static int[] postProcessDimensionBlacklist;
+    public static int[] postProcessCelestialBloomDimensionWhitelist;
+    public static int[] postProcessCelestialBloomDimensionBlacklist;
     public static float postProcessGamma;
     public static float postProcessBrightness;
     public static float postProcessContrast;
@@ -237,6 +241,8 @@ public class ModConfig {
     public static boolean enablePostProcessWorldBloomCache;
     public static boolean enablePostProcessCelestialBloomCache;
     public static boolean postProcessBloomCacheHighPrecision;
+    public static boolean postProcessBloomCacheUsePackedFormat;
+    public static boolean enablePostProcessPersistentRenderTarget;
     public static boolean postProcessBloomAffectsHeldItem;
     public static float postProcessCelestialBloomStrengthPercent;
     public static float postProcessCelestialBloomThreshold;
@@ -258,6 +264,10 @@ public class ModConfig {
     public static float celestialBetaStyleFogBiomeTintWeatherEventChancePercent;
     public static float celestialBetaStyleFogBiomeTintDayEventChancePercent;
     public static float celestialBetaStyleFogBiomeTintNightEventChancePercent;
+    public static int[] celestialFogHorizonDimensionWhitelist;
+    public static int[] celestialFogHorizonDimensionBlacklist;
+    public static int[] celestialFogChanceEventDimensionWhitelist;
+    public static int[] celestialFogChanceEventDimensionBlacklist;
     public static boolean celestialBlackNightFog;
     public static float celestialFogDesaturationPercent;
     public static float celestialNightFogDesaturationPercent;
@@ -277,6 +287,7 @@ public class ModConfig {
     public static int betaStarsSunsetFadeEndTick;
     public static boolean betaStarsSpinWithSunMoon;
     public static boolean betaStarsDisableBetterSkiesStars;
+    public static boolean suppressTwilightForestStars;
 
     // Zelda
     public static boolean zeldaHeartsEnabled;
@@ -366,6 +377,11 @@ public class ModConfig {
     public static String[] blessingsDisabledList;
 
     // Natural mob spawning
+    public static String initialMoonPhase;
+    public static int initialMoonPhaseIndex;
+    public static String[] hostileMobSpawnDisabledMoonPhases;
+    public static boolean[] hostileMobSpawnDisabledMoonPhaseFlags;
+    public static int hostileMobSpawnGracePeriodDays;
     public static String[] mobSpawnWhitelist;
     public static String[] mobSpawnBlacklist;
     public static String[] mobSpawnWhitelistOnlyBiomes;
@@ -1895,6 +1911,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, hides the pumpkin blur overlay while wearing a pumpkin."
         );
 
+        centerCrosshair = config.getBoolean(
+                "CenterCrosshair",
+                "client",
+                true,
+                "If true, render the crosshair around the exact center of the scaled GUI instead of using vanilla integer positioning. Requires restart."
+        );
+
         disableUnderwaterOverlay = config.getBoolean(
                 "DisableUnderwaterOverlay",
                 "client",
@@ -1932,6 +1955,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 POST_PROCESSING_CATEGORY,
                 new String[0],
                 "Dimension IDs where post processing must not render. Blacklist takes precedence over whitelist."
+        ));
+        postProcessCelestialBloomDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "PostProcessCelestialBloomDimensionWhitelist",
+                POST_PROCESSING_CATEGORY,
+                new String[0],
+                "Dimension IDs where celestial bloom may render. Leave empty to allow every dimension unless blacklisted."
+        ));
+        postProcessCelestialBloomDimensionBlacklist = ConfigResolver.parseIntegerList(config.getStringList(
+                "PostProcessCelestialBloomDimensionBlacklist",
+                POST_PROCESSING_CATEGORY,
+                new String[0],
+                "Dimension IDs where celestial bloom must not render. Blacklist takes precedence over whitelist."
         ));
         postProcessGamma = config.getFloat(
                 "PostProcessGamma",
@@ -2072,13 +2107,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         enablePostProcessWorldBloomCache = config.getBoolean(
                 "EnablePostProcessWorldBloomCache",
                 POST_PROCESSING_CATEGORY,
-                false,
+                true,
                 "If true, world bloom precomputes its full-resolution bright pass once per pixel and reuses it for blur samples. Falls back to direct bloom if framebuffer caching is unavailable."
         );
         enablePostProcessCelestialBloomCache = config.getBoolean(
                 "EnablePostProcessCelestialBloomCache",
                 POST_PROCESSING_CATEGORY,
-                false,
+                true,
                 "If true, celestial bloom precomputes its full-resolution bright pass once per pixel and reuses it for blur samples. Falls back to direct bloom if framebuffer caching is unavailable."
         );
         postProcessBloomCacheHighPrecision = config.getBoolean(
@@ -2086,6 +2121,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 POST_PROCESSING_CATEGORY,
                 true,
                 "If true, bloom caches prefer a 16-bit-per-channel texture to minimize interpolation and banding differences. Automatically falls back to RGBA8 if unsupported."
+        );
+        postProcessBloomCacheUsePackedFormat = config.getBoolean(
+                "PostProcessBloomCacheUsePackedFormat",
+                POST_PROCESSING_CATEGORY,
+                false,
+                "If true, bloom caches use RGB10_A2 to halve cache memory and bandwidth versus RGBA16. This may slightly change bloom appearance on some GPUs. Takes precedence over PostProcessBloomCacheHighPrecision and falls back automatically if unsupported."
+        );
+        enablePostProcessPersistentRenderTarget = config.getBoolean(
+                "EnablePostProcessPersistentRenderTarget",
+                POST_PROCESSING_CATEGORY,
+                true,
+                "If true, renders the 3D scene directly into persistent color/depth textures and ping-pongs post processing without framebuffer copies. Automatically falls back to the copy renderer when incompatible."
         );
         postProcessBloomAffectsHeldItem = config.getBoolean(
                 "PostProcessBloomAffectsHeldItem",
@@ -2516,6 +2563,30 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 100.0F,
                 "Server-side chance per Minecraft night that a fog event appears during the night without rain. 0 disables random nighttime fog events."
         );
+        celestialFogHorizonDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "CelestialFogHorizonDimensionWhitelist",
+                "celestial",
+                new String[]{"0"},
+                "Dimension IDs where RiftFlux fog and horizon changes may render. Leave empty to allow every dimension unless blacklisted."
+        ));
+        celestialFogHorizonDimensionBlacklist = ConfigResolver.parseIntegerList(config.getStringList(
+                "CelestialFogHorizonDimensionBlacklist",
+                "celestial",
+                new String[0],
+                "Dimension IDs where RiftFlux fog and horizon changes must not render. Blacklist takes precedence over whitelist."
+        ));
+        celestialFogChanceEventDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "CelestialFogChanceEventDimensionWhitelist",
+                "celestial",
+                new String[]{"0"},
+                "Dimension IDs where random foggy day, night, and weather events may occur. Leave empty to allow every dimension unless blacklisted."
+        ));
+        celestialFogChanceEventDimensionBlacklist = ConfigResolver.parseIntegerList(config.getStringList(
+                "CelestialFogChanceEventDimensionBlacklist",
+                "celestial",
+                new String[0],
+                "Dimension IDs where random foggy day, night, and weather events must not occur. Blacklist takes precedence over whitelist."
+        ));
         celestialBlackNightFog = config.getBoolean(
                 "CelestialBlackNightFog",
                 "celestial",
@@ -2670,6 +2741,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "celestial",
                 true,
                 "If true, suppresses MCPatcherForge/BetterSkies star layers while beta stars are enabled so RiftFlux beta stars replace them."
+        );
+        suppressTwilightForestStars = config.getBoolean(
+                "SuppressTwilightForestStars",
+                "celestial",
+                true,
+                "If true, suppresses the Twilight Forest sky renderer's built-in stars without affecting its sky color, fog, or sky planes."
         );
 
         zeldaHeartsEnabled = config.getBoolean(
@@ -3265,6 +3342,42 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 new String[]{"2", "4", "9", "15", "17", "18", "19", "20"},
                 "Potion IDs eligible for the Drunk blessing negative effect."
         ));
+
+        initialMoonPhase = MoonPhaseHelper.canonicalName(config.getString(
+                "InitialMoonPhase",
+                "celestial",
+                "waning_crescent",
+                "Moon phase used on the first night of the world's lunar cycle. This offsets the cycle without changing world time.\n"
+                        + "Accepted names: full_moon, waning_gibbous, last_quarter, waning_crescent, new_moon, waxing_crescent, first_quarter, waxing_gibbous. Numeric values 0-7 are also accepted.\n"
+                        + "Changing this shifts the moon phase in existing worlds too."
+        ), MoonPhaseHelper.WANING_CRESCENT);
+        initialMoonPhaseIndex = MoonPhaseHelper.parsePhase(initialMoonPhase, MoonPhaseHelper.WANING_CRESCENT);
+        config.getCategory("celestial").get("InitialMoonPhase").set(initialMoonPhase);
+
+        hostileMobSpawnDisabledMoonPhases = MoonPhaseHelper.sanitizePhaseList(config.getStringList(
+                "HostileMobSpawnDisabledMoonPhases",
+                MOB_SPAWNING_CATEGORY,
+                new String[0],
+                "Moon phases where natural hostile mob spawning is disabled for vanilla, modded, and RiftFlux-configured mobs.\n"
+                        + "Accepted names: full_moon, waning_gibbous, last_quarter, waning_crescent, new_moon, waxing_crescent, first_quarter, waxing_gibbous. Numeric values 0-7 are also accepted.\n"
+                        + "Spawn eggs, mob spawners, structures, commands, and scripted boss/minion spawns are not affected."
+        ));
+        hostileMobSpawnDisabledMoonPhaseFlags =
+                MoonPhaseHelper.parsePhaseFlags(hostileMobSpawnDisabledMoonPhases);
+        config.getCategory(MOB_SPAWNING_CATEGORY)
+                .get("HostileMobSpawnDisabledMoonPhases")
+                .set(hostileMobSpawnDisabledMoonPhases);
+
+        hostileMobSpawnGracePeriodDays = config.getInt(
+                "HostileMobSpawnGracePeriodDays",
+                MOB_SPAWNING_CATEGORY,
+                0,
+                0,
+                1000000,
+                "Number of complete Minecraft days after world creation during which natural hostile mob spawning is disabled.\n"
+                        + "0 allows hostile spawning immediately. Uses the current Minecraft day, so custom day speeds, sleeping, and time changes affect the grace period.\n"
+                        + "Applies to vanilla, modded, and RiftFlux-configured mobs. Spawn eggs, mob spawners, structures, commands, and scripted boss/minion spawns are not affected."
+        );
 
         mobSpawnWhitelist = config.getStringList(
                 "Whitelist",
@@ -9062,6 +9175,33 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         return postProcessDimensionWhitelist == null
                 || postProcessDimensionWhitelist.length == 0
                 || containsInt(postProcessDimensionWhitelist, dimensionId);
+    }
+
+    public static boolean isPostProcessCelestialBloomDimensionAllowed(int dimensionId) {
+        if (containsInt(postProcessCelestialBloomDimensionBlacklist, dimensionId)) {
+            return false;
+        }
+        return postProcessCelestialBloomDimensionWhitelist == null
+                || postProcessCelestialBloomDimensionWhitelist.length == 0
+                || containsInt(postProcessCelestialBloomDimensionWhitelist, dimensionId);
+    }
+
+    public static boolean isCelestialFogHorizonDimensionAllowed(int dimensionId) {
+        if (containsInt(celestialFogHorizonDimensionBlacklist, dimensionId)) {
+            return false;
+        }
+        return celestialFogHorizonDimensionWhitelist == null
+                || celestialFogHorizonDimensionWhitelist.length == 0
+                || containsInt(celestialFogHorizonDimensionWhitelist, dimensionId);
+    }
+
+    public static boolean isCelestialFogChanceEventDimensionAllowed(int dimensionId) {
+        if (containsInt(celestialFogChanceEventDimensionBlacklist, dimensionId)) {
+            return false;
+        }
+        return celestialFogChanceEventDimensionWhitelist == null
+                || celestialFogChanceEventDimensionWhitelist.length == 0
+                || containsInt(celestialFogChanceEventDimensionWhitelist, dimensionId);
     }
 
     private static boolean containsInt(int[] values, int needle) {

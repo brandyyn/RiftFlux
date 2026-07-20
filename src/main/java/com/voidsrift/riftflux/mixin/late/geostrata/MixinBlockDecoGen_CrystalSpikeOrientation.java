@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.mixin.late.geostrata;
 
 import Reika.GeoStrata.Blocks.BlockDecoGen;
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.waterlogging.RiftFluxCrystalSpikeAccess;
 import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -18,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = BlockDecoGen.class, remap = false)
-public abstract class MixinBlockDecoGen_CrystalSpikeOrientation {
+public abstract class MixinBlockDecoGen_CrystalSpikeOrientation implements RiftFluxCrystalSpikeAccess {
     @Unique
     private static final int riftflux$ORIENTATION_MASK = 14;
     @Unique

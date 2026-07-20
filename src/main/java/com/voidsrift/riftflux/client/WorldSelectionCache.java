@@ -56,12 +56,17 @@ public final class WorldSelectionCache {
     }
 
     public static void invalidate() {
+        Thread thread;
         synchronized (LOCK) {
             generation++;
             cachedSaveList = null;
             pendingSaveList = null;
             pendingError = null;
             loading = false;
+            thread = loaderThread;
+        }
+        if (thread != null) {
+            thread.interrupt();
         }
     }
 
@@ -69,37 +74,14 @@ public final class WorldSelectionCache {
         invalidate();
     }
 
-    public static void cancelAndWaitForIdle() {
-        Thread thread;
-        synchronized (LOCK) {
-            generation++;
-            pendingSaveList = null;
-            pendingError = null;
-            loading = false;
-            thread = loaderThread;
-        }
-
-        if (thread == null || thread == Thread.currentThread()) {
-            return;
-        }
-
-        try {
-            thread.join();
-        } catch (InterruptedException interruptedException) {
-            Thread.currentThread().interrupt();
-        }
-
-        synchronized (LOCK) {
-            if (loaderThread == thread) {
-                loaderThread = null;
-            }
-        }
+    public static void cancelRefresh() {
+        invalidate();
     }
 
     private static void startRefresh(final ISaveFormat saveFormat) {
         final int refreshGeneration;
         synchronized (LOCK) {
-            if (loading) {
+            if (loading || loaderThread != null) {
                 return;
             }
             loading = true;
@@ -133,10 +115,10 @@ public final class WorldSelectionCache {
                         } else {
                             pendingError = error;
                         }
-                        loading = false;
                     }
                     if (loaderThread == Thread.currentThread()) {
                         loaderThread = null;
+                        loading = false;
                     }
                 }
             }

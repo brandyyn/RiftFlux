@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.geostrata.client.DecoGenItemRenderer;
 import com.voidsrift.riftflux.geostrata.client.GeoStrataDecoGenParticle;
+import com.voidsrift.riftflux.waterlogging.RiftFluxCrystalSpikeAccess;
 import net.minecraft.block.Block;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.world.World;
@@ -95,7 +96,7 @@ public abstract class MixinEffectRenderer_GeoStrataDecoGenParticles {
     }
 
     private static boolean riftflux$isDecoGen(Block block) {
-        return block != null && "Reika.GeoStrata.Blocks.BlockDecoGen".equals(block.getClass().getName());
+        return block instanceof RiftFluxCrystalSpikeAccess;
     }
 
     private static boolean riftflux$isIcicle(int meta) {

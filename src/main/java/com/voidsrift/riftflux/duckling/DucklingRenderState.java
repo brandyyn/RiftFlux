@@ -345,6 +345,7 @@ final class DucklingRenderState {
 
     static void restoreAfterRender(Snapshot snapshot) {
         restoreSnapshot(snapshot);
+        normalizeAfterEntityRender();
     }
 
     private static void restoreSnapshot(Snapshot snapshot) {

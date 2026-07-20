@@ -104,7 +104,13 @@ public final class CelestialFogEventServerEvents {
     }
 
     private boolean updateState(World world, DimensionState state) {
-        boolean hasSky = world.provider != null && !world.provider.hasNoSky;
+        int dimensionId = getDimensionId(world);
+        boolean dimensionAllowed = ModConfig.isCelestialFogChanceEventDimensionAllowed(dimensionId);
+        if (!dimensionAllowed) {
+            state.inWeather = false;
+            state.weatherRoll = false;
+        }
+        boolean hasSky = dimensionAllowed && world.provider != null && !world.provider.hasNoSky;
         boolean dayFog = hasSky && isTimedEventEnabled(
                 world,
                 DAY_EVENT_START_TICK,

@@ -17,8 +17,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 @Mixin(RenderGlobal.class)
 public abstract class MixinRenderGlobal_CelestialEventTextures {
@@ -40,14 +38,17 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
     private static final ResourceLocation rf$defaultMoon = new ResourceLocation("textures/environment/moon_phases.png");
 
     @Unique
-    private static final Map<String, ResourceLocation> rf$validTextureCache = new HashMap<String, ResourceLocation>();
-    @Unique
-    private static final Map<String, Long> rf$missingTextureCheckedDay = new HashMap<String, Long>();
-
-    @Unique
     private float rf$celestialSkyAlpha = 1.0F;
     @Unique
     private ResourceLocation rf$cachedSunTexture;
+    @Unique
+    private WorldClient rf$textureSelectionWorld;
+    @Unique
+    private long rf$textureSelectionDay = Long.MIN_VALUE;
+    @Unique
+    private ResourceLocation rf$selectedSunTexture;
+    @Unique
+    private ResourceLocation rf$selectedMoonTexture;
 
     @Shadow
     private WorldClient theWorld;
@@ -105,34 +106,50 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
 
     @Unique
     private ResourceLocation rf$resolveSunTexture() {
-        if (!ModConfig.enableCelestialEventTextures) {
-            return rf$defaultSun;
-        }
-        if (!rf$rollForToday(ModConfig.celestialSunEventChance, rf$sunRollSalt)) {
-            return rf$defaultSun;
-        }
-        return rf$pickEventTexture(
-                ModConfig.celestialSunEventTextures,
-                ModConfig.celestialSunEventTexture,
-                rf$defaultSun,
-                rf$sunPickSalt
-        );
+        this.rf$refreshTextureSelection();
+        return this.rf$selectedSunTexture;
     }
 
     @Unique
     private ResourceLocation rf$resolveMoonTexture() {
+        this.rf$refreshTextureSelection();
+        return this.rf$selectedMoonTexture;
+    }
+
+    @Unique
+    private void rf$refreshTextureSelection() {
+        long day = this.rf$getDayIndex();
+        if (this.rf$textureSelectionWorld == this.theWorld
+                && this.rf$textureSelectionDay == day
+                && this.rf$selectedSunTexture != null
+                && this.rf$selectedMoonTexture != null) {
+            return;
+        }
+
+        this.rf$textureSelectionWorld = this.theWorld;
+        this.rf$textureSelectionDay = day;
+        this.rf$selectedSunTexture = rf$defaultSun;
+        this.rf$selectedMoonTexture = rf$defaultMoon;
         if (!ModConfig.enableCelestialEventTextures) {
-            return rf$defaultMoon;
+            return;
         }
-        if (!rf$rollForToday(ModConfig.celestialMoonEventChance, rf$moonRollSalt)) {
-            return rf$defaultMoon;
+
+        if (this.rf$rollForToday(ModConfig.celestialSunEventChance, rf$sunRollSalt)) {
+            this.rf$selectedSunTexture = rf$pickEventTexture(
+                    ModConfig.celestialSunEventTextures,
+                    ModConfig.celestialSunEventTexture,
+                    rf$defaultSun,
+                    rf$sunPickSalt
+            );
         }
-        return rf$pickEventTexture(
-                ModConfig.celestialMoonEventTextures,
-                ModConfig.celestialMoonEventTexture,
-                rf$defaultMoon,
-                rf$moonPickSalt
-        );
+        if (this.rf$rollForToday(ModConfig.celestialMoonEventChance, rf$moonRollSalt)) {
+            this.rf$selectedMoonTexture = rf$pickEventTexture(
+                    ModConfig.celestialMoonEventTextures,
+                    ModConfig.celestialMoonEventTexture,
+                    rf$defaultMoon,
+                    rf$moonPickSalt
+            );
+        }
     }
 
     @Unique
@@ -225,41 +242,18 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
             return null;
         }
 
-        ResourceLocation cached = rf$validTextureCache.get(path);
-        if (cached != null) {
-            return cached;
-        }
-
-        long day = rf$getCurrentDay();
-        Long checkedMissingDay = rf$missingTextureCheckedDay.get(path);
-        if (checkedMissingDay != null && checkedMissingDay.longValue() == day) {
-            return null;
-        }
-
         ResourceLocation location;
         try {
             location = new ResourceLocation(path);
         } catch (Throwable ignored) {
-            rf$missingTextureCheckedDay.put(path, day);
             return null;
         }
 
         if (!rf$resourceExists(location)) {
-            rf$missingTextureCheckedDay.put(path, day);
             return null;
         }
 
-        rf$validTextureCache.put(path, location);
-        rf$missingTextureCheckedDay.remove(path);
         return location;
-    }
-
-    @Unique
-    private long rf$getCurrentDay() {
-        if (this.theWorld == null) {
-            return -1L;
-        }
-        return rf$getDayIndex();
     }
 
     @Unique

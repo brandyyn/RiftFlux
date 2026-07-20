@@ -20,9 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityAmbientCreature;
 import net.minecraft.entity.passive.EntityAnimal;
@@ -107,7 +105,9 @@ public final class ConfiguredMobSpawns {
         int x = MathHelper.floor_double(event.x);
         int y = MathHelper.floor_double(event.entityLiving.boundingBox.minY);
         int z = MathHelper.floor_double(event.z);
-        if (isHostileMob(event.entityLiving) && isBrightDaylightSurface(world, x, y, z)) {
+        if (HostileSpawnRules.isHostile(event.entityLiving)
+                && (!HostileSpawnRules.allowsNaturalHostileSpawning(world)
+                || isBrightDaylightSurface(world, x, y, z))) {
             event.setResult(Event.Result.DENY);
             return;
         }
@@ -129,6 +129,24 @@ public final class ConfiguredMobSpawns {
         if (!ruleSet.allows(dimension, biome)) {
             event.setResult(Event.Result.DENY);
         }
+    }
+
+    public static boolean allowsNaturalSpawn(Class entityClass, World world, int x, int z) {
+        if (entityClass == null || world == null) {
+            return true;
+        }
+        if (HostileSpawnRules.isHostileClass(entityClass)
+                && !HostileSpawnRules.allowsNaturalHostileSpawning(world)) {
+            return false;
+        }
+
+        BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+        RuleSet ruleSet = ACTIVE_RULES.get(entityClass);
+        if (ruleSet != null) {
+            int dimension = world.provider == null ? 0 : world.provider.dimensionId;
+            return ruleSet.allows(dimension, biome);
+        }
+        return biome == null || !isWhitelistOnlyBiome(biome.biomeID);
     }
 
     private static void registerWhitelistSpawns(RuleSet ruleSet) {
@@ -280,10 +298,6 @@ public final class ConfiguredMobSpawns {
 
     private static boolean isWhitelistOnlyBiome(int biomeId) {
         return biomeId >= 0 && WHITELIST_ONLY_BIOME_IDS.get(biomeId);
-    }
-
-    private static boolean isHostileMob(EntityLivingBase entity) {
-        return entity instanceof IMob || entity instanceof EntityMob;
     }
 
     private static boolean isBrightDaylightSurface(World world, int x, int y, int z) {

@@ -131,6 +131,8 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.strictMobSpawnsZeroBlockLight) {
             mixins.add("early.MixinEntityMob_ZeroBlockLightSpawn");
         }
+        mixins.add("early.MixinWorldProvider_InitialMoonPhase");
+        mixins.add("early.MixinWorldServer_ConfiguredMobDimensions");
         if (ModConfig.useSpawnTypeForMobCap) {
             mixins.add("early.MixinEntity_SpawnTypeMobCap");
         }
@@ -385,7 +387,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 mixins.add("early.MixinBlock_SugarcaneWaterRenderPass");
                 mixins.add("early.MixinWorldRenderer_SugarcaneWaterRenderPass");
                 mixins.add("early.MixinRenderBlocks_SugarcaneWaterlogging");
-                mixins.add("early.MixinWorld_SugarcaneWaterPhysics");
+            }
+            if (ModConfig.allowSugarcaneInWater || ModConfig.fixGeoStrataCrystalSpikeWaterlogging) {
+                mixins.add("early.MixinWorld_SupportedFluidLookup");
             }
             mixins.add("early.MixinRenderBlocks_TorchAllFaces");
             if (ModConfig.betterTorchTexture) {
@@ -494,6 +498,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             }
             if (ModConfig.disablePumpkinOverlay) {
                 mixins.add("early.MixinGuiIngame_NoPumpkinOverlay");
+            }
+            if (ModConfig.centerCrosshair) {
+                mixins.add("early.MixinGuiIngame_CenteredCrosshair");
             }
             if (ModConfig.disableUnderwaterOverlay) {
                 mixins.add("early.MixinItemRenderer_NoUnderwaterOverlay");

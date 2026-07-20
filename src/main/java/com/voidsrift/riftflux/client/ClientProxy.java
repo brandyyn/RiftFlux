@@ -177,6 +177,7 @@ public class ClientProxy extends CommonProxy {
             WorldTooltipClient.bootstrap();
         }
         CelestialFogEventClientState.bootstrap();
+        PostProcessRenderer.bootstrap();
         BombCarryClientHandler.bootstrap();
         StarbeamRailHud.bootstrap();
         TorchBillboardRenderer.bootstrap();

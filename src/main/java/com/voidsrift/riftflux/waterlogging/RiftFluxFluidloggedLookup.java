@@ -7,7 +7,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.IBlockAccess;
 
 public final class RiftFluxFluidloggedLookup {
-    private static final String GEOSTRATA_DECO_GEN_CLASS = "Reika.GeoStrata.Blocks.BlockDecoGen";
     private static final int GEOSTRATA_CRYSTAL_ORIENTATION_MASK = 14;
 
     private RiftFluxFluidloggedLookup() {
@@ -19,7 +18,27 @@ public final class RiftFluxFluidloggedLookup {
     }
 
     public static int getFluidMetaOrBlockMeta(IBlockAccess world, int x, int y, int z, int defaultFluidMeta) {
-        return getFluidBlock(world, x, y, z) != null ? defaultFluidMeta : world.getBlockMetadata(x, y, z);
+        return getFluidBlock(world, x, y, z) != null
+                ? defaultFluidMeta : world.getBlockMetadata(x, y, z);
+    }
+
+    public static Block getSupportedFluidOrBlock(IBlockAccess world, int x, int y, int z) {
+        Block fluid = getFluidBlock(world, x, y, z);
+        if (fluid != null) {
+            return fluid;
+        }
+        Block block = world.getBlock(x, y, z);
+        return isSupportedFluidBlock(world, x, y, z, block) ? Blocks.water : block;
+    }
+
+    public static int getSupportedFluidMetaOrBlockMeta(IBlockAccess world, int x, int y, int z,
+                                                        int defaultFluidMeta) {
+        if (getFluidBlock(world, x, y, z) != null) {
+            return defaultFluidMeta;
+        }
+        Block block = world.getBlock(x, y, z);
+        return isSupportedFluidBlock(world, x, y, z, block)
+                ? defaultFluidMeta : world.getBlockMetadata(x, y, z);
     }
 
     public static Block getFluidBlock(IBlockAccess world, int x, int y, int z) {
@@ -34,14 +53,17 @@ public final class RiftFluxFluidloggedLookup {
         }
 
         Block block = world.getBlock(x, y, z);
+        return isSupportedFluidBlock(world, x, y, z, block) ? Blocks.water : null;
+    }
+
+    private static boolean isSupportedFluidBlock(IBlockAccess world, int x, int y, int z, Block block) {
         if (block == Blocks.reeds) {
-            return ModConfig.allowSugarcaneInWater
-                    && hasAdjacentWater(world, x, y, z) ? Blocks.water : null;
+            return ModConfig.allowSugarcaneInWater && hasAdjacentWater(world, x, y, z);
         }
 
         return ModConfig.fixGeoStrataCrystalSpikeWaterlogging
                 && isGeoStrataCrystalSpike(block, world.getBlockMetadata(x, y, z))
-                && hasAdjacentWater(world, x, y, z) ? Blocks.water : null;
+                && hasAdjacentWater(world, x, y, z);
     }
 
     public static boolean hasSupportedFluidBlock(IBlockAccess world, int x, int y, int z) {
@@ -59,7 +81,7 @@ public final class RiftFluxFluidloggedLookup {
 
     private static boolean isGeoStrataCrystalSpike(Block block, int meta) {
         return block != null
-                && GEOSTRATA_DECO_GEN_CLASS.equals(block.getClass().getName())
+                && block instanceof RiftFluxCrystalSpikeAccess
                 && (meta & ~GEOSTRATA_CRYSTAL_ORIENTATION_MASK) == 0;
     }
 

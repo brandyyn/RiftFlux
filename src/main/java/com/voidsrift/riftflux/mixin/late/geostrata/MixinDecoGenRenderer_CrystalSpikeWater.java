@@ -310,19 +310,13 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
         int n = 0;
         if (!ModConfig.disableGeoStrataCrystalSpikeHeightDarkening) {
             if (orientation == riftflux$ORIENTATION_DOWN) {
-                while (this.riftflux$isSameDownwardSpike(world, x, y - 1 - n, z)) {
-                    ++n;
-                }
+                n = this.riftflux$isSameDownwardSpike(world, x, y - 1, z) ? 1 : 0;
             } else if (orientation == 0) {
-                while (this.riftflux$isSameUpwardSpike(world, x, y + 1 + n, z)) {
-                    ++n;
-                }
+                n = this.riftflux$isSameUpwardSpike(world, x, y + 1, z) ? 1 : 0;
             } else {
                 int dx = riftflux$getOffsetX(orientation);
                 int dz = riftflux$getOffsetZ(orientation);
-                while (this.riftflux$isSameOrientedSpike(world, x + dx * (n + 1), y, z + dz * (n + 1), orientation)) {
-                    ++n;
-                }
+                n = this.riftflux$isSameOrientedSpike(world, x + dx, y, z + dz, orientation) ? 1 : 0;
             }
         }
         int grayscale = Math.max(
