@@ -647,7 +647,7 @@ public final class LegendGearLegacyContent {
                     Items.stick, Items.diamond, Items.water_bucket);
         }
 
-        GameRegistry.addRecipe(new ItemStack(LegendGear.jarBlock, 16),
+        GameRegistry.addRecipe(new ItemStack(LegendGear.jarBlock),
                 "b b",
                 "b b",
                 "bbb",

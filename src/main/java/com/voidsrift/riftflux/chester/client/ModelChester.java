@@ -4,6 +4,7 @@ import com.voidsrift.riftflux.chester.EntityChester;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MathHelper;
 
 public class ModelChester extends ModelBase {
@@ -14,6 +15,7 @@ public class ModelChester extends ModelBase {
     private final ModelRenderer leftBackLeg;
     private final ModelRenderer rightFrontLeg;
     private final ModelRenderer rightBackLeg;
+    private float sitProgress;
 
     public ModelChester() {
         textureWidth = 128;
@@ -29,24 +31,24 @@ public class ModelChester extends ModelBase {
         child(body, part(40, 47, 0, -7, -5, 1, 5, 10, 4, 20, 0, 0, 0, 0));
         child(body, part(40, 38, -4, -7, 0, 8, 5, 1, 0, 20, 4, 0, 0, 0));
 
-        rightFrontLeg = root();
-        child(rightFrontLeg, part(41, 29, -2, 0, -2, 4, 4, 4, -4, 18, -3.5F, -0.3316126F, 0.2792527F, 0));
-        child(rightFrontLeg, part(17, 51, -2, 3, -3, 4, 3, 4, -4, 18, -3.5F, 0, 0.2792527F, 0));
+        rightFrontLeg = rootAt(-4.0F, 18.0F, -3.5F);
+        child(rightFrontLeg, part(41, 29, -2, 0, -2, 4, 4, 4, 0, 0, 0, -0.3316126F, 0.2792527F, 0));
+        child(rightFrontLeg, part(17, 51, -2, 3, -3, 4, 3, 4, 0, 0, 0, 0, 0.2792527F, 0));
         child(body, rightFrontLeg);
 
-        leftFrontLeg = root();
-        child(leftFrontLeg, part(0, 32, -2, 0, -2, 4, 4, 4, 4, 18, -3.5F, -0.3316126F, -0.2792527F, 0));
-        child(leftFrontLeg, part(41, 21, -2, 3, -3, 4, 3, 4, 4, 18, -3.5F, 0, -0.2792527F, 0));
+        leftFrontLeg = rootAt(4.0F, 18.0F, -3.5F);
+        child(leftFrontLeg, part(0, 32, -2, 0, -2, 4, 4, 4, 0, 0, 0, -0.3316126F, -0.2792527F, 0));
+        child(leftFrontLeg, part(41, 21, -2, 3, -3, 4, 3, 4, 0, 0, 0, 0, -0.2792527F, 0));
         child(body, leftFrontLeg);
 
-        leftBackLeg = root();
-        child(leftBackLeg, part(0, 50, -2, 0, -2, 4, 4, 4, 4, 18, 3, 0.3316126F, 0.2792527F, 0));
-        child(leftBackLeg, part(74, 1, -2, 3, -1, 4, 3, 4, 4, 18, 3, 0, 0.2792527F, 0));
+        leftBackLeg = rootAt(4.0F, 18.0F, 3.0F);
+        child(leftBackLeg, part(0, 50, -2, 0, -2, 4, 4, 4, 0, 0, 0, 0.3316126F, 0.2792527F, 0));
+        child(leftBackLeg, part(74, 1, -2, 3, -1, 4, 3, 4, 0, 0, 0, 0, 0.2792527F, 0));
         child(body, leftBackLeg);
 
-        rightBackLeg = root();
-        child(rightBackLeg, part(0, 41, -2, 0, -2, 4, 4, 4, -4, 18, 3, 0.3316126F, -0.2792527F, 0));
-        child(rightBackLeg, part(64, 14, -2, 3, -1, 4, 3, 4, -4, 18, 3, 0, -0.2792527F, 0));
+        rightBackLeg = rootAt(-4.0F, 18.0F, 3.0F);
+        child(rightBackLeg, part(0, 41, -2, 0, -2, 4, 4, 4, 0, 0, 0, 0.3316126F, -0.2792527F, 0));
+        child(rightBackLeg, part(64, 14, -2, 3, -1, 4, 3, 4, 0, 0, 0, 0, -0.2792527F, 0));
         child(body, rightBackLeg);
 
         child(topLid, part(58, 22, -4, -2.5F, -9.5F, 8, 2, 9, 0, 13, 5, -0.2094395F, 0, 0));
@@ -71,8 +73,12 @@ public class ModelChester extends ModelBase {
     }
 
     private ModelRenderer root() {
+        return rootAt(0.0F, 0.0F, 0.0F);
+    }
+
+    private ModelRenderer rootAt(float x, float y, float z) {
         ModelRenderer renderer = new ModelRenderer(this);
-        renderer.setRotationPoint(0.0F, 0.0F, 0.0F);
+        renderer.setRotationPoint(x, y, z);
         return renderer;
     }
 
@@ -111,11 +117,28 @@ public class ModelChester extends ModelBase {
     public void render(Entity entity, float limbSwing, float limbSwingAmount, float age, float yaw, float pitch, float scale) {
         setRotationAngles(limbSwing, limbSwingAmount, age, yaw, pitch, scale, entity);
         EntityChester chester = (EntityChester) entity;
-        topLid.setRotationPoint(0.0F, 0.0F, chester.isOpen() ? 10.0F : 0.0F);
-        topLid.rotateAngleX = chester.isOpen() ? -0.72F : 0.0F;
+        float sitY = 3.0F * sitProgress;
+        float sitZ = 1.5F * sitProgress;
+        float bodyTilt = -0.12F * sitProgress;
+        body.setRotationPoint(0.0F, sitY, sitZ);
+        body.rotateAngleX = bodyTilt;
+        topLid.setRotationPoint(0.0F, sitY, sitZ + (chester.isOpen() ? 10.0F : 0.0F));
+        topLid.rotateAngleX = bodyTilt + (chester.isOpen() ? -0.72F : 0.0F);
+        tongue.setRotationPoint(0.0F, sitY, sitZ);
+        tongue.rotateAngleX = bodyTilt;
         topLid.render(scale);
         tongue.render(scale);
         body.render(scale);
+    }
+
+    @Override
+    public void setLivingAnimations(
+            EntityLivingBase entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float partialTicks
+    ) {
+        sitProgress = ((EntityChester) entity).getSitAnimationProgress(partialTicks);
     }
 
     @Override
@@ -129,11 +152,19 @@ public class ModelChester extends ModelBase {
             Entity entity
     ) {
         super.setRotationAngles(limbSwing, limbSwingAmount, age, yaw, pitch, scale, entity);
-        leftFrontLeg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 0.07F * limbSwingAmount;
-        rightFrontLeg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI)
-                * 0.07F * limbSwingAmount;
-        rightBackLeg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 0.07F * limbSwingAmount;
-        leftBackLeg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI)
-                * 0.07F * limbSwingAmount;
+        float leftFrontWalk = MathHelper.cos(limbSwing * 0.6662F) * 0.65F * limbSwingAmount;
+        float rightFrontWalk = MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI)
+                * 0.65F * limbSwingAmount;
+        float rightBackWalk = MathHelper.cos(limbSwing * 0.6662F) * 0.65F * limbSwingAmount;
+        float leftBackWalk = MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI)
+                * 0.65F * limbSwingAmount;
+        leftFrontLeg.rotateAngleX = blend(leftFrontWalk, -0.9F, sitProgress);
+        rightFrontLeg.rotateAngleX = blend(rightFrontWalk, -0.9F, sitProgress);
+        rightBackLeg.rotateAngleX = blend(rightBackWalk, 1.25F, sitProgress);
+        leftBackLeg.rotateAngleX = blend(leftBackWalk, 1.25F, sitProgress);
+    }
+
+    private static float blend(float from, float to, float amount) {
+        return from + (to - from) * amount;
     }
 }

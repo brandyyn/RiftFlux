@@ -117,7 +117,18 @@ extends LGItem {
 
     public void addRecipes() {
         for (NucleusType type : NucleusType.values()) {
-            GameRegistry.addShapelessRecipe((ItemStack)new ItemStack((Item)this, 1, type.ordinal()), (Object[])new Object[]{LegendGear2.abstractionGel, type.ingredient});
+            if (type == NucleusType.LIGHTNING) {
+                GameRegistry.addShapelessRecipe(
+                        (ItemStack)new ItemStack((Item)this, 1, type.ordinal()),
+                        (Object[])new Object[]{
+                                LegendGear2.abstractionGel,
+                                type.ingredient,
+                                new ItemStack((Item)this, 1, NucleusType.SKY.ordinal())
+                        }
+                );
+            } else {
+                GameRegistry.addShapelessRecipe((ItemStack)new ItemStack((Item)this, 1, type.ordinal()), (Object[])new Object[]{LegendGear2.abstractionGel, type.ingredient});
+            }
             GameRegistry.addShapelessRecipe((ItemStack)new ItemStack((Item)this, 1, type.ordinal() + 1000), (Object[])new Object[]{Items.diamond, new ItemStack((Item)this, 1, type.ordinal())});
         }
     }
@@ -176,4 +187,3 @@ extends LGItem {
         }
     }
 }
-

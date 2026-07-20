@@ -20,9 +20,9 @@ public class BackpackConfigHelper {
             "You can also use 'ore:Name' to match an ore dictionary entry.";
 
     public static final String[] NON_NESTABLE_BACKPACK_BLACKLIST = new String[] {
-            "satchels:satchel",
-            "satchels:pouch",
-            "satchels:pouch_upgrade",
+            "riftflux:satchel",
+            "riftflux:pouch",
+            "riftflux:pouch_upgrade",
             "riftflux:backpack"
     };
 

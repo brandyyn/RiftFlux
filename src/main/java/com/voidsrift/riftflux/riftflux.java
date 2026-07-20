@@ -18,6 +18,7 @@ import com.voidsrift.riftflux.specialarmor.SpecialArmorContent;
 import com.voidsrift.riftflux.asgardshield.AsgardShieldContent;
 import com.voidsrift.riftflux.soulhearts.SoulHeartsContent;
 import com.voidsrift.riftflux.heartcrystal.HeartCrystalContent;
+import com.voidsrift.riftflux.hotsprings.HotSpringsContent;
 import com.voidsrift.riftflux.armoroverlay.ArmorOverlayContent;
 import com.voidsrift.riftflux.axolotl.AxolotlContent;
 import com.voidsrift.riftflux.levelup.LevelUpContent;
@@ -41,6 +42,7 @@ import com.voidsrift.riftflux.wam.WAMContent;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
 import de.rinonline.korinrpg.Springmain;
+import de.sanandrew.mods.claysoldiers.util.ClaySoldiersMod;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -79,6 +81,7 @@ public class riftflux {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        ClaySoldiersMod.preInit(event);
         vortexContent.preInit(event);
         com.voidsrift.riftflux.placeditem.PlacedItemContent.init();
         PlaceableGunpowderContent.preInit();
@@ -99,6 +102,7 @@ public class riftflux {
         AxolotlContent.preInit(event);
         DucklingContent.preInit(event);
         TerrariaContent.preInit(event);
+        HotSpringsContent.preInit(event);
         WheatfieldContent.preInit(event);
         WAMContent.preInit(event);
         OffLawnContent.preInit(event);
@@ -119,6 +123,7 @@ public class riftflux {
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
+        ClaySoldiersMod.init(event);
         com.voidsrift.riftflux.net.RFNetwork.init();
         if (Loader.isModLoaded("Waila")) {
             RiftFluxWailaCompat.register();
@@ -183,6 +188,7 @@ public class riftflux {
 
         proxy.initClientFeatures();
         TerrariaContent.init(event);
+        HotSpringsContent.init(event);
         WheatfieldContent.init(event);
         WAMContent.init(event);
         OffLawnContent.init(event);
@@ -204,6 +210,7 @@ public class riftflux {
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
+        ClaySoldiersMod.postInit(event);
         vortexContent.postInit(event);
         makamys.satchels.Satchels.postInit(event);
         Core.postInit(event);
@@ -612,7 +619,6 @@ public class riftflux {
 
         registerLevelUpLegacyAliases();
         registerLegendGearLegacyAliases();
-        registerSatchelsLegacyAliases();
         registerSpecialArmorLegacyAliases();
         registerPlaceableGunpowderLegacyAliases();
         registerGlowstoneDustLegacyAliases();
@@ -691,20 +697,6 @@ public class riftflux {
         }
         LegendGearAdditionsContent.registerLegacyAliases();
         LegendGearLegacyContent.registerLegacyAliases();
-    }
-
-    private static void registerSatchelsLegacyAliases() {
-        registerItemAliasVariants(SatchelsItems.satchel,
-                "satchels:satchel",
-                "satchels:satchelitem");
-        registerItemAliasVariants(SatchelsItems.pouch,
-                "satchels:pouch",
-                "satchels:pouchitem");
-        registerItemAliasVariants(SatchelsItems.pouch_upgrade,
-                "satchels:pouch_upgrade",
-                "satchels:pouchUpgrade",
-                "satchels:pouchupgrade",
-                "satchels:satchelupgrade");
     }
 
     private static void registerSpecialArmorLegacyAliases() {

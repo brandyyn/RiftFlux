@@ -1,12 +1,11 @@
 package com.voidsrift.riftflux.vortex.item;
 
 import com.voidsrift.riftflux.util.ConfigResolver;
+import com.voidsrift.riftflux.util.ConfiguredPotionEffectHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -16,7 +15,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.item.Item.ToolMaterial;
-import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.IIcon;
@@ -258,89 +256,8 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
    }
 
    private static List<PotionEffect> buildBoostEffects() {
-      String[] entries = com.voidsrift.riftflux.ModConfig.butterflyKnifeFlickBoostEffects;
-      if (entries == null || entries.length == 0) {
-         return Collections.emptyList();
-      }
-      List<PotionEffect> effects = new ArrayList<>();
-       for (String entry : entries) {
-          if (entry == null) continue;
-          String raw = entry.trim();
-          if (raw.isEmpty()) continue;
-          String[] parts = raw.split("\\s*,\\s*");
-          if (parts.length < 3) continue;
-          int potionId = parsePotionId(parts[0]);
-          if (potionId < 0 || potionId >= Potion.potionTypes.length || Potion.potionTypes[potionId] == null) {
-             continue;
-          }
-          int amp = parseIntSafe(parts[1], 0);
-          int durationTicks = parseDurationTicks(parts[2]);
-          if (durationTicks <= 0) continue;
-          effects.add(new PotionEffect(potionId, durationTicks, amp, true));
-       }
-       return effects;
-    }
-
-    private static int parsePotionId(String token) {
-       if (token == null) return -1;
-       String trimmed = token.trim();
-       if (trimmed.isEmpty()) return -1;
-       try {
-          return Integer.parseInt(trimmed);
-       } catch (NumberFormatException ignored) {
-       }
-       String normalized = trimmed.toLowerCase(Locale.ROOT);
-       if (normalized.startsWith("potion.")) {
-          normalized = normalized.substring("potion.".length());
-       }
-       if (normalized.equals("speed")) normalized = "movespeed";
-       if (normalized.equals("slowness")) normalized = "moveslowdown";
-       if (normalized.equals("haste")) normalized = "digspeed";
-       if (normalized.equals("miningfatigue")) normalized = "digslowdown";
-       if (normalized.equals("strength")) normalized = "damageboost";
-       if (normalized.equals("jump")) normalized = "jump";
-       if (normalized.equals("regen")) normalized = "regeneration";
-       for (Potion potion : Potion.potionTypes) {
-          if (potion == null) continue;
-          String name = potion.getName();
-          if (name == null) continue;
-          String simple = name.toLowerCase(Locale.ROOT);
-          if (simple.startsWith("potion.")) {
-             simple = simple.substring("potion.".length());
-          }
-          if (simple.equals(normalized)) {
-             return potion.id;
-          }
-       }
-       return -1;
-    }
- 
-    private static int parseDurationTicks(String token) {
-       if (token == null) return 0;
-       String trimmed = token.trim().toLowerCase(Locale.ROOT);
-      boolean seconds = trimmed.contains(".") || trimmed.endsWith("s");
-      if (trimmed.endsWith("s")) {
-         trimmed = trimmed.substring(0, trimmed.length() - 1);
-      }
-      float value;
-      try {
-         value = Float.parseFloat(trimmed);
-      } catch (NumberFormatException ignored) {
-         return 0;
-      }
-      if (seconds) {
-         return Math.max(1, Math.round(value * 20.0F));
-      }
-      return Math.max(1, (int) value);
-   }
-
-   private static int parseIntSafe(String token, int fallback) {
-      if (token == null) return fallback;
-      try {
-         return Integer.parseInt(token.trim());
-      } catch (NumberFormatException ignored) {
-         return fallback;
-      }
+      return ConfiguredPotionEffectHelper.parseEffects(
+              com.voidsrift.riftflux.ModConfig.butterflyKnifeFlickBoostEffects);
    }
 
    @Override

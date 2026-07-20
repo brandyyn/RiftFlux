@@ -31,7 +31,6 @@ import tk.nukeduck.hearts.HeartsConfig;
 public class TileEntityHeartLantern
 extends TileEntity {
     private static final int DEFAULT_AURA_DURATION_TICKS = 80;
-    private static final int MIN_AURA_DURATION_TICKS = 20;
     private static final int MIN_AURA_REFRESH_INTERVAL_TICKS = 10;
     private static final int MAX_AURA_REFRESH_INTERVAL_TICKS = 40;
     private static final int CHARGE_TICK_INTERVAL = 4;
@@ -40,6 +39,7 @@ extends TileEntity {
     private static final String AURA_EFFECTS_KEY = "AuraEffects";
     private static final String AURA_EFFECT_POTION_ID_KEY = "PotionId";
     private static final String AURA_EFFECT_AMPLIFIER_KEY = "Amplifier";
+    private static final String AURA_EFFECT_DURATION_KEY = "Duration";
     float chargeLevel;
     public static final String CHARGE_KEY = "ChargeLevel";
     private final List<HeartsConfig.LanternAuraEffect> infusedAuraEffects = new ArrayList<HeartsConfig.LanternAuraEffect>();
@@ -85,7 +85,10 @@ extends TileEntity {
             if (potionId < 0 || potionId >= Potion.potionTypes.length || Potion.potionTypes[potionId] == null) {
                 continue;
             }
-            this.mergeInfusedAuraEffect(new HeartsConfig.LanternAuraEffect(potionId, amplifier));
+            int durationTicks = effectTag.hasKey(AURA_EFFECT_DURATION_KEY, 3)
+                    ? Math.max(1, effectTag.getInteger(AURA_EFFECT_DURATION_KEY))
+                    : DEFAULT_AURA_DURATION_TICKS;
+            this.mergeInfusedAuraEffect(new HeartsConfig.LanternAuraEffect(potionId, amplifier, durationTicks));
         }
     }
 
@@ -101,6 +104,7 @@ extends TileEntity {
             NBTTagCompound effectTag = new NBTTagCompound();
             effectTag.setInteger(AURA_EFFECT_POTION_ID_KEY, effect.getPotionId());
             effectTag.setInteger(AURA_EFFECT_AMPLIFIER_KEY, effect.getAmplifier());
+            effectTag.setInteger(AURA_EFFECT_DURATION_KEY, effect.getDurationTicks());
             effectList.appendTag(effectTag);
         }
         compound.setTag(AURA_EFFECTS_KEY, effectList);
@@ -155,8 +159,6 @@ extends TileEntity {
     }
 
     private void applyLanternEffects(EntityPlayer player, List<HeartsConfig.LanternAuraEffect> effects) {
-        int auraDurationTicks = this.getAuraDurationTicks();
-        int minRemainingTicks = this.getAuraMinRemainingTicks(auraDurationTicks);
         for (HeartsConfig.LanternAuraEffect effectDef : effects) {
             if (effectDef == null) {
                 continue;
@@ -169,6 +171,8 @@ extends TileEntity {
             if (potion == null) {
                 continue;
             }
+            int auraDurationTicks = effectDef.getDurationTicks();
+            int minRemainingTicks = this.getAuraMinRemainingTicks(auraDurationTicks);
             PotionEffect active = player.getActivePotionEffect(potion);
             if (active != null && active.getAmplifier() == effectDef.getAmplifier() && active.getDuration() > minRemainingTicks) {
                 continue;
@@ -200,13 +204,20 @@ extends TileEntity {
         return true;
     }
 
-    private int getAuraDurationTicks() {
-        return Math.max(MIN_AURA_DURATION_TICKS, this.getAuraDurationSeconds() * 20);
-    }
-
     private int getAuraRefreshIntervalTicks() {
-        int auraDurationTicks = this.getAuraDurationTicks();
-        return Math.max(MIN_AURA_REFRESH_INTERVAL_TICKS, Math.min(MAX_AURA_REFRESH_INTERVAL_TICKS, auraDurationTicks / 2));
+        int shortestDurationTicks = Integer.MAX_VALUE;
+        for (HeartsConfig.LanternAuraEffect effect : this.getAuraEffects()) {
+            if (effect != null) {
+                shortestDurationTicks = Math.min(shortestDurationTicks, effect.getDurationTicks());
+            }
+        }
+        if (shortestDurationTicks == Integer.MAX_VALUE) {
+            shortestDurationTicks = DEFAULT_AURA_DURATION_TICKS;
+        }
+        return Math.max(
+                MIN_AURA_REFRESH_INTERVAL_TICKS,
+                Math.min(MAX_AURA_REFRESH_INTERVAL_TICKS, shortestDurationTicks / 2)
+        );
     }
 
     private int getAuraMinRemainingTicks(int auraDurationTicks) {
@@ -225,14 +236,6 @@ extends TileEntity {
     protected float getAuraRadius() {
         HeartsConfig config = this.getLanternConfig();
         return config != null ? config.getHeartLanternAuraRadius() : 0.0f;
-    }
-
-    protected int getAuraDurationSeconds() {
-        HeartsConfig config = this.getLanternConfig();
-        if (config == null) {
-            return DEFAULT_AURA_DURATION_TICKS / 20;
-        }
-        return config.getHeartLanternAuraDurationSeconds();
     }
 
     protected HeartsConfig getLanternConfig() {
@@ -267,8 +270,14 @@ extends TileEntity {
                 continue;
             }
             HeartsConfig.LanternAuraEffect existing = merged.get(effect.getPotionId());
-            if (existing != null && existing.getAmplifier() >= effect.getAmplifier()) {
-                continue;
+            if (existing != null) {
+                if (existing.getAmplifier() > effect.getAmplifier()) {
+                    continue;
+                }
+                if (existing.getAmplifier() == effect.getAmplifier()
+                        && existing.getDurationTicks() >= effect.getDurationTicks()) {
+                    continue;
+                }
             }
             merged.put(effect.getPotionId(), effect);
         }
@@ -297,7 +306,11 @@ extends TileEntity {
             if (potion == null || potion.isInstant()) {
                 continue;
             }
-            extracted.add(new HeartsConfig.LanternAuraEffect(potionId, Math.max(0, effect.getAmplifier())));
+            extracted.add(new HeartsConfig.LanternAuraEffect(
+                    potionId,
+                    Math.max(0, effect.getAmplifier()),
+                    Math.max(1, effect.getDuration())
+            ));
         }
         if (extracted.isEmpty()) {
             return Collections.emptyList();
@@ -315,7 +328,9 @@ extends TileEntity {
             if (existing == null || existing.getPotionId() != potionId) {
                 continue;
             }
-            if (existing.getAmplifier() >= effect.getAmplifier()) {
+            if (existing.getAmplifier() > effect.getAmplifier()
+                    || (existing.getAmplifier() == effect.getAmplifier()
+                    && existing.getDurationTicks() >= effect.getDurationTicks())) {
                 return false;
             }
             this.infusedAuraEffects.set(i, effect);

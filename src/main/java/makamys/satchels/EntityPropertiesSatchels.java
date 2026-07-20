@@ -32,6 +32,7 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
     private static final int SLOT_SATCHEL = 0;
     private static final int SLOT_LEFT_POUCH = 1;
     private static final int SLOT_RIGHT_POUCH = 2;
+    private boolean chesterContentsDirty = true;
     
     public static final Predicate<ItemStack> satchelsSlotPredicate =
             (stack) -> ConfigSatchels.backpackHelper == null || ConfigSatchels.backpackHelper.isAllowed(stack);
@@ -43,9 +44,12 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
         };
     };
     
-    public InventorySimple satchel = new InventorySimple(SATCHEL_MAX_SLOTS, "container.satchel");
-    public InventorySimple leftPouch = new InventorySimple(POUCH_MAX_SLOTS, "container.leftPouch");
-    public InventorySimple rightPouch = new InventorySimple(POUCH_MAX_SLOTS, "container.rightPouch");
+    public InventorySimpleNotifying satchel =
+            new InventorySimpleNotifying(SATCHEL_MAX_SLOTS, null, this::markChesterContentsDirty);
+    public InventorySimpleNotifying leftPouch =
+            new InventorySimpleNotifying(POUCH_MAX_SLOTS, null, this::markChesterContentsDirty);
+    public InventorySimpleNotifying rightPouch =
+            new InventorySimpleNotifying(POUCH_MAX_SLOTS, null, this::markChesterContentsDirty);
     public InventoryAggregate aggregate = new InventoryAggregate(satchel, leftPouch, rightPouch);
     
     public EntityPlayer player;
@@ -125,6 +129,7 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
     }
     
     public void updateInventories(ItemStack stack) {
+        markChesterContentsDirty();
         if(stack != null) {
             player.worldObj.playSoundEffect(player.posX, player.posY, player.posZ, "satchels:item.armor.equip_leather", 1f, 1f);
         }
@@ -249,6 +254,16 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
             }
         }
         return Ints.toArray(slots);
+    }
+
+    public void markChesterContentsDirty() {
+        chesterContentsDirty = true;
+    }
+
+    public boolean consumeChesterContentsDirty() {
+        boolean dirty = chesterContentsDirty;
+        chesterContentsDirty = false;
+        return dirty;
     }
 
     private void mergeIntoExistingStacks(int[] slots, ItemStack stack) {

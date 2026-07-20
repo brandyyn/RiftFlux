@@ -459,6 +459,9 @@ private static Object newInstance(String className) {
     // -----------------------------
 
     private static boolean isClaySoldiersPresent() {
+        if (!com.voidsrift.riftflux.ModConfig.enableClaySoldiersModule) {
+            return false;
+        }
         try {
             Class.forName("de.sanandrew.mods.claysoldiers.util.RegistryItems");
             return true;

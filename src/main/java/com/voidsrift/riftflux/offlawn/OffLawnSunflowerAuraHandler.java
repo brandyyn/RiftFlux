@@ -1,16 +1,15 @@
 package com.voidsrift.riftflux.offlawn;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.ConfiguredPotionEffectHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 public final class OffLawnSunflowerAuraHandler {
     private static final int MIN_REFRESH_TICKS = 10;
@@ -24,9 +23,9 @@ public final class OffLawnSunflowerAuraHandler {
                 ? ModConfig.offLawnBrightSunflowerAuraEnabled
                 : ModConfig.offLawnSunflowerAuraEnabled;
         if (auraEnabled && hasEntries(effects)) {
-            shortestDuration = (bright
-                    ? ModConfig.offLawnBrightSunflowerAuraDurationSeconds
-                    : ModConfig.offLawnSunflowerAuraDurationSeconds) * 20;
+            for (PotionEffect effect : ConfiguredPotionEffectHelper.parseEffects(effects)) {
+                shortestDuration = Math.min(shortestDuration, effect.getDuration());
+            }
         }
         if (bright && ModConfig.offLawnBrightSunflowerSpeedBoostEnabled
                 && ModConfig.offLawnBrightSunflowerSpeedBoostPercent > 0.0F) {
@@ -50,14 +49,11 @@ public final class OffLawnSunflowerAuraHandler {
         float auraRadius = bright
                 ? ModConfig.offLawnBrightSunflowerAuraRadius
                 : ModConfig.offLawnSunflowerAuraRadius;
-        int auraDuration = (bright
-                ? ModConfig.offLawnBrightSunflowerAuraDurationSeconds
-                : ModConfig.offLawnSunflowerAuraDurationSeconds) * 20;
-        List<AuraEffect> effects = auraEnabled
-                ? parseEffects(bright
+        List<PotionEffect> effects = auraEnabled
+                ? ConfiguredPotionEffectHelper.parseEffects(bright
                         ? ModConfig.offLawnBrightSunflowerAuraEffects
                         : ModConfig.offLawnSunflowerAuraEffects)
-                : Collections.<AuraEffect>emptyList();
+                : Collections.<PotionEffect>emptyList();
 
         boolean speedEnabled = bright
                 && ModConfig.offLawnBrightSunflowerSpeedBoostEnabled
@@ -87,7 +83,7 @@ public final class OffLawnSunflowerAuraHandler {
             double dz = player.posZ - centerZ;
             double distanceSq = dx * dx + dy * dy + dz * dz;
             if (!effects.isEmpty() && distanceSq <= auraRadiusSq) {
-                applyPotionEffects(player, effects, auraDuration);
+                applyPotionEffects(player, effects);
             }
             if (speedEnabled && distanceSq <= speedRadiusSq) {
                 refreshHappyEffect(player, ModConfig.offLawnBrightSunflowerSpeedBoostDurationSeconds * 20);
@@ -108,83 +104,21 @@ public final class OffLawnSunflowerAuraHandler {
         player.addPotionEffect(new PotionEffect(happy.id, safeDuration, 0, true));
     }
 
-    private static void applyPotionEffects(EntityPlayer player, List<AuraEffect> effects, int durationTicks) {
-        int safeDuration = Math.max(20, durationTicks);
-        for (AuraEffect effect : effects) {
-            Potion potion = Potion.potionTypes[effect.potionId];
+    private static void applyPotionEffects(EntityPlayer player, List<PotionEffect> effects) {
+        for (PotionEffect effect : effects) {
+            int safeDuration = Math.max(1, effect.getDuration());
+            Potion potion = Potion.potionTypes[effect.getPotionID()];
             PotionEffect active = player.getActivePotionEffect(potion);
-            if (active != null && active.getAmplifier() == effect.amplifier
+            if (active != null && active.getAmplifier() == effect.getAmplifier()
                     && active.getDuration() > Math.min(safeDuration - 1, MAX_REFRESH_TICKS)) {
                 continue;
             }
-            player.addPotionEffect(new PotionEffect(effect.potionId, safeDuration, effect.amplifier, true));
-        }
-    }
-
-    private static List<AuraEffect> parseEffects(String[] entries) {
-        if (!hasEntries(entries)) {
-            return Collections.emptyList();
-        }
-        List<AuraEffect> effects = new ArrayList<AuraEffect>();
-        for (String entry : entries) {
-            if (entry == null) {
-                continue;
-            }
-            String[] parts = entry.trim().split("\\s*,\\s*");
-            if (parts.length < 2) {
-                continue;
-            }
-            int potionId = parsePotionId(parts[0]);
-            int amplifier = parseInt(parts[1], 0);
-            if (potionId >= 0 && potionId < Potion.potionTypes.length
-                    && Potion.potionTypes[potionId] != null) {
-                effects.add(new AuraEffect(potionId, Math.max(0, amplifier)));
-            }
-        }
-        return effects;
-    }
-
-    private static int parsePotionId(String token) {
-        if (token == null) {
-            return -1;
-        }
-        String value = token.trim();
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException ignored) {
-        }
-        String normalized = value.toLowerCase(Locale.ROOT);
-        if (normalized.startsWith("potion.")) {
-            normalized = normalized.substring("potion.".length());
-        }
-        if ("speed".equals(normalized)) normalized = "movespeed";
-        if ("slowness".equals(normalized)) normalized = "moveslowdown";
-        if ("haste".equals(normalized)) normalized = "digspeed";
-        if ("miningfatigue".equals(normalized)) normalized = "digslowdown";
-        if ("strength".equals(normalized)) normalized = "damageboost";
-        if ("regen".equals(normalized)) normalized = "regeneration";
-        if ("manaregen".equals(normalized)) normalized = "legendgearmanaregen";
-
-        for (Potion potion : Potion.potionTypes) {
-            if (potion == null || potion.getName() == null) {
-                continue;
-            }
-            String name = potion.getName().toLowerCase(Locale.ROOT);
-            if (name.startsWith("potion.")) {
-                name = name.substring("potion.".length());
-            }
-            if (name.equals(normalized)) {
-                return potion.id;
-            }
-        }
-        return -1;
-    }
-
-    private static int parseInt(String value, int fallback) {
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (RuntimeException ignored) {
-            return fallback;
+            player.addPotionEffect(new PotionEffect(
+                    effect.getPotionID(),
+                    safeDuration,
+                    effect.getAmplifier(),
+                    true
+            ));
         }
     }
 
@@ -198,15 +132,5 @@ public final class OffLawnSunflowerAuraHandler {
             }
         }
         return false;
-    }
-
-    private static final class AuraEffect {
-        private final int potionId;
-        private final int amplifier;
-
-        private AuraEffect(int potionId, int amplifier) {
-            this.potionId = potionId;
-            this.amplifier = amplifier;
-        }
     }
 }

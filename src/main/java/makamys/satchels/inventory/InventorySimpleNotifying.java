@@ -8,10 +8,16 @@ import net.minecraft.item.ItemStack;
 public class InventorySimpleNotifying extends InventorySimple {
 
     public Consumer<ItemStack> callback;
+    public Runnable dirtyCallback;
     
     public InventorySimpleNotifying(int size, Consumer<ItemStack> callback) {
+        this(size, callback, null);
+    }
+
+    public InventorySimpleNotifying(int size, Consumer<ItemStack> callback, Runnable dirtyCallback) {
         super(size);
         this.callback = callback;
+        this.dirtyCallback = dirtyCallback;
     }
     
     @Override
@@ -26,4 +32,11 @@ public class InventorySimpleNotifying extends InventorySimple {
         }
     };
 
+    @Override
+    public void markDirty() {
+        super.markDirty();
+        if (dirtyCallback != null) {
+            dirtyCallback.run();
+        }
+    }
 }

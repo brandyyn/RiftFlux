@@ -11,11 +11,14 @@
  */
 package net.nmccoy.legendgear;
 
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.util.ConfigResolver;
 import cpw.mods.fml.common.IWorldGenerator;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.nmccoy.legendgear.LegendGear2;
@@ -57,7 +60,7 @@ implements IWorldGenerator {
             int x = coreX;
             for (y = coreY - h; y <= coreY + h; ++y) {
                 for (int z = coreZ - r; z <= coreZ + r; ++z) {
-                    if (!(random.nextFloat() < 0.5f) || world.getBlock(x, y, z) != Blocks.stone || !world.isAirBlock(x + airDirection.offsetX, y, z)) continue;
+                    if (!(random.nextFloat() < 0.5f) || world.getBlock(x, y, z) != Blocks.stone || !world.isAirBlock(x + airDirection.offsetX, y, z) || !isBiomeAllowed(world, x, z)) continue;
                     world.setBlock(x, y, z, (Block)azurineOre);
                     world.setBlock(x + airDirection.offsetX, y, z, azurineCrystal);
                 }
@@ -67,7 +70,7 @@ implements IWorldGenerator {
             int z = coreZ;
             for (y = coreY - h; y <= coreY + h; ++y) {
                 for (int x = coreX - r; x <= coreX + r; ++x) {
-                    if (!(random.nextFloat() < 0.5f) || world.getBlock(x, y, z) != Blocks.stone || !world.isAirBlock(x, y, z + airDirection.offsetZ)) continue;
+                    if (!(random.nextFloat() < 0.5f) || world.getBlock(x, y, z) != Blocks.stone || !world.isAirBlock(x, y, z + airDirection.offsetZ) || !isBiomeAllowed(world, x, z)) continue;
                     world.setBlock(x, y, z, (Block)azurineOre);
                     world.setBlock(x, y, z + airDirection.offsetZ, azurineCrystal);
                 }
@@ -111,5 +114,25 @@ implements IWorldGenerator {
             }
         }
     }
-}
 
+    private static boolean isBiomeAllowed(World world, int x, int z) {
+        BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+        if (matchesAnyBiome(biome, ModConfig.legendGearAzuriteBiomeBlacklist)) {
+            return false;
+        }
+        String[] whitelist = ModConfig.legendGearAzuriteBiomeWhitelist;
+        return whitelist == null || whitelist.length == 0 || matchesAnyBiome(biome, whitelist);
+    }
+
+    private static boolean matchesAnyBiome(BiomeGenBase biome, String[] entries) {
+        if (biome == null || entries == null) {
+            return false;
+        }
+        for (String entry : entries) {
+            if (ConfigResolver.matchesBiomeEntry(biome, entry)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

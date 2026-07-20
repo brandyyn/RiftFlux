@@ -5,14 +5,18 @@ import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.chester.client.ModelChester;
 import com.voidsrift.riftflux.chester.client.RenderChester;
+import baubles.api.expanded.BaubleExpandedSlots;
 import cpw.mods.fml.client.registry.RenderingRegistry;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraftforge.common.MinecraftForge;
 
 public final class ChesterContent {
     public static final String MODID = "chester";
     public static final int GUI_ID = 13000;
+    public static final String BAUBLE_TYPE = "chester_staff";
 
     public static Item eyeBone;
     public static Item chesterSpawnEgg;
@@ -35,6 +39,11 @@ public final class ChesterContent {
         preInited = true;
         if (!isEnabled()) {
             return;
+        }
+
+        if (ModConfig.enableChesterBaubleSlot) {
+            BaubleExpandedSlots.tryRegisterType(BAUBLE_TYPE);
+            BaubleExpandedSlots.tryAssignSlotsUpToMinimum(BAUBLE_TYPE, 1);
         }
 
         eyeBone = new ItemEyeBone()
@@ -63,6 +72,9 @@ public final class ChesterContent {
         if (!isEnabled()) {
             return;
         }
+        ChesterEvents events = new ChesterEvents();
+        FMLCommonHandler.instance().bus().register(events);
+        MinecraftForge.EVENT_BUS.register(events);
     }
 
     public static void initClient() {

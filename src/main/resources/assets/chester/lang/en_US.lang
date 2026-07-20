@@ -1,3 +1,5 @@
 item.eyebone.name=Eyebone
 container.chester=Chester
 container.shadow_chester=Shadow Chester
+slot.chester_staff=Chester Staff
+tooltip.chester.bound=Bound to: %s

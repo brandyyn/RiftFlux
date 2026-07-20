@@ -19,15 +19,6 @@ extends TileEntityHeartLantern {
     }
 
     @Override
-    protected int getAuraDurationSeconds() {
-        HeartsConfig config = this.getLanternConfig();
-        if (config == null) {
-            return 4;
-        }
-        return config.getStarLanternAuraDurationSeconds();
-    }
-
-    @Override
     protected List<HeartsConfig.LanternAuraEffect> getBaseAuraEffects() {
         HeartsConfig config = this.getLanternConfig();
         if (config == null) {

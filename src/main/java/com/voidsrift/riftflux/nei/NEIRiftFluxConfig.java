@@ -6,7 +6,6 @@ import codechicken.nei.api.IRecipeFilter;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.IRecipeHandler;
 import codechicken.nei.NEIClientConfig;
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Optional;
 import cpw.mods.fml.common.FMLLog;
 
@@ -83,7 +82,7 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
 
     private static Item resolveClaymanDollItem() {
         try {
-            Item it = cpw.mods.fml.common.registry.GameRegistry.findItem("claysoldiers", "clayman_doll");
+            Item it = cpw.mods.fml.common.registry.GameRegistry.findItem("riftflux", "clayman_doll");
             if (it != null) return it;
         } catch (Throwable ignored) {}
 
@@ -97,7 +96,7 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
     @Override
     @Optional.Method(modid = "NotEnoughItems")
     public void loadConfig() {
-        if (Loader.isModLoaded("claysoldiers")) {
+        if (com.voidsrift.riftflux.ModConfig.enableClaySoldiersModule) {
             try {
                 ClaySoldiersRecipeHandler handler = new ClaySoldiersRecipeHandler();
                 API.registerRecipeHandler(handler);

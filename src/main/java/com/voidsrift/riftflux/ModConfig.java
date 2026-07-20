@@ -21,6 +21,7 @@ public class ModConfig {
     private static final String PALARIA_CATEGORY = "palaria";
     private static final String MOB_SPAWNING_CATEGORY = "mobspawning";
     private static final String POST_PROCESSING_CATEGORY = "post processing";
+    private static final String CLAY_SOLDIERS_CATEGORY = "claysoldiers";
     private static final String[] DEFAULT_MOB_SPAWN_WHITELIST = new String[]{
             "riftflux.DemonEye|300|1-3|0",
             "riftflux.Cyclops|77|1|0",
@@ -493,6 +494,20 @@ public class ModConfig {
     public static int wheatfieldPumpkinChunkChance;
     public static int wheatfieldBarleyFistDropChancePercent;
     public static boolean wheatfieldBarleyOnlyDropsWhenSheared;
+
+    // Biomes O' Plenty 1.6.4 Hot Springs port
+    public static boolean enableHotSpringsModule;
+    public static int hotSpringsBiomeId;
+    public static int hotSpringsBiomeWeight;
+    public static boolean hotSpringsAllowVillages;
+    public static String[] hotSpringsPotionEffects;
+    public static int hotSpringsSpringLakesPerChunk;
+    public static int hotSpringsLavaLakesPerChunk;
+    public static int hotSpringsLakeRarity;
+    public static String[] hotSpringsLakeBiomeWhitelist;
+    public static String[] hotSpringsLakeBiomeBlacklist;
+    public static int[] hotSpringsLakeDimensionWhitelist;
+    public static int[] hotSpringsLakeDimensionBlacklist;
     public static boolean configurableWaterLakeYLevels;
     public static int waterLakeMinY;
     public static int waterLakeMaxY;
@@ -538,11 +553,9 @@ public class ModConfig {
     public static int offLawnBeanstalkMaxGrowthLevel;
     public static boolean offLawnSunflowerAuraEnabled;
     public static float offLawnSunflowerAuraRadius;
-    public static int offLawnSunflowerAuraDurationSeconds;
     public static String[] offLawnSunflowerAuraEffects;
     public static boolean offLawnBrightSunflowerAuraEnabled;
     public static float offLawnBrightSunflowerAuraRadius;
-    public static int offLawnBrightSunflowerAuraDurationSeconds;
     public static String[] offLawnBrightSunflowerAuraEffects;
     public static boolean offLawnBrightSunflowerSpeedBoostEnabled;
     public static float offLawnBrightSunflowerSpeedBoostPercent;
@@ -953,6 +966,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     // Chester module
     public static boolean enableChesterModule;
+    public static boolean enableChesterBaubleSlot;
+    public static float chesterTeleportDistance;
     public static String chesterInventoryColor;
     public static String shadowChesterInventoryColor;
 
@@ -1018,6 +1033,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int legendGearLegacyMysticShrubRarity;
     public static String[] legendGearLegacyMysticShrubBiomeWhitelist;
     public static String[] legendGearLegacyMysticShrubBiomeBlacklist;
+    public static String[] legendGearAzuriteBiomeWhitelist;
+    public static String[] legendGearAzuriteBiomeBlacklist;
     public static int[] legendGearLegacyMysticShrubDimensionWhitelist;
     public static int[] legendGearLegacyBombFlowerDimensionWhitelist;
     public static int legendGearLegacyQuiverMaxCapacity;
@@ -1154,11 +1171,9 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean heartCrystalOldModel;
     public static float heartCrystalHeartPetDropChance;
     public static boolean heartLanternAuraEnabled;
-    public static int heartLanternAuraDurationSeconds;
     public static float heartLanternAuraRadius;
     public static String[] heartLanternAuraEffects;
     public static boolean starLanternAuraEnabled;
-    public static int starLanternAuraDurationSeconds;
     public static float starLanternAuraRadius;
     public static String[] starLanternAuraEffects;
 
@@ -1294,6 +1309,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static double bonemealFlowerChance;
 
     public static boolean allowPlantsOnAnyBlock;
+    public static boolean allowPumpkinsOnAnyBlock;
     public static boolean allowSugarcaneOnAnyBlock;
     public static boolean allowSugarcaneInWater;
     public static boolean sugarcaneGeneratesOnRiverFloors;
@@ -1412,6 +1428,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean randomizeEnchantedGlintColors;
     public static boolean GluttonyCharm;
     public static int highlanderPotionEffectId;
+    public static boolean enableClaySoldiersModule;
+    public static boolean claySoldiersUseOldHurtSound;
+    public static float claySoldiersBaseHealth;
+    public static float claySoldiersBaseDamage;
+    public static double claySoldiersStatItemRange;
+    public static int claySoldiersClayHutSpawnChance;
+    public static int claySoldiersClayHutZombieChance;
 
     public static void init(File file){
         config = new Configuration(file);
@@ -1433,6 +1456,59 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     }
 
     public static void syncConfig(){
+        enableClaySoldiersModule = config.getBoolean(
+                "enableClaySoldiersModule",
+                CLAY_SOLDIERS_CATEGORY,
+                true,
+                "Enables RiftFlux's native Clay Soldiers module. Requires restart."
+        );
+        claySoldiersUseOldHurtSound = config.getBoolean(
+                "Use old hurt sound",
+                CLAY_SOLDIERS_CATEGORY,
+                true,
+                "Should soldiers use the old hurt sound?"
+        );
+        claySoldiersBaseHealth = config.getFloat(
+                "Soldier Base Health",
+                CLAY_SOLDIERS_CATEGORY,
+                20.0F,
+                1.0F,
+                40.0F,
+                "A soldier's base health."
+        );
+        claySoldiersBaseDamage = config.getFloat(
+                "Soldier Base Damage",
+                CLAY_SOLDIERS_CATEGORY,
+                1.0F,
+                1.0F,
+                40.0F,
+                "A soldier's unarmed/base damage."
+        );
+        claySoldiersStatItemRange = config.getFloat(
+                "Stat Item Range",
+                CLAY_SOLDIERS_CATEGORY,
+                48.0F,
+                1.0F,
+                256.0F,
+                "Maximum range used by the Clay Soldiers stat display."
+        );
+        claySoldiersClayHutSpawnChance = config.getInt(
+                "Clay-Hut Spawn Chance",
+                CLAY_SOLDIERS_CATEGORY,
+                0,
+                0,
+                Integer.MAX_VALUE,
+                "Clay hut rarity denominator. Higher values are rarer; 0 disables clay huts."
+        );
+        claySoldiersClayHutZombieChance = config.getInt(
+                "Clay-Hut Zombie Chance",
+                CLAY_SOLDIERS_CATEGORY,
+                0,
+                0,
+                Integer.MAX_VALUE,
+                "Zombie-infested clay hut rarity denominator. Higher values are rarer; 0 disables infestation."
+        );
+
         enableChromatiCraftMixin = config.getBoolean("ChromatiCraftMixin","general",true,"Toggles the progression effects");
 
         DisableAether2Portal = config.getBoolean("MixinAetherPortal","general",true,"Disables Aether 2 Portal, used for Aether Legacy Departure");
@@ -4512,6 +4588,22 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             config.getCategory("legendgear").get("legacyMysticShrubBiomeBlacklist").set(legendGearLegacyMysticShrubBiomeBlacklist);
         }
 
+        legendGearAzuriteBiomeWhitelist = config.getStringList(
+                "azuriteBiomeWhitelist",
+                "legendgear",
+                new String[]{"Hot Springs"},
+                "Biomes where Azurite Ore may generate. Default: Hot Springs. Leave empty to allow every Overworld biome unless blacklisted.\n" +
+                        "Entries may be biome IDs, exact biome names, name:<name>, or biome dictionary types such as type:HILLS.\n" +
+                        "The biome blacklist always takes precedence."
+        );
+
+        legendGearAzuriteBiomeBlacklist = config.getStringList(
+                "azuriteBiomeBlacklist",
+                "legendgear",
+                new String[0],
+                "Biomes where Azurite Ore must never generate. Uses the same entry format as azuriteBiomeWhitelist and always takes precedence."
+        );
+
         legendGearLegacyMysticShrubDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
                 "legacyMysticShrubDimensionWhitelist",
                 "legendgear",
@@ -4588,8 +4680,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "legendgear",
                 new String[0],
                 "Potion effects Fortune Cookies can apply at random when eaten.\n" +
-                        "Format per entry: potionNameOrId,level,durationSeconds (or durationTicks).\n" +
-                        "Examples: speed,2,30  or  regeneration,1,10s.\n" +
+                        "Format per entry: potionNameOrId,level,durationSeconds.\n" +
+                        "Examples: speed,2,30  or  regeneration,1,10.\n" +
                         "Leave empty to keep Fortune Cookies as chat-only."
         );
 
@@ -4597,12 +4689,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "sweetSnackPotionEffects",
                 "legendgear",
                 new String[]{
-                        "legendgearManaRegen,2,20s",
-                        "speed,3,20s"
+                        "legendgearManaRegen,2,20",
+                        "speed,3,20"
                 },
                 "Potion effects Star Candy and Poptarts can apply at random when eaten.\n" +
-                        "Format per entry: potionNameOrId,level,durationSeconds (or durationTicks).\n" +
-                        "Examples: legendgearManaRegen,2,20s  or  speed,3,20s.\n" +
+                        "Format per entry: potionNameOrId,level,durationSeconds.\n" +
+                        "Examples: legendgearManaRegen,2,20  or  speed,3,20.\n" +
                         "Leave empty to disable random potion effects from those snacks."
         );
 
@@ -5571,15 +5663,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, heart lanterns apply configurable potion effects to players inside the configured radius."
         );
 
-        heartLanternAuraDurationSeconds = config.getInt(
-                "HeartLanternAuraDurationSeconds",
-                "heartcrystal",
-                4,
-                1,
-                60,
-                "How long heart lantern aura potion effects last, in seconds."
-        );
-
         heartLanternAuraRadius = config.getFloat(
                 "HeartLanternAuraRadius",
                 "heartcrystal",
@@ -5592,10 +5675,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         heartLanternAuraEffects = config.getStringList(
                 "HeartLanternAuraEffects",
                 "heartcrystal",
-                new String[]{"regeneration,1"},
+                new String[]{"regeneration,2,4"},
                 "Potion effects applied by heart lanterns.\n" +
-                        "Format per entry: potionNameOrId,amplifier\n" +
-                        "Examples: regeneration,0  or  moveSpeed,1"
+                        "Format per entry: potionNameOrId,level,durationSeconds\n" +
+                        "Examples: regeneration,2,4  or  moveSpeed,1,10"
         );
 
         starLanternAuraEnabled = config.getBoolean(
@@ -5603,15 +5686,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "heartcrystal",
                 true,
                 "If true, star lanterns apply configurable potion effects to players inside the configured radius."
-        );
-
-        starLanternAuraDurationSeconds = config.getInt(
-                "StarLanternAuraDurationSeconds",
-                "heartcrystal",
-                4,
-                1,
-                60,
-                "How long star lantern aura potion effects last, in seconds."
         );
 
         starLanternAuraRadius = config.getFloat(
@@ -5626,10 +5700,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         starLanternAuraEffects = config.getStringList(
                 "StarLanternAuraEffects",
                 "heartcrystal",
-                new String[]{"legendgearManaRegen,0"},
+                new String[]{"legendgearManaRegen,1,4"},
                 "Potion effects applied by star lanterns.\n" +
-                        "Format per entry: potionNameOrId,amplifier\n" +
-                        "Examples: legendgearManaRegen,0  or  moveSpeed,1"
+                        "Format per entry: potionNameOrId,level,durationSeconds\n" +
+                        "Examples: legendgearManaRegen,1,4  or  moveSpeed,1,10"
         );
 
         enableWheatfieldBiome = config.getBoolean(
@@ -5697,6 +5771,105 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 false,
                 "If true, barley only drops when harvested with shears."
         );
+
+        enableHotSpringsModule = config.getBoolean(
+                "EnableHotSpringsModule",
+                "hotsprings",
+                true,
+                "Master switch for the Biomes O' Plenty 1.6.4 Hot Springs biome, spring water, and bucket. Requires restart."
+        );
+
+        hotSpringsBiomeId = config.getInt(
+                "BiomeId",
+                "hotsprings",
+                193,
+                0,
+                255,
+                "Preferred biome ID for Hot Springs. RiftFlux will fall back to a free ID if this slot is occupied."
+        );
+
+        hotSpringsBiomeWeight = config.getInt(
+                "BiomeWeight",
+                "hotsprings",
+                4,
+                0,
+                1000,
+                "Generation weight for Hot Springs in the cool biome list. Set to 0 to stop natural generation without disabling the biome."
+        );
+
+        hotSpringsAllowVillages = config.getBoolean(
+                "AllowVillages",
+                "hotsprings",
+                false,
+                "If true, villages may generate in the Hot Springs biome."
+        );
+
+        hotSpringsPotionEffects = config.getStringList(
+                "PotionEffects",
+                "hotsprings",
+                new String[]{"regeneration,3,3"},
+                "Potion effects applied to living entities in spring water.\n" +
+                        "Format per entry: potionNameOrId,level,durationSeconds\n" +
+                        "Example: regeneration,3,3. Leave empty to disable spring-water effects."
+        );
+
+        hotSpringsSpringLakesPerChunk = config.getInt(
+                "SpringLakesPerChunk",
+                "hotsprings",
+                32,
+                0,
+                32,
+                "Spring-water lake attempts per Hot Springs chunk."
+        );
+
+        hotSpringsLavaLakesPerChunk = config.getInt(
+                "LavaLakesPerChunk",
+                "hotsprings",
+                8,
+                0,
+                32,
+                "Underground lava-lake attempts per Hot Springs chunk."
+        );
+
+        hotSpringsLakeRarity = config.getInt(
+                "LakeRarity",
+                "hotsprings",
+                512,
+                1,
+                1000000,
+                "Independent hotsprings water lake generation attempt per this many eligible chunks. 1 means every eligible chunk; 512 is quite rare."
+        );
+
+        hotSpringsLakeBiomeWhitelist = config.getStringList(
+                "LakeBiomeWhitelist",
+                "hotsprings",
+                new String[0],
+                "Biomes where independent hotsprings water lakes may generate. Leave empty to allow every biome in an allowed dimension.\n" +
+                        "Entries may be biome IDs, exact biome names, name:<name>, or biome dictionary types such as type:FOREST.\n" +
+                        "The biome blacklist always takes precedence."
+        );
+
+        hotSpringsLakeBiomeBlacklist = config.getStringList(
+                "LakeBiomeBlacklist",
+                "hotsprings",
+                new String[0],
+                "Biomes where independent hotsprings water lake must never generate. Uses the same entry format as LakeBiomeWhitelist and takes precedence over it."
+        );
+
+        hotSpringsLakeDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "LakeDimensionWhitelist",
+                "hotsprings",
+                new String[]{"0"},
+                "Dimension IDs where independent spring-water lakes may generate. Leave empty to allow every dimension. Default: 0 (Overworld).\n" +
+                        "The dimension blacklist always takes precedence."
+        ));
+
+        hotSpringsLakeDimensionBlacklist = ConfigResolver.parseIntegerList(config.getStringList(
+                "LakeDimensionBlacklist",
+                "hotsprings",
+                new String[0],
+                "Dimension IDs where independent spring-water lakes must never generate. Takes precedence over LakeDimensionWhitelist."
+        ));
 
         configurableWaterLakeYLevels = config.getBoolean(
                 "ConfigurableWaterLakeYLevels",
@@ -6023,22 +6196,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Radius around a Sunflower Bush that receives its configured aura effects."
         );
 
-        offLawnSunflowerAuraDurationSeconds = config.getInt(
-                "SunflowerAuraDurationSeconds",
-                "offlawn",
-                4,
-                1,
-                60,
-                "How long Sunflower Bush aura potion effects last, in seconds."
-        );
-
         offLawnSunflowerAuraEffects = config.getStringList(
                 "SunflowerAuraEffects",
                 "offlawn",
                 new String[0],
                 "Potion effects applied by Sunflower Bushes.\n"
-                        + "Format per entry: potionNameOrId,amplifier\n"
-                        + "Examples: regeneration,0  or  moveSpeed,1. Empty by default."
+                        + "Format per entry: potionNameOrId,level,durationSeconds\n"
+                        + "Examples: regeneration,1,4  or  moveSpeed,2,10. Empty by default."
         );
 
         offLawnBrightSunflowerAuraEnabled = config.getBoolean(
@@ -6057,22 +6221,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Radius around a Bright Sunflower that receives its configured aura effects."
         );
 
-        offLawnBrightSunflowerAuraDurationSeconds = config.getInt(
-                "BrightSunflowerAuraDurationSeconds",
-                "offlawn",
-                4,
-                1,
-                60,
-                "How long Bright Sunflower aura potion effects last, in seconds."
-        );
-
         offLawnBrightSunflowerAuraEffects = config.getStringList(
                 "BrightSunflowerAuraEffects",
                 "offlawn",
                 new String[0],
                 "Potion effects applied by Bright Sunflowers.\n"
-                        + "Format per entry: potionNameOrId,amplifier\n"
-                        + "Examples: regeneration,0  or  moveSpeed,1. Empty by default."
+                        + "Format per entry: potionNameOrId,level,durationSeconds\n"
+                        + "Examples: regeneration,1,4  or  moveSpeed,2,10. Empty by default."
         );
 
         offLawnBrightSunflowerSpeedBoostEnabled = config.getBoolean(
@@ -7046,6 +7201,22 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Master switch for integrated Chester content."
         );
 
+        enableChesterBaubleSlot = config.getBoolean(
+                "EnableBaubleSlot",
+                "chester",
+                true,
+                "If true, registers a dedicated Chester Staff Bauble slot and allows right-click equipping the Eyebone."
+        );
+
+        chesterTeleportDistance = config.getFloat(
+                "ChesterTeleportDistance",
+                "chester",
+                24.0F,
+                0.0F,
+                256.0F,
+                "Distance in blocks before Chester teleports to the player carrying his Eyebone. Set to 0 to disable follow-owner teleporting."
+        );
+
         chesterInventoryColor = config.getString(
                 "InventoryColor",
                 "chester",
@@ -7683,6 +7854,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "general",
                 true,
                 "If true, tall grass and all BlockBush-based plants can be placed on any block instead of only on grass/dirt/farmland."
+        );
+
+        allowPumpkinsOnAnyBlock = config.getBoolean(
+                "AllowPumpkinsOnAnyBlock",
+                "general",
+                true,
+                "If true, pumpkins, jack o'lanterns, and BlockPumpkin subclasses such as Haunted Pumpkins can be placed on any non-air block, including leaves. Requires restart."
         );
 
         allowSugarcaneOnAnyBlock = config.getBoolean(
@@ -8434,7 +8612,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "vortex",
                 new String[]{"speed,5,1.0"},
                 "Potion effects applied when flicking shortly after a successful backstab.\n" +
-                        "Format per entry: potionNameOrId,amplifier,durationSeconds (or durationTicks).\n" +
+                        "Format per entry: potionNameOrId,level,durationSeconds.\n" +
                         "Example: speed,5,1.0"
         );
 
@@ -8551,6 +8729,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
         DualHotbarConfig.syncFromModConfig();
         zelda.Config.syncFromModConfig();
+        de.sanandrew.mods.claysoldiers.util.ModConfig.syncConfig();
 
         config.save();
     }
