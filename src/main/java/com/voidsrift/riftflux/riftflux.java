@@ -159,10 +159,12 @@ public class riftflux {
         }
 
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.tweaks.ladder.FloatingLadderEvents());
-        final com.voidsrift.riftflux.avatar.glider.GliderEvents gliderEvents =
-                new com.voidsrift.riftflux.avatar.glider.GliderEvents();
-        MinecraftForge.EVENT_BUS.register(gliderEvents);
-        FMLCommonHandler.instance().bus().register(gliderEvents);
+        if (com.voidsrift.riftflux.avatar.AvatarTLBContent.isEnabled()) {
+            final com.voidsrift.riftflux.avatar.glider.GliderEvents gliderEvents =
+                    new com.voidsrift.riftflux.avatar.glider.GliderEvents();
+            MinecraftForge.EVENT_BUS.register(gliderEvents);
+            FMLCommonHandler.instance().bus().register(gliderEvents);
+        }
 
         MinecraftForge.EVENT_BUS.register(new StickTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new PaintingTooltipHandler());

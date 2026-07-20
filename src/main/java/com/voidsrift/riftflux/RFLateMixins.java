@@ -73,8 +73,11 @@ public class RFLateMixins implements ILateMixinLoader {
         if (loadedMods.contains("battlegear2")) {
             mixins.add("late.battlegear.MixinBattlegearClientEventsBridge");
         }
-        if (hasAnyMod(loadedMods, "Botania", "botania") && FMLLaunchHandler.side() == Side.CLIENT) {
-            mixins.add("late.botania.MixinHUDHandler_ManaBarOffset");
+        if (hasAnyMod(loadedMods, "Botania", "botania")) {
+            mixins.add("late.botania.MixinMysticShrub_HornHarvest");
+            if (FMLLaunchHandler.side() == Side.CLIENT) {
+                mixins.add("late.botania.MixinHUDHandler_ManaBarOffset");
+            }
         }
         if(loadedMods.contains("LambdaLib")) {
             mixins.add("late.MixinRenderImagPhaseLiquid_Optimize");

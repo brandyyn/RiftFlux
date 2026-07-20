@@ -48,10 +48,16 @@ public class ItemOffLawnSunSeed extends Item {
             return false;
         }
 
-        if (OffLawnContent.sunflowerBush instanceof BlockOffLawnSunflowerBush) {
-            ((BlockOffLawnSunflowerBush) OffLawnContent.sunflowerBush).placeAt(world, placeX, placeY, placeZ, 2);
+        net.minecraft.block.Block plantedSunflower = OffLawnContent.sunflowerBush;
+        if (OffLawnContent.brightSunflower != null
+                && world.rand.nextFloat() < ModConfig.offLawnBrightSunflowerSeedChance) {
+            plantedSunflower = OffLawnContent.brightSunflower;
+        }
+
+        if (plantedSunflower instanceof BlockOffLawnSunflowerBush) {
+            ((BlockOffLawnSunflowerBush) plantedSunflower).placeAt(world, placeX, placeY, placeZ, 2);
         } else {
-            world.setBlock(placeX, placeY, placeZ, OffLawnContent.sunflowerBush, 0, 3);
+            world.setBlock(placeX, placeY, placeZ, plantedSunflower, 0, 3);
         }
 
         RFPlantContext.markPlayerPlaced(world, placeX, placeY, placeZ);
@@ -66,14 +72,14 @@ public class ItemOffLawnSunSeed extends Item {
             RFPlantContext.markCrossedPlantFacingFromPlacer(world, placeX, placeY + 1, placeZ, player);
         }
 
-        if (OffLawnContent.sunflowerBush != null && OffLawnContent.sunflowerBush.stepSound != null) {
+        if (plantedSunflower != null && plantedSunflower.stepSound != null) {
             world.playSoundEffect(
                     placeX + 0.5D,
                     placeY + 0.5D,
                     placeZ + 0.5D,
-                    OffLawnContent.sunflowerBush.stepSound.getStepResourcePath(),
-                    (OffLawnContent.sunflowerBush.stepSound.getVolume() + 1.0F) / 2.0F,
-                    OffLawnContent.sunflowerBush.stepSound.getPitch() * 0.8F
+                    plantedSunflower.stepSound.getStepResourcePath(),
+                    (plantedSunflower.stepSound.getVolume() + 1.0F) / 2.0F,
+                    plantedSunflower.stepSound.getPitch() * 0.8F
             );
         }
 

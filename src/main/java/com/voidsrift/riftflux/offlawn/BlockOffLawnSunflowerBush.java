@@ -40,6 +40,7 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
         setStepSound(soundTypeGrass);
         setHardness(0.0F);
         setCreativeTab(CreativeTabs.tabDecorations);
+        setTickRandomly(true);
     }
 
     @Override
@@ -138,6 +139,7 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
     public void onBlockAdded(World world, int x, int y, int z) {
         super.onBlockAdded(world, x, y, z);
         normalizeTypeMetadata(world, x, y, z);
+        scheduleAuraUpdate(world, x, y, z);
     }
 
     @Override
@@ -150,6 +152,16 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
         // Use non-sunflower variant metadata to suppress vanilla sunflower head overlay rendering.
         func_149889_c(world, x, y, z, 1, flags);
         world.setBlockMetadataWithNotify(x, y, z, 1, 2);
+    }
+
+    @Override
+    public void updateTick(World world, int x, int y, int z, Random random) {
+        super.updateTick(world, x, y, z, random);
+        if (world.isRemote || BlockDoublePlant.func_149887_c(world.getBlockMetadata(x, y, z))) {
+            return;
+        }
+        OffLawnSunflowerAuraHandler.refreshAura(world, x, y, z, this == OffLawnContent.brightSunflower);
+        scheduleAuraUpdate(world, x, y, z);
     }
 
     @Override
@@ -193,6 +205,16 @@ public class BlockOffLawnSunflowerBush extends BlockDoublePlant implements IGrow
 
     private static boolean canPlaceOnBeanstalk(World world, int x, int y, int z) {
         return world.getBlock(x, y - 1, z) == OffLawnContent.beanstalk;
+    }
+
+    private void scheduleAuraUpdate(World world, int x, int y, int z) {
+        if (world == null || world.isRemote || BlockDoublePlant.func_149887_c(world.getBlockMetadata(x, y, z))) {
+            return;
+        }
+        int interval = OffLawnSunflowerAuraHandler.getRefreshIntervalTicks(this == OffLawnContent.brightSunflower);
+        if (interval > 0) {
+            world.scheduleBlockUpdate(x, y, z, this, interval);
+        }
     }
 
     private static void normalizeTypeMetadata(World world, int x, int y, int z) {

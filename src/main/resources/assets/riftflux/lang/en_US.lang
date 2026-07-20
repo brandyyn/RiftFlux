@@ -272,6 +272,7 @@ tile.offlawn_sunflower_bush.name=Sunflower Bush
 tile.bright_sunflower.name=Bright Sunflower
 tile.offlawn_beanstalk.name=Beanstalk
 item.offlawn_sun_seed.name=Sunflower Seed
+potion.riftflux.happy=Happy!
 tile.pumpkin_j.name=Haunted Pumpkin
 tile.suspicious_pumpkin.name=Suspicious Pumpkin
 item.roast_pumpkin.name=Roast Pumpkin

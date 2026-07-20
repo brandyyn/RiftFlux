@@ -49,6 +49,7 @@ public final class OffLawnContent {
         GameRegistry.registerBlock(brightSunflower, ItemOffLawnBrightSunflower.class, "bright_sunflower");
         GameRegistry.registerBlock(beanstalk, ItemBlock.class, "beanstalk");
         GameRegistry.registerItem(sunSeed, "sun_seed");
+        OffLawnPotions.init();
     }
 
     public static void init(FMLInitializationEvent event) {
@@ -95,13 +96,6 @@ public final class OffLawnContent {
             );
         }
 
-        if (sunflowerBush != null) {
-            registerSunflowerRecipes(sunflowerBush);
-        }
-        if (brightSunflower != null) {
-            registerSunflowerRecipes(brightSunflower);
-        }
-
         if (sunSeed != null) {
             GameRegistry.addRecipe(
                     new ItemStack(sunSeed, 1),
@@ -122,18 +116,4 @@ public final class OffLawnContent {
         return sunflowerBush != null || brightSunflower != null;
     }
 
-    private static void registerSunflowerRecipes(Block block) {
-        GameRegistry.addShapelessRecipe(
-                new ItemStack(block, 1, 1),
-                new ItemStack(Blocks.double_plant, 1, 0),
-                new ItemStack(Blocks.tallgrass, 1, 1)
-        );
-        if (lawnBlock != null) {
-            GameRegistry.addShapelessRecipe(
-                    new ItemStack(block, 1, 1),
-                    new ItemStack(Blocks.double_plant, 1, 0),
-                    new ItemStack(lawnBlock, 1)
-            );
-        }
-    }
 }

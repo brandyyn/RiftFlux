@@ -79,8 +79,12 @@ public final class AvatarTLBContent {
     private AvatarTLBContent() {
     }
 
+    public static boolean isEnabled() {
+        return ModConfig.enableAvatarModule;
+    }
+
     public static void preInit() {
-        if (initialized) {
+        if (!isEnabled() || initialized) {
             return;
         }
         initialized = true;
@@ -91,7 +95,7 @@ public final class AvatarTLBContent {
     }
 
     public static void initClient() {
-        if (FMLCommonHandler.instance().getSide() != Side.CLIENT || clientInitialized) {
+        if (!isEnabled() || FMLCommonHandler.instance().getSide() != Side.CLIENT || clientInitialized) {
             return;
         }
         clientInitialized = true;

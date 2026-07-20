@@ -11,12 +11,14 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
@@ -26,6 +28,7 @@ import net.minecraftforge.event.entity.player.PlayerUseItemEvent.Tick;
 
 import com.voidsrift.riftflux.vortex.entity.EntityDeathRune;
 import com.voidsrift.riftflux.vortex.item.ModItems;
+import com.voidsrift.riftflux.vortex.item.ItemButterflyKnife;
 import com.voidsrift.riftflux.vortex.lib.container.InventoryBackpack;
 import com.voidsrift.riftflux.vortex.lib.event.LivingDestroyArmorEvent;
 import com.voidsrift.riftflux.vortex.lib.helper.ContainerHelper;
@@ -48,6 +51,46 @@ public class EntityEventHandler {
     private static final String TAG_DROPPED_ON_BREAK = "rf_bp_dropped";
     private static final String TAG_RUNE_LAST_SAVE_TICK = "rf_thanatos_last_save_tick";
     private static final String TAG_RUNE_PROTECTED_UNTIL = "rf_thanatos_protected_until";
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onLivingAttack(LivingAttackEvent event) {
+        if (!ModConfig.butterflyKnifeFlickParry
+                || !(event.entity instanceof EntityPlayer)
+                || event.source.isUnblockable()) {
+            return;
+        }
+
+        EntityPlayer player = (EntityPlayer) event.entity;
+        ItemStack held = player.getCurrentEquippedItem();
+        if (held == null
+                || held.getItem() != ModItems.butterflyKnife
+                || !ItemButterflyKnife.isFlickParryActive(held, player.worldObj)) {
+            return;
+        }
+
+        Entity damagingEntity = event.source.getSourceOfDamage();
+        if (damagingEntity != null) {
+            if (event.source.isProjectile()) {
+                damagingEntity.motionX = -damagingEntity.motionX / 1.5D;
+                damagingEntity.motionY = -damagingEntity.motionY / 1.5D;
+                damagingEntity.motionZ = -damagingEntity.motionZ / 1.5D;
+                if (damagingEntity instanceof EntityArrow) {
+                    ((EntityArrow) damagingEntity).shootingEntity = player;
+                }
+            } else {
+                damagingEntity.motionX = -damagingEntity.motionX * 5.0D;
+                damagingEntity.motionY = 0.42D;
+                damagingEntity.motionZ = -damagingEntity.motionZ * 5.0D;
+            }
+        }
+
+        player.worldObj.playSoundAtEntity(
+                player,
+                "random.anvil_land",
+                0.6F,
+                Math.max(1.4F - event.ammount / 10.0F, 0.4F));
+        event.setCanceled(true);
+    }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onLivingHurt(LivingHurtEvent event) {

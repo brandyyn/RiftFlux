@@ -113,7 +113,6 @@ implements IMana {
         map.put((Object)CustomAttributes.arcanePower.getAttributeUnlocalizedName(), (Object)new AttributeModifier(weaponPowerUUID, "Weapon Power", this.getBasePower(stack), 0));
         map.put((Object)CustomAttributes.spellRange.getAttributeUnlocalizedName(), (Object)new AttributeModifier(weaponRangeUUID, "Weapon Range", this.getBaseRange(stack), 0));
         map.put((Object)CustomAttributes.spellRadius.getAttributeUnlocalizedName(), (Object)new AttributeModifier(weaponRadiusUUID, "Weapon Radius", this.getBaseRadius(stack), 0));
-        map.put((Object)CustomAttributes.spellSurgePower.getAttributeUnlocalizedName(), (Object)new AttributeModifier(weaponSurgeUUID, "Weapon Surge", this.getBaseCritBonus(stack), 0));
         map.put((Object)SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(), (Object)new AttributeModifier(field_111210_e, "Weapon modifier", (double)this.getSmackDamage(stack), 0));
         return map;
     }

@@ -29,6 +29,8 @@ public class ItemButterflyKnife extends ItemSword {
    public IIcon iconFlick;
    public IIcon iconAlt;
    private static final String TAG_FLICK_UNTIL = "rf_flick_until";
+   private static final String TAG_PARRY_UNTIL = "rf_parry_until";
+   private static final String TAG_FLICK_COOLDOWN_UNTIL = "rf_flick_cooldown_until";
    private static final String TAG_FLICK_ALT = "rf_flick_alt";
    private static final String TAG_LAST_BACKSTAB = "rf_last_backstab";
    private static final String TAG_BACKSTAB_COUNT = "rf_backtrak";
@@ -69,10 +71,19 @@ public class ItemButterflyKnife extends ItemSword {
 
    public ItemStack onItemRightClick(ItemStack p_77659_1_, World p_77659_2_, EntityPlayer p_77659_3_) {
       if (p_77659_2_ != null) {
-         long until = p_77659_2_.getTotalWorldTime() + FLICK_TICKS;
          net.minecraft.nbt.NBTTagCompound tag = p_77659_1_.getTagCompound();
          tag = (tag == null) ? new net.minecraft.nbt.NBTTagCompound() : (net.minecraft.nbt.NBTTagCompound) tag.copy();
-         tag.setLong(TAG_FLICK_UNTIL, until);
+         long now = p_77659_2_.getTotalWorldTime();
+         if (now < tag.getLong(TAG_FLICK_COOLDOWN_UNTIL)) {
+            return p_77659_1_;
+         }
+         tag.setLong(TAG_FLICK_UNTIL, now + FLICK_TICKS - 1L);
+         tag.setLong(
+                 TAG_PARRY_UNTIL,
+                 now + com.voidsrift.riftflux.ModConfig.butterflyKnifeFlickParryWindowTicks - 1L);
+         tag.setLong(
+                 TAG_FLICK_COOLDOWN_UNTIL,
+                 now + com.voidsrift.riftflux.ModConfig.butterflyKnifeFlickCooldownTicks);
          boolean alt = tag.getBoolean(TAG_FLICK_ALT);
          if (alt) {
             tag.removeTag(TAG_FLICK_ALT);
@@ -137,6 +148,9 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
 
    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_) {
       list.add("Backstabs while sneaking, Right click to flip");
+      if (com.voidsrift.riftflux.ModConfig.butterflyKnifeFlickParry) {
+         list.add("Flick at the moment of impact to parry");
+      }
       list.add("Flipping after a successful backstab gives a boost");
       if (com.voidsrift.riftflux.ModConfig.butterflyKnifeShowBackstabCounter) {
          int count = getBackstabCount(stack);
@@ -170,6 +184,14 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
       if (now > tag.getLong(TAG_FLICK_UNTIL)) {
          endFlick(stack, tag);
       }
+   }
+
+   public static boolean isFlickParryActive(ItemStack stack, World world) {
+      if (stack == null || world == null) return false;
+      net.minecraft.nbt.NBTTagCompound tag = stack.getTagCompound();
+      return tag != null
+              && tag.hasKey(TAG_PARRY_UNTIL, 4)
+              && world.getTotalWorldTime() <= tag.getLong(TAG_PARRY_UNTIL);
    }
 
    @SideOnly(Side.CLIENT)
@@ -330,6 +352,7 @@ private boolean isBackstab(EntityPlayer attacker, EntityLivingBase target) {
       if (stack == null || tag == null) return;
       net.minecraft.nbt.NBTTagCompound copy = (net.minecraft.nbt.NBTTagCompound) tag.copy();
       copy.removeTag(TAG_FLICK_UNTIL);
+      copy.removeTag(TAG_PARRY_UNTIL);
       if (copy.hasNoTags()) {
          stack.setTagCompound(null);
       } else {

@@ -68,6 +68,15 @@ public class BlockWheatfieldBarley extends BlockBush implements IShearable {
     }
 
     @Override
+    public ArrayList<ItemStack> getDrops(World world, int x, int y, int z, int meta, int fortune) {
+        ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
+        if (shouldDropWhenBroken(world.rand)) {
+            drops.add(new ItemStack(this));
+        }
+        return drops;
+    }
+
+    @Override
     public void harvestBlock(World world, net.minecraft.entity.player.EntityPlayer player, int x, int y, int z, int meta) {
         if (player != null) {
             player.addStat(net.minecraft.stats.StatList.mineBlockStatArray[Block.getIdFromBlock(this)], 1);
@@ -85,13 +94,22 @@ public class BlockWheatfieldBarley extends BlockBush implements IShearable {
             return;
         }
         if (EnchantmentHelper.getSilkTouchModifier(player)) {
+            dropBlockAsItem(world, x, y, z, new ItemStack(this));
             return;
         }
 
-        int chance = Math.max(0, Math.min(100, ModConfig.wheatfieldBarleyFistDropChancePercent));
-        if (chance > 0 && world.rand.nextInt(100) < chance) {
+        if (shouldDropWhenBroken(world.rand)) {
             dropBlockAsItem(world, x, y, z, new ItemStack(this));
         }
+    }
+
+    private boolean shouldDropWhenBroken(Random random) {
+        if (ModConfig.wheatfieldBarleyOnlyDropsWhenSheared) {
+            return false;
+        }
+
+        int chance = Math.max(0, Math.min(100, ModConfig.wheatfieldBarleyFistDropChancePercent));
+        return chance > 0 && random.nextInt(100) < chance;
     }
 
     @Override

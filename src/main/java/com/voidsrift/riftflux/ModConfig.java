@@ -387,7 +387,8 @@ public class ModConfig {
     public static String[] mobSpawnWhitelistOnlyBiomes;
     public static boolean useSpawnTypeForMobCap;
 
-    // Avatar 
+    // Avatar
+    public static boolean enableAvatarModule;
     public static boolean gliderDyeRecipes;
     public static boolean gliderStackable;
     public static boolean gliderUseItemInHand;
@@ -535,6 +536,20 @@ public class ModConfig {
     public static String[] offLawnMixedSunflowerBiomeTypes;
     public static String[] offLawnMixedSunflowerBiomeList;
     public static int offLawnBeanstalkMaxGrowthLevel;
+    public static boolean offLawnSunflowerAuraEnabled;
+    public static float offLawnSunflowerAuraRadius;
+    public static int offLawnSunflowerAuraDurationSeconds;
+    public static String[] offLawnSunflowerAuraEffects;
+    public static boolean offLawnBrightSunflowerAuraEnabled;
+    public static float offLawnBrightSunflowerAuraRadius;
+    public static int offLawnBrightSunflowerAuraDurationSeconds;
+    public static String[] offLawnBrightSunflowerAuraEffects;
+    public static boolean offLawnBrightSunflowerSpeedBoostEnabled;
+    public static float offLawnBrightSunflowerSpeedBoostPercent;
+    public static int offLawnBrightSunflowerHappyPotionId;
+    public static float offLawnBrightSunflowerSpeedBoostRadius;
+    public static int offLawnBrightSunflowerSpeedBoostDurationSeconds;
+    public static float offLawnBrightSunflowerSeedChance;
 
     // Pumpkin Pastures ports
     public static boolean enablePumpkinPasturesModule;
@@ -1377,6 +1392,9 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static String butterflyKnifeBackstabCounterLabel;
     public static String[] butterflyKnifeFlickBoostEffects;
     public static int butterflyKnifeFlickBoostWindowTicks;
+    public static boolean butterflyKnifeFlickParry;
+    public static int butterflyKnifeFlickParryWindowTicks;
+    public static int butterflyKnifeFlickCooldownTicks;
     public static boolean backpackStorage;
     public static boolean backpackDurability;
     public static int backpackDurabilityAmount;
@@ -3425,6 +3443,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                         + "This fixes mobs such as aquatic creatures counting toward the wrong cap. "
                         + "RiftFlux prewarms the lookup once at load-complete from the final spawn registry, then uses a cached class lookup during play. "
                         + "Requires restart."
+        );
+
+        enableAvatarModule = config.getBoolean(
+                "EnableAvatarModule",
+                "avatar",
+                true,
+                "Master switch for the Avatar module (Appa and gliders). Requires restart."
         );
 
         gliderDyeRecipes = config.getBoolean(
@@ -5977,6 +6002,126 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Maximum contiguous beanstalk height from the base block. 256 preserves the previous effectively-unlimited growth behavior."
         );
 
+        offLawnSunflowerAuraEnabled = config.getBoolean(
+                "SunflowerAuraEnabled",
+                "offlawn",
+                true,
+                "If true, Sunflower Bushes apply their configured potion effects to nearby players. The default effect list is empty."
+        );
+
+        offLawnSunflowerAuraRadius = config.getFloat(
+                "SunflowerAuraRadius",
+                "offlawn",
+                12.0F,
+                0.0F,
+                64.0F,
+                "Radius around a Sunflower Bush that receives its configured aura effects."
+        );
+
+        offLawnSunflowerAuraDurationSeconds = config.getInt(
+                "SunflowerAuraDurationSeconds",
+                "offlawn",
+                4,
+                1,
+                60,
+                "How long Sunflower Bush aura potion effects last, in seconds."
+        );
+
+        offLawnSunflowerAuraEffects = config.getStringList(
+                "SunflowerAuraEffects",
+                "offlawn",
+                new String[0],
+                "Potion effects applied by Sunflower Bushes.\n"
+                        + "Format per entry: potionNameOrId,amplifier\n"
+                        + "Examples: regeneration,0  or  moveSpeed,1. Empty by default."
+        );
+
+        offLawnBrightSunflowerAuraEnabled = config.getBoolean(
+                "BrightSunflowerAuraEnabled",
+                "offlawn",
+                true,
+                "If true, Bright Sunflowers apply their separately configured potion effects to nearby players. The default effect list is empty."
+        );
+
+        offLawnBrightSunflowerAuraRadius = config.getFloat(
+                "BrightSunflowerAuraRadius",
+                "offlawn",
+                12.0F,
+                0.0F,
+                64.0F,
+                "Radius around a Bright Sunflower that receives its configured aura effects."
+        );
+
+        offLawnBrightSunflowerAuraDurationSeconds = config.getInt(
+                "BrightSunflowerAuraDurationSeconds",
+                "offlawn",
+                4,
+                1,
+                60,
+                "How long Bright Sunflower aura potion effects last, in seconds."
+        );
+
+        offLawnBrightSunflowerAuraEffects = config.getStringList(
+                "BrightSunflowerAuraEffects",
+                "offlawn",
+                new String[0],
+                "Potion effects applied by Bright Sunflowers.\n"
+                        + "Format per entry: potionNameOrId,amplifier\n"
+                        + "Examples: regeneration,0  or  moveSpeed,1. Empty by default."
+        );
+
+        offLawnBrightSunflowerSpeedBoostEnabled = config.getBoolean(
+                "BrightSunflowerSpeedBoostEnabled",
+                "offlawn",
+                true,
+                "If true, Bright Sunflowers grant a separate movement-speed attribute boost that stacks with potion effects."
+        );
+
+        offLawnBrightSunflowerSpeedBoostPercent = config.getFloat(
+                "BrightSunflowerSpeedBoostPercent",
+                "offlawn",
+                15.0F,
+                0.0F,
+                1000.0F,
+                "Stacking movement speed increase from Bright Sunflowers, as a percentage. 15 = 15%."
+        );
+
+        offLawnBrightSunflowerHappyPotionId = config.getInt(
+                "BrightSunflowerHappyPotionId",
+                "offlawn",
+                223,
+                0,
+                65535,
+                "Potion ID preferred by the Bright Sunflower Happy! speed effect. If occupied, the next free ID is used."
+        );
+
+        offLawnBrightSunflowerSpeedBoostRadius = config.getFloat(
+                "BrightSunflowerSpeedBoostRadius",
+                "offlawn",
+                12.0F,
+                0.0F,
+                64.0F,
+                "Radius around a Bright Sunflower that grants its stacking speed boost."
+        );
+
+        offLawnBrightSunflowerSpeedBoostDurationSeconds = config.getInt(
+                "BrightSunflowerSpeedBoostDurationSeconds",
+                "offlawn",
+                4,
+                1,
+                60,
+                "How long the Bright Sunflower stacking speed boost remains after its last refresh, in seconds."
+        );
+
+        offLawnBrightSunflowerSeedChance = config.getFloat(
+                "BrightSunflowerSeedChance",
+                "offlawn",
+                0.10F,
+                0.0F,
+                1.0F,
+                "Chance that planting a Sunflower Seed creates a Bright Sunflower. 0.10 = 10%; remaining chance creates a Sunflower Bush."
+        );
+
         enablePumpkinPasturesModule = config.getBoolean(
                 "EnablePumpkinPasturesModule",
                 "pumpkinpastures",
@@ -8274,6 +8419,31 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Time window (in seconds) after a successful backstab in which a flick grants the boost."
         );
         butterflyKnifeFlickBoostWindowTicks = Math.max(0, Math.round(flickWindowSeconds * 20.0F));
+
+        butterflyKnifeFlickParry = config.getBoolean(
+                "butterflyKnifeFlickParry",
+                "vortex",
+                true,
+                "If true, damage received during the configured opening window of a butterfly knife flick is parried."
+        );
+
+        butterflyKnifeFlickParryWindowTicks = config.getInt(
+                "butterflyKnifeFlickParryWindowTicks",
+                "vortex",
+                4,
+                1,
+                12,
+                "Number of ticks after right-clicking during which the butterfly knife can parry."
+        );
+
+        butterflyKnifeFlickCooldownTicks = config.getInt(
+                "butterflyKnifeFlickCooldownTicks",
+                "vortex",
+                20,
+                0,
+                1200,
+                "Cooldown between butterfly knife flicks, in ticks. 20 ticks equals 1 second; 0 disables the cooldown."
+        );
 
         backpackStorage = config.getBoolean("backpackStorage", "vortex", true,
                 "Allows the backpack to be unequipped while containing items.");
