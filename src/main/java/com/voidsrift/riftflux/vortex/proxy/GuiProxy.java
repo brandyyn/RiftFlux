@@ -11,6 +11,7 @@ import com.voidsrift.riftflux.furniture.tileentity.TileEntityBedsideCabinet;
 import com.voidsrift.riftflux.furniture.tileentity.TileEntityCabinet;
 import com.voidsrift.riftflux.riftexplorer.RiftExplorerGuiIds;
 import cpw.mods.fml.common.network.IGuiHandler;
+import gravestone.core.GSGuiHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -34,8 +35,13 @@ public class GuiProxy implements IGuiHandler {
    public static final int backpackId = 1;
    public static final int gluttonyCharmId = 2;
    private static final ChesterGuiHandler CHESTER_GUI_HANDLER = new ChesterGuiHandler();
+   private static final GSGuiHandler GRAVESTONE_GUI_HANDLER = new GSGuiHandler();
 
    public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+      Object gravestoneGui = GRAVESTONE_GUI_HANDLER.getServerGuiElement(id, player, world, x, y, z);
+      if (gravestoneGui != null) {
+         return gravestoneGui;
+      }
       switch(id) {
       case 0:
          return new ContainerToolbelt(player);
@@ -75,6 +81,10 @@ public class GuiProxy implements IGuiHandler {
    }
 
    public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+      Object gravestoneGui = GRAVESTONE_GUI_HANDLER.getClientGuiElement(id, player, world, x, y, z);
+      if (gravestoneGui != null) {
+         return gravestoneGui;
+      }
       switch(id) {
       case 0:
          return new GuiInventoryToolbelt(player);

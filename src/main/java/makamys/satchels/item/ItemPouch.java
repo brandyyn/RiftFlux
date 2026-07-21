@@ -160,7 +160,7 @@ public class ItemPouch extends ItemEquippable implements IBaubleExpanded, IBaubl
 
    @Override
    public String[] getBaubleTypes(ItemStack stack) {
-       return new String[]{BaublesCompat.TYPE_POUCH};
+       return BaublesCompat.getTypes(BaublesCompat.ITEM_POUCH, BaublesCompat.TYPE_POUCH);
    }
 
    @Override

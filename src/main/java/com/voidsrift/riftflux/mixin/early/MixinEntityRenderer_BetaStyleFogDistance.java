@@ -61,37 +61,37 @@ public abstract class MixinEntityRenderer_BetaStyleFogDistance {
 
         FogStateCompat.fogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_RADIAL_NV);
 
-        float gradientStart = 0.0F;
-        float gradientEnd = 0.0F;
-        boolean gradientDistanceReady = false;
+        float[] fogDistance;
         if (SunriseSkyTintHelper.shouldUseDenseFogDistance(world, partialTicks)) {
-            float[] fogDistance = SunriseSkyTintHelper.resolveDenseFogDistance(world, view, this.farPlaneDistance, fogMode < 0, partialTicks);
-            if (fogDistance == null || fogDistance.length < 2) {
-                FogDistanceGradientState.invalidate(world);
-                return;
-            }
-            float start = fogDistance[0];
-            float finish = fogDistance[1];
-
-            FogStateCompat.fogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR);
-            FogStateCompat.fogf(GL11.GL_FOG_START, start);
-            FogStateCompat.fogf(GL11.GL_FOG_END, finish);
-            gradientStart = start;
-            gradientEnd = finish;
-            gradientDistanceReady = true;
+            fogDistance = SunriseSkyTintHelper.resolveDenseFogDistance(
+                    world,
+                    view,
+                    this.farPlaneDistance,
+                    fogMode < 0,
+                    partialTicks
+            );
+        } else {
+            // Restore vanilla explicitly after a fog event. Optimized renderers can cache the
+            // dense override and otherwise fail to restore vanilla when the event fades out.
+            fogDistance = SunriseSkyTintHelper.resolveVanillaFogDistance(
+                    world,
+                    view,
+                    this.farPlaneDistance,
+                    fogMode < 0
+            );
+        }
+        if (fogDistance == null || fogDistance.length < 2) {
+            FogDistanceGradientState.invalidate(world);
+            return;
         }
 
-        if (SunriseSkyTintHelper.shouldUseFogDistanceGradient(world)) {
-            if (!gradientDistanceReady) {
-                float[] fogDistance = SunriseSkyTintHelper.resolveVanillaFogDistance(world, view, this.farPlaneDistance, fogMode < 0);
-                if (fogDistance == null || fogDistance.length < 2) {
-                    FogDistanceGradientState.invalidate(world);
-                    return;
-                }
-                gradientStart = fogDistance[0];
-                gradientEnd = fogDistance[1];
-            }
+        float gradientStart = fogDistance[0];
+        float gradientEnd = fogDistance[1];
+        FogStateCompat.fogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR);
+        FogStateCompat.fogf(GL11.GL_FOG_START, gradientStart);
+        FogStateCompat.fogf(GL11.GL_FOG_END, gradientEnd);
 
+        if (SunriseSkyTintHelper.shouldUseFogDistanceGradient(world)) {
             float[] projectionScale = this.riftflux$estimateProjectionScale(partialTicks);
             FogDistanceGradientState.setFogDistance(
                     world,

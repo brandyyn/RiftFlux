@@ -311,6 +311,7 @@ public final class LegendGearLegacyContent {
         applyConfiguredItemDurability(LegendGear.pyroAmulet, ModConfig.legendGearLegacyPyroAmuletDurability);
         LegendGear.medallionEffectsAffectPlayer = ModConfig.legendGearLegacyMedallionEffectsAffectPlayer;
         LegendGear.whirlwindBootsDashSound = ModConfig.legendGearLegacyWhirlwindBootsDashSound;
+        LegendGear.whirlwindBootsUseDurability = ModConfig.legendGearLegacyWhirlwindBootsUseDurability;
         LegendGear.starbeamRailLaunchStrength = ModConfig.legendGearLegacyStarbeamRailLaunchStrength;
         LegendGear.starbeamRailConnectionRange = ModConfig.legendGearLegacyStarbeamRailConnectionRange;
         LegendGear.starbeamRailNoSlowdown = ModConfig.legendGearLegacyStarbeamRailNoSlowdown;

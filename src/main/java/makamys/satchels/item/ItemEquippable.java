@@ -19,9 +19,12 @@ public class ItemEquippable extends Item implements TooltippedItem {
     
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
         if(!world.isRemote && stack != null) {
-            String type = stack.getItem() instanceof ItemSatchel ? BaublesCompat.TYPE_SATCHEL :
-                    (stack.getItem() instanceof ItemPouch ? BaublesCompat.TYPE_POUCH : null);
-            if(type != null && BaublesCompat.equipToFirstEmpty(player, stack, type)) {
+            String[] types = stack.getItem() instanceof ItemSatchel
+                    ? BaublesCompat.getTypes(BaublesCompat.ITEM_SATCHEL, BaublesCompat.TYPE_SATCHEL)
+                    : (stack.getItem() instanceof ItemPouch
+                    ? BaublesCompat.getTypes(BaublesCompat.ITEM_POUCH, BaublesCompat.TYPE_POUCH)
+                    : null);
+            if(types != null && BaublesCompat.equipToFirstEmpty(player, stack, types)) {
                 return stack;
             }
         }

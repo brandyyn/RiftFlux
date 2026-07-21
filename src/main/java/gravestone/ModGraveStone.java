@@ -5,11 +5,9 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
-import cpw.mods.fml.common.network.NetworkRegistry;
 import gravestone.config.GraveStoneConfig;
 import gravestone.core.GSBlock;
 import gravestone.core.GSEntity;
-import gravestone.core.GSGuiHandler;
 import gravestone.core.GSItem;
 import gravestone.core.GSMessageHandler;
 import gravestone.core.GSPotion;
@@ -22,7 +20,6 @@ import gravestone.core.compatibility.GSCompatibility;
 import gravestone.core.event.GSEventHandlerNetwork;
 import gravestone.core.event.GSEventsHandler;
 import gravestone.core.proxy.CommonProxy;
-import com.voidsrift.riftflux.riftflux;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ModGraveStone {
@@ -51,7 +48,6 @@ public class ModGraveStone {
       GSStructures.getInstance();
       GSEntity.getInstance();
       GSPotion.init();
-      NetworkRegistry.INSTANCE.registerGuiHandler(riftflux.instance, new GSGuiHandler());
       proxy.registerRenderers();
    }
 

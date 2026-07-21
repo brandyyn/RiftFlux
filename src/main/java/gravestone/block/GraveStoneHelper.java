@@ -345,10 +345,11 @@ public class GraveStoneHelper {
          GSCompatibilityAntiqueAtlas.placeDeathMarkerAtDeath(player);
          items.addAll(Arrays.asList(player.inventory.mainInventory));
          items.addAll(Arrays.asList(player.inventory.armorInventory));
+         GSCompatibilityisArsMagica.excludeSoulboundPlayerInventory(items, player);
          GSCompatibilityTwilightForest.addSlotTags(items);
          GSCompatibilityBattlegear.addItems(items, player);
          if (!GSCompatibilityTwilightForest.handleCharmsOfKeeping(items, player)) {
-            player.inventory.clearInventory((Item)null, -1);
+            GSCompatibilityisArsMagica.clearNonSoulboundPlayerInventory(player);
          }
 
          GSCompatibilityTheCampingMod.addItems(items, player);

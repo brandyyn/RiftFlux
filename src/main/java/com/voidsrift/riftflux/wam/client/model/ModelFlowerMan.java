@@ -67,13 +67,13 @@ extends ModelBase {
         this.head.mirror = true;
         this.setRotation(this.head, 0.0f, 0.0f, 0.0f);
         this.Petals = new ModelRenderer(this, 0, 29);
-        this.Petals.addBox(-6.0f, -10.0f, -2.0f, 12, 12, 0);
+        this.Petals.addBox(-6.0f, -10.0f, -2.0f, 12, 12, 0, 0.01f);
         this.Petals.setRotationPoint(1.0f, 12.0f, 1.0f);
         this.Petals.setTextureSize(128, 128);
         this.Petals.mirror = true;
         this.setRotation(this.Petals, 0.0f, 0.0f, 0.0f);
         this.face = new ModelRenderer(this, 19, 0);
-        this.face.addBox(-2.0f, -6.0f, -2.5f, 4, 4, 1);
+        this.face.addBox(-2.0f, -6.0f, -2.5f, 4, 4, 1, 0.01f);
         this.face.setRotationPoint(1.0f, 12.0f, 1.0f);
         this.face.setTextureSize(128, 128);
         this.face.mirror = true;

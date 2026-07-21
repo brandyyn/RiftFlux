@@ -49,6 +49,7 @@ public final class PickupStarServerEvents {
     private static final class State {
         Map<Key,Integer> lastTotals;
         Map<Key,Integer> baseTotals;
+        final Set<Key> pickupKeys = new HashSet<Key>();
         boolean pending;
         int idleTicks;
     }
@@ -107,6 +108,10 @@ public final class PickupStarServerEvents {
 
         if (ModConfig.enablePickupNotifier) {
             State st = states.computeIfAbsent(player.getUniqueID(), k -> new State());
+
+            if (pickedStack != null && pickedStack.getItem() != null) {
+                st.pickupKeys.add(Key.of(pickedStack));
+            }
 
             if (syntheticPickup && pickedStack != null && pickedStack.getItem() != null) {
                 // Synthetic pickup events (boomerang-return payload, etc.) happen after inventory mutation.
@@ -199,6 +204,7 @@ public final class PickupStarServerEvents {
                         if (sent >= MAX_PER_TICK_KEYS) break;
 
                         final Key k = ent.getKey();
+                        if (!st.pickupKeys.contains(k)) continue;
                         final int now = ent.getValue();
                         final int before = st.baseTotals.getOrDefault(k, 0);
                         final int delta = now - before;
@@ -220,6 +226,7 @@ public final class PickupStarServerEvents {
                     if (st.idleTicks <= 0) {
                         st.pending = false;
                         st.baseTotals = null;
+                        st.pickupKeys.clear();
                     }
                 }
             }

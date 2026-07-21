@@ -101,6 +101,9 @@ public class RFLateMixins implements ILateMixinLoader {
         if (loadedMods.contains("XaeroMinimap")) {
             mixins.add("late.xaero.minimap.MixinInternet");
             if (FMLLaunchHandler.side() == Side.CLIENT) {
+                if (ModConfig.xaeroMinimapImmediateWaypointDelete) {
+                    mixins.add("late.xaero.minimap.MixinGuiWaypoints_ImmediateDelete");
+                }
                 mixins.add("late.xaero.minimap.XaeroWaypointsManagerInvoker");
                 mixins.add("late.xaero.minimap.MixinWaypointsManager_GravestoneDeathpoint");
             }

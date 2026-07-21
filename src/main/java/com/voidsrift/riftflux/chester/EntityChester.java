@@ -32,6 +32,7 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
     private static final int TYPE_MASK = 3;
     private static final int OPEN_FLAG = 4;
     private static final int SITTING_FLAG = 8;
+    private static final int HAPPY_PANT_FLAG = 16;
     private static final int ANCHOR_IDLE_NONE = 0;
     private static final int ANCHOR_IDLE_STAY = 1;
     private static final int ANCHOR_IDLE_SIT = 2;
@@ -49,6 +50,8 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
     private boolean hasStaffAnchor;
     private float previousSitProgress;
     private float sitProgress;
+    private float previousMouthOpenProgress;
+    private float mouthOpenProgress;
     private boolean registeredBinding;
     private boolean commandedSitting;
     private int anchorIdleMode;
@@ -58,6 +61,8 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
     private float anchorCircleDirection;
     private double anchorCircleRadius;
     private int nextPathRecalculationTick;
+    private int happyPantTicks;
+    private int happyPantSoundCooldown;
 
     public EntityChester(World world) {
         super(world);
@@ -120,10 +125,7 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
             return true;
         }
 
-        setOpen(true);
         if (!worldObj.isRemote) {
-            worldObj.playSoundEffect(posX, posY, posZ, "chester:chesteropen", 0.7F, 1.0F);
-            worldObj.playSoundEffect(posX, posY, posZ, "chester:chestopen", 0.7F, 1.0F);
             player.openGui(
                     riftflux.instance,
                     ChesterContent.GUI_ID,
@@ -132,6 +134,11 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
                     0,
                     0
             );
+            if (player.openContainer instanceof ContainerChester) {
+                setOpen(true);
+                worldObj.playSoundEffect(posX, posY, posZ, "chester:chesteropen", 0.7F, 1.0F);
+                worldObj.playSoundEffect(posX, posY, posZ, "chester:chestopen", 0.7F, 1.0F);
+            }
         }
         return true;
     }
@@ -163,9 +170,17 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
         } else {
             sitProgress = Math.max(0.0F, sitProgress - 0.18F);
         }
+        previousMouthOpenProgress = mouthOpenProgress;
+        if (isOpen()) {
+            mouthOpenProgress = Math.min(1.0F, mouthOpenProgress + 0.15F);
+        } else {
+            mouthOpenProgress = Math.max(0.0F, mouthOpenProgress - 0.15F);
+        }
         if (worldObj.isRemote) {
             return;
         }
+
+        updateHappyPanting();
 
         if (!registeredBinding) {
             ChesterBinding.register(this);
@@ -395,6 +410,13 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
         return previousSitProgress + (sitProgress - previousSitProgress) * partialTicks;
     }
 
+    public float getMouthOpenAnimationProgress(float partialTicks) {
+        float progress = previousMouthOpenProgress
+                + (mouthOpenProgress - previousMouthOpenProgress) * partialTicks;
+        float remaining = 1.0F - progress;
+        return 1.0F - remaining * remaining * remaining;
+    }
+
     public ChesterInventory getInventory() {
         return inventory;
     }
@@ -428,11 +450,37 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
     }
 
     public boolean isOpen() {
-        return (packedState & OPEN_FLAG) != 0;
+        return (packedState & (OPEN_FLAG | HAPPY_PANT_FLAG)) != 0;
     }
 
     public void setOpen(boolean open) {
         setPackedState(open ? packedState | OPEN_FLAG : packedState & ~OPEN_FLAG);
+    }
+
+    private void updateHappyPanting() {
+        if (happyPantTicks > 0) {
+            --happyPantTicks;
+            if (--happyPantSoundCooldown <= 0) {
+                playSound("chester:chesterpant", 0.8F, 1.0F);
+                happyPantSoundCooldown = 18 + rand.nextInt(13);
+            }
+            if (happyPantTicks <= 0) {
+                setHappyPanting(false);
+            }
+            return;
+        }
+
+        if ((packedState & OPEN_FLAG) == 0 && rand.nextInt(500) == 0) {
+            happyPantTicks = 70 + rand.nextInt(91);
+            happyPantSoundCooldown = 1;
+            setHappyPanting(true);
+        }
+    }
+
+    private void setHappyPanting(boolean panting) {
+        setPackedState(panting
+                ? packedState | HAPPY_PANT_FLAG
+                : packedState & ~HAPPY_PANT_FLAG);
     }
 
     public boolean isSitting() {
@@ -511,7 +559,7 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
     public void writeEntityToNBT(NBTTagCompound tag) {
         super.writeEntityToNBT(tag);
         tag.setInteger("Type", getChesterType());
-        tag.setInteger("PackedState", packedState);
+        tag.setInteger("PackedState", packedState & ~(OPEN_FLAG | HAPPY_PANT_FLAG));
         tag.setString("OwnerUUID", ownerId);
         tag.setBoolean("CommandedSitting", commandedSitting);
         tag.setBoolean("HasStaffAnchor", hasStaffAnchor);
@@ -540,6 +588,7 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
         packedState = tag.hasKey("PackedState")
                 ? tag.getInteger("PackedState")
                 : tag.getInteger("Type") & TYPE_MASK;
+        packedState &= ~(OPEN_FLAG | HAPPY_PANT_FLAG);
         ownerId = tag.getString("OwnerUUID");
         commandedSitting = tag.hasKey("CommandedSitting")
                 ? tag.getBoolean("CommandedSitting")
@@ -575,6 +624,8 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
         ownerId = ByteBufUtils.readUTF8String(data);
         sitProgress = isSitting() ? 1.0F : 0.0F;
         previousSitProgress = sitProgress;
+        mouthOpenProgress = isOpen() ? 1.0F : 0.0F;
+        previousMouthOpenProgress = mouthOpenProgress;
     }
 
     @Override

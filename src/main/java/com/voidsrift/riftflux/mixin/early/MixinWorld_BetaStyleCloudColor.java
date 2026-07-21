@@ -20,6 +20,11 @@ public abstract class MixinWorld_BetaStyleCloudColor {
         }
 
         WorldClient world = (WorldClient) (Object) this;
+        float[] daytimeWhite = SunriseSkyTintHelper.resolveDaytimeWhiteCloudColor(world, partialTicks);
+        if (daytimeWhite != null && daytimeWhite.length >= 3) {
+            cir.setReturnValue(Vec3.createVectorHelper(daytimeWhite[0], daytimeWhite[1], daytimeWhite[2]));
+            return;
+        }
         if (!SunriseSkyTintHelper.shouldUseBetaStyleBiomeFog(world)) {
             return;
         }

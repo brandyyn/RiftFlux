@@ -32,7 +32,7 @@ public class ItemSatchel extends ItemEquippable implements IBaubleExpanded, IBau
 
    @Override
    public String[] getBaubleTypes(net.minecraft.item.ItemStack stack) {
-       return new String[]{BaublesCompat.TYPE_SATCHEL};
+       return BaublesCompat.getTypes(BaublesCompat.ITEM_SATCHEL, BaublesCompat.TYPE_SATCHEL);
    }
 
    @Override

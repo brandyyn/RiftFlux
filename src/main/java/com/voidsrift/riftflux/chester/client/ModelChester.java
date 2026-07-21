@@ -16,6 +16,7 @@ public class ModelChester extends ModelBase {
     private final ModelRenderer rightFrontLeg;
     private final ModelRenderer rightBackLeg;
     private float sitProgress;
+    private float mouthOpenProgress;
 
     public ModelChester() {
         textureWidth = 128;
@@ -116,14 +117,16 @@ public class ModelChester extends ModelBase {
     @Override
     public void render(Entity entity, float limbSwing, float limbSwingAmount, float age, float yaw, float pitch, float scale) {
         setRotationAngles(limbSwing, limbSwingAmount, age, yaw, pitch, scale, entity);
-        EntityChester chester = (EntityChester) entity;
         float sitY = 3.0F * sitProgress;
         float sitZ = 1.5F * sitProgress;
         float bodyTilt = -0.12F * sitProgress;
         body.setRotationPoint(0.0F, sitY, sitZ);
         body.rotateAngleX = bodyTilt;
-        topLid.setRotationPoint(0.0F, sitY, sitZ + (chester.isOpen() ? 10.0F : 0.0F));
-        topLid.rotateAngleX = bodyTilt + (chester.isOpen() ? -0.72F : 0.0F);
+        float lidOpenOffset = 10.0F * mouthOpenProgress;
+        float lidOffsetY = -MathHelper.sin(bodyTilt) * lidOpenOffset;
+        float lidOffsetZ = MathHelper.cos(bodyTilt) * lidOpenOffset;
+        topLid.setRotationPoint(0.0F, sitY + lidOffsetY, sitZ + lidOffsetZ);
+        topLid.rotateAngleX = bodyTilt - 0.72F * mouthOpenProgress;
         tongue.setRotationPoint(0.0F, sitY, sitZ);
         tongue.rotateAngleX = bodyTilt;
         topLid.render(scale);
@@ -138,7 +141,9 @@ public class ModelChester extends ModelBase {
             float limbSwingAmount,
             float partialTicks
     ) {
-        sitProgress = ((EntityChester) entity).getSitAnimationProgress(partialTicks);
+        EntityChester chester = (EntityChester) entity;
+        sitProgress = chester.getSitAnimationProgress(partialTicks);
+        mouthOpenProgress = chester.getMouthOpenAnimationProgress(partialTicks);
     }
 
     @Override

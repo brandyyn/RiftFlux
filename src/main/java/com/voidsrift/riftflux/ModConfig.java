@@ -258,6 +258,8 @@ public class ModConfig {
     public static String celestialSunEventTexture;
     public static String celestialMoonEventTexture;
     public static boolean celestialFullSunriseSunsetTint;
+    public static boolean celestialCloudsStayDaytimeWhite;
+    public static boolean celestialCloudsStayDaytimeWhiteDuringWeather;
     public static boolean celestialFogMatchesSky;
     public static boolean celestialBetaStyleFogBiomeTint;
     public static boolean celestialBetaStyleFogBiomeTintWeatherEvent;
@@ -968,6 +970,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     // Chester module
     public static boolean enableChesterModule;
     public static boolean enableChesterBaubleSlot;
+    public static String[] baubleItemSlotMappings;
+    public static String[] customBaubleSlots;
     public static float chesterTeleportDistance;
     public static String chesterInventoryColor;
     public static String shadowChesterInventoryColor;
@@ -1061,6 +1065,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean legendGearLegacyAmuletsUseBaublesSlot;
     public static boolean legendGearLegacyMedallionEffectsAffectPlayer;
     public static boolean legendGearLegacyWhirlwindBootsDashSound;
+    public static boolean legendGearLegacyWhirlwindBootsUseDurability;
     public static double legendGearLegacyStarbeamRailLaunchStrength;
     public static int legendGearLegacyStarbeamRailConnectionRange;
     public static boolean legendGearLegacyStarbeamRailNoSlowdown;
@@ -1431,6 +1436,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int highlanderPotionEffectId;
     public static boolean enableClaySoldiersModule;
     public static boolean claySoldiersUseOldHurtSound;
+    public static boolean xaeroMinimapImmediateWaypointDelete;
     public static float claySoldiersBaseHealth;
     public static float claySoldiersBaseDamage;
     public static double claySoldiersStatItemRange;
@@ -2614,6 +2620,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "celestial",
                 true,
                 "If true, sunrise and sunset tint the full sky and fog instead of only the direction you are looking."
+        );
+        celestialCloudsStayDaytimeWhite = config.getBoolean(
+                "CelestialCloudsStayDaytimeWhite",
+                "celestial",
+                false,
+                "If true, clouds keep their normal daytime white base color at sunset and night. Vanilla rain and thunder darkening still applies. Obeys CelestialFogHorizonDimensionWhitelist/Blacklist."
+        );
+        celestialCloudsStayDaytimeWhiteDuringWeather = config.getBoolean(
+                "CelestialCloudsStayDaytimeWhiteDuringWeather",
+                "celestial",
+                false,
+                "If true, CelestialCloudsStayDaytimeWhite also keeps clouds pure white during rain and thunderstorms instead of applying vanilla weather darkening."
         );
         celestialFogMatchesSky = config.getBoolean(
                 "CelestialFogMatchesSky",
@@ -4807,6 +4825,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, Whirlwind Boots play their legacy dash sound while sprinting."
         );
 
+        legendGearLegacyWhirlwindBootsUseDurability = config.getBoolean(
+                "legacyWhirlwindBootsUseDurability",
+                "legendgear",
+                true,
+                "If true, Whirlwind Boots lose durability while sprinting. Set to false for infinite sprint use."
+        );
+
         legendGearLegacyStarbeamRailLaunchStrength = config.getFloat(
                 "legacyStarbeamRailLaunchStrength",
                 "legendgear",
@@ -6331,6 +6356,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         );
         registerGravestoneConfigSchema();
 
+        xaeroMinimapImmediateWaypointDelete = config.getBoolean(
+                "ImmediateWaypointDelete",
+                "xaerominimap",
+                true,
+                "Delete selected Xaero's Minimap waypoints immediately when Delete is used. When false, Xaero's normal two-step temporary/confirm behavior is retained. Requires restart."
+        );
+
         enableGokiStatsModule = config.getBoolean(
                 "EnableGokiStatsModule",
                 "gokistats",
@@ -7213,7 +7245,35 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "EnableBaubleSlot",
                 "chester",
                 true,
-                "If true, registers a dedicated Chester Staff Bauble slot and allows right-click equipping the Eyebone."
+                "If true, allows Rift Flux to register the dedicated chester_staff slot listed in baubles.CustomBaubleSlots.\n" +
+                        "This does not disable Eyebone Bauble support when the Eyebone is mapped to an existing slot type."
+        );
+
+        baubleItemSlotMappings = config.getStringList(
+                "BaubleItemSlotMappings",
+                "baubles",
+                new String[]{
+                        "chester:eyebone=chester_staff",
+                        "riftflux:backpack=backpack",
+                        "riftflux:satchel=satchel",
+                        "riftflux:pouch=pouch"
+                },
+                "Bauble slot types accepted by supported Rift Flux items. Format: item_id=slot_type,slot_type.\n" +
+                        "Known Baubles Expanded types include amulet, ring, belt, head, body, charm, cape, shield, quiver, gauntlet, earring, wings, and universal.\n" +
+                        "Example: riftflux:backpack=wings,body. Leave the right side empty to disable Bauble equipping for that item. Requires restart."
+        );
+
+        customBaubleSlots = config.getStringList(
+                "CustomBaubleSlots",
+                "baubles",
+                new String[]{
+                        "chester_staff=1",
+                        "backpack=1",
+                        "satchel=1",
+                        "pouch=2"
+                },
+                "Custom Baubles Expanded slot types Rift Flux should register. Format: slot_type=count.\n" +
+                        "Remove an entry after mapping its items to existing slot types if you do not want that custom slot. Requires restart."
         );
 
         chesterTeleportDistance = config.getFloat(
@@ -8775,6 +8835,15 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "CanPlaceGravesEveryWhere", true, "Allows gravestones to be placed on any type of surface.");
         config.get(category, "EnablePlayerDeathGraves", true, "Enable this module's player-death graves and inventory capture. Disable when another grave mod handles player deaths; all other Gravestone content remains enabled.");
         config.get(category, "EnableXaeroMinimapGraveWaypoints", true, "Make Xaero's Minimap death waypoint use the exact location where the player's gravestone was placed. Disable to retain Xaero's normal death-location waypoint behavior.");
+        config.get(category, "KeepArmorOnDeath", false, "Keep equipped vanilla armour on the player after death instead of storing it in the grave or dropping it. No copies are created.");
+        config.get(category, "KeepHotbarOnDeath", false, "Keep all nine hotbar slots on the player after death instead of storing them in the grave or dropping them. No copies are created.");
+        config.get(category, "KeepItemsOnDeathWhitelist", new String[0], "Registry names of items that stay with the player after death, regardless of whether they are in the main inventory, hotbar, armour, a Baubles slot, or a Traveller's Gear slot. Use modid:item or modid:item:metadata. Empty disables this rule. Traveller's Gear blacklist entries still take precedence.");
+        config.get(category, "KeepBaublesOnDeath", true, "Keep items from allowed Baubles Expanded slots on the player after death instead of storing them in the grave or dropping them. When both slot lists are empty, every Baubles slot is allowed. The blacklist always takes precedence over the whitelist.");
+        config.get(category, "KeepBaubleSlotWhitelist", new String[0], "Baubles Expanded slot types or numeric slot indexes whose items may stay with the player after death. Examples: ring, amulet, head, or slot:4. Empty means all slots unless blacklisted.");
+        config.get(category, "KeepBaubleSlotBlacklist", new String[]{"chester_staff"}, "Baubles Expanded slot types or numeric slot indexes whose items must not be kept by KeepBaublesOnDeath. Blacklist takes precedence over the Baubles slot whitelist. Chester's staff slot is blacklisted by default.");
+        config.get(category, "KeepTravellersGearOnDeath", true, "Keep equipped Traveller's Gear items on the player after death instead of storing them in the grave or dropping them. When both Traveller's Gear item lists are empty, every equipped item is kept. The blacklist always takes precedence over all keep-item whitelists.");
+        config.get(category, "KeepTravellersGearItemWhitelist", new String[0], "Registry names of equipped Traveller's Gear items that may stay with the player after death. Use modid:item or modid:item:metadata. Empty allows every equipped Traveller's Gear item unless blacklisted.");
+        config.get(category, "KeepTravellersGearItemBlacklist", new String[0], "Registry names of equipped Traveller's Gear items that must not stay with the player after death. Use modid:item or modid:item:metadata. Blacklist takes precedence over the Traveller's Gear whitelist and KeepItemsOnDeathWhitelist. Empty blocks no items.");
         config.get(category, "GeneratePlayerGraves", true, "Enable or disable grave generation when players die.");
         config.get(category, "GenerateVillagerGraves", false, "Enable or disable grave generation when villagers die.");
         config.get(category, "GeneratePetGraves", true, "Enable or disable grave generation when pets such as dogs, cats, and horses die.");

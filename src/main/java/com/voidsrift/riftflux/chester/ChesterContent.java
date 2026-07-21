@@ -5,7 +5,6 @@ import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.chester.client.ModelChester;
 import com.voidsrift.riftflux.chester.client.RenderChester;
-import baubles.api.expanded.BaubleExpandedSlots;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -39,11 +38,6 @@ public final class ChesterContent {
         preInited = true;
         if (!isEnabled()) {
             return;
-        }
-
-        if (ModConfig.enableChesterBaubleSlot) {
-            BaubleExpandedSlots.tryRegisterType(BAUBLE_TYPE);
-            BaubleExpandedSlots.tryAssignSlotsUpToMinimum(BAUBLE_TYPE, 1);
         }
 
         eyeBone = new ItemEyeBone()

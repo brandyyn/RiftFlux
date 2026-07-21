@@ -10,6 +10,7 @@ import baubles.api.IBauble;
 import baubles.api.expanded.IBaubleExpanded;
 import baubles.common.container.ContainerPlayerExpanded;
 import com.voidsrift.riftflux.vortex.item.ItemBackpack;
+import makamys.satchels.compat.BaublesCompat;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -31,7 +32,7 @@ public abstract class MixinContainerPlayerExpanded_BackpackShiftClick {
     private static final class ItemBackpackBaubleProxy extends Item implements IBaubleExpanded {
         @Override
         public String[] getBaubleTypes(ItemStack stack) {
-            return new String[]{"backpack"};
+            return BaublesCompat.getTypes(BaublesCompat.ITEM_BACKPACK, BaublesCompat.TYPE_BACKPACK);
         }
 
         @Override

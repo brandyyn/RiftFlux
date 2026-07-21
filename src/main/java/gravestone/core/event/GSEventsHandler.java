@@ -7,6 +7,7 @@ import gravestone.block.BlockGSGraveStone;
 import gravestone.block.GraveStoneHelper;
 import gravestone.config.GraveStoneConfig;
 import gravestone.core.GSMobSpawn;
+import gravestone.core.GraveStoneDeathInventory;
 import gravestone.core.MobHandler;
 import gravestone.core.compatibility.GSCompatibilityWitchery;
 import gravestone.core.logger.GravesLogger;
@@ -26,6 +27,7 @@ import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
 
 public class GSEventsHandler {
@@ -34,6 +36,11 @@ public class GSEventsHandler {
    )
    public void onEntityLivingDeath(LivingDeathEvent event) {
       if (FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+         if (GraveStoneConfig.enablePlayerDeathGraves && event.entityLiving instanceof EntityPlayer
+               && !GSCompatibilityWitchery.isVampire((EntityPlayer)event.entity, event.source)) {
+            GraveStoneDeathInventory.captureConfiguredItems((EntityPlayer)event.entityLiving);
+         }
+
          if (!GraveStoneConfig.generateGravesInLava && event.source.damageType.equals("lava")) {
             return;
          }
@@ -74,6 +81,13 @@ public class GSEventsHandler {
          }
       }
 
+   }
+
+   @SubscribeEvent(priority = EventPriority.LOWEST)
+   public void onPlayerClone(PlayerEvent.Clone event) {
+      if (event.wasDeath && FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+         GraveStoneDeathInventory.restoreConfiguredItems(event.original, event.entityPlayer);
+      }
    }
 
    @SubscribeEvent

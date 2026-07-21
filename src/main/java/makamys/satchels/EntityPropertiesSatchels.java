@@ -114,10 +114,13 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
     
     public ItemStack equip(ItemStack stack) {
         if(player != null && stack != null) {
-            String type = stack.getItem() instanceof ItemSatchel ? BaublesCompat.TYPE_SATCHEL :
-                    (stack.getItem() instanceof ItemPouch ? BaublesCompat.TYPE_POUCH : null);
-            if(type != null && !player.worldObj.isRemote) {
-                BaublesCompat.equipToFirstEmpty(player, stack, type);
+            String[] types = stack.getItem() instanceof ItemSatchel
+                    ? BaublesCompat.getTypes(BaublesCompat.ITEM_SATCHEL, BaublesCompat.TYPE_SATCHEL)
+                    : (stack.getItem() instanceof ItemPouch
+                    ? BaublesCompat.getTypes(BaublesCompat.ITEM_POUCH, BaublesCompat.TYPE_POUCH)
+                    : null);
+            if(types != null && !player.worldObj.isRemote) {
+                BaublesCompat.equipToFirstEmpty(player, stack, types);
             }
         }
         return stack;
@@ -185,15 +188,30 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
     }
 
     public ItemStack getSatchelStack() {
-        return BaublesCompat.getBaubleStack(player, BaublesCompat.TYPE_SATCHEL, 0);
+        return BaublesCompat.getBaubleStack(
+                player,
+                SatchelsItems.satchel,
+                0,
+                BaublesCompat.getTypes(BaublesCompat.ITEM_SATCHEL, BaublesCompat.TYPE_SATCHEL)
+        );
     }
 
     public ItemStack getLeftPouchStack() {
-        return BaublesCompat.getBaubleStack(player, BaublesCompat.TYPE_POUCH, 0);
+        return BaublesCompat.getBaubleStack(
+                player,
+                SatchelsItems.pouch,
+                0,
+                BaublesCompat.getTypes(BaublesCompat.ITEM_POUCH, BaublesCompat.TYPE_POUCH)
+        );
     }
 
     public ItemStack getRightPouchStack() {
-        return BaublesCompat.getBaubleStack(player, BaublesCompat.TYPE_POUCH, 1);
+        return BaublesCompat.getBaubleStack(
+                player,
+                SatchelsItems.pouch,
+                1,
+                BaublesCompat.getTypes(BaublesCompat.ITEM_POUCH, BaublesCompat.TYPE_POUCH)
+        );
     }
     
     public static EntityPropertiesSatchels fromPlayer(EntityPlayer player) {
@@ -332,19 +350,28 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
         if(player == null) return;
         ItemStack satchelStack = legacy.getStackInSlot(SLOT_SATCHEL);
         if(satchelStack != null) {
-            if(!BaublesCompat.equipToFirstEmpty(player, satchelStack, BaublesCompat.TYPE_SATCHEL)) {
+            if(!BaublesCompat.equipToFirstEmpty(
+                    player,
+                    satchelStack,
+                    BaublesCompat.getTypes(BaublesCompat.ITEM_SATCHEL, BaublesCompat.TYPE_SATCHEL))) {
                 player.inventory.addItemStackToInventory(satchelStack);
             }
         }
         ItemStack leftPouchStack = legacy.getStackInSlot(SLOT_LEFT_POUCH);
         if(leftPouchStack != null) {
-            if(!BaublesCompat.equipToFirstEmpty(player, leftPouchStack, BaublesCompat.TYPE_POUCH)) {
+            if(!BaublesCompat.equipToFirstEmpty(
+                    player,
+                    leftPouchStack,
+                    BaublesCompat.getTypes(BaublesCompat.ITEM_POUCH, BaublesCompat.TYPE_POUCH))) {
                 player.inventory.addItemStackToInventory(leftPouchStack);
             }
         }
         ItemStack rightPouchStack = legacy.getStackInSlot(SLOT_RIGHT_POUCH);
         if(rightPouchStack != null) {
-            if(!BaublesCompat.equipToFirstEmpty(player, rightPouchStack, BaublesCompat.TYPE_POUCH)) {
+            if(!BaublesCompat.equipToFirstEmpty(
+                    player,
+                    rightPouchStack,
+                    BaublesCompat.getTypes(BaublesCompat.ITEM_POUCH, BaublesCompat.TYPE_POUCH))) {
                 player.inventory.addItemStackToInventory(rightPouchStack);
             }
         }

@@ -114,7 +114,7 @@ public class ItemBackpack extends ItemArmor implements IBaubleExpanded, IBauble 
    @Override
    public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
       if (!world.isRemote && stack != null) {
-         if (BaublesCompat.equipToFirstEmpty(player, stack, BaublesCompat.TYPE_BACKPACK)) {
+         if (BaublesCompat.equipToFirstEmpty(player, stack, getBaubleTypes(stack))) {
             return stack;
          }
       }
@@ -171,7 +171,7 @@ public class ItemBackpack extends ItemArmor implements IBaubleExpanded, IBauble 
 
    @Override
    public String[] getBaubleTypes(ItemStack stack) {
-      return new String[]{BaublesCompat.TYPE_BACKPACK};
+      return BaublesCompat.getTypes(BaublesCompat.ITEM_BACKPACK, BaublesCompat.TYPE_BACKPACK);
    }
 
    @Override
@@ -218,7 +218,12 @@ public class ItemBackpack extends ItemArmor implements IBaubleExpanded, IBauble 
    }
 
    public static ItemStack getEquippedBackpack(EntityPlayer player) {
-      return BaublesCompat.getBaubleStack(player, BaublesCompat.TYPE_BACKPACK, 0);
+      return BaublesCompat.getBaubleStack(
+              player,
+              ModItems.backpack,
+              0,
+              BaublesCompat.getTypes(BaublesCompat.ITEM_BACKPACK, BaublesCompat.TYPE_BACKPACK)
+      );
    }
 
    private static void ensureBackpackId(ItemStack stack, EntityPlayer player) {

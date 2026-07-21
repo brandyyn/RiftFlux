@@ -320,6 +320,28 @@ public final class SunriseSkyTintHelper {
         };
     }
 
+    public static float[] resolveDaytimeWhiteCloudColor(WorldClient world, float partialTicks) {
+        if (world == null || world.provider == null
+                || !ModConfig.celestialCloudsStayDaytimeWhite
+                || !ModConfig.isCelestialFogHorizonDimensionAllowed(world.provider.dimensionId)) {
+            return null;
+        }
+
+        float brightness = 1.0F;
+        if (ModConfig.celestialCloudsStayDaytimeWhiteDuringWeather) {
+            return new float[] { brightness, brightness, brightness };
+        }
+        float rain = clamp01(world.getRainStrength(partialTicks));
+        if (rain > 0.0F) {
+            brightness *= 1.0F - rain * 0.38F;
+        }
+        float thunder = clamp01(world.getWeightedThunderStrength(partialTicks));
+        if (thunder > 0.0F) {
+            brightness *= 1.0F - thunder * 0.76F;
+        }
+        return new float[] { brightness, brightness, brightness };
+    }
+
     public static float[] resolveBetaStyleFogDistance(WorldClient world, EntityLivingBase view, float farPlaneDistance, boolean negativeFogMode) {
         if (world == null || view == null) {
             return null;

@@ -1,12 +1,12 @@
 package com.voidsrift.riftflux.chester;
 
-import com.voidsrift.riftflux.ModConfig;
 import baubles.api.BaubleType;
 import baubles.api.expanded.BaubleItemHelper;
 import baubles.api.expanded.IBaubleExpanded;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.List;
+import makamys.satchels.compat.BaublesCompat;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -24,7 +24,7 @@ public class ItemEyeBone extends Item implements IBaubleExpanded {
 
     @Override
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
-        return ModConfig.enableChesterBaubleSlot
+        return getBaubleTypes(stack).length > 0
                 ? BaubleItemHelper.onBaubleRightClick(stack, world, player)
                 : stack;
     }
@@ -59,14 +59,15 @@ public class ItemEyeBone extends Item implements IBaubleExpanded {
         if (boundName != null && !boundName.isEmpty()) {
             tooltip.add(StatCollector.translateToLocalFormatted("tooltip.chester.bound", boundName));
         }
-        if (ModConfig.enableChesterBaubleSlot) {
-            BaubleItemHelper.addSlotInformation(tooltip, getBaubleTypes(stack));
+        String[] baubleTypes = getBaubleTypes(stack);
+        if (baubleTypes.length > 0) {
+            BaubleItemHelper.addSlotInformation(tooltip, baubleTypes);
         }
     }
 
     @Override
     public String[] getBaubleTypes(ItemStack stack) {
-        return new String[]{ChesterContent.BAUBLE_TYPE};
+        return BaublesCompat.getTypes(BaublesCompat.ITEM_EYEBONE, ChesterContent.BAUBLE_TYPE);
     }
 
     @Override
@@ -91,7 +92,7 @@ public class ItemEyeBone extends Item implements IBaubleExpanded {
 
     @Override
     public boolean canEquip(ItemStack stack, EntityLivingBase wearer) {
-        return ModConfig.enableChesterBaubleSlot;
+        return getBaubleTypes(stack).length > 0;
     }
 
     @Override
