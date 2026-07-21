@@ -51,6 +51,7 @@ public final class PostProcessRenderer {
     private boolean persistentWorldRenderActive;
     private boolean persistentWorldPresented;
     private boolean persistentWorldBloomApplied;
+    private boolean bloomAppliedBeforeExcludedOverlays;
     private boolean persistentWorldFailed;
     private int depthTexture = -1;
     private int textureWidth = -1;
@@ -148,6 +149,7 @@ public final class PostProcessRenderer {
     }
 
     public static void beginWorldRender(float partialTicks) {
+        INSTANCE.bloomAppliedBeforeExcludedOverlays = false;
         INSTANCE.beginPersistentWorldRender(partialTicks);
     }
 
@@ -232,8 +234,28 @@ public final class PostProcessRenderer {
         }
     }
 
+    public static boolean shouldDeferBloomExcludedWorldOverlays() {
+        Minecraft mc = Minecraft.getMinecraft();
+        return mc != null
+                && mc.theWorld != null
+                && ModConfig.enablePostProcessing
+                && ModConfig.postProcessBloomStrengthPercent > 0.0F
+                && ModConfig.isPostProcessingDimensionAllowed(mc.theWorld.provider.dimensionId)
+                && !INSTANCE.shaderFailed;
+    }
+
+    public static void prepareBloomExcludedWorldOverlays(float partialTicks) {
+        if (ModConfig.postProcessBloomAffectsHeldItem && shouldDeferBloomExcludedWorldOverlays()) {
+            INSTANCE.renderFrame(partialTicks, false, true, false, "before bloom-excluded world overlays");
+            INSTANCE.bloomAppliedBeforeExcludedOverlays = true;
+        }
+    }
+
     public static void renderBeforeHud(float partialTicks) {
-        INSTANCE.renderFrame(partialTicks, true, ModConfig.postProcessBloomAffectsHeldItem, false, "before GUI overlay", false, true);
+        boolean applyBloom = ModConfig.postProcessBloomAffectsHeldItem
+                && !INSTANCE.bloomAppliedBeforeExcludedOverlays;
+        INSTANCE.renderFrame(partialTicks, true, applyBloom, false, "before GUI overlay", false, true);
+        INSTANCE.bloomAppliedBeforeExcludedOverlays = false;
     }
 
     private void renderFrame(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, String stageName) {
@@ -446,6 +468,7 @@ public final class PostProcessRenderer {
         persistentWorldRenderActive = false;
         persistentWorldPresented = false;
         persistentWorldBloomApplied = false;
+        bloomAppliedBeforeExcludedOverlays = false;
         activeRenderSceneTexture = -1;
         activeRenderDepthTexture = -1;
         releasePersistentWorldFramebuffer();

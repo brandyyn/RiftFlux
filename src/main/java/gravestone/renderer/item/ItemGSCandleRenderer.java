@@ -1,0 +1,22 @@
+package gravestone.renderer.item;
+
+import gravestone.tileentity.TileEntityGSCandle;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.IItemRenderer.ItemRenderType;
+import net.minecraftforge.client.IItemRenderer.ItemRendererHelper;
+
+public class ItemGSCandleRenderer implements IItemRenderer {
+   public boolean handleRenderType(ItemStack item, ItemRenderType type) {
+      return true;
+   }
+
+   public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack item, ItemRendererHelper helper) {
+      return true;
+   }
+
+   public void renderItem(ItemRenderType type, ItemStack item, Object... data) {
+      TileEntityRendererDispatcher.instance.renderTileEntityAt(new TileEntityGSCandle(), 0.0D, 0.0D, 0.0D, 0.0F);
+   }
+}

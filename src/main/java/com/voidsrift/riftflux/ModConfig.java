@@ -586,6 +586,7 @@ public class ModConfig {
     public static float pumpkinPasturesEnderflameStaffSpellDamage;
 
     // Embedded legacy module ports
+    public static boolean enableGravestoneModule;
     public static boolean enableGokiStatsModule;
     public static boolean enableRiftExplorerModule;
     public static boolean enableMoreBowsModule;
@@ -5821,7 +5822,6 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 32,
                 "Visible surface spring-water lake attempts per Hot Springs chunk. Higher values create a much wetter biome."
         );
-
         hotSpringsLavaLakesPerChunk = config.getInt(
                 "LavaLakesPerChunk",
                 "hotsprings",
@@ -6322,6 +6322,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 false,
                 "If false, Pumpkin Creeper explosions still damage living entities but do not destroy blocks or non-living entities such as item frames."
         );
+
+        enableGravestoneModule = config.getBoolean(
+                "EnableGravestoneModule",
+                "gravestone",
+                true,
+                "Master switch for integrated Gravestone content. Requires restart."
+        );
+        registerGravestoneConfigSchema();
 
         enableGokiStatsModule = config.getBoolean(
                 "EnableGokiStatsModule",
@@ -8732,6 +8740,93 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         de.sanandrew.mods.claysoldiers.util.ModConfig.syncConfig();
 
         config.save();
+    }
+
+    /** Registers Gravestone properties during RiftFlux's primary config pass so comments are always serialized. */
+    private static void registerGravestoneConfigSchema() {
+        final String category = "gravestone";
+
+        config.get(category, "StructuresDimensionId", 0, "Allows choosing the dimension in which Gravestone structures can generate.");
+        config.get(category, "GenerateCatacombs", true, "Enable or disable catacombs generation.");
+        config.get(category, "MaximumCatacombsGenerationHeight", 75, "Maximum ground height at which catacombs are allowed to generate.");
+        config.get(category, "CatacombsGenerationChance", 2.5E-4D, "Chance to generate catacombs.");
+        config.get(category, "GenerateCatacombsGraveyard", true, "Enable or disable catacombs graveyard generation.");
+        config.get(category, "GenerateEyeboneInGraveyards", true, "Add exactly one Chester Eyebone to a random courtyard grave outside each generated catacombs. Requires the Chester module.");
+        config.get(category, "GenerateEyeboneInCatacombsGrave", true, "Add exactly one Chester Eyebone to a random underground grave across all levels of each generated catacombs. Requires the Chester module.");
+        config.get(category, "GenerateEyeboneChestInLowestCatacombs", true, "Add one Eyebone to a randomly selected existing loot chest on the lowest catacombs level. Requires the Chester module.");
+        config.get(category, "GenerateEyeboneChestInRandomCatacombsLayer", true, "Add one Eyebone to an existing loot chest on a randomly selected catacombs level. Requires the Chester module.");
+        config.get(category, "GenerateGravesInMushroomBiomes", false, "Enable or disable world-generated graves in Mushroom biomes.");
+        config.get(category, "GenerateMemorials", false, "Enable or disable memorial generation.");
+        config.get(category, "GenerateSingleGraves", false, "Enable or disable single-grave generation during world generation.");
+        config.get(category, "GenerateCemeteries", false, "Enable or disable cemetery generation in villages.");
+        config.get(category, "GenerateVillageMemorials", false, "Enable or disable memorial generation in villages.");
+        config.get(category, "GenerateUndertaker", true, "Enable or disable undertaker house generation in villages.");
+        config.get(category, "undertakerId", 385, "Villager profession ID used by the undertaker.");
+        config.get(category, "GeneratePilesOfBones", false, "Enable or disable piles of bones in catacombs. Disable to improve performance.");
+        config.get(category, "CatacombsMinRoomsCountAt1Level", 30, "Minimum room count on catacombs level 1.");
+        config.get(category, "CatacombsMaxRoomsCountAt1Level", 60, "Maximum room count on catacombs level 1.");
+        config.get(category, "CatacombsMinRoomsCountAt2Level", 60, "Minimum room count on catacombs level 2.");
+        config.get(category, "CatacombsMaxRoomsCountAt2Level", 120, "Maximum room count on catacombs level 2.");
+        config.get(category, "CatacombsMinRoomsCountAt3Level", 90, "Minimum room count on catacombs level 3.");
+        config.get(category, "CatacombsMaxRoomsCountAt3Level", 180, "Maximum room count on catacombs level 3.");
+        config.get(category, "CatacombsMinRoomsCountAt4Level", 160, "Minimum room count on catacombs level 4.");
+        config.get(category, "CatacombsMaxRoomsCountAt4Level", 320, "Maximum room count on catacombs level 4.");
+
+        config.get(category, "CanPlaceGravesEveryWhere", true, "Allows gravestones to be placed on any type of surface.");
+        config.get(category, "EnablePlayerDeathGraves", true, "Enable this module's player-death graves and inventory capture. Disable when another grave mod handles player deaths; all other Gravestone content remains enabled.");
+        config.get(category, "EnableXaeroMinimapGraveWaypoints", true, "Make Xaero's Minimap death waypoint use the exact location where the player's gravestone was placed. Disable to retain Xaero's normal death-location waypoint behavior.");
+        config.get(category, "GeneratePlayerGraves", true, "Enable or disable grave generation when players die.");
+        config.get(category, "GenerateVillagerGraves", false, "Enable or disable grave generation when villagers die.");
+        config.get(category, "GeneratePetGraves", true, "Enable or disable grave generation when pets such as dogs, cats, and horses die.");
+        config.get(category, "GenerateGravesInLava", true, "Enable or disable grave generation when an entity dies in lava.");
+        config.get(category, "GenerateSwordGraves", true, "Allows one sword from the player's inventory to be used as their gravestone when they die.");
+        config.get(category, "RenderGravesFlowers", true, "Enable grave flower rendering. Disable to improve rendering performance.");
+        config.get(category, "VanillaRendererForSwordsGraves", true, "Controls sword gravestone rendering mode. The vanilla renderer uses considerably more resources.");
+        config.get(category, "SavedItemsCount", 40, "Amount of inventory slots stored in a grave when a player dies. Valid range: 0-40; 40 stores all standard inventory slots.");
+        config.get(category, "SpawnRate", 1000, "Amount of ticks between mob spawn attempts by graves. Must be greater than 600.");
+        config.get(category, "SpawnMobAtGraveDestruction", false, "Enable or disable mobs spawning when a grave is destroyed.");
+        config.get(category, "SpawnChance", 80, "Chance, in percent, for a mob to spawn by a grave.");
+        config.get(category, "IsFogEnabled", true, "Enable or disable fog created by graves and cemeteries.");
+        config.get(category, "EnableNightStone", true, "Enable or disable the Night Stone's time-changing effect.");
+        config.get(category, "EnableThunderStone", true, "Enable or disable the Thunder Stone's weather-changing effect.");
+        config.get(category, "ShowNightStoneMessage", true, "Enable or disable messages when the Night Stone changes time.");
+        config.get(category, "CursePotionEffectId", 135, "Potion effect ID used by the Gravestone curse.");
+        config.get(category, "EnableCreeperStatuesRecipes", true, "Enable or disable creeper statue crafting recipes.");
+        config.get(category, "EnableBossSpawnerCraftingRecipe", false, "Enable or disable the Wither spawner crafting recipe.");
+        config.get(category, "EnableMonsterSpawnerCraftingRecipe", false, "Enable or disable monster spawner crafting recipes.");
+        config.get(category, "ReplaceHauntedChest", false, "Replace a haunted chest with a normal chest when used.");
+        config.get(category, "RemoveEmptyGraves", true, "Automatically remove all empty graves after a random delay.");
+        config.get(category, "ShowGravesRemovingMessages", true, "Enable or disable messages when empty graves are automatically removed.");
+        config.get(category, "OnlyPlayersCanBreakGraves", true, "Prevent mobs, fake players, mining AI, and compatible mob-griefing mods from breaking gravestones.");
+        config.get(category, "ProtectGravesFromExplosions", true, "Prevent creepers and all other explosions from destroying gravestones.");
+        config.get(category, "OnlyOwnerCanBreakGraves", false, "Allow only the player whose death created a gravestone to break it. Existing graves without owner data remain breakable.");
+        config.get(category, "RestrictGraveGenerationInArea", "", "Disables player-death grave generation within configured areas. Enter dimension ID, start X, start Y, start Z, end X, end Y, and end Z separated by commas. Dimension ID is optional and defaults to 0. Separate multiple areas with semicolons.");
+        config.get(category, "CraftableNightStone", true, "Enable or disable the Night Stone crafting recipe.");
+        config.get(category, "CraftableThunderStone", true, "Enable or disable the Thunder Stone crafting recipe.");
+        config.get(category, "HardAltarRecipe", false, "Enable or disable the hard altar recipe.");
+
+        config.get(category, "SpawnZombieDogs", true, "Enable or disable Zombie Dogs spawning in the world.");
+        config.get(category, "SpawnZombieCats", true, "Enable or disable Zombie Cats spawning in the world.");
+        config.get(category, "SpawnSkeletonDogs", true, "Enable or disable Skeleton Dogs spawning in the world.");
+        config.get(category, "SpawnSkeletonCats", true, "Enable or disable Skeleton Cats spawning in the world.");
+        config.get(category, "SpawnSkullCrawlersAtMobsDeath", true, "Enable or disable Skull Crawlers spawning when mobs die.");
+        config.get(category, "SpawnSkullCrawlersOnBoneBlockDestruction", true, "Enable or disable Skull Crawlers spawning when bone blocks are destroyed.");
+
+        config.get(category, "SpawnMoCreaturesMobs", true, "Enable or disable supported Mo' Creatures mobs spawning by graves when the mod is installed.");
+        config.get(category, "EnableForestryBackpacks", true, "Enable or disable Forestry backpack crafting recipes when Forestry is installed.");
+        config.get(category, "StoreBattlegearItems", true, "Store Mine & Blade Battlegear 2 items in graves.");
+        config.get(category, "StoreTheCampingModItems", true, "Store The Camping Mod items in graves.");
+        config.get(category, "StoreBaublesItems", true, "Store Baubles mod items in graves.");
+        config.get(category, "StoreTravellersGearItems", true, "Store Traveller's Gear slot items, including vambraces and pauldrons, in graves.");
+        config.get(category, "StoreMaricultureItems", true, "Store Mariculture mod items in graves.");
+        config.get(category, "StoreTinkerConstructItems", true, "Store Tinkers' Construct mod items in graves.");
+        config.get(category, "StoreRpgInventoryItems", true, "Store RPG Inventory mod items in graves.");
+        config.get(category, "StoreGalacticraftItems", true, "Store Galacticraft mod items in graves.");
+        config.get(category, "StoreBackpacksItems", true, "Store Backpacks mod items in graves.");
+        config.get(category, "EnableArsMagicaSoulbound", true, "Prevent items with Ars Magica Soulbound enchantments from being stored in graves.");
+        config.get(category, "EnableEnderIOSoulbound", true, "Prevent items with Ender IO Soulbound enchantments from being stored in graves.");
+        config.get(category, "EnableTwilightForestCharmsOfKeeping", true, "Prevent affected items from being stored in graves when Twilight Forest Charms of Keeping are used.");
+        config.get(category, "EnableAntiqueAtlasDeathMarkers", true, "Add an Antique Atlas death marker when a player grave is created.");
     }
 
     private static void persistConfigIntValue(String category, String key, int value) {

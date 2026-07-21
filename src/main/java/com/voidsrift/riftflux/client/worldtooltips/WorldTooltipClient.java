@@ -61,6 +61,14 @@ public final class WorldTooltipClient {
         return modName;
     }
 
+    public static void beginDeferredRenderFrame() {
+        RENDER_HANDLER.beginDeferredRenderFrame();
+    }
+
+    public static void renderDeferred() {
+        RENDER_HANDLER.renderDeferred();
+    }
+
     public static int getRarityColor(EnumChatFormatting formatting, int fallback) {
         Integer color = RARITY_COLOR_CODES.get(formatting);
         return color != null ? color.intValue() : fallback;

@@ -14,13 +14,18 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
+import com.voidsrift.riftflux.gravestone.GravestoneTypeGrouping;
 import com.voidsrift.riftflux.placeditem.PlacedItemContent;
 import com.voidsrift.riftflux.terramine.TerrariaContent;
 import com.voidsrift.riftflux.vortex.block.ModBlocks;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.legacy.LegendGear;
+import gravestone.core.GSBlock;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Optional.Interface(iface = "codechicken.nei.api.IConfigureNEI", modid = "NotEnoughItems")
 public class NEIRiftFluxConfig implements IConfigureNEI {
@@ -168,6 +173,40 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 FMLLog.severe("[RiftFlux] Failed to hide inserted sword pedestal block in NEI: %s", t);
             }
         }
+        if (com.voidsrift.riftflux.ModConfig.enableGravestoneModule) {
+            hideRedundantGravestoneVariants();
+        }
+    }
+
+    private static void hideRedundantGravestoneVariants() {
+        if (GSBlock.invisibleWall != null) {
+            API.hideItem(new ItemStack(GSBlock.invisibleWall));
+        }
+        showOnePerGravestoneFamily(GSBlock.graveStone);
+        showOnePerGravestoneFamily(GSBlock.memorial);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void showOnePerGravestoneFamily(net.minecraft.block.Block block) {
+        if (block == null) {
+            return;
+        }
+        Item item = Item.getItemFromBlock(block);
+        List variants = new ArrayList();
+        block.getSubBlocks(item, block.getCreativeTabToDisplayOn(), variants);
+        Set<String> visibleFamilies = new HashSet<String>();
+        List<ItemStack> visibleVariants = new ArrayList<ItemStack>();
+        for (Object value : variants) {
+            if (!(value instanceof ItemStack)) {
+                continue;
+            }
+            ItemStack stack = (ItemStack)value;
+            String family = GravestoneTypeGrouping.getFamily(stack);
+            if (family != null && visibleFamilies.add(family)) {
+                visibleVariants.add(stack);
+            }
+        }
+        API.setItemListEntries(item, visibleVariants);
     }
 
     @Override

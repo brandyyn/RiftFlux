@@ -1,0 +1,1059 @@
+package gravestone.block;
+
+import cpw.mods.fml.common.registry.VillagerRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import gravestone.ModGraveStone;
+import gravestone.block.enums.EnumHangedMobs;
+import gravestone.block.enums.EnumMemorials;
+import gravestone.config.GraveStoneConfig;
+import gravestone.core.GSBlock;
+import gravestone.core.GSTabs;
+import gravestone.item.ItemGSCorpse;
+import gravestone.item.corpse.VillagerCorpseHelper;
+import gravestone.item.enums.EnumCorpse;
+import gravestone.particle.EntityBigFlameFX;
+import gravestone.tileentity.TileEntityGSMemorial;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockContainer;
+import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.EntityFX;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.world.Explosion;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.common.BiomeDictionary.Type;
+
+public class BlockGSMemorial extends BlockContainer {
+   public static final byte[] TAB_MEMORIALS = new byte[]{(byte)EnumMemorials.WOODEN_CROSS.ordinal(), (byte)EnumMemorials.SANDSTONE_CROSS.ordinal(), (byte)EnumMemorials.STONE_CROSS.ordinal(), (byte)EnumMemorials.MOSSY_CROSS.ordinal(), (byte)EnumMemorials.IRON_CROSS.ordinal(), (byte)EnumMemorials.GOLDEN_CROSS.ordinal(), (byte)EnumMemorials.DIAMOND_CROSS.ordinal(), (byte)EnumMemorials.EMERALD_CROSS.ordinal(), (byte)EnumMemorials.LAPIS_CROSS.ordinal(), (byte)EnumMemorials.REDSTONE_CROSS.ordinal(), (byte)EnumMemorials.OBSIDIAN_CROSS.ordinal(), (byte)EnumMemorials.QUARTZ_CROSS.ordinal(), (byte)EnumMemorials.ICE_CROSS.ordinal(), (byte)EnumMemorials.QUARTZ_OBELISK.ordinal(), (byte)EnumMemorials.WOODEN_STEVE_STATUE.ordinal(), (byte)EnumMemorials.SANDSTONE_STEVE_STATUE.ordinal(), (byte)EnumMemorials.STONE_STEVE_STATUE.ordinal(), (byte)EnumMemorials.MOSSY_STEVE_STATUE.ordinal(), (byte)EnumMemorials.IRON_STEVE_STATUE.ordinal(), (byte)EnumMemorials.GOLDEN_STEVE_STATUE.ordinal(), (byte)EnumMemorials.DIAMOND_STEVE_STATUE.ordinal(), (byte)EnumMemorials.EMERALD_STEVE_STATUE.ordinal(), (byte)EnumMemorials.LAPIS_STEVE_STATUE.ordinal(), (byte)EnumMemorials.REDSTONE_STEVE_STATUE.ordinal(), (byte)EnumMemorials.OBSIDIAN_STEVE_STATUE.ordinal(), (byte)EnumMemorials.QUARTZ_STEVE_STATUE.ordinal(), (byte)EnumMemorials.ICE_STEVE_STATUE.ordinal(), (byte)EnumMemorials.WOODEN_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.SANDSTONE_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.STONE_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.MOSSY_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.IRON_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.GOLDEN_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.DIAMOND_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.EMERALD_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.LAPIS_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.REDSTONE_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.OBSIDIAN_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.QUARTZ_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.ICE_VILLAGER_STATUE.ordinal(), (byte)EnumMemorials.WOODEN_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.SANDSTONE_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.STONE_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.MOSSY_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.IRON_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.GOLDEN_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.DIAMOND_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.EMERALD_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.LAPIS_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.REDSTONE_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.OBSIDIAN_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.QUARTZ_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.ICE_ANGEL_STATUE.ordinal(), (byte)EnumMemorials.WOODEN_DOG_STATUE.ordinal(), (byte)EnumMemorials.SANDSTONE_DOG_STATUE.ordinal(), (byte)EnumMemorials.STONE_DOG_STATUE.ordinal(), (byte)EnumMemorials.MOSSY_DOG_STATUE.ordinal(), (byte)EnumMemorials.IRON_DOG_STATUE.ordinal(), (byte)EnumMemorials.GOLDEN_DOG_STATUE.ordinal(), (byte)EnumMemorials.DIAMOND_DOG_STATUE.ordinal(), (byte)EnumMemorials.EMERALD_DOG_STATUE.ordinal(), (byte)EnumMemorials.LAPIS_DOG_STATUE.ordinal(), (byte)EnumMemorials.REDSTONE_DOG_STATUE.ordinal(), (byte)EnumMemorials.OBSIDIAN_DOG_STATUE.ordinal(), (byte)EnumMemorials.QUARTZ_DOG_STATUE.ordinal(), (byte)EnumMemorials.ICE_DOG_STATUE.ordinal(), (byte)EnumMemorials.WOODEN_CAT_STATUE.ordinal(), (byte)EnumMemorials.SANDSTONE_CAT_STATUE.ordinal(), (byte)EnumMemorials.STONE_CAT_STATUE.ordinal(), (byte)EnumMemorials.MOSSY_CAT_STATUE.ordinal(), (byte)EnumMemorials.IRON_CAT_STATUE.ordinal(), (byte)EnumMemorials.GOLDEN_CAT_STATUE.ordinal(), (byte)EnumMemorials.DIAMOND_CAT_STATUE.ordinal(), (byte)EnumMemorials.EMERALD_CAT_STATUE.ordinal(), (byte)EnumMemorials.LAPIS_CAT_STATUE.ordinal(), (byte)EnumMemorials.REDSTONE_CAT_STATUE.ordinal(), (byte)EnumMemorials.OBSIDIAN_CAT_STATUE.ordinal(), (byte)EnumMemorials.QUARTZ_CAT_STATUE.ordinal(), (byte)EnumMemorials.ICE_CAT_STATUE.ordinal(), (byte)EnumMemorials.WOODEN_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.SANDSTONE_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.STONE_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.MOSSY_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.IRON_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.GOLDEN_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.DIAMOND_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.EMERALD_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.LAPIS_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.REDSTONE_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.OBSIDIAN_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.QUARTZ_CREEPER_STATUE.ordinal(), (byte)EnumMemorials.ICE_CREEPER_STATUE.ordinal()};
+   public static final EnumMemorials[] WOODEN_GENERATED_MEMORIALS = new EnumMemorials[]{EnumMemorials.WOODEN_CROSS, EnumMemorials.QUARTZ_OBELISK, EnumMemorials.WOODEN_STEVE_STATUE, EnumMemorials.WOODEN_VILLAGER_STATUE, EnumMemorials.WOODEN_ANGEL_STATUE, EnumMemorials.WOODEN_DOG_STATUE, EnumMemorials.WOODEN_CAT_STATUE};
+   public static final EnumMemorials[] SANDSTONE_GENERATED_MEMORIALS = new EnumMemorials[]{EnumMemorials.SANDSTONE_CROSS, EnumMemorials.QUARTZ_OBELISK, EnumMemorials.SANDSTONE_STEVE_STATUE, EnumMemorials.SANDSTONE_VILLAGER_STATUE, EnumMemorials.SANDSTONE_ANGEL_STATUE, EnumMemorials.SANDSTONE_DOG_STATUE, EnumMemorials.SANDSTONE_CAT_STATUE};
+   public static final EnumMemorials[] STONE_GENERATED_MEMORIALS = new EnumMemorials[]{EnumMemorials.STONE_CROSS, EnumMemorials.QUARTZ_OBELISK, EnumMemorials.STONE_STEVE_STATUE, EnumMemorials.STONE_VILLAGER_STATUE, EnumMemorials.STONE_ANGEL_STATUE, EnumMemorials.STONE_DOG_STATUE, EnumMemorials.STONE_CAT_STATUE};
+   public static final EnumMemorials[] MOSSY_GENERATED_MEMORIALS = new EnumMemorials[]{EnumMemorials.MOSSY_CROSS, EnumMemorials.QUARTZ_OBELISK, EnumMemorials.MOSSY_STEVE_STATUE, EnumMemorials.MOSSY_VILLAGER_STATUE, EnumMemorials.MOSSY_ANGEL_STATUE, EnumMemorials.MOSSY_DOG_STATUE, EnumMemorials.MOSSY_CAT_STATUE};
+   public static final EnumMemorials[] QUARTZ_GENERATED_MEMORIALS = new EnumMemorials[]{EnumMemorials.QUARTZ_CROSS, EnumMemorials.QUARTZ_OBELISK, EnumMemorials.QUARTZ_STEVE_STATUE, EnumMemorials.QUARTZ_VILLAGER_STATUE, EnumMemorials.QUARTZ_ANGEL_STATUE, EnumMemorials.QUARTZ_DOG_STATUE, EnumMemorials.QUARTZ_CAT_STATUE};
+   public static final EnumMemorials[] ICE_GENERATED_MEMORIALS = new EnumMemorials[]{EnumMemorials.ICE_CROSS, EnumMemorials.QUARTZ_OBELISK, EnumMemorials.ICE_STEVE_STATUE, EnumMemorials.ICE_VILLAGER_STATUE, EnumMemorials.ICE_ANGEL_STATUE, EnumMemorials.ICE_DOG_STATUE, EnumMemorials.ICE_CAT_STATUE};
+   public static final EnumMemorials[] WOODEN_DOG_MEMORIALS = new EnumMemorials[]{EnumMemorials.WOODEN_DOG_STATUE};
+   public static final EnumMemorials[] SANDSTONE_DOG_MEMORIALS = new EnumMemorials[]{EnumMemorials.SANDSTONE_DOG_STATUE};
+   public static final EnumMemorials[] STONE_DOG_MEMORIALS = new EnumMemorials[]{EnumMemorials.STONE_DOG_STATUE};
+   public static final EnumMemorials[] MOSSY_DOG_MEMORIALS = new EnumMemorials[]{EnumMemorials.MOSSY_DOG_STATUE};
+   public static final EnumMemorials[] QUARTZ_DOG_MEMORIALS = new EnumMemorials[]{EnumMemorials.QUARTZ_DOG_STATUE};
+   public static final EnumMemorials[] ICE_DOG_MEMORIALS = new EnumMemorials[]{EnumMemorials.ICE_DOG_STATUE};
+   public static final EnumMemorials[] WOODEN_CAT_MEMORIALS = new EnumMemorials[]{EnumMemorials.WOODEN_CAT_STATUE};
+   public static final EnumMemorials[] SANDSTONE_CAT_MEMORIALS = new EnumMemorials[]{EnumMemorials.SANDSTONE_CAT_STATUE};
+   public static final EnumMemorials[] STONE_CAT_MEMORIALS = new EnumMemorials[]{EnumMemorials.STONE_CAT_STATUE};
+   public static final EnumMemorials[] MOSSY_CAT_MEMORIALS = new EnumMemorials[]{EnumMemorials.MOSSY_CAT_STATUE};
+   public static final EnumMemorials[] QUARTZ_CAT_MEMORIALS = new EnumMemorials[]{EnumMemorials.QUARTZ_CAT_STATUE};
+   public static final EnumMemorials[] ICE_CAT_MEMORIALS = new EnumMemorials[]{EnumMemorials.ICE_CAT_STATUE};
+   public static final EnumMemorials[] WOODEN_CREEPER_MEMORIALS = new EnumMemorials[]{EnumMemorials.WOODEN_CREEPER_STATUE};
+   public static final EnumMemorials[] SANDSTONE_CREEPER_MEMORIALS = new EnumMemorials[]{EnumMemorials.SANDSTONE_CREEPER_STATUE};
+   public static final EnumMemorials[] STONE_CREEPER_MEMORIALS = new EnumMemorials[]{EnumMemorials.STONE_CREEPER_STATUE};
+   public static final EnumMemorials[] MOSSY_CREEPER_MEMORIALS = new EnumMemorials[]{EnumMemorials.MOSSY_CREEPER_STATUE};
+   public static final EnumMemorials[] QUARTZ_CREEPER_MEMORIALS = new EnumMemorials[]{EnumMemorials.QUARTZ_CREEPER_STATUE};
+   public static final EnumMemorials[] ICE_CREEPER_MEMORIALS = new EnumMemorials[]{EnumMemorials.ICE_CREEPER_STATUE};
+   public static final EnumMemorials[] WOODEN_STATUES_MEMORIALS = new EnumMemorials[]{EnumMemorials.WOODEN_STEVE_STATUE, EnumMemorials.WOODEN_VILLAGER_STATUE, EnumMemorials.WOODEN_ANGEL_STATUE};
+   public static final EnumMemorials[] SANDSTONE_STATUES_MEMORIALS = new EnumMemorials[]{EnumMemorials.SANDSTONE_STEVE_STATUE, EnumMemorials.SANDSTONE_VILLAGER_STATUE, EnumMemorials.SANDSTONE_ANGEL_STATUE};
+   public static final EnumMemorials[] STONE_STATUES_MEMORIALS = new EnumMemorials[]{EnumMemorials.STONE_STEVE_STATUE, EnumMemorials.STONE_VILLAGER_STATUE, EnumMemorials.STONE_ANGEL_STATUE};
+   public static final EnumMemorials[] MOSSY_STATUES_MEMORIALS = new EnumMemorials[]{EnumMemorials.MOSSY_STEVE_STATUE, EnumMemorials.MOSSY_VILLAGER_STATUE, EnumMemorials.MOSSY_ANGEL_STATUE};
+   public static final EnumMemorials[] QUARTZ_STATUES_MEMORIALS = new EnumMemorials[]{EnumMemorials.QUARTZ_STEVE_STATUE, EnumMemorials.QUARTZ_VILLAGER_STATUE, EnumMemorials.QUARTZ_ANGEL_STATUE};
+   public static final EnumMemorials[] ICE_STATUES_MEMORIALS = new EnumMemorials[]{EnumMemorials.ICE_STEVE_STATUE, EnumMemorials.ICE_VILLAGER_STATUE, EnumMemorials.ICE_ANGEL_STATUE};
+   public static final EnumMemorials[] TORTURE_MEMORIALS = new EnumMemorials[]{EnumMemorials.GIBBET, EnumMemorials.STOCKS, EnumMemorials.BURNING_STAKE};
+
+   public BlockGSMemorial() {
+      super(Material.rock);
+      this.isBlockContainer = true;
+      this.setStepSound(Block.soundTypeStone);
+      this.setBlockName("Memorial");
+      this.setHardness(1.0F);
+      this.setResistance(5.0F);
+      this.setCreativeTab(GSTabs.memorialsTab);
+      this.setBlockTextureName("stone");
+   }
+
+   public static int getMetaDirection(int direction) {
+      switch(direction) {
+      case 0:
+         return 1;
+      case 1:
+         return 2;
+      case 2:
+         return 0;
+      case 3:
+         return 3;
+      default:
+         return 0;
+      }
+   }
+
+   public static byte getMemorialType(World world, int x, int z, Random random, int memorialType) {
+      switch(memorialType) {
+      case 0:
+      default:
+         return getRandomMemorial(getGeneratedMemorialsTypes(world, x, z), random);
+      case 1:
+         return getRandomMemorial(getPetsMemorialsTypes(world, x, z), random);
+      case 2:
+         return getRandomMemorial(getDogsMemorialsTypes(world, x, z), random);
+      case 3:
+         return getRandomMemorial(getCatsMemorialsTypes(world, x, z), random);
+      case 4:
+         return getRandomMemorial(getCreeperMemorialsTypes(world, x, z), random);
+      case 5:
+         return getRandomMemorial(getStatuesMemorialsTypes(world, x, z), random);
+      }
+   }
+
+   public static byte getRandomMemorial(List<EnumMemorials> memorialTypes, Random rand) {
+      return memorialTypes.size() > 0 ? (byte)memorialTypes.get(rand.nextInt(memorialTypes.size())).ordinal() : 0;
+   }
+
+   public static ArrayList<EnumMemorials> getGeneratedMemorialsTypes(World world, int x, int z) {
+      BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+      ArrayList<Type> biomeTypesList = new ArrayList<>(Arrays.asList(BiomeDictionary.getTypesForBiome(biome)));
+      ArrayList<EnumMemorials> memorialTypes = new ArrayList<>();
+      if (biomeTypesList.contains(Type.DESERT) || biomeTypesList.contains(Type.BEACH)) {
+         memorialTypes.addAll(Arrays.asList(SANDSTONE_GENERATED_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.JUNGLE) || biomeTypesList.contains(Type.SWAMP)) {
+         memorialTypes.addAll(Arrays.asList(MOSSY_GENERATED_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.MOUNTAIN) || biomeTypesList.contains(Type.HILLS) || biomeTypesList.contains(Type.PLAINS) || biomeTypesList.contains(Type.MUSHROOM)) {
+         memorialTypes.addAll(Arrays.asList(STONE_GENERATED_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.FOREST)) {
+         memorialTypes.addAll(Arrays.asList(WOODEN_GENERATED_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.FROZEN)) {
+         memorialTypes.addAll(Arrays.asList(ICE_GENERATED_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.NETHER)) {
+         memorialTypes.addAll(Arrays.asList(QUARTZ_GENERATED_MEMORIALS));
+      }
+
+      if (memorialTypes.isEmpty()) {
+         memorialTypes.addAll(Arrays.asList(STONE_GENERATED_MEMORIALS));
+      }
+
+      return memorialTypes;
+   }
+
+   public static ArrayList<EnumMemorials> getPetsMemorialsTypes(World world, int x, int z) {
+      ArrayList<EnumMemorials> memorialTypes = new ArrayList<>();
+      memorialTypes.addAll(getDogsMemorialsTypes(world, x, z));
+      memorialTypes.addAll(getCatsMemorialsTypes(world, x, z));
+      return memorialTypes;
+   }
+
+   public static ArrayList<EnumMemorials> getDogsMemorialsTypes(World world, int x, int z) {
+      BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+      ArrayList<Type> biomeTypesList = new ArrayList<>(Arrays.asList(BiomeDictionary.getTypesForBiome(biome)));
+      ArrayList<EnumMemorials> memorialTypes = new ArrayList<>();
+      if (biomeTypesList.contains(Type.SANDY) || biomeTypesList.contains(Type.BEACH)) {
+         memorialTypes.addAll(Arrays.asList(SANDSTONE_DOG_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.JUNGLE) || biomeTypesList.contains(Type.SWAMP)) {
+         memorialTypes.addAll(Arrays.asList(MOSSY_DOG_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.MOUNTAIN) || biomeTypesList.contains(Type.HILLS) || biomeTypesList.contains(Type.PLAINS) || biomeTypesList.contains(Type.MUSHROOM)) {
+         memorialTypes.addAll(Arrays.asList(STONE_DOG_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.FOREST)) {
+         memorialTypes.addAll(Arrays.asList(WOODEN_DOG_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.SNOWY)) {
+         memorialTypes.addAll(Arrays.asList(ICE_DOG_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.NETHER)) {
+         memorialTypes.addAll(Arrays.asList(QUARTZ_DOG_MEMORIALS));
+      }
+
+      if (memorialTypes.isEmpty()) {
+         memorialTypes.addAll(Arrays.asList(STONE_DOG_MEMORIALS));
+      }
+
+      return memorialTypes;
+   }
+
+   public static ArrayList<EnumMemorials> getCatsMemorialsTypes(World world, int x, int z) {
+      BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+      ArrayList<Type> biomeTypesList = new ArrayList<>(Arrays.asList(BiomeDictionary.getTypesForBiome(biome)));
+      ArrayList<EnumMemorials> memorialTypes = new ArrayList<>();
+      if (biomeTypesList.contains(Type.SANDY) || biomeTypesList.contains(Type.BEACH)) {
+         memorialTypes.addAll(Arrays.asList(SANDSTONE_CAT_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.JUNGLE) || biomeTypesList.contains(Type.SWAMP)) {
+         memorialTypes.addAll(Arrays.asList(MOSSY_CAT_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.MOUNTAIN) || biomeTypesList.contains(Type.HILLS) || biomeTypesList.contains(Type.PLAINS) || biomeTypesList.contains(Type.MUSHROOM)) {
+         memorialTypes.addAll(Arrays.asList(STONE_CAT_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.FOREST)) {
+         memorialTypes.addAll(Arrays.asList(WOODEN_CAT_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.SNOWY)) {
+         memorialTypes.addAll(Arrays.asList(ICE_CAT_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.NETHER)) {
+         memorialTypes.addAll(Arrays.asList(QUARTZ_CAT_MEMORIALS));
+      }
+
+      if (memorialTypes.isEmpty()) {
+         memorialTypes.addAll(Arrays.asList(STONE_CAT_MEMORIALS));
+      }
+
+      return memorialTypes;
+   }
+
+   public static ArrayList<EnumMemorials> getCreeperMemorialsTypes(World world, int x, int z) {
+      BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+      ArrayList<Type> biomeTypesList = new ArrayList<>(Arrays.asList(BiomeDictionary.getTypesForBiome(biome)));
+      ArrayList<EnumMemorials> memorialTypes = new ArrayList<>();
+      if (biomeTypesList.contains(Type.SANDY) || biomeTypesList.contains(Type.BEACH)) {
+         memorialTypes.addAll(Arrays.asList(SANDSTONE_CREEPER_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.JUNGLE) || biomeTypesList.contains(Type.SWAMP)) {
+         memorialTypes.addAll(Arrays.asList(MOSSY_CREEPER_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.MOUNTAIN) || biomeTypesList.contains(Type.HILLS) || biomeTypesList.contains(Type.PLAINS) || biomeTypesList.contains(Type.MUSHROOM)) {
+         memorialTypes.addAll(Arrays.asList(STONE_CREEPER_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.FOREST)) {
+         memorialTypes.addAll(Arrays.asList(WOODEN_CREEPER_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.SNOWY)) {
+         memorialTypes.addAll(Arrays.asList(ICE_CREEPER_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.NETHER)) {
+         memorialTypes.addAll(Arrays.asList(QUARTZ_CREEPER_MEMORIALS));
+      }
+
+      if (memorialTypes.isEmpty()) {
+         memorialTypes.addAll(Arrays.asList(STONE_CREEPER_MEMORIALS));
+      }
+
+      return memorialTypes;
+   }
+
+   public static ArrayList<EnumMemorials> getStatuesMemorialsTypes(World world, int x, int z) {
+      BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+      ArrayList<Type> biomeTypesList = new ArrayList<>(Arrays.asList(BiomeDictionary.getTypesForBiome(biome)));
+      ArrayList<EnumMemorials> memorialTypes = new ArrayList<>();
+      if (biomeTypesList.contains(Type.SANDY) || biomeTypesList.contains(Type.BEACH)) {
+         memorialTypes.addAll(Arrays.asList(SANDSTONE_STATUES_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.JUNGLE) || biomeTypesList.contains(Type.SWAMP)) {
+         memorialTypes.addAll(Arrays.asList(MOSSY_STATUES_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.MOUNTAIN) || biomeTypesList.contains(Type.HILLS) || biomeTypesList.contains(Type.PLAINS) || biomeTypesList.contains(Type.MUSHROOM)) {
+         memorialTypes.addAll(Arrays.asList(STONE_STATUES_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.FOREST)) {
+         memorialTypes.addAll(Arrays.asList(WOODEN_STATUES_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.SNOWY)) {
+         memorialTypes.addAll(Arrays.asList(ICE_STATUES_MEMORIALS));
+      }
+
+      if (biomeTypesList.contains(Type.NETHER)) {
+         memorialTypes.addAll(Arrays.asList(QUARTZ_STATUES_MEMORIALS));
+      }
+
+      if (memorialTypes.isEmpty()) {
+         memorialTypes.addAll(Arrays.asList(STONE_STATUES_MEMORIALS));
+      }
+
+      return memorialTypes;
+   }
+
+   public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase player, ItemStack itemStack) {
+      int direction = MathHelper.floor_float(player.rotationYaw);
+      if (direction < 0) {
+         direction += 360;
+      }
+
+      int metadata = this.getMetadataBasedOnRotation(direction);
+      world.setBlockMetadataWithNotify(x, y, z, metadata, 2);
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (tileEntity != null && itemStack.stackTagCompound != null) {
+         if (itemStack.stackTagCompound.hasKey("isLocalized") && itemStack.stackTagCompound.getBoolean("isLocalized")) {
+            tileEntity.getDeathTextComponent().setLocalized();
+            if (itemStack.stackTagCompound.hasKey("name") && itemStack.stackTagCompound.hasKey("KillerName")) {
+               tileEntity.getDeathTextComponent().setName(itemStack.stackTagCompound.getString("name"));
+               tileEntity.getDeathTextComponent().setKillerName(itemStack.stackTagCompound.getString("KillerName"));
+            }
+         }
+
+         if (itemStack.stackTagCompound.hasKey("DeathText")) {
+            tileEntity.getDeathTextComponent().setDeathText(itemStack.stackTagCompound.getString("DeathText"));
+         }
+
+         if (itemStack.stackTagCompound.hasKey("GraveType")) {
+            tileEntity.setGraveType(itemStack.stackTagCompound.getByte("GraveType"));
+         } else {
+            tileEntity.setGraveType((byte)0);
+         }
+
+         if (itemStack.stackTagCompound.hasKey("HangedMob")) {
+            tileEntity.setHangedMob(EnumHangedMobs.getByID(itemStack.stackTagCompound.getByte("HangedMob")));
+            tileEntity.setHangedVillagerProfession(itemStack.stackTagCompound.getInteger("HangedVillagerProfession"));
+         }
+
+         placeWalls(world, x, y, z);
+      }
+
+   }
+
+   public static void placeWalls(World world, int x, int y, int z) {
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (tileEntity != null) {
+         byte maxX = 1;
+         byte maxZ = 1;
+         byte startX = 0;
+         byte startZ = 0;
+         byte maxY;
+         switch(tileEntity.getMemorialType()) {
+         case WOODEN_CROSS:
+         case SANDSTONE_CROSS:
+         case STONE_CROSS:
+         case MOSSY_CROSS:
+         case IRON_CROSS:
+         case GOLDEN_CROSS:
+         case DIAMOND_CROSS:
+         case EMERALD_CROSS:
+         case LAPIS_CROSS:
+         case REDSTONE_CROSS:
+         case OBSIDIAN_CROSS:
+         case QUARTZ_CROSS:
+         case ICE_CROSS:
+         case WOODEN_OBELISK:
+         case SANDSTONE_OBELISK:
+         case STONE_OBELISK:
+         case MOSSY_OBELISK:
+         case IRON_OBELISK:
+         case GOLDEN_OBELISK:
+         case DIAMOND_OBELISK:
+         case EMERALD_OBELISK:
+         case LAPIS_OBELISK:
+         case REDSTONE_OBELISK:
+         case OBSIDIAN_OBELISK:
+         case QUARTZ_OBELISK:
+         case ICE_OBELISK:
+            maxY = 5;
+            maxX = 2;
+            maxZ = 2;
+            startX = -1;
+            startZ = -1;
+            break;
+         case WOODEN_DOG_STATUE:
+         case WOODEN_CAT_STATUE:
+         case SANDSTONE_DOG_STATUE:
+         case SANDSTONE_CAT_STATUE:
+         case STONE_DOG_STATUE:
+         case STONE_CAT_STATUE:
+         case MOSSY_DOG_STATUE:
+         case MOSSY_CAT_STATUE:
+         case IRON_DOG_STATUE:
+         case IRON_CAT_STATUE:
+         case GOLDEN_DOG_STATUE:
+         case GOLDEN_CAT_STATUE:
+         case DIAMOND_DOG_STATUE:
+         case DIAMOND_CAT_STATUE:
+         case EMERALD_DOG_STATUE:
+         case EMERALD_CAT_STATUE:
+         case LAPIS_DOG_STATUE:
+         case LAPIS_CAT_STATUE:
+         case REDSTONE_DOG_STATUE:
+         case REDSTONE_CAT_STATUE:
+         case OBSIDIAN_DOG_STATUE:
+         case OBSIDIAN_CAT_STATUE:
+         case QUARTZ_DOG_STATUE:
+         case QUARTZ_CAT_STATUE:
+         case ICE_DOG_STATUE:
+         case ICE_CAT_STATUE:
+            maxY = 2;
+            break;
+         case WOODEN_STEVE_STATUE:
+         case SANDSTONE_STEVE_STATUE:
+         case STONE_STEVE_STATUE:
+         case MOSSY_STEVE_STATUE:
+         case IRON_STEVE_STATUE:
+         case GOLDEN_STEVE_STATUE:
+         case DIAMOND_STEVE_STATUE:
+         case EMERALD_STEVE_STATUE:
+         case LAPIS_STEVE_STATUE:
+         case REDSTONE_STEVE_STATUE:
+         case OBSIDIAN_STEVE_STATUE:
+         case QUARTZ_STEVE_STATUE:
+         case ICE_STEVE_STATUE:
+         case WOODEN_VILLAGER_STATUE:
+         case SANDSTONE_VILLAGER_STATUE:
+         case STONE_VILLAGER_STATUE:
+         case MOSSY_VILLAGER_STATUE:
+         case IRON_VILLAGER_STATUE:
+         case GOLDEN_VILLAGER_STATUE:
+         case DIAMOND_VILLAGER_STATUE:
+         case EMERALD_VILLAGER_STATUE:
+         case LAPIS_VILLAGER_STATUE:
+         case REDSTONE_VILLAGER_STATUE:
+         case OBSIDIAN_VILLAGER_STATUE:
+         case QUARTZ_VILLAGER_STATUE:
+         case ICE_VILLAGER_STATUE:
+         case WOODEN_ANGEL_STATUE:
+         case SANDSTONE_ANGEL_STATUE:
+         case STONE_ANGEL_STATUE:
+         case MOSSY_ANGEL_STATUE:
+         case IRON_ANGEL_STATUE:
+         case GOLDEN_ANGEL_STATUE:
+         case DIAMOND_ANGEL_STATUE:
+         case EMERALD_ANGEL_STATUE:
+         case LAPIS_ANGEL_STATUE:
+         case REDSTONE_ANGEL_STATUE:
+         case OBSIDIAN_ANGEL_STATUE:
+         case QUARTZ_ANGEL_STATUE:
+         case ICE_ANGEL_STATUE:
+         case WOODEN_CREEPER_STATUE:
+         case SANDSTONE_CREEPER_STATUE:
+         case STONE_CREEPER_STATUE:
+         case MOSSY_CREEPER_STATUE:
+         case IRON_CREEPER_STATUE:
+         case GOLDEN_CREEPER_STATUE:
+         case DIAMOND_CREEPER_STATUE:
+         case EMERALD_CREEPER_STATUE:
+         case LAPIS_CREEPER_STATUE:
+         case REDSTONE_CREEPER_STATUE:
+         case OBSIDIAN_CREEPER_STATUE:
+         case QUARTZ_CREEPER_STATUE:
+         case ICE_CREEPER_STATUE:
+         default:
+            maxY = 3;
+         }
+
+         for(byte shiftY = 0; shiftY < maxY; ++shiftY) {
+            for(byte shiftZ = startZ; shiftZ < maxZ; ++shiftZ) {
+               for(byte shiftX = startX; shiftX < maxX; ++shiftX) {
+                  int newX = x + shiftX;
+                  int newY = y + shiftY;
+                  int newZ = z + shiftZ;
+                  if (world.getBlock(newX, newY, newZ) == Blocks.air) {
+                     world.setBlock(newX, newY, newZ, GSBlock.invisibleWall);
+                  }
+               }
+            }
+         }
+      }
+
+   }
+
+   public void onBlockDestroyedByExplosion(World world, int x, int y, int z, Explosion explosionIn) {
+      removeWalls(world, x, y, z);
+      super.onBlockDestroyedByExplosion(world, x, y, z, explosionIn);
+   }
+
+   public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest) {
+      removeWalls(world, x, y, z);
+      return super.removedByPlayer(world, player, x, y, z, willHarvest);
+   }
+
+   private static void removeWalls(World world, int x, int y, int z) {
+      byte maxX = 1;
+      byte maxZ = 1;
+      byte startX = 0;
+      byte startZ = 0;
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (tileEntity != null) {
+         byte maxY;
+         switch(tileEntity.getMemorialType()) {
+         case WOODEN_CROSS:
+         case SANDSTONE_CROSS:
+         case STONE_CROSS:
+         case MOSSY_CROSS:
+         case IRON_CROSS:
+         case GOLDEN_CROSS:
+         case DIAMOND_CROSS:
+         case EMERALD_CROSS:
+         case LAPIS_CROSS:
+         case REDSTONE_CROSS:
+         case OBSIDIAN_CROSS:
+         case QUARTZ_CROSS:
+         case ICE_CROSS:
+         case WOODEN_OBELISK:
+         case SANDSTONE_OBELISK:
+         case STONE_OBELISK:
+         case MOSSY_OBELISK:
+         case IRON_OBELISK:
+         case GOLDEN_OBELISK:
+         case DIAMOND_OBELISK:
+         case EMERALD_OBELISK:
+         case LAPIS_OBELISK:
+         case REDSTONE_OBELISK:
+         case OBSIDIAN_OBELISK:
+         case QUARTZ_OBELISK:
+         case ICE_OBELISK:
+            maxY = 5;
+            maxX = 2;
+            maxZ = 2;
+            startX = -1;
+            startZ = -1;
+            break;
+         case WOODEN_DOG_STATUE:
+         case WOODEN_CAT_STATUE:
+         case SANDSTONE_DOG_STATUE:
+         case SANDSTONE_CAT_STATUE:
+         case STONE_DOG_STATUE:
+         case STONE_CAT_STATUE:
+         case MOSSY_DOG_STATUE:
+         case MOSSY_CAT_STATUE:
+         case IRON_DOG_STATUE:
+         case IRON_CAT_STATUE:
+         case GOLDEN_DOG_STATUE:
+         case GOLDEN_CAT_STATUE:
+         case DIAMOND_DOG_STATUE:
+         case DIAMOND_CAT_STATUE:
+         case EMERALD_DOG_STATUE:
+         case EMERALD_CAT_STATUE:
+         case LAPIS_DOG_STATUE:
+         case LAPIS_CAT_STATUE:
+         case REDSTONE_DOG_STATUE:
+         case REDSTONE_CAT_STATUE:
+         case OBSIDIAN_DOG_STATUE:
+         case OBSIDIAN_CAT_STATUE:
+         case QUARTZ_DOG_STATUE:
+         case QUARTZ_CAT_STATUE:
+         case ICE_DOG_STATUE:
+         case ICE_CAT_STATUE:
+            maxY = 2;
+            break;
+         case WOODEN_STEVE_STATUE:
+         case SANDSTONE_STEVE_STATUE:
+         case STONE_STEVE_STATUE:
+         case MOSSY_STEVE_STATUE:
+         case IRON_STEVE_STATUE:
+         case GOLDEN_STEVE_STATUE:
+         case DIAMOND_STEVE_STATUE:
+         case EMERALD_STEVE_STATUE:
+         case LAPIS_STEVE_STATUE:
+         case REDSTONE_STEVE_STATUE:
+         case OBSIDIAN_STEVE_STATUE:
+         case QUARTZ_STEVE_STATUE:
+         case ICE_STEVE_STATUE:
+         case WOODEN_VILLAGER_STATUE:
+         case SANDSTONE_VILLAGER_STATUE:
+         case STONE_VILLAGER_STATUE:
+         case MOSSY_VILLAGER_STATUE:
+         case IRON_VILLAGER_STATUE:
+         case GOLDEN_VILLAGER_STATUE:
+         case DIAMOND_VILLAGER_STATUE:
+         case EMERALD_VILLAGER_STATUE:
+         case LAPIS_VILLAGER_STATUE:
+         case REDSTONE_VILLAGER_STATUE:
+         case OBSIDIAN_VILLAGER_STATUE:
+         case QUARTZ_VILLAGER_STATUE:
+         case ICE_VILLAGER_STATUE:
+         case WOODEN_ANGEL_STATUE:
+         case SANDSTONE_ANGEL_STATUE:
+         case STONE_ANGEL_STATUE:
+         case MOSSY_ANGEL_STATUE:
+         case IRON_ANGEL_STATUE:
+         case GOLDEN_ANGEL_STATUE:
+         case DIAMOND_ANGEL_STATUE:
+         case EMERALD_ANGEL_STATUE:
+         case LAPIS_ANGEL_STATUE:
+         case REDSTONE_ANGEL_STATUE:
+         case OBSIDIAN_ANGEL_STATUE:
+         case QUARTZ_ANGEL_STATUE:
+         case ICE_ANGEL_STATUE:
+         case WOODEN_CREEPER_STATUE:
+         case SANDSTONE_CREEPER_STATUE:
+         case STONE_CREEPER_STATUE:
+         case MOSSY_CREEPER_STATUE:
+         case IRON_CREEPER_STATUE:
+         case GOLDEN_CREEPER_STATUE:
+         case DIAMOND_CREEPER_STATUE:
+         case EMERALD_CREEPER_STATUE:
+         case LAPIS_CREEPER_STATUE:
+         case REDSTONE_CREEPER_STATUE:
+         case OBSIDIAN_CREEPER_STATUE:
+         case QUARTZ_CREEPER_STATUE:
+         case ICE_CREEPER_STATUE:
+         default:
+            maxY = 3;
+         }
+
+         for(byte shiftY = 0; shiftY < maxY; ++shiftY) {
+            for(byte shiftZ = startZ; shiftZ < maxZ; ++shiftZ) {
+               for(byte shiftX = startX; shiftX < maxX; ++shiftX) {
+                  int newX = x + shiftX;
+                  int newY = y + shiftY;
+                  int newZ = z + shiftZ;
+                  if (world.getBlock(newX, newY, newZ) == GSBlock.invisibleWall) {
+                     world.setBlock(newX, newY, newZ, Blocks.air);
+                  }
+               }
+            }
+         }
+      }
+
+   }
+
+   private int getMetadataBasedOnRotation(int rotation) {
+      if (rotation < 315 && rotation >= 45) {
+         if (rotation >= 45 && rotation < 135) {
+            return 2;
+         } else {
+            return rotation >= 135 && rotation < 225 ? 0 : 3;
+         }
+      } else {
+         return 1;
+      }
+   }
+
+   public void setBlockBoundsBasedOnState(IBlockAccess access, int x, int y, int z) {
+      int meta = access.getBlockMetadata(x, y, z);
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)access.getTileEntity(x, y, z);
+      EnumMemorials memorialType;
+      if (tileEntity != null) {
+         memorialType = tileEntity.getMemorialType();
+      } else {
+         memorialType = EnumMemorials.STONE_CROSS;
+      }
+
+      switch(memorialType) {
+      case WOODEN_CROSS:
+      case SANDSTONE_CROSS:
+      case STONE_CROSS:
+      case MOSSY_CROSS:
+      case IRON_CROSS:
+      case GOLDEN_CROSS:
+      case DIAMOND_CROSS:
+      case EMERALD_CROSS:
+      case LAPIS_CROSS:
+      case REDSTONE_CROSS:
+      case OBSIDIAN_CROSS:
+      case QUARTZ_CROSS:
+      case ICE_CROSS:
+      case WOODEN_OBELISK:
+      case SANDSTONE_OBELISK:
+      case STONE_OBELISK:
+      case MOSSY_OBELISK:
+      case IRON_OBELISK:
+      case GOLDEN_OBELISK:
+      case DIAMOND_OBELISK:
+      case EMERALD_OBELISK:
+      case LAPIS_OBELISK:
+      case REDSTONE_OBELISK:
+      case OBSIDIAN_OBELISK:
+      case QUARTZ_OBELISK:
+      case ICE_OBELISK:
+         this.setBlockBounds(-1.0F, 0.0F, -1.0F, 2.0F, 5.0F, 2.0F);
+         break;
+      case WOODEN_DOG_STATUE:
+      case WOODEN_CAT_STATUE:
+      case SANDSTONE_DOG_STATUE:
+      case SANDSTONE_CAT_STATUE:
+      case STONE_DOG_STATUE:
+      case STONE_CAT_STATUE:
+      case MOSSY_DOG_STATUE:
+      case MOSSY_CAT_STATUE:
+      case IRON_DOG_STATUE:
+      case IRON_CAT_STATUE:
+      case GOLDEN_DOG_STATUE:
+      case GOLDEN_CAT_STATUE:
+      case DIAMOND_DOG_STATUE:
+      case DIAMOND_CAT_STATUE:
+      case EMERALD_DOG_STATUE:
+      case EMERALD_CAT_STATUE:
+      case LAPIS_DOG_STATUE:
+      case LAPIS_CAT_STATUE:
+      case REDSTONE_DOG_STATUE:
+      case REDSTONE_CAT_STATUE:
+      case OBSIDIAN_DOG_STATUE:
+      case OBSIDIAN_CAT_STATUE:
+      case QUARTZ_DOG_STATUE:
+      case QUARTZ_CAT_STATUE:
+      case ICE_DOG_STATUE:
+      case ICE_CAT_STATUE:
+         this.setBlockBounds(0.125F, 0.0F, 0.125F, 0.875F, 2.0F, 0.875F);
+         break;
+      case WOODEN_STEVE_STATUE:
+      case SANDSTONE_STEVE_STATUE:
+      case STONE_STEVE_STATUE:
+      case MOSSY_STEVE_STATUE:
+      case IRON_STEVE_STATUE:
+      case GOLDEN_STEVE_STATUE:
+      case DIAMOND_STEVE_STATUE:
+      case EMERALD_STEVE_STATUE:
+      case LAPIS_STEVE_STATUE:
+      case REDSTONE_STEVE_STATUE:
+      case OBSIDIAN_STEVE_STATUE:
+      case QUARTZ_STEVE_STATUE:
+      case ICE_STEVE_STATUE:
+      case WOODEN_VILLAGER_STATUE:
+      case SANDSTONE_VILLAGER_STATUE:
+      case STONE_VILLAGER_STATUE:
+      case MOSSY_VILLAGER_STATUE:
+      case IRON_VILLAGER_STATUE:
+      case GOLDEN_VILLAGER_STATUE:
+      case DIAMOND_VILLAGER_STATUE:
+      case EMERALD_VILLAGER_STATUE:
+      case LAPIS_VILLAGER_STATUE:
+      case REDSTONE_VILLAGER_STATUE:
+      case OBSIDIAN_VILLAGER_STATUE:
+      case QUARTZ_VILLAGER_STATUE:
+      case ICE_VILLAGER_STATUE:
+      case WOODEN_ANGEL_STATUE:
+      case SANDSTONE_ANGEL_STATUE:
+      case STONE_ANGEL_STATUE:
+      case MOSSY_ANGEL_STATUE:
+      case IRON_ANGEL_STATUE:
+      case GOLDEN_ANGEL_STATUE:
+      case DIAMOND_ANGEL_STATUE:
+      case EMERALD_ANGEL_STATUE:
+      case LAPIS_ANGEL_STATUE:
+      case REDSTONE_ANGEL_STATUE:
+      case OBSIDIAN_ANGEL_STATUE:
+      case QUARTZ_ANGEL_STATUE:
+      case ICE_ANGEL_STATUE:
+         this.setBlockBounds(0.125F, 0.0F, 0.125F, 0.875F, 3.0F, 0.875F);
+         break;
+      case WOODEN_CREEPER_STATUE:
+      case SANDSTONE_CREEPER_STATUE:
+      case STONE_CREEPER_STATUE:
+      case MOSSY_CREEPER_STATUE:
+      case IRON_CREEPER_STATUE:
+      case GOLDEN_CREEPER_STATUE:
+      case DIAMOND_CREEPER_STATUE:
+      case EMERALD_CREEPER_STATUE:
+      case LAPIS_CREEPER_STATUE:
+      case REDSTONE_CREEPER_STATUE:
+      case OBSIDIAN_CREEPER_STATUE:
+      case QUARTZ_CREEPER_STATUE:
+      case ICE_CREEPER_STATUE:
+         this.setBlockBounds(0.125F, 0.0F, 0.125F, 0.875F, 2.5F, 0.875F);
+         break;
+      case GIBBET:
+      case BURNING_STAKE:
+         this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 2.5F, 1.0F);
+         break;
+      case STOCKS:
+         switch(meta) {
+         case 0:
+         case 1:
+            this.setBlockBounds(-0.5F, 0.0F, 0.0F, 1.5F, 2.0F, 1.0F);
+            break;
+         case 2:
+         case 3:
+            this.setBlockBounds(0.0F, 0.0F, -0.5F, 1.0F, 2.0F, 1.5F);
+         }
+      }
+
+   }
+
+   public void setBlockBoundsForItemRender() {
+      this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 2.0F);
+   }
+
+   public boolean renderAsNormalBlock() {
+      return false;
+   }
+
+   public boolean isOpaqueCube() {
+      return false;
+   }
+
+   public int getRenderType() {
+      return GraveStoneConfig.memorialRenderID;
+   }
+
+   public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9) {
+      TileEntityGSMemorial te = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (te != null) {
+         ItemStack item = player.inventory.getCurrentItem();
+         if (item != null && item.getItem() instanceof ItemGSCorpse && EnumCorpse.getById((byte)item.getItemDamage()).equals(EnumCorpse.VILLAGER) && te.getHangedMob() == EnumHangedMobs.NONE && (te.getMemorialType().equals(EnumMemorials.GIBBET) || te.getMemorialType().equals(EnumMemorials.STOCKS) || te.getMemorialType().equals(EnumMemorials.BURNING_STAKE))) {
+            te.setHangedMob(EnumHangedMobs.VILLAGER);
+            te.setHangedVillagerProfession(VillagerCorpseHelper.getVillagerType(item.getTagCompound()));
+            --item.stackSize;
+         }
+
+         if (world.isRemote) {
+            String deathText = te.getDeathTextComponent().getDeathText();
+            if (deathText.length() != 0) {
+               if (te.getDeathTextComponent().isLocalized()) {
+                  String name = ModGraveStone.proxy.getLocalizedEntityName(te.getDeathTextComponent().getName());
+                  if (name.length() != 0) {
+                     String killerName = ModGraveStone.proxy.getLocalizedEntityName(te.getDeathTextComponent().getKillerName());
+                     if (killerName.length() == 0) {
+                        player.addChatComponentMessage(new ChatComponentTranslation(deathText, name));
+                     } else {
+                        player.addChatComponentMessage(new ChatComponentTranslation(deathText, name, killerName));
+                     }
+
+                     return false;
+                  }
+               }
+
+               player.addChatComponentMessage(new ChatComponentTranslation(deathText));
+            }
+         }
+      }
+
+      return false;
+   }
+
+   public TileEntity createNewTileEntity(World world, int var2) {
+      return new TileEntityGSMemorial(world);
+   }
+
+   public int damageDropped(int metadata) {
+      return 0;
+   }
+
+   @SideOnly(Side.CLIENT)
+   public void getSubBlocks(Item item, CreativeTabs tab, List list) {
+      for(byte i = 0; i < TAB_MEMORIALS.length; ++i) {
+         list.add(getMemorialItemForCreativeInventory(item, TAB_MEMORIALS[i]));
+      }
+
+      for(byte mobType = 0; mobType < EnumHangedMobs.values().length; ++mobType) {
+         ItemStack stack = getMemorialItemForCreativeInventory(item, (byte)EnumMemorials.GIBBET.ordinal());
+         stack.getTagCompound().setByte("HangedMob", mobType);
+         switch(EnumHangedMobs.values()[mobType]) {
+         case VILLAGER:
+            for(byte villagerProfession = 0; villagerProfession <= 4; ++villagerProfession) {
+               ItemStack villagerStack = stack.copy();
+               villagerStack.getTagCompound().setInteger("HangedVillagerProfession", villagerProfession);
+               list.add(villagerStack);
+            }
+
+            Collection<Integer> villagerIds = VillagerRegistry.getRegisteredVillagers();
+            Iterator<Integer> it = villagerIds.iterator();
+
+            while(it.hasNext()) {
+               ItemStack villagerStack = stack.copy();
+               villagerStack.getTagCompound().setInteger("HangedVillagerProfession", it.next());
+               list.add(villagerStack);
+            }
+            break;
+         default:
+            list.add(stack);
+         }
+      }
+
+      for(byte mobType = 0; mobType < EnumHangedMobs.values().length; ++mobType) {
+         ItemStack stack = getMemorialItemForCreativeInventory(item, (byte)EnumMemorials.STOCKS.ordinal());
+         stack.getTagCompound().setByte("HangedMob", mobType);
+         switch(EnumHangedMobs.values()[mobType]) {
+         case VILLAGER:
+            for(byte villagerProfession = 0; villagerProfession <= 4; ++villagerProfession) {
+               ItemStack villagerStack = stack.copy();
+               villagerStack.getTagCompound().setInteger("HangedVillagerProfession", villagerProfession);
+               list.add(villagerStack);
+            }
+
+            Collection<Integer> villagerIds = VillagerRegistry.getRegisteredVillagers();
+            Iterator<Integer> it = villagerIds.iterator();
+
+            while(it.hasNext()) {
+               ItemStack villagerStack = stack.copy();
+               villagerStack.getTagCompound().setInteger("HangedVillagerProfession", it.next());
+               list.add(villagerStack);
+            }
+            break;
+         default:
+            list.add(stack);
+         }
+      }
+
+      for(byte mobType = 0; mobType < EnumHangedMobs.values().length; ++mobType) {
+         ItemStack stack = getMemorialItemForCreativeInventory(item, (byte)EnumMemorials.BURNING_STAKE.ordinal());
+         stack.getTagCompound().setByte("HangedMob", mobType);
+         switch(EnumHangedMobs.values()[mobType]) {
+         case VILLAGER:
+            for(byte villagerProfession = 0; villagerProfession <= 4; ++villagerProfession) {
+               ItemStack villagerStack = stack.copy();
+               villagerStack.getTagCompound().setInteger("HangedVillagerProfession", villagerProfession);
+               list.add(villagerStack);
+            }
+
+            Collection<Integer> villagerIds = VillagerRegistry.getRegisteredVillagers();
+            Iterator<Integer> it = villagerIds.iterator();
+
+            while(it.hasNext()) {
+               ItemStack villagerStack = stack.copy();
+               villagerStack.getTagCompound().setInteger("HangedVillagerProfession", it.next());
+               list.add(villagerStack);
+            }
+            break;
+         default:
+            list.add(stack);
+         }
+      }
+
+   }
+
+   private static ItemStack getMemorialItemForCreativeInventory(Item item, byte graveType) {
+      ItemStack stack = new ItemStack(item, 1, 0);
+      NBTTagCompound nbt = new NBTTagCompound();
+      nbt.setByte("GraveType", graveType);
+      stack.setTagCompound(nbt);
+      return stack;
+   }
+
+   public void onBlockHarvested(World world, int x, int y, int z, int metadata, EntityPlayer player) {
+      player.addExhaustion(0.025F);
+      ItemStack itemStack;
+      if (EnchantmentHelper.getSilkTouchModifier(player)) {
+         itemStack = this.getBlockItemStack(world, x, y, z);
+      } else {
+         itemStack = this.getBlockItemStackWithoutInfo(world, x, y, z);
+      }
+
+      if (itemStack != null) {
+         this.dropBlockAsItem(world, x, y, z, itemStack);
+      }
+
+   }
+
+   private ItemStack getBlockItemStack(World world, int x, int y, int z) {
+      ItemStack itemStack = this.createStackedBlock(0);
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (tileEntity != null) {
+         NBTTagCompound nbt = new NBTTagCompound();
+         if (tileEntity.getDeathTextComponent().isLocalized()) {
+            nbt.setBoolean("isLocalized", true);
+            nbt.setString("name", tileEntity.getDeathTextComponent().getName());
+            nbt.setString("KillerName", tileEntity.getDeathTextComponent().getKillerName());
+         }
+
+         nbt.setString("DeathText", tileEntity.getDeathTextComponent().getDeathText());
+         nbt.setByte("GraveType", tileEntity.getGraveTypeNum());
+         nbt.setBoolean("Enchanted", tileEntity.isEnchanted());
+         nbt.setByte("HangedMob", (byte)tileEntity.getHangedMob().ordinal());
+         nbt.setInteger("HangedVillagerProfession", tileEntity.getHangedVillagerProfession());
+         itemStack.setTagCompound(nbt);
+      }
+
+      return itemStack;
+   }
+
+   private ItemStack getBlockItemStackWithoutInfo(World world, int x, int y, int z) {
+      ItemStack itemStack = this.createStackedBlock(0);
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (tileEntity != null) {
+         NBTTagCompound nbt = new NBTTagCompound();
+         nbt.setByte("GraveType", tileEntity.getGraveTypeNum());
+         itemStack.setTagCompound(nbt);
+      }
+
+      return itemStack;
+   }
+
+   public void harvestBlock(World world, EntityPlayer player, int x, int y, int z, int metadata) {
+   }
+
+   public void dropCreeperMemorial(World world, int x, int y, int z) {
+      byte memorialType = getMemorialType(world, x, z, new Random(), 4);
+      ItemStack itemStack = new ItemStack(this);
+      NBTTagCompound nbt = new NBTTagCompound();
+      nbt.setByte("GraveType", memorialType);
+      itemStack.setTagCompound(nbt);
+      this.dropBlockAsItem(world, x, y, z, itemStack);
+   }
+
+   public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z) {
+      ItemStack itemStack = this.createStackedBlock(0);
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (tileEntity != null && itemStack != null) {
+         NBTTagCompound nbt = new NBTTagCompound();
+         nbt.setByte("GraveType", tileEntity.getGraveTypeNum());
+         nbt.setByte("HangedMob", (byte)tileEntity.getHangedMob().ordinal());
+         nbt.setInteger("HangedVillagerProfession", tileEntity.getHangedVillagerProfession());
+         itemStack.setTagCompound(nbt);
+      }
+
+      return itemStack;
+   }
+
+   public int getLightValue(IBlockAccess world, int x, int y, int z) {
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      return tileEntity != null && tileEntity.getMemorialType() == EnumMemorials.BURNING_STAKE && tileEntity.getHangedMob() != EnumHangedMobs.NONE ? 15 : super.getLightValue(world, x, y, z);
+   }
+
+   @SideOnly(Side.CLIENT)
+   public void randomDisplayTick(World world, int x, int y, int z, Random random) {
+      TileEntityGSMemorial tileEntity = (TileEntityGSMemorial)world.getTileEntity(x, y, z);
+      if (tileEntity != null && tileEntity.getMemorialType() == EnumMemorials.BURNING_STAKE && tileEntity.getHangedMob() != EnumHangedMobs.NONE) {
+         double yPos = (double)y + 0.25D;
+
+         for(int angle = 0; angle < 20; ++angle) {
+            double xPos = (double)x + 0.5D + Math.sin((double)angle * 0.2792D) * 0.75D;
+            double zPos = (double)z + 0.5D + Math.cos((double)angle * 0.2792D) * 0.75D;
+            EntityFX entityfx = new EntityBigFlameFX(world, xPos, yPos, zPos, 0.0D, 0.0D, 0.0D);
+            Minecraft.getMinecraft().effectRenderer.addEffect(entityfx);
+         }
+
+         yPos = yPos + 0.25D;
+
+         for(int angle = 0; angle < 11; ++angle) {
+            double xPos = (double)x + 0.5D + Math.sin((double)angle * 0.5584D) * 0.5D;
+            double zPos = (double)z + 0.5D + Math.cos((double)angle * 0.5584D) * 0.5D;
+            EntityFX entityfx = new EntityBigFlameFX(world, xPos, yPos, zPos, 0.0D, 0.0D, 0.0D);
+            Minecraft.getMinecraft().effectRenderer.addEffect(entityfx);
+         }
+
+         yPos = yPos + 0.35D;
+
+         for(int angle = 0; angle < 5; ++angle) {
+            double xPos = (double)x + 0.5D + Math.sin((double)angle * 1.1168D) * 0.2D;
+            double zPos = (double)z + 0.5D + Math.cos((double)angle * 1.1168D) * 0.2D;
+            EntityFX entityfx = new EntityBigFlameFX(world, xPos, yPos, zPos, 0.0D, 0.0D, 0.0D);
+            Minecraft.getMinecraft().effectRenderer.addEffect(entityfx);
+            world.spawnParticle("lava", xPos, yPos, zPos, 0.0D, 0.0D, 0.0D);
+            world.spawnParticle("largesmoke", xPos, yPos, zPos, 0.0D, 0.0D, 0.0D);
+         }
+      }
+
+   }
+}

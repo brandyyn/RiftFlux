@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.client.chatbubbles;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.client.PostProcessRenderer;
 import com.voidsrift.riftflux.chatbubbles.ChatBubbleColorManager;
 import com.voidsrift.riftflux.net.MsgSetChatBubbleColor;
 import com.voidsrift.riftflux.net.MsgSetChatBubbleTextColor;
@@ -40,6 +41,7 @@ public final class ChatBubblesClient {
 
     private final ArrayList<ChatBubbleMessage> messages = new ArrayList<ChatBubbleMessage>();
     private final ArrayList<ChatBubbleMessage> relevantMessages = new ArrayList<ChatBubbleMessage>();
+    private final ArrayList<DeferredBubbleRender> deferredBubbleRenders = new ArrayList<DeferredBubbleRender>();
     private final TreeMap<String, ChatParseLine> customParseLines =
             new TreeMap<String, ChatParseLine>(String.CASE_INSENSITIVE_ORDER);
 
@@ -65,6 +67,18 @@ public final class ChatBubblesClient {
         INSTANCE.loadCustomParseLines();
         MinecraftForge.EVENT_BUS.register(INSTANCE);
         FMLCommonHandler.instance().bus().register(INSTANCE);
+    }
+
+    public static void beginDeferredRenderFrame() {
+        INSTANCE.deferredBubbleRenders.clear();
+    }
+
+    public static void renderDeferred() {
+        for (int i = 0; i < INSTANCE.deferredBubbleRenders.size(); i++) {
+            DeferredBubbleRender render = INSTANCE.deferredBubbleRenders.get(i);
+            INSTANCE.renderPlayerBubbles(render.player, render.x, render.y, render.z);
+        }
+        INSTANCE.deferredBubbleRenders.clear();
     }
 
     @SubscribeEvent
@@ -122,6 +136,14 @@ public final class ChatBubblesClient {
         }
 
         EntityPlayer player = (EntityPlayer) event.entity;
+        if (PostProcessRenderer.shouldDeferBloomExcludedWorldOverlays()) {
+            deferredBubbleRenders.add(new DeferredBubbleRender(player, event.x, event.y, event.z));
+            return;
+        }
+        renderPlayerBubbles(player, event.x, event.y, event.z);
+    }
+
+    private void renderPlayerBubbles(EntityPlayer player, double x, double y, double z) {
         String author = scrubCodes(player.getCommandSenderName());
         if (author == null || author.isEmpty()) {
             return;
@@ -134,13 +156,27 @@ public final class ChatBubblesClient {
 
         ChatBubbleRenderer.render(
                 player,
-                event.x,
-                event.y,
-                event.z,
+                x,
+                y,
+                z,
                 relevantMessages,
                 Math.max(20, ModConfig.chatBubblesMessageLifetimeSeconds * 20)
         );
         relevantMessages.clear();
+    }
+
+    private static final class DeferredBubbleRender {
+        private final EntityPlayer player;
+        private final double x;
+        private final double y;
+        private final double z;
+
+        private DeferredBubbleRender(EntityPlayer player, double x, double y, double z) {
+            this.player = player;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
     }
 
     @SubscribeEvent
@@ -252,6 +288,7 @@ public final class ChatBubblesClient {
     private void clearTransientClientState() {
         messages.clear();
         relevantMessages.clear();
+        deferredBubbleRenders.clear();
         ChatBubbleColorManager.clearClientColors();
         advertisedConfiguredColor = false;
         advertisedConfiguredTextColor = false;

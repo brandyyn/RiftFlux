@@ -105,5 +105,8 @@ public final class RFNetwork {
         // Dash ring air jump (ID 26)
         CH.registerMessage(MsgDashRingJump.Handler.class, MsgDashRingJump.class, 26, Side.SERVER);
 
+        // Exact integrated Gravestone location for client waypoint mods (ID 27)
+        CH.registerMessage(MsgGravestoneLocation.Handler.class, MsgGravestoneLocation.class, 27, Side.CLIENT);
+
     }
 }

@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.client.worldtooltips;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.client.PostProcessRenderer;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -20,6 +21,22 @@ public final class WorldTooltipRenderHandler {
     private static final double DISTANCE_EPSILON = 1.0E-4D;
 
     private WorldTooltip cachedTooltip;
+    private WorldTooltip deferredTooltip;
+    private float deferredPartialTicks;
+
+    public void beginDeferredRenderFrame() {
+        deferredTooltip = null;
+    }
+
+    public void renderDeferred() {
+        if (deferredTooltip != null) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc != null) {
+                deferredTooltip.render(mc, deferredPartialTicks);
+            }
+            deferredTooltip = null;
+        }
+    }
 
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
@@ -40,7 +57,12 @@ public final class WorldTooltipRenderHandler {
             return;
         }
 
-        tooltip.render(mc, event.partialTicks);
+        if (PostProcessRenderer.shouldDeferBloomExcludedWorldOverlays()) {
+            deferredTooltip = tooltip;
+            deferredPartialTicks = event.partialTicks;
+        } else {
+            tooltip.render(mc, event.partialTicks);
+        }
     }
 
     private WorldTooltip getOrCreateTooltip(EntityItem hoveredItem) {

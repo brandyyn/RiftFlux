@@ -38,6 +38,7 @@ import com.voidsrift.riftflux.blessings.BlessingContent;
 import com.voidsrift.riftflux.furniture.FurnitureContent;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
 import com.voidsrift.riftflux.gokistats.GokiStatsContent;
+import com.voidsrift.riftflux.gravestone.GravestoneContent;
 import com.voidsrift.riftflux.wam.WAMContent;
 import com.voidsrift.riftflux.wheatfield.WheatfieldContent;
 import com.voidsrift.riftflux.util.LegacyRegistryAliasHelper;
@@ -107,6 +108,7 @@ public class riftflux {
         WAMContent.preInit(event);
         OffLawnContent.preInit(event);
         PumpkinPasturesContent.preInit(event);
+        GravestoneContent.preInit(event);
         GokiStatsContent.preInit(event);
         RiftExplorerContent.preInit(event);
         MoreBowsContent.preInit(event);
@@ -193,6 +195,7 @@ public class riftflux {
         WAMContent.init(event);
         OffLawnContent.init(event);
         PumpkinPasturesContent.init(event);
+        GravestoneContent.init(event);
         GokiStatsContent.init(event);
         RiftExplorerContent.init(event);
         PalariaMobContent.init(event);
@@ -224,6 +227,7 @@ public class riftflux {
         SoulHeartsContent.postInit(event);
         HeartCrystalContent.postInit(event);
         AxolotlContent.postInit(event);
+        GravestoneContent.postInit(event);
         GokiStatsContent.postInit(event);
         RiftExplorerContent.postInit(event);
     }
@@ -248,6 +252,7 @@ public class riftflux {
         event.registerServerCommand(CommandRiftFlux.chatBubbleTextCommand());
         event.registerServerCommand(CommandRiftFlux.chatBubbleSizeCommand());
         BlessingContent.serverStarting(event);
+        GravestoneContent.serverStarting(event);
         GokiStatsContent.serverStarting(event);
     }
 

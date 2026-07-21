@@ -14,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 import java.util.List;
 
@@ -27,6 +28,13 @@ public final class ChatBubbleRenderer {
     private static final float HORIZONTAL_PADDING = 5.0F;
     private static final float TAIL_HALF_WIDTH = 4.0F;
     private static final int LINE_HEIGHT = 9;
+    private static final int ATTRIB_MASK = GL11.GL_ENABLE_BIT
+            | GL11.GL_CURRENT_BIT
+            | GL11.GL_COLOR_BUFFER_BIT
+            | GL11.GL_DEPTH_BUFFER_BIT
+            | GL11.GL_LIGHTING_BIT
+            | GL11.GL_POLYGON_BIT
+            | GL11.GL_TEXTURE_BIT;
 
     private ChatBubbleRenderer() {
     }
@@ -69,11 +77,25 @@ public final class ChatBubbleRenderer {
         int currentTime = mc.ingameGUI.getUpdateCounter();
         int lines = 2;
         int messageGap = Math.max(0, ModConfig.chatBubblesMessageGap);
-        for (ChatBubbleMessage message : messages) {
-            String[] messageLines = message.getMessageLines();
-            float remainingTime = messageLifetimeTicks - (currentTime - message.getUpdateCounterCreated());
-            renderMessage(x, y, z, lines, messageLines, remainingTime, red, green, blue, textColor, photoModeActive);
-            lines += messageLines.length + messageGap;
+        int previousActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+        float previousBrightnessX = OpenGlHelper.lastBrightnessX;
+        float previousBrightnessY = OpenGlHelper.lastBrightnessY;
+        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushAttrib(ATTRIB_MASK);
+        try {
+            for (ChatBubbleMessage message : messages) {
+                String[] messageLines = message.getMessageLines();
+                float remainingTime = messageLifetimeTicks - (currentTime - message.getUpdateCounterCreated());
+                renderMessage(x, y, z, lines, messageLines, remainingTime, red, green, blue, textColor, photoModeActive);
+                lines += messageLines.length + messageGap;
+            }
+        } finally {
+            GL11.glPopAttrib();
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, previousBrightnessX, previousBrightnessY);
+            OpenGlHelper.setActiveTexture(previousActiveTexture);
+            GL11.glMatrixMode(previousMatrixMode);
         }
     }
 

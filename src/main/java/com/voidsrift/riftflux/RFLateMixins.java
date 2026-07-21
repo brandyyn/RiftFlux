@@ -100,6 +100,10 @@ public class RFLateMixins implements ILateMixinLoader {
         }
         if (loadedMods.contains("XaeroMinimap")) {
             mixins.add("late.xaero.minimap.MixinInternet");
+            if (FMLLaunchHandler.side() == Side.CLIENT) {
+                mixins.add("late.xaero.minimap.XaeroWaypointsManagerInvoker");
+                mixins.add("late.xaero.minimap.MixinWaypointsManager_GravestoneDeathpoint");
+            }
         }
         if (loadedMods.contains("XaeroWorldMap")) {
             mixins.add("late.xaero.worldmap.MixinInternet");
@@ -107,6 +111,10 @@ public class RFLateMixins implements ILateMixinLoader {
 
         if (loadedMods.contains("ExtraUtilities")) {
             mixins.add("late.extrautilities.MixinEnderConstructorRecipesHandler");
+        }
+
+        if (loadedMods.contains("mod_Invasion")) {
+            mixins.add("late.invasion.MixinTerrainModifier_ProtectGravestones");
         }
 
         if (loadedMods.contains("NotEnoughItems") && FMLLaunchHandler.side() == Side.CLIENT) {

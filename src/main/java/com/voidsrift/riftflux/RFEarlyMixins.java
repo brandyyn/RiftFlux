@@ -54,6 +54,15 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     @Override
     public List<String> getMixins(Set<String> loadedCoreMods) {
         List<String> mixins = new ArrayList<String>();
+        mixins.add("early.MixinWorld_ProtectGravestones");
+        if (ModConfig.enableGravestoneModule) {
+            mixins.add("early.MixinSlotCrafting_GravestoneChisel");
+        }
+        if (ModConfig.enableGravestoneModule
+                && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT
+                && hasClass("codechicken.nei.NEIServerUtils")) {
+            mixins.add("early.nei.MixinNEIServerUtils_GravestoneNBTRecipes");
+        }
         if (ModConfig.shearsDamageOnAnyBlock) {
             mixins.add("early.MixinItemShears_DamageAnyBlock");
         }
