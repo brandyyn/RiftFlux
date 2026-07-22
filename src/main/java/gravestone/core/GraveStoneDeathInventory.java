@@ -4,6 +4,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import gravestone.config.GraveStoneConfig;
 import gravestone.core.compatibility.GSCompatibilityBaubles;
 import gravestone.core.compatibility.GSCompatibilityTravellersGear;
+import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -12,6 +13,7 @@ import net.minecraft.nbt.NBTTagList;
 public final class GraveStoneDeathInventory {
    private static final String DATA_KEY = "RiftFluxGravestoneKeptInventory";
    private static final String ITEMS_KEY = "Items";
+   private static final String EXTRACTED_ITEMS_KEY = "RiftFluxGravestoneExtractedCarrierItems";
    private static final byte INVENTORY_MAIN = 0;
    private static final byte INVENTORY_ARMOR = 1;
    private static final byte INVENTORY_BAUBLES = 2;
@@ -28,6 +30,9 @@ public final class GraveStoneDeathInventory {
 
       player.getEntityData().removeTag(DATA_KEY);
       NBTTagList keptItems = new NBTTagList();
+      player.getEntityData().removeTag(EXTRACTED_ITEMS_KEY);
+
+      GSCompatibilityBaubles.extractCarrierContentsForDeath(player);
 
       for(int slot = 0; slot < player.inventory.mainInventory.length; ++slot) {
          ItemStack stack = player.inventory.mainInventory[slot];
@@ -92,6 +97,39 @@ public final class GraveStoneDeathInventory {
 
    public static void addKeptTravellersGear(NBTTagList keptItems, int slot, ItemStack stack) {
       addKeptItem(keptItems, INVENTORY_TRAVELLERS_GEAR, slot, stack);
+   }
+
+   public static void addExtractedDeathItem(EntityPlayer player, ItemStack stack) {
+      if (player == null || stack == null) {
+         return;
+      }
+      NBTTagList items = player.getEntityData().getTagList(EXTRACTED_ITEMS_KEY, 10);
+      NBTTagCompound itemData = new NBTTagCompound();
+      stack.writeToNBT(itemData);
+      items.appendTag(itemData);
+      player.getEntityData().setTag(EXTRACTED_ITEMS_KEY, items);
+   }
+
+   public static void addExtractedDeathItems(List<ItemStack> destination, EntityPlayer player) {
+      if (destination != null) {
+         destination.addAll(takeExtractedDeathItems(player));
+      }
+   }
+
+   public static List<ItemStack> takeExtractedDeathItems(EntityPlayer player) {
+      List<ItemStack> items = new java.util.ArrayList<ItemStack>();
+      if (player == null || !player.getEntityData().hasKey(EXTRACTED_ITEMS_KEY, 9)) {
+         return items;
+      }
+      NBTTagList stored = player.getEntityData().getTagList(EXTRACTED_ITEMS_KEY, 10);
+      for (int i = 0; i < stored.tagCount(); ++i) {
+         ItemStack stack = ItemStack.loadItemStackFromNBT(stored.getCompoundTagAt(i));
+         if (stack != null) {
+            items.add(stack);
+         }
+      }
+      player.getEntityData().removeTag(EXTRACTED_ITEMS_KEY);
+      return items;
    }
 
    public static boolean isWhitelistedItem(ItemStack stack) {

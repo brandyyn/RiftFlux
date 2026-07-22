@@ -257,8 +257,11 @@ implements IBauble {
     }
 
     public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean bool) {
-        String desc = I18n.format((String)("item." + (Object)((Object)RingType.values()[stack.getItemDamage()]) + ".desc"), (Object[])new Object[0]);
-        list.add(desc);
+        String key = "item." + RingType.values()[stack.getItemDamage()] + ".desc";
+        String desc = I18n.format(key, new Object[0]);
+        if (!key.equals(desc)) {
+            list.add(desc);
+        }
     }
 
     public int getRenderPasses(int metadata) {

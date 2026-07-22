@@ -45,7 +45,7 @@ extends ItemBlock {
 
     @SideOnly(value=Side.CLIENT)
     public boolean hasEffect(ItemStack par1ItemStack, int pass) {
-        return true;
+        return HeartCrystal.config != null && HeartCrystal.config.isEnchantmentGlintEnabled();
     }
 
     public ItemStack onEaten(ItemStack stack, World world, EntityPlayer player) {

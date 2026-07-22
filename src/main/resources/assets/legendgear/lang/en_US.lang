@@ -94,7 +94,6 @@ item.infernoScroll.name=Inferno Scroll
 item.scythewindScroll.name=Scythewind Scroll
 
 item.SPEED_RING.name=Dash Ring
-item.SPEED_RING.desc=Sprint faster
 item.SOFT_FALL_RING.name=Descent Ring
 item.SOFT_FALL_RING.desc=Gentle landings
 item.CONVECTION_RING.name=Convection Ring

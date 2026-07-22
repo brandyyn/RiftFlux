@@ -2,22 +2,20 @@ package com.voidsrift.riftflux.mixin.early;
 
 import net.minecraft.block.BlockPumpkin;
 import net.minecraft.block.material.Material;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(BlockPumpkin.class)
+@Mixin(value = BlockPumpkin.class, priority = 1100)
 public abstract class MixinBlockPumpkin_AnySupport {
 
-    @Redirect(
-            method = "canPlaceBlockAt(Lnet/minecraft/world/World;III)Z",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/World;doesBlockHaveSolidTopSurface(Lnet/minecraft/world/IBlockAccess;III)Z"
-            )
-    )
-    private boolean riftflux$allowAnyNonAirPumpkinSupport(IBlockAccess world, int x, int y, int z) {
-        return world.getBlock(x, y, z).getMaterial() != Material.air;
+    /**
+     * @author RiftFlux
+     * @reason Allow any non-air support while winning conflicts with BugTorch's placement overwrite.
+     */
+    @Overwrite
+    public boolean canPlaceBlockAt(World world, int x, int y, int z) {
+        return world.getBlock(x, y, z).getMaterial().isReplaceable()
+                && world.getBlock(x, y - 1, z).getMaterial() != Material.air;
     }
 }

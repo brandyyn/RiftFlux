@@ -1,11 +1,11 @@
 package gravestone.core.event;
 
+import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gravestone.config.GraveStoneConfig;
 import gravestone.core.TimeHelper;
-import gravestone.core.compatibility.forestry.GSCompatibilityForestry;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -46,7 +46,11 @@ public class GSRenderEventHandler {
    @SideOnly(Side.CLIENT)
    public void backpackTooltip(ItemTooltipEvent event) {
       ItemStack stack = event.itemStack;
-      if (stack != null && (stack.getItem() == GSCompatibilityForestry.backpackItemT1 || stack.getItem() == GSCompatibilityForestry.backpackItemT2)) {
+      GameRegistry.UniqueIdentifier identifier = stack == null
+            ? null
+            : GameRegistry.findUniqueIdentifierFor(stack.getItem());
+      if (identifier != null && ("GSUndertakerBackpackT1".equals(identifier.name)
+            || "GSUndertakerBackpackT2".equals(identifier.name))) {
          event.toolTip.add(StatCollector.translateToLocal("item.backpack.undertaker.tooltip"));
       }
    }

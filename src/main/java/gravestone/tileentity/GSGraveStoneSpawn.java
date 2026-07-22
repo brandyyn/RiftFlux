@@ -47,6 +47,7 @@ public class GSGraveStoneSpawn extends GSSpawner {
          } else {
             if (GSMobSpawn.checkChance(this.tileEntity.getWorldObj().rand) && GSMobSpawn.spawnMob(this.tileEntity.getWorldObj(), this.spawnedMob, (double)this.tileEntity.xCoord, (double)this.tileEntity.yCoord, (double)this.tileEntity.zCoord, true)) {
                this.getNewMob = true;
+               ((TileEntityGSGraveStone)this.tileEntity).markMobSpawnedThisNight();
             }
 
             this.updateDelay();
@@ -55,7 +56,8 @@ public class GSGraveStoneSpawn extends GSSpawner {
    }
 
    protected boolean canSpawnMobs(World world) {
-      return TimeHelper.isGraveSpawnTime();
+      TileEntityGSGraveStone grave = (TileEntityGSGraveStone)this.tileEntity;
+      return !grave.isPlayerPlaced() && !grave.hasSpawnedMobThisNight() && TimeHelper.isGraveSpawnTime();
    }
 
    protected int getPlayerRange() {

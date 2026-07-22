@@ -24,6 +24,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
 public class EntityPropertiesSatchels implements IExtendedEntityProperties {
+    private static final String CARRIER_CONTENTS_TAG = "RiftFluxStoredItems";
     
     public static final int SATCHEL_MAX_SLOTS = 9;
     public static final int POUCH_MAX_SLOTS = 8;
@@ -45,11 +46,11 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
     };
     
     public InventorySimpleNotifying satchel =
-            new InventorySimpleNotifying(SATCHEL_MAX_SLOTS, null, this::markChesterContentsDirty);
+            new InventorySimpleNotifying(SATCHEL_MAX_SLOTS, null, this::onSatchelContentsDirty);
     public InventorySimpleNotifying leftPouch =
-            new InventorySimpleNotifying(POUCH_MAX_SLOTS, null, this::markChesterContentsDirty);
+            new InventorySimpleNotifying(POUCH_MAX_SLOTS, null, this::onLeftPouchContentsDirty);
     public InventorySimpleNotifying rightPouch =
-            new InventorySimpleNotifying(POUCH_MAX_SLOTS, null, this::markChesterContentsDirty);
+            new InventorySimpleNotifying(POUCH_MAX_SLOTS, null, this::onRightPouchContentsDirty);
     public InventoryAggregate aggregate = new InventoryAggregate(satchel, leftPouch, rightPouch);
     
     public EntityPlayer player;
@@ -57,6 +58,10 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
     private ItemStack lastSatchelStack;
     private ItemStack lastLeftPouchStack;
     private ItemStack lastRightPouchStack;
+    private boolean satchelContentsBound;
+    private boolean leftPouchContentsBound;
+    private boolean rightPouchContentsBound;
+    private boolean synchronizingCarrierContents;
     
     @Override
     public void saveNBTData(NBTTagCompound compound) {
@@ -137,23 +142,9 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
             player.worldObj.playSoundEffect(player.posX, player.posY, player.posZ, "satchels:item.armor.equip_leather", 1f, 1f);
         }
         
+        refreshEquipmentCache();
         ContainerSatchels container = ((ContainerSatchels)player.inventoryContainer);
         container.redoSlots();
-        for(int i = 0; i < leftPouch.getSizeInventory(); i++) {
-            if(i >= getLeftPouchSlotCount() || !satchelsSlotPredicate.test(leftPouch.getStackInSlot(i))) {
-                dropStack(leftPouch, i);
-            }
-        }
-        for(int i = 0; i < rightPouch.getSizeInventory(); i++) {
-            if(i >= getRightPouchSlotCount() || !satchelsSlotPredicate.test(rightPouch.getStackInSlot(i))) {
-                dropStack(rightPouch, i);
-            }
-        }
-        for(int i = 0; i < satchel.getSizeInventory(); i++) {
-            if(i >= getSatchelSlotCount() || !satchelsSlotPredicate.test(satchel.getStackInSlot(i))) {
-                dropStack(satchel, i);
-            }
-        }
     }
     
     private void dropStack(IInventory inv, int i) {
@@ -222,15 +213,143 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
         ItemStack satchelStack = getSatchelStack();
         ItemStack leftPouchStack = getLeftPouchStack();
         ItemStack rightPouchStack = getRightPouchStack();
-        boolean changed = satchelStack != lastSatchelStack
-                || leftPouchStack != lastLeftPouchStack
-                || rightPouchStack != lastRightPouchStack;
-        if (changed) {
+        boolean satchelChanged = satchelStack != lastSatchelStack;
+        boolean leftPouchChanged = leftPouchStack != lastLeftPouchStack;
+        boolean rightPouchChanged = rightPouchStack != lastRightPouchStack;
+        if (!satchelChanged && !leftPouchChanged && !rightPouchChanged) {
+            return false;
+        }
+
+        synchronizingCarrierContents = true;
+        try {
+            if (satchelChanged) saveCarrierContents(lastSatchelStack, satchel);
+            if (leftPouchChanged) saveCarrierContents(lastLeftPouchStack, leftPouch);
+            if (rightPouchChanged) saveCarrierContents(lastRightPouchStack, rightPouch);
+
+            if (satchelChanged) {
+                satchelContentsBound = bindCarrierContents(satchelStack, lastSatchelStack, satchel, satchelContentsBound);
+            }
+            if (leftPouchChanged) {
+                leftPouchContentsBound = bindCarrierContents(leftPouchStack, lastLeftPouchStack, leftPouch, leftPouchContentsBound);
+            }
+            if (rightPouchChanged) {
+                rightPouchContentsBound = bindCarrierContents(rightPouchStack, lastRightPouchStack, rightPouch, rightPouchContentsBound);
+            }
+
             lastSatchelStack = satchelStack;
             lastLeftPouchStack = leftPouchStack;
             lastRightPouchStack = rightPouchStack;
+        } finally {
+            synchronizingCarrierContents = false;
         }
-        return changed;
+        markChesterContentsDirty();
+        return true;
+    }
+
+    private boolean bindCarrierContents(ItemStack currentStack, ItemStack previousStack,
+            InventorySimpleNotifying inventory, boolean contentsBound) {
+        if (currentStack == null) {
+            if (previousStack != null) {
+                SatchelsUtils.clearInventory(inventory);
+                return true;
+            }
+            return contentsBound;
+        }
+
+        if (currentStack.hasTagCompound() && currentStack.getTagCompound().hasKey(CARRIER_CONTENTS_TAG, 9)) {
+            SatchelsUtils.clearInventory(inventory);
+            InventoryUtils.readItemStacksFromTag(inventory.items,
+                    currentStack.getTagCompound().getTagList(CARRIER_CONTENTS_TAG, 10));
+            return true;
+        }
+
+        if (!contentsBound && !SatchelsUtils.isInventoryEmpty(inventory)) {
+            saveCarrierContents(currentStack, inventory);
+            return true;
+        }
+
+        SatchelsUtils.clearInventory(inventory);
+        return true;
+    }
+
+    private void saveCarrierContents(ItemStack carrier, InventorySimpleNotifying inventory) {
+        if (carrier == null) {
+            return;
+        }
+        if (SatchelsUtils.isInventoryEmpty(inventory)) {
+            if (carrier.hasTagCompound()) {
+                carrier.getTagCompound().removeTag(CARRIER_CONTENTS_TAG);
+            }
+            return;
+        }
+        carrier.setTagInfo(CARRIER_CONTENTS_TAG, InventoryUtils.writeItemStacksToTag(inventory.items));
+    }
+
+    private void onSatchelContentsDirty() {
+        markChesterContentsDirty();
+        if (!synchronizingCarrierContents) {
+            saveCarrierContents(getSatchelStack(), satchel);
+        }
+    }
+
+    private void onLeftPouchContentsDirty() {
+        markChesterContentsDirty();
+        if (!synchronizingCarrierContents) {
+            saveCarrierContents(getLeftPouchStack(), leftPouch);
+        }
+    }
+
+    private void onRightPouchContentsDirty() {
+        markChesterContentsDirty();
+        if (!synchronizingCarrierContents) {
+            saveCarrierContents(getRightPouchStack(), rightPouch);
+        }
+    }
+
+    public List<ItemStack> extractStoredContents(ItemStack carrier) {
+        List<ItemStack> extracted = new ArrayList<ItemStack>();
+        if (carrier == null) {
+            return extracted;
+        }
+
+        InventorySimpleNotifying inventory = null;
+        if (carrier == getSatchelStack()) {
+            inventory = satchel;
+        } else if (carrier == getLeftPouchStack()) {
+            inventory = leftPouch;
+        } else if (carrier == getRightPouchStack()) {
+            inventory = rightPouch;
+        }
+
+        synchronizingCarrierContents = true;
+        try {
+            if (inventory != null) {
+                for (int slot = 0; slot < inventory.getSizeInventory(); ++slot) {
+                    ItemStack stack = inventory.getStackInSlot(slot);
+                    if (stack != null) {
+                        extracted.add(stack);
+                        inventory.setInventorySlotContents(slot, null);
+                    }
+                }
+            }
+            if (extracted.isEmpty() && carrier.hasTagCompound()
+                    && carrier.getTagCompound().hasKey(CARRIER_CONTENTS_TAG, 9)) {
+                net.minecraft.nbt.NBTTagList stored = carrier.getTagCompound().getTagList(CARRIER_CONTENTS_TAG, 10);
+                for (int index = 0; index < stored.tagCount(); ++index) {
+                    ItemStack stack = ItemStack.loadItemStackFromNBT(stored.getCompoundTagAt(index));
+                    if (stack != null) {
+                        extracted.add(stack);
+                    }
+                }
+            }
+            if (carrier.hasTagCompound()) {
+                carrier.getTagCompound().removeTag(CARRIER_CONTENTS_TAG);
+            }
+        } finally {
+            synchronizingCarrierContents = false;
+        }
+        markChesterContentsDirty();
+        return extracted;
     }
     
     public boolean preAddItemStackToInventory(final ItemStack stack) {
@@ -337,12 +456,6 @@ public class EntityPropertiesSatchels implements IExtendedEntityProperties {
         if(existing.getItem() != stack.getItem()) return false;
         if(existing.getItemDamage() != stack.getItemDamage()) return false;
         return ItemStack.areItemStackTagsEqual(existing, stack);
-    }
-
-    public void copyFrom(EntityPropertiesSatchels from) {
-        SatchelsUtils.copyInventory(from.satchel, satchel);
-        SatchelsUtils.copyInventory(from.leftPouch, leftPouch);
-        SatchelsUtils.copyInventory(from.rightPouch, rightPouch);
     }
 
     private void migrateLegacyEquipment(InventorySimple legacy) {

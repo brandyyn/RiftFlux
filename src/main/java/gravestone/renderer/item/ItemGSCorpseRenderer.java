@@ -14,8 +14,9 @@ import net.minecraft.client.model.ModelOcelot;
 import net.minecraft.client.model.ModelVillager;
 import net.minecraft.client.model.ModelWolf;
 import net.minecraft.client.renderer.texture.LayeredTexture;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityHorse;
+import net.minecraft.entity.passive.EntityOcelot;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -30,7 +31,9 @@ public class ItemGSCorpseRenderer implements IItemRenderer {
    private static final ModelWolf dogModel = new ModelWolf();
    private static final ModelOcelot catModel = new ModelOcelot();
    private static final ModelHorse horseModel = new ModelHorse();
+   private static EntityVillager villager;
    private static EntityWolf dog;
+   private static EntityOcelot cat;
    private static EntityHorse horse;
 
    public boolean handleRenderType(ItemStack item, ItemRenderType type) {
@@ -70,7 +73,13 @@ public class ItemGSCorpseRenderer implements IItemRenderer {
             Minecraft.getMinecraft().renderEngine.bindTexture(VillagerRegistry.getVillagerSkin(profession, Resources.VILLAGER));
          }
 
-         villagerModel.render((Entity)null, xz, xz, xz, xz, xz, xz);
+         if (villager == null) {
+            villager = new EntityVillager(Minecraft.getMinecraft().theWorld);
+         }
+
+         villager.setProfession(profession);
+         villagerModel.setLivingAnimations(villager, 0.0F, 0.0F, 0.0F);
+         villagerModel.render(villager, xz, xz, xz, xz, xz, xz);
          break;
       case DOG:
          GL11.glTranslatef(0.0F, -1.0F, 0.0F);
@@ -100,7 +109,13 @@ public class ItemGSCorpseRenderer implements IItemRenderer {
             Minecraft.getMinecraft().renderEngine.bindTexture(Resources.SIAMESE_CAT);
          }
 
-         catModel.render((Entity)null, xz, xz, xz, xz, xz, xz);
+         if (cat == null) {
+            cat = new EntityOcelot(Minecraft.getMinecraft().theWorld);
+         }
+
+         cat.setTameSkin(catType);
+         catModel.setLivingAnimations(cat, 0.0F, 0.0F, 0.0F);
+         catModel.render(cat, xz, xz, xz, xz, xz, xz);
          break;
       case HORSE:
          GL11.glTranslatef(0.0F, -0.6F, 0.0F);

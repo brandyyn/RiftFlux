@@ -20,6 +20,7 @@ package tk.nukeduck.hearts.renderer;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -62,6 +63,7 @@ extends TileEntitySpecialRenderer {
     private static final float LANTERN_MODERN_CRYSTAL_XY_SCALE = 0.7f;
     private static final float LANTERN_MODERN_CRYSTAL_Z_SCALE = 5.0f;
     protected static final ResourceLocation oldTexture = new ResourceLocation("hearts", "textures/models/heart_crystal.png");
+    private static final ResourceLocation ENCHANTED_ITEM_GLINT = new ResourceLocation("textures/misc/enchanted_item_glint.png");
     private final EntityItem item;
     private final ItemStack crystalStack;
     private final ModelHeart model;
@@ -115,8 +117,7 @@ extends TileEntitySpecialRenderer {
         GL11.glScaled((double)0.4, (double)0.4, (double)0.4);
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)this.getRotation(tileentity, partialTicks), (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindOldCrystalTexture();
-        this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        this.renderOldCrystalGeometry();
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
     }
@@ -162,8 +163,7 @@ extends TileEntitySpecialRenderer {
         }
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)this.getRotation(tileentity, partialTicks), (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindOldCrystalTexture();
-        this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        this.renderOldCrystalGeometry();
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
     }
@@ -176,8 +176,7 @@ extends TileEntitySpecialRenderer {
         GL11.glTranslatef((float)0.0f, (float)0.6f, (float)0.0f);
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)rotation, (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindOldCrystalTexture();
-        this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        this.renderOldCrystalGeometry();
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
     }
@@ -191,8 +190,7 @@ extends TileEntitySpecialRenderer {
         GL11.glScaled((double)0.4, (double)0.4, (double)0.4);
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         GL11.glRotatef((float)rotation, (float)0.0f, (float)1.0f, (float)0.0f);
-        this.bindOldCrystalTexture();
-        this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        this.renderOldCrystalGeometry();
         GL11.glDisable((int)3042);
         GL11.glPopMatrix();
     }
@@ -238,8 +236,77 @@ extends TileEntitySpecialRenderer {
         GL11.glRotatef((float)180.0f, (float)0.0f, (float)1.0f, (float)0.0f);
         GL11.glTranslatef((float)(0.0f - FRAME_ITEM_HALF_WIDTH), (float)(0.0f - FRAME_ITEM_BASE_Y), (float)zOffset);
         ItemRenderer.renderItemIn2D((Tessellator)Tessellator.instance, (float)icon.getMaxU(), (float)icon.getMinV(), (float)icon.getMinU(), (float)icon.getMaxV(), (int)icon.getIconWidth(), (int)icon.getIconHeight(), (float)FRAME_ITEM_DEPTH);
+        if (this.shouldRenderEnchantmentGlint()) {
+            this.renderModernCrystalGlint(textureManager);
+        }
         GL11.glDisable((int)GL12.GL_RESCALE_NORMAL);
         GL11.glPopMatrix();
+    }
+
+    private void renderModernCrystalGlint(TextureManager textureManager) {
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glDepthFunc(GL11.GL_EQUAL);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_BLEND);
+        OpenGlHelper.glBlendFunc(768, 1, 1, 0);
+        GL11.glColor4f(0.38f, 0.19f, 0.61f, 1.0f);
+        textureManager.bindTexture(ENCHANTED_ITEM_GLINT);
+        this.renderModernGlintPass(-50.0f, 3000L, 1.0f);
+        this.renderModernGlintPass(10.0f, 4873L, -1.0f);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPopAttrib();
+    }
+
+    private void renderModernGlintPass(float rotation, long period, float direction) {
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPushMatrix();
+        GL11.glScalef(0.125f, 0.125f, 0.125f);
+        float scroll = (float)(Minecraft.getSystemTime() % period) / (float)period * 8.0f * direction;
+        GL11.glTranslatef(scroll, 0.0f, 0.0f);
+        GL11.glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        ItemRenderer.renderItemIn2D(Tessellator.instance, 0.0f, 0.0f, 1.0f, 1.0f, 256, 256, FRAME_ITEM_DEPTH);
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+    }
+
+    private void renderOldCrystalGeometry() {
+        this.bindOldCrystalTexture();
+        this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        if (!this.shouldRenderEnchantmentGlint()) {
+            return;
+        }
+
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glDepthFunc(GL11.GL_EQUAL);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_BLEND);
+        OpenGlHelper.glBlendFunc(768, 1, 1, 0);
+        GL11.glColor4f(0.38f, 0.19f, 0.61f, 1.0f);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(ENCHANTED_ITEM_GLINT);
+        this.renderOldGlintPass(-50.0f, 3000L, 1.0f);
+        this.renderOldGlintPass(10.0f, 4873L, -1.0f);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPopAttrib();
+    }
+
+    private void renderOldGlintPass(float rotation, long period, float direction) {
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPushMatrix();
+        GL11.glScalef(0.125f, 0.125f, 0.125f);
+        float scroll = (float)(Minecraft.getSystemTime() % period) / (float)period * 8.0f * direction;
+        GL11.glTranslatef(scroll, 0.0f, 0.0f);
+        GL11.glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        this.model.render(null, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+    }
+
+    private boolean shouldRenderEnchantmentGlint() {
+        return HeartCrystal.config != null && HeartCrystal.config.isEnchantmentGlintEnabled();
     }
 
     private ItemStack getRenderStack(ItemStack stack) {

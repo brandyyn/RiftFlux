@@ -47,4 +47,8 @@ public class EntitySkeletonCat extends EntityUndeadCat {
    protected Item getDropItem() {
       return Items.bone;
    }
+
+   public boolean interact(EntityPlayer player) {
+      return this.tryTame(player, Items.fish) || super.interact(player);
+   }
 }

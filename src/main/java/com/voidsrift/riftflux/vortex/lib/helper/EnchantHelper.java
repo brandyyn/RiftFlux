@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentDurability;
 import net.minecraft.init.Items;
+import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import com.voidsrift.riftflux.vortex.item.ModItems;
@@ -80,5 +81,51 @@ public class EnchantHelper {
 
       float[] colors = new float[]{(float)(truncColor >> 16 & 255) / 255.0F, (float)(truncColor >> 8 & 255) / 255.0F, (float)(truncColor & 255) / 255.0F};
       return colors;
+   }
+
+   @SideOnly(Side.CLIENT)
+   public static GlintColor resolveGlintColor(int value) {
+      switch (value) {
+      case 7:
+         return new GlintColor(true, true, 0.36F, 0.36F, 0.36F);
+      case 8:
+         return new GlintColor(true, false, 0.36F, 0.36F, 0.36F);
+      case 11:
+         return new GlintColor(true, true, 0.72F, 0.39F, 0.02F);
+      case 12:
+         return new GlintColor(true, true, 0.35F, 0.48F, 0.57F);
+      case 13:
+         return new GlintColor(true, true, 0.54F, 0.22F, 0.57F);
+      case 15:
+         return new GlintColor(true, true, 0.52F, 0.52F, 0.52F);
+      case 16:
+         return new GlintColor(false, false, 0.0F, 0.0F, 0.0F);
+      default:
+         int color = value >= 0 && value <= 15 ? ItemDye.field_150922_c[15 - value] : value;
+         float[] colors = generateColorsForGlint(color);
+         return new GlintColor(true, false, colors[0], colors[1], colors[2]);
+      }
+   }
+
+   @SideOnly(Side.CLIENT)
+   public static GlintColor defaultGlintColor() {
+      return new GlintColor(true, false, 0.38F, 0.19F, 0.608F);
+   }
+
+   @SideOnly(Side.CLIENT)
+   public static final class GlintColor {
+      public final boolean render;
+      public final boolean subtractive;
+      public final float red;
+      public final float green;
+      public final float blue;
+
+      private GlintColor(boolean render, boolean subtractive, float red, float green, float blue) {
+         this.render = render;
+         this.subtractive = subtractive;
+         this.red = red;
+         this.green = green;
+         this.blue = blue;
+      }
    }
 }

@@ -24,6 +24,7 @@ public class HeartsConfig {
     private int genCount;
     private float keptRate;
     private boolean oldModel;
+    private boolean enchantmentGlint;
     private boolean heartLanternAuraEnabled;
     private float heartLanternAuraRadius;
     private String[] heartLanternAuraEffects = new String[0];
@@ -43,6 +44,7 @@ public class HeartsConfig {
             this.genHeight = ModConfig.heartCrystalGenHeight;
             this.genCount = ModConfig.heartCrystalGenCount;
             this.oldModel = ModConfig.heartCrystalOldModel;
+            this.enchantmentGlint = ModConfig.heartCrystalEnchantmentGlint;
             this.heartLanternAuraEnabled = ModConfig.heartLanternAuraEnabled;
             this.heartLanternAuraRadius = Math.max(0.0f, ModConfig.heartLanternAuraRadius);
             this.heartLanternAuraEffects = ModConfig.heartLanternAuraEffects;
@@ -60,6 +62,7 @@ public class HeartsConfig {
         this.genCount = this.config.getInt("genCount", "general", 4, 0, 1000, "Sets the chances of heart crystals spawning. Set to 0 for no spawning");
         this.keptRate = this.config.getFloat("keptRate", "general", 0.0f, 0.0f, 1.0f, "Sets the chance of retaining individual hearts upon death. 0.0F to always drop hearts, 1.0F to always keep them.");
         this.oldModel = this.config.getBoolean("oldModel", "general", false, "Enable this to use the old 3D model for heart crystals.");
+        this.enchantmentGlint = this.config.getBoolean("enchantmentGlint", "general", true, "Show the enchantment glint on Heart Crystals and inside Heart Lanterns.");
         this.heartLanternAuraEnabled = this.config.getBoolean("heartLanternAuraEnabled", "general", false, "If true, heart lanterns apply configurable potion effects in a radius.");
         this.heartLanternAuraRadius = this.config.getFloat("heartLanternAuraRadius", "general", 6.0f, 0.0f, 64.0f, "Radius around a heart lantern that receives the configured aura effects.");
         this.heartLanternAuraEffects = this.config.getStringList("heartLanternAuraEffects", "general", new String[]{"regeneration,2,4"}, "Format per entry: potionNameOrId,level,durationSeconds");
@@ -96,6 +99,10 @@ public class HeartsConfig {
 
     public boolean getOldModel() {
         return this.oldModel;
+    }
+
+    public boolean isEnchantmentGlintEnabled() {
+        return this.enchantmentGlint;
     }
 
     public boolean isHeartLanternAuraEnabled() {

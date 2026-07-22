@@ -1,5 +1,6 @@
 package gravestone.tileentity;
 
+import com.voidsrift.riftflux.vortex.lib.helper.EnchantHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gravestone.inventory.GraveInventory;
@@ -18,6 +19,7 @@ public abstract class TileEntityGSGrave extends TileEntity {
    protected GSGraveStoneDeathText gSDeathText;
    protected boolean isEditable = true;
    protected boolean isEnchanted = false;
+   protected int customGlint = -1;
    protected byte graveType = 0;
    protected int age = -1;
    protected String ownerName = "";
@@ -97,6 +99,20 @@ public abstract class TileEntityGSGrave extends TileEntity {
       this.isEnchanted = isEnchanted;
    }
 
+   public boolean hasCustomGlint() {
+      return this.customGlint >= 0;
+   }
+
+   public int getCustomGlint() {
+      return this.customGlint;
+   }
+
+   public void setCustomGlint(int customGlint) {
+      this.customGlint = customGlint;
+      this.isEnchanted = true;
+      this.markDirty();
+   }
+
    public void setOwner(EntityPlayer player) {
       if (player != null) {
          this.ownerName = player.getCommandSenderName();
@@ -143,6 +159,9 @@ public abstract class TileEntityGSGrave extends TileEntity {
          this.isEnchanted = nbtTag.getBoolean("Enchanted");
       }
 
+      this.customGlint = nbtTag.hasKey(EnchantHelper.CUSTOM_GLINT_TAG, 3)
+              ? nbtTag.getInteger(EnchantHelper.CUSTOM_GLINT_TAG) : -1;
+
       this.ownerName = nbtTag.getString("GraveOwnerName");
       this.ownerUuid = nbtTag.getString("GraveOwnerUUID");
 
@@ -151,6 +170,9 @@ public abstract class TileEntityGSGrave extends TileEntity {
    public void writeToNBT(NBTTagCompound nbtTag) {
       super.writeToNBT(nbtTag);
       nbtTag.setBoolean("Enchanted", this.isEnchanted);
+      if (this.hasCustomGlint()) {
+         nbtTag.setInteger(EnchantHelper.CUSTOM_GLINT_TAG, this.customGlint);
+      }
       if (this.hasOwner()) {
          nbtTag.setString("GraveOwnerName", this.ownerName);
          nbtTag.setString("GraveOwnerUUID", this.ownerUuid);

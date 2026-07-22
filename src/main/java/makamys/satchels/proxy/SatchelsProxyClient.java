@@ -52,7 +52,7 @@ public class SatchelsProxyClient extends SatchelsProxyCommon {
     
     @SubscribeEvent
     public void onGuiOpen(GuiOpenEvent event) {
-        if(event.gui != null && event.gui.doesGuiPauseGame()) {
+        if(ConfigSatchels.hotSwap && event.gui != null && event.gui.doesGuiPauseGame()) {
             ConfigSatchels.reloadIfChanged();
         }
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;

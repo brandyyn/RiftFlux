@@ -50,6 +50,10 @@ public class LegendGearManaTooltipHandler {
             return;
         }
 
+        if (item == LegendGear2.spottingScope && !LegendGear2.CONFIG_SPOTTING_SCOPE_CONSUMES_MANA) {
+            return;
+        }
+
         if (item instanceof IMana) {
             this.addNumericTooltip(event.toolTip, "Mana Cost", ((IMana) item).getManaCost());
             return;

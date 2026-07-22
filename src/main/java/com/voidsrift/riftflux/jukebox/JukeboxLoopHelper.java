@@ -11,8 +11,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public final class JukeboxLoopHelper {
     public static final long NO_LOOP_TICK = -1L;
@@ -20,12 +22,15 @@ public final class JukeboxLoopHelper {
     private static final Map<String, Integer> RECORD_LENGTH_SECONDS = buildRecordLengthSeconds();
     private static String[] cachedTrackTimingEntries;
     private static Map<String, TrackTiming> cachedTrackTimings;
+    private static String[] cachedAutoLoopBlacklistEntries;
+    private static Set<String> cachedAutoLoopBlacklist;
 
     private JukeboxLoopHelper() {
     }
 
     public static void scheduleLoop(BlockJukebox.TileEntityJukebox jukebox, ItemStack record) {
-        if (!ModConfig.jukeboxAutoLoopEnabled || jukebox == null || record == null || !(record.getItem() instanceof ItemRecord)) {
+        if (!ModConfig.jukeboxAutoLoopEnabled || jukebox == null || record == null
+                || !(record.getItem() instanceof ItemRecord) || isAutoLoopBlacklisted(record)) {
             setNextLoopTick(jukebox, NO_LOOP_TICK);
             setScheduledRecordKey(jukebox, NO_RECORD_KEY);
             return;
@@ -77,7 +82,7 @@ public final class JukeboxLoopHelper {
         }
 
         ItemStack record = jukebox.func_145856_a();
-        if (record == null || !(record.getItem() instanceof ItemRecord)) {
+        if (record == null || !(record.getItem() instanceof ItemRecord) || isAutoLoopBlacklisted(record)) {
             clearLoop(jukebox);
             return;
         }
@@ -214,6 +219,58 @@ public final class JukeboxLoopHelper {
             }
         }
         return null;
+    }
+
+    private static boolean isAutoLoopBlacklisted(ItemStack record) {
+        if (record == null || !(record.getItem() instanceof ItemRecord)) {
+            return false;
+        }
+
+        Set<String> blacklist = getAutoLoopBlacklist();
+        if (blacklist.isEmpty()) {
+            return false;
+        }
+
+        Item item = record.getItem();
+        if (blacklist.contains(normalize(((ItemRecord) item).recordName))) {
+            return true;
+        }
+
+        String registryName = getItemRegistryName(item);
+        if (blacklist.contains(normalize(registryName))) {
+            return true;
+        }
+        if (registryName != null && registryName.startsWith("minecraft:")
+                && blacklist.contains(normalize(registryName.substring("minecraft:".length())))) {
+            return true;
+        }
+
+        String unlocalizedName = item.getUnlocalizedName(record);
+        if (blacklist.contains(normalize(unlocalizedName))) {
+            return true;
+        }
+        return unlocalizedName != null && unlocalizedName.startsWith("item.")
+                && blacklist.contains(normalize(unlocalizedName.substring("item.".length())));
+    }
+
+    private static Set<String> getAutoLoopBlacklist() {
+        String[] entries = ModConfig.jukeboxAutoLoopBlacklist;
+        if (cachedAutoLoopBlacklist != null && cachedAutoLoopBlacklistEntries == entries) {
+            return cachedAutoLoopBlacklist;
+        }
+
+        Set<String> blacklist = new HashSet<String>();
+        if (entries != null) {
+            for (int i = 0; i < entries.length; i++) {
+                String entry = normalize(entries[i]);
+                if (!entry.isEmpty() && !entry.startsWith("#")) {
+                    blacklist.add(entry);
+                }
+            }
+        }
+        cachedAutoLoopBlacklistEntries = entries;
+        cachedAutoLoopBlacklist = blacklist;
+        return blacklist;
     }
 
     private static TrackTiming getFirstConfiguredTiming(Map<String, TrackTiming> configured, ItemStack record) {

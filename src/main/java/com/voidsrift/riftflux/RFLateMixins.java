@@ -43,6 +43,10 @@ public class RFLateMixins implements ILateMixinLoader {
         if(loadedMods.contains("DragonAPI")) {
             mixins.add("late.FixNullCrash");
             mixins.add("late.MixinMTInteractionManager");
+            if (ModConfig.enablePlacedItem && FMLLaunchHandler.side() == Side.CLIENT) {
+                mixins.add("late.dragonapi.MixinItemSpriteSheetRenderer_PlacedItem");
+                mixins.add("late.dragonapi.MixinMultiSheetItemRenderer_PlacedItem");
+            }
         }
         if(loadedMods.contains("Hats")) {
             mixins.add("late.MixinHatsEventHandler");

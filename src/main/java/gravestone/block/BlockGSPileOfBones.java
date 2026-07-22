@@ -63,7 +63,9 @@ public class BlockGSPileOfBones extends BlockContainer {
    }
 
    public int quantityDropped(Random random) {
-      return 4;
+      int minDrops = GraveStoneConfig.pileOfBonesMinDrops;
+      int maxDrops = GraveStoneConfig.pileOfBonesMaxDrops;
+      return minDrops + random.nextInt(maxDrops - minDrops + 1);
    }
 
    public int damageDropped(int damage) {

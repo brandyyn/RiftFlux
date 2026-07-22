@@ -3,9 +3,9 @@ package gravestone.models.block.memorials;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gravestone.core.Resources;
+import gravestone.renderer.GSGlintAnimation;
 import gravestone.models.block.ModelMemorial;
 import gravestone.renderer.tileentity.TileEntityGSMemorialRenderer;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
@@ -89,7 +89,7 @@ public class ModelCreeperStatueMemorial extends ModelMemorial {
    }
 
    private void renderCreeperCharging() {
-      float tickModifier = (float)(Minecraft.getSystemTime() % 3000L) / 3000.0F * 48.0F;
+      double elapsedSeconds = GSGlintAnimation.getElapsedSeconds();
       float scale = 1.2F;
       float f4 = 0.5F;
       GL11.glTranslated(0.0D, -0.5D, 0.0D);
@@ -102,7 +102,7 @@ public class ModelCreeperStatueMemorial extends ModelMemorial {
 
       for(int var21 = 0; var21 < 3; ++var21) {
          GL11.glLoadIdentity();
-         float var23 = tickModifier * (0.001F + (float)var21 * 0.0015F) * 15.0F;
+         float var23 = (float)(elapsedSeconds * (0.24D + (double)var21 * 0.36D));
          GL11.glTranslatef(0.0F, var23, 0.0F);
          this.renderCreeper();
       }

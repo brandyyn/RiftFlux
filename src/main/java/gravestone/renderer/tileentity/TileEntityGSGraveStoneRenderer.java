@@ -15,8 +15,10 @@ import gravestone.models.block.graves.ModelHorisontalPlateGraveStone;
 import gravestone.models.block.graves.ModelHorseGraveStone;
 import gravestone.models.block.graves.ModelSwordGrave;
 import gravestone.models.block.graves.ModelVerticalPlateGraveStone;
+import gravestone.renderer.GSGlintAnimation;
 import gravestone.tileentity.TileEntityGSGraveStone;
 import com.voidsrift.riftflux.vortex.lib.helper.EnchantHelper;
+import com.voidsrift.riftflux.placeditem.VanillaToolRenderContext;
 import java.util.Map;
 import java.util.Random;
 import java.util.IdentityHashMap;
@@ -36,7 +38,6 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Items;
-import net.minecraft.item.ItemDye;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -111,14 +112,14 @@ public class TileEntityGSGraveStoneRenderer extends TileEntityGSRenderer {
          } else {
             this.bindTextureByName(swordsTextureMap.get(tileEntity.getSword().getItem()));
             if (tileEntity.isEnchanted()) {
-               MODELS_MAP.get(graveType).renderEnchanted();
+               renderEnchantedGrave(MODELS_MAP.get(graveType), tileEntity);
             } else {
                MODELS_MAP.get(graveType).renderAll();
             }
          }
       } else {
          if (tileEntity.isEnchanted()) {
-            MODELS_MAP.get(graveType).renderEnchanted();
+            renderEnchantedGrave(MODELS_MAP.get(graveType), tileEntity);
          } else {
             renderStaticModel(MODELS_MAP.get(graveType));
          }
@@ -134,13 +135,17 @@ public class TileEntityGSGraveStoneRenderer extends TileEntityGSRenderer {
    private void renderSword(TileEntityGSGraveStone te) {
       ItemStack sword = te.getSword();
       ItemStack renderSword = sword;
-      if (te.isEnchanted() && !renderSword.isItemEnchanted()) {
+      if (te.hasCustomGlint() || te.isEnchanted() && !renderSword.isItemEnchanted()) {
          renderSword = renderSword.copy();
          if (!renderSword.hasTagCompound()) {
             renderSword.setTagCompound(new NBTTagCompound());
          }
 
          renderSword.getTagCompound().setTag("ench", new NBTTagList());
+      }
+
+      if (te.hasCustomGlint()) {
+         renderSword.getTagCompound().setInteger(EnchantHelper.CUSTOM_GLINT_TAG, te.getCustomGlint());
       }
 
       net.minecraft.world.World renderWorld = te.getWorldObj() != null
@@ -203,7 +208,7 @@ public class TileEntityGSGraveStoneRenderer extends TileEntityGSRenderer {
       textures.bindTexture(ITEM_GLINT);
       GL11.glEnable(GL11.GL_BLEND);
       GL11.glBlendFunc(GL11.GL_SRC_COLOR, GL11.GL_ONE);
-      GlintColor glint = getSwordGlintColor(sword);
+      EnchantHelper.GlintColor glint = getSwordGlintColor(sword);
       if (glint.render) {
          GL11.glColorMask(true, true, true, false);
          if (glint.subtractive) {
@@ -226,53 +231,25 @@ public class TileEntityGSGraveStoneRenderer extends TileEntityGSRenderer {
       GL11.glPopMatrix();
    }
 
-   private static GlintColor getSwordGlintColor(ItemStack sword) {
+   private static EnchantHelper.GlintColor getSwordGlintColor(ItemStack sword) {
       if (!sword.hasTagCompound() || !sword.getTagCompound().hasKey(EnchantHelper.CUSTOM_GLINT_TAG)) {
-         return new GlintColor(true, false, 0.38F, 0.19F, 0.608F);
+         return EnchantHelper.defaultGlintColor();
       }
-      int value = sword.getTagCompound().getInteger(EnchantHelper.CUSTOM_GLINT_TAG);
-      switch (value) {
-         case 7:
-            return new GlintColor(true, true, 0.36F, 0.36F, 0.36F);
-         case 8:
-            return new GlintColor(true, false, 0.36F, 0.36F, 0.36F);
-         case 11:
-            return new GlintColor(true, true, 0.72F, 0.39F, 0.02F);
-         case 12:
-            return new GlintColor(true, true, 0.35F, 0.48F, 0.57F);
-         case 13:
-            return new GlintColor(true, true, 0.54F, 0.22F, 0.57F);
-         case 15:
-            return new GlintColor(true, true, 0.52F, 0.52F, 0.52F);
-         case 16:
-            return new GlintColor(false, false, 0.0F, 0.0F, 0.0F);
-         default:
-            int color = value >= 0 && value <= 15 ? ItemDye.field_150922_c[15 - value] : value;
-            float[] colors = EnchantHelper.generateColorsForGlint(color);
-            return new GlintColor(true, false, colors[0], colors[1], colors[2]);
-      }
+      return EnchantHelper.resolveGlintColor(sword.getTagCompound().getInteger(EnchantHelper.CUSTOM_GLINT_TAG));
    }
 
-   private static final class GlintColor {
-      private final boolean render;
-      private final boolean subtractive;
-      private final float red;
-      private final float green;
-      private final float blue;
-
-      private GlintColor(boolean render, boolean subtractive, float red, float green, float blue) {
-         this.render = render;
-         this.subtractive = subtractive;
-         this.red = red;
-         this.green = green;
-         this.blue = blue;
+   private static void renderEnchantedGrave(ModelGraveStone model, TileEntityGSGraveStone grave) {
+      if (grave.hasCustomGlint()) {
+         model.renderEnchanted(grave.getCustomGlint());
+      } else {
+         model.renderEnchanted();
       }
    }
 
    private static void renderSwordGlintPass(long period, float rotation, boolean reverse) {
       GL11.glPushMatrix();
       GL11.glScalef(0.125F, 0.125F, 0.125F);
-      float offset = (float)(net.minecraft.client.Minecraft.getSystemTime() % period) / (float)period * 8.0F;
+      float offset = (float)(GSGlintAnimation.getElapsedSeconds() * 8000.0D / (double)period);
       GL11.glTranslatef(reverse ? -offset : offset, 0.0F, 0.0F);
       GL11.glRotatef(rotation, 0.0F, 0.0F, 1.0F);
       ItemRenderer.renderItemIn2D(Tessellator.instance, 0.0F, 0.0F, 1.0F, 1.0F, 255, 255, 0.0625F);
@@ -282,7 +259,12 @@ public class TileEntityGSGraveStoneRenderer extends TileEntityGSRenderer {
    private void renderSwordEntity(net.minecraft.world.World world, ItemStack sword) {
       EntityItem entityitem = new EntityItem(world, 0.0D, 0.0D, 0.0D, sword);
       entityitem.hoverStart = 0.0F;
-      this.renderItem(entityitem, 0.0D, 0.0D, 0.0D, 0.0F, 0.0F);
+      VanillaToolRenderContext.enterGravestone();
+      try {
+         this.renderItem(entityitem, 0.0D, 0.0D, 0.0D, 0.0F, 0.0F);
+      } finally {
+         VanillaToolRenderContext.exitGravestone();
+      }
    }
 
    private static void renderStaticModel(ModelGraveStone model) {

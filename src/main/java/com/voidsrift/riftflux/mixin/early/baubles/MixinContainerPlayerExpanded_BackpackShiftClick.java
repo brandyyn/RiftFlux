@@ -3,6 +3,8 @@ package com.voidsrift.riftflux.mixin.early.baubles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import baubles.api.BaubleType;
@@ -27,6 +29,14 @@ public abstract class MixinContainerPlayerExpanded_BackpackShiftClick {
     )
     private Item rf$swapBackpackItem(Item item) {
         return item instanceof ItemBackpack ? rf$backpackProxy : item;
+    }
+
+    @ModifyConstant(
+            method = {"transferStackInSlot", "func_82846_b"},
+            constant = @Constant(stringValue = "universal")
+    )
+    private String rf$makeUniversalTypeExact(String constant) {
+        return "riftflux:no_universal_wildcard";
     }
 
     private static final class ItemBackpackBaubleProxy extends Item implements IBaubleExpanded {

@@ -44,7 +44,7 @@ public class MemorialGenerator implements GSStructureGenerator {
    }
 
    protected static boolean canSpawnStructureAtCoords(World world, int x, int z, double chance) {
-      return chance < 0.05D && isBiomeAllowed(world, x, z) && noAnyInRange(x, z);
+      return chance < 0.05D && isBiomeAllowed(world, x, z) && noAnyInRange(world, x, z);
    }
 
    protected static boolean isBiomeAllowed(World world, int x, int z) {
@@ -52,17 +52,15 @@ public class MemorialGenerator implements GSStructureGenerator {
       return !biomeTypesList.contains(Type.WATER);
    }
 
-   protected static boolean noAnyInRange(int x, int z) {
+   protected static boolean noAnyInRange(World world, int x, int z) {
       for(ChunkCoordIntPair position : structuresList) {
          if (position.chunkXPos > x - 400 && position.chunkXPos < x + 400 && position.chunkZPos > z - 400 && position.chunkZPos < z + 400) {
             return false;
          }
       }
 
-      for(ChunkCoordIntPair position : CatacombsGenerator.getStructuresList()) {
-         if (position.chunkXPos > x - 100 && position.chunkXPos < x + 100 && position.chunkZPos > z - 100 && position.chunkZPos < z + 100) {
-            return false;
-         }
+      if (CatacombsGenerator.hasStructureInRange(world, x, z, 100)) {
+         return false;
       }
 
       return true;

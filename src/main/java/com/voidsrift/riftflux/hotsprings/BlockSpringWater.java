@@ -58,7 +58,19 @@ public final class BlockSpringWater extends BlockFluidClassic {
     @SideOnly(Side.CLIENT)
     public void randomDisplayTick(World world, int x, int y, int z, Random random) {
         super.randomDisplayTick(world, x, y, z, random);
-        if (world.isAirBlock(x, y + 1, z)) {
+        int particleCount = ModConfig.hotSpringsSteamParticlesPerDisplayTick;
+        float chancePercent = ModConfig.hotSpringsSteamParticleChancePercent;
+        double renderDistance = ModConfig.hotSpringsSteamParticleRenderDistance;
+        if (particleCount <= 0
+                || chancePercent <= 0.0F
+                || renderDistance <= 0.0D
+                || !world.isAirBlock(x, y + 1, z)
+                || world.getClosestPlayer(x + 0.5D, y + 1.0D, z + 0.5D, renderDistance) == null
+                || random.nextFloat() * 100.0F >= chancePercent) {
+            return;
+        }
+
+        for (int i = 0; i < particleCount; i++) {
             world.spawnParticle(
                     "cloud",
                     x + random.nextFloat(),

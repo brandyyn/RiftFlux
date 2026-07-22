@@ -118,6 +118,7 @@ public class RenderTilePlacedItem extends TileEntitySpecialRenderer {
         GL11.glPushMatrix();
         int previousStackSize = entityStack.stackSize;
         boolean previousInFrame = RenderItem.renderInFrame;
+        VanillaToolRenderContext.enterPlacedItem();
         try {
             entityStack.stackSize = 1;
             entity.age = 0;
@@ -172,6 +173,7 @@ public class RenderTilePlacedItem extends TileEntitySpecialRenderer {
             }
             RenderManager.instance.renderEntityWithPosYaw(entity, 0.0D, 0.0D, 0.0D, 0.0F, 0.0F);
         } finally {
+            VanillaToolRenderContext.exitPlacedItem();
             entityStack.stackSize = previousStackSize;
             RenderItem.renderInFrame = previousInFrame;
             GL11.glMatrixMode(GL11.GL_MODELVIEW);

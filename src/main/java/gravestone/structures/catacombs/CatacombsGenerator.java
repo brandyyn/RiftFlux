@@ -3,15 +3,11 @@ package gravestone.structures.catacombs;
 import gravestone.config.GraveStoneConfig;
 import gravestone.core.logger.GSLogger;
 import gravestone.structures.GSStructureGenerator;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.village.Village;
-import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
-import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.BiomeDictionary.Type;
 
 public class CatacombsGenerator implements GSStructureGenerator {
    private static CatacombsGenerator instance;
@@ -19,8 +15,8 @@ public class CatacombsGenerator implements GSStructureGenerator {
    public static final byte CATACOMBS_RANGE = 100;
    public static final int CATACOMBS_DISTANCE = 1500;
    public static final int DISTANCE_FROM_SPAWN = 1000;
-   public static final double DEFAULT_GENERATION_CHANCE = 2.5E-4D;
-   protected static LinkedList<ChunkCoordIntPair> structuresList = new LinkedList<>();
+   public static final double DEFAULT_GENERATION_CHANCE = 3.3E-4D;
+   protected static LinkedList<CatacombsPosition> structuresList = new LinkedList<>();
 
    private CatacombsGenerator() {
       instance = this;
@@ -39,7 +35,7 @@ public class CatacombsGenerator implements GSStructureGenerator {
             new CatacombsUnderground(world, rand, direction, surface.getMausoleumX(), surface.getMausoleumY(), surface.getMausoleumZ());
          }
 
-         structuresList.add(new ChunkCoordIntPair(x, z));
+         structuresList.add(new CatacombsPosition(world.provider.dimensionId, x, z));
          return true;
       } else {
          return false;
@@ -47,19 +43,15 @@ public class CatacombsGenerator implements GSStructureGenerator {
    }
 
    protected static boolean canSpawnStructureAtCoords(World world, int x, int z, double chance) {
-      return chance < GraveStoneConfig.catacombsGenerationChance && isBiomeAllowed(world, x, z) && noAnyInRange(x, z, world);
-   }
-
-   protected static boolean isBiomeAllowed(World world, int x, int z) {
-      LinkedList<Type> biomeTypesList = new LinkedList<>(Arrays.asList(BiomeDictionary.getTypesForBiome(world.getBiomeGenForCoords(x, z))));
-      return !biomeTypesList.contains(Type.WATER) && !biomeTypesList.contains(Type.SWAMP) && !biomeTypesList.contains(Type.JUNGLE) && !biomeTypesList.contains(Type.MAGICAL) && !biomeTypesList.contains(Type.HILLS) && !biomeTypesList.contains(Type.MOUNTAIN) && (biomeTypesList.contains(Type.PLAINS) || biomeTypesList.contains(Type.FOREST) || biomeTypesList.contains(Type.FROZEN) || biomeTypesList.contains(Type.WASTELAND));
+      double generationChance = CatacombsGenerationConfig.getGenerationChance(world, x, z);
+      return generationChance >= 0.0D && chance < generationChance && noAnyInRange(x, z, world);
    }
 
    protected static boolean noAnyInRange(int x, int z, World world) {
       GSLogger.logInfo("Catacombs generation - Begin Checking area for another catacombs or villages");
 
-      for(ChunkCoordIntPair position : structuresList) {
-         if (checkStructuresInRange(position.chunkXPos, position.chunkZPos, x, z, 1500)) {
+      for(CatacombsPosition position : structuresList) {
+         if (position.dimensionId == world.provider.dimensionId && checkStructuresInRange(position.x, position.z, x, z, 1500)) {
             return false;
          }
       }
@@ -85,8 +77,16 @@ public class CatacombsGenerator implements GSStructureGenerator {
       return xPos > x - range && xPos < x + range && zPos > z - range && zPos < z + range;
    }
 
-   public static LinkedList<ChunkCoordIntPair> getStructuresList() {
-      return structuresList;
+   public static boolean hasStructureInRange(World world, int x, int z, int range) {
+      if (world == null || world.provider == null) {
+         return false;
+      }
+      for (CatacombsPosition position : structuresList) {
+         if (position.dimensionId == world.provider.dimensionId && checkStructuresInRange(position.x, position.z, x, z, range)) {
+            return true;
+         }
+      }
+      return false;
    }
 
    private static boolean isHeightAcceptable(World world, int x, int z) {
@@ -103,5 +103,17 @@ public class CatacombsGenerator implements GSStructureGenerator {
 
       GSLogger.logInfo("Catacombs generation - End Checking area height");
       return height / count < GraveStoneConfig.maxCatacombsHeight;
+   }
+
+   protected static final class CatacombsPosition {
+      private final int dimensionId;
+      private final int x;
+      private final int z;
+
+      private CatacombsPosition(int dimensionId, int x, int z) {
+         this.dimensionId = dimensionId;
+         this.x = x;
+         this.z = z;
+      }
    }
 }

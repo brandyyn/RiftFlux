@@ -1,6 +1,5 @@
 package makamys.satchels.proxy;
 
-import codechicken.lib.inventory.InventoryUtils;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import makamys.satchels.EntityPropertiesSatchels;
@@ -10,14 +9,10 @@ import makamys.satchels.inventory.ContainerSatchels;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
-import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 
 public class SatchelsProxyCommon {
     
@@ -90,11 +85,4 @@ public class SatchelsProxyCommon {
         }
     }
 
-    @SubscribeEvent
-    public void onPlayerClone(PlayerEvent.Clone event) {
-        if(event.wasDeath) {
-            EntityPropertiesSatchels.fromPlayer(event.entityPlayer).copyFrom(EntityPropertiesSatchels.fromPlayer(event.original));
-        }
-    }
-    
 }

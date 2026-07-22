@@ -1,9 +1,9 @@
 {
-"chesterbreathe": {"category": "master","sounds": [{"name": "chesterbreathe","stream": false}]},
-"chesterpant": {"category": "master","sounds": [{"name": "chesterpant","stream": false}]},
-"chesteropen": {"category": "master","sounds": [{"name": "chesteropen","stream": false}]},
-"chestopen": {"category": "master","sounds": [{"name": "chestopen","stream": false}]},
-"chesterclose": {"category": "master","sounds": [{"name": "chesterclose","stream": false}]},
-"chesterclose2": {"category": "master","sounds": [{"name": "chesterclose2","stream": false}]}
+"chesterbreathe": {"category": "neutral","sounds": [{"name": "chesterbreathe","stream": false}]},
+"chesterpant": {"category": "neutral","sounds": [{"name": "chesterpant","stream": false}]},
+"chesteropen": {"category": "neutral","sounds": [{"name": "chesteropen","stream": false}]},
+"chestopen": {"category": "block","sounds": [{"name": "chestopen","stream": false}]},
+"chesterclose": {"category": "block","sounds": [{"name": "chesterclose","stream": false}]},
+"chesterclose2": {"category": "block","sounds": [{"name": "chesterclose2","stream": false}]}
 
 }

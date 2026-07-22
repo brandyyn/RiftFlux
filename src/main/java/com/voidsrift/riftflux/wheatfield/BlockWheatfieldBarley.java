@@ -59,21 +59,12 @@ public class BlockWheatfieldBarley extends BlockBush implements IShearable {
 
     @Override
     public Item getItemDropped(int meta, Random random, int fortune) {
-        return null;
+        return Item.getItemFromBlock(this);
     }
 
     @Override
     public int quantityDropped(Random random) {
-        return 0;
-    }
-
-    @Override
-    public ArrayList<ItemStack> getDrops(World world, int x, int y, int z, int meta, int fortune) {
-        ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
-        if (shouldDropWhenBroken(world.rand)) {
-            drops.add(new ItemStack(this));
-        }
-        return drops;
+        return shouldDropWhenBroken(random) ? 1 : 0;
     }
 
     @Override

@@ -33,9 +33,9 @@ public class ItemGSMonsterPlacer extends ItemMonsterPlacer {
 
    public String getItemStackDisplayName(ItemStack p_77653_1_) {
       String s = ("" + StatCollector.translateToLocal(this.getUnlocalizedName() + ".name")).trim();
-      String s1 = eggs[p_77653_1_.getItemDamage()];
-      if (s1 != null) {
-         s = s + " " + StatCollector.translateToLocal("entity." + s1 + ".name");
+      int metadata = p_77653_1_.getItemDamage();
+      if (metadata >= 0 && metadata < eggs.length) {
+         s = s + " " + StatCollector.translateToLocal("entity.riftflux." + eggs[metadata] + ".name");
       }
 
       return s;

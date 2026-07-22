@@ -20,7 +20,6 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 public class EntityFlowerMan extends EntityAnimal implements IEntitySyncData {
@@ -72,14 +71,6 @@ public class EntityFlowerMan extends EntityAnimal implements IEntitySyncData {
     }
 
     @Override
-    public void onLivingUpdate() {
-        super.onLivingUpdate();
-        if (!worldObj.isRemote && ticksExisted % 20 == 0 && rand.nextInt(20) == 0) {
-            spreadLife();
-        }
-    }
-
-    @Override
     protected String getLivingSound() {
         return null;
     }
@@ -126,30 +117,6 @@ public class EntityFlowerMan extends EntityAnimal implements IEntitySyncData {
 
     public ItemStack createLifeDropStack() {
         return new ItemStack(getLifeBlock(), 1, getLifeMetadata());
-    }
-
-    private void spreadLife() {
-        for (int attempt = 0; attempt < 12; attempt++) {
-            int x = MathHelper.floor_double(posX) + rand.nextInt(5) - 2;
-            int y = MathHelper.floor_double(posY) + rand.nextInt(3) - 1;
-            int z = MathHelper.floor_double(posZ) + rand.nextInt(5) - 2;
-
-            if (!worldObj.isAirBlock(x, y, z)) {
-                continue;
-            }
-
-            Block ground = worldObj.getBlock(x, y - 1, z);
-            if (ground != Blocks.grass && ground != Blocks.dirt) {
-                continue;
-            }
-
-            Block plant = rand.nextInt(5) == 0 ? Blocks.tallgrass : getLifeBlock();
-            int metadata = plant == Blocks.tallgrass ? 1 : getLifeMetadata();
-            if (plant.canPlaceBlockAt(worldObj, x, y, z)) {
-                worldObj.setBlock(x, y, z, plant, metadata, 3);
-                return;
-            }
-        }
     }
 
     private Block getLifeBlock() {

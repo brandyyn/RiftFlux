@@ -689,6 +689,7 @@ public final class LegendGearLegacyContent {
 
     private static void registerEventHandlers() {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHooksHandler());
+        MinecraftForge.EVENT_BUS.register(new WhirlwindBootsTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new AugmentedSwordHandler());
         MinecraftForge.EVENT_BUS.register(new JumpNoticeHandler());
         if (LegendGear.enchantmentSoulTether != null) {

@@ -136,8 +136,8 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
             );
             if (player.openContainer instanceof ContainerChester) {
                 setOpen(true);
-                worldObj.playSoundEffect(posX, posY, posZ, "chester:chesteropen", 0.7F, 1.0F);
-                worldObj.playSoundEffect(posX, posY, posZ, "chester:chestopen", 0.7F, 1.0F);
+                worldObj.playSoundEffect(posX, posY, posZ, "chester:chesteropen", 0.3F, 1.0F);
+                worldObj.playSoundEffect(posX, posY, posZ, "chester:chestopen", 0.3F, 1.0F);
             }
         }
         return true;
@@ -146,6 +146,11 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
     @Override
     protected String getLivingSound() {
         return "chester:chesterbreathe";
+    }
+
+    @Override
+    protected float getSoundVolume() {
+        return 0.4F;
     }
 
     @Override
@@ -461,7 +466,7 @@ public class EntityChester extends EntityCreature implements IEntitySyncData, IE
         if (happyPantTicks > 0) {
             --happyPantTicks;
             if (--happyPantSoundCooldown <= 0) {
-                playSound("chester:chesterpant", 0.8F, 1.0F);
+                playSound("chester:chesterpant", 0.4F, 1.0F);
                 happyPantSoundCooldown = 18 + rand.nextInt(13);
             }
             if (happyPantTicks <= 0) {

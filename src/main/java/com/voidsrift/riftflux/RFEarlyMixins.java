@@ -63,6 +63,11 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 && hasClass("codechicken.nei.NEIServerUtils")) {
             mixins.add("early.nei.MixinNEIServerUtils_GravestoneNBTRecipes");
         }
+        if (ModConfig.enableClaySoldiersModule
+                && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT
+                && hasClass("de.sanandrew.mods.claysoldiers.client.render.EntityRendererClayCam")) {
+            mixins.add("early.claysoldiers.MixinEntityRendererClayCam_MatrixStackGuard");
+        }
         if (ModConfig.shearsDamageOnAnyBlock) {
             mixins.add("early.MixinItemShears_DamageAnyBlock");
         }
@@ -312,6 +317,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.protectCircuitryFromWater) {
             mixins.add("early.MixinBlockDynamicLiquid_ProtectCircuitryFromWater");
             mixins.add("early.MixinItemBucket_ProtectCircuitryFromWater");
+        }
+        if (ModConfig.enablePlaceableGunpowder || ModConfig.enableGlowstoneDust) {
+            mixins.add("early.MixinItem_PlaceableDust");
         }
         if (ModConfig.preventWaterGrassDecay) {
             mixins.add("early.MixinBlockGrass_NoWaterDecay");
@@ -586,6 +594,8 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinBlock_LeafLightOpacity");
         }
         mixins.add("early.baubles.MixinContainerPlayerExpanded_BackpackShiftClick");
+        mixins.add("early.baubles.MixinInventoryBaubles_UniversalSlotOnly");
+        mixins.add("early.baubles.MixinSlotBauble_UniversalSlotOnly");
 
         // vortex mixins (always enabled)
         mixins.add("early.vortex.MixinArmorProperties");

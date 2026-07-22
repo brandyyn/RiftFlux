@@ -5,6 +5,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.net.MsgGravestoneLocation;
 import com.voidsrift.riftflux.net.RFNetwork;
+import com.voidsrift.riftflux.vortex.item.ModItems;
+import com.voidsrift.riftflux.vortex.lib.helper.EnchantHelper;
 import gravestone.ModGraveStone;
 import gravestone.block.enums.EnumGraves;
 import gravestone.config.GraveStoneConfig;
@@ -123,6 +125,9 @@ public class BlockGSGraveStone extends BlockContainer {
       int metadata = GraveStoneHelper.getMetadataBasedOnRotation(direction);
       world.setBlockMetadataWithNotify(x, y, z, metadata, 2);
       TileEntityGSGraveStone tileEntity = (TileEntityGSGraveStone)world.getTileEntity(x, y, z);
+      if (tileEntity != null) {
+         tileEntity.setPlayerPlaced(true);
+      }
       if (tileEntity != null && itemStack.stackTagCompound != null) {
          if (itemStack.stackTagCompound.hasKey("GraveType")) {
             tileEntity.setGraveType(itemStack.stackTagCompound.getByte("GraveType"));
@@ -152,6 +157,10 @@ public class BlockGSGraveStone extends BlockContainer {
 
          if (itemStack.stackTagCompound.hasKey("Enchanted")) {
             tileEntity.setEnchanted(itemStack.stackTagCompound.getBoolean("Enchanted"));
+         }
+
+         if (itemStack.stackTagCompound.hasKey(EnchantHelper.CUSTOM_GLINT_TAG, 3)) {
+            tileEntity.setCustomGlint(itemStack.stackTagCompound.getInteger(EnchantHelper.CUSTOM_GLINT_TAG));
          }
 
          if (itemStack.stackTagCompound.hasKey("GraveOwnerName") || itemStack.stackTagCompound.hasKey("GraveOwnerUUID")) {
@@ -434,6 +443,21 @@ public class BlockGSGraveStone extends BlockContainer {
       if (te != null) {
          if (player.inventory.getCurrentItem() != null) {
             ItemStack item = player.inventory.getCurrentItem();
+            if (item.getItem() == ModItems.glintRune) {
+               if (!world.isRemote) {
+                  te.setCustomGlint(MathHelper.clamp_int(item.getItemDamage(), 0, 16));
+                  world.markBlockForUpdate(x, y, z);
+                  if (!player.capabilities.isCreativeMode) {
+                     --item.stackSize;
+                     if (item.stackSize <= 0) {
+                        player.inventory.setInventorySlotContents(player.inventory.currentItem, (ItemStack)null);
+                     }
+                     player.inventory.markDirty();
+                  }
+               }
+               return true;
+            }
+
             if (item.getItem() instanceof ItemSpade) {
                if (!world.isRemote) {
                   GSLogger.logInfoGrave(player.getCommandSenderName() + " loot grave at " + x + "/" + y + "/" + z);
@@ -605,6 +629,9 @@ public class BlockGSGraveStone extends BlockContainer {
          }
 
          nbt.setBoolean("Enchanted", tileEntity.isEnchanted());
+         if (tileEntity.hasCustomGlint()) {
+            nbt.setInteger(EnchantHelper.CUSTOM_GLINT_TAG, tileEntity.getCustomGlint());
+         }
          if (tileEntity.hasOwner()) {
             nbt.setString("GraveOwnerName", tileEntity.getOwnerName());
             nbt.setString("GraveOwnerUUID", tileEntity.getOwnerUuid());

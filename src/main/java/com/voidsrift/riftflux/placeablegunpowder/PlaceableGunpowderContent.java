@@ -8,7 +8,6 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraftforge.common.MinecraftForge;
 
 public final class PlaceableGunpowderContent {
 
@@ -29,7 +28,6 @@ public final class PlaceableGunpowderContent {
                 .setBlockTextureName("redstone_dust");
         GameRegistry.registerBlock(gunpowderBlock, "gunpowder_block");
         Blocks.fire.setFireInfo(gunpowderBlock, 15, 20);
-        MinecraftForge.EVENT_BUS.register(new GunpowderEventHandler());
     }
 
     @SideOnly(Side.CLIENT)

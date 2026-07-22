@@ -13,15 +13,18 @@ public class GraveStoneWorldGenerator implements IWorldGenerator {
    public static final int DEFAULT_DIMENSION_ID = 0;
 
    public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider chunkGenerator, IChunkProvider chunkProvider) {
-      if (world.provider.dimensionId == GraveStoneConfig.structuresDimensionId) {
-         this.generateSurface(world, random, chunkX * 16, chunkZ * 16);
+      int x = chunkX * 16;
+      int z = chunkZ * 16;
+      double chance = random.nextDouble();
+      boolean generatedCatacombs = CatacombsGenerator.getInstance().generate(world, random, x, z, chance, false);
+      if (world.provider.dimensionId == GraveStoneConfig.structuresDimensionId && !generatedCatacombs) {
+         this.generateSurface(world, random, x, z, chance);
       }
 
    }
 
-   public void generateSurface(World world, Random rand, int x, int z) {
-      double chance = rand.nextDouble();
-      if (!CatacombsGenerator.getInstance().generate(world, rand, x, z, chance, false) && !MemorialGenerator.getInstance().generate(world, rand, x, z, chance, false)) {
+   public void generateSurface(World world, Random rand, int x, int z, double chance) {
+      if (!MemorialGenerator.getInstance().generate(world, rand, x, z, chance, false)) {
          SingleGraveGenerator.getInstance().generate(world, rand, x, z, chance, false);
       }
 

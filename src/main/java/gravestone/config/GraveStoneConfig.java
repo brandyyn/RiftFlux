@@ -3,6 +3,7 @@ package gravestone.config;
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import gravestone.block.GraveStoneHelper;
+import gravestone.structures.catacombs.CatacombsGenerationConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,6 @@ public class GraveStoneConfig {
    public static boolean generateSingleGraves;
    public static boolean generateMemorials;
    public static int maxCatacombsHeight;
-   public static double catacombsGenerationChance;
    public static boolean generateCemeteries;
    public static boolean generateVillageMemorials;
    public static boolean generateUndertaker;
@@ -40,9 +40,14 @@ public class GraveStoneConfig {
    public static boolean keepBaublesOnDeath;
    public static String[] keepBaubleSlotWhitelist;
    public static String[] keepBaubleSlotBlacklist;
+   public static String[] keepBaubleItemWhitelist;
+   public static String[] keepBaubleItemBlacklist;
+   public static boolean keepSatchelContentsOnDeath;
+   public static boolean keepBackpackContentsOnDeath;
+   public static boolean keepPouchContentsOnDeath;
    public static boolean keepTravellersGearOnDeath;
-   public static String[] keepTravellersGearItemWhitelist;
-   public static String[] keepTravellersGearItemBlacklist;
+   public static String[] keepTravellersGearSlotWhitelist;
+   public static String[] keepTravellersGearSlotBlacklist;
    public static String[] keepItemsOnDeathWhitelist;
    public static boolean keepHotbarOnDeath;
    public static boolean generateVillagerGraves;
@@ -61,8 +66,6 @@ public class GraveStoneConfig {
    public static boolean enableCreeperStatuesRecipes;
    public static boolean enableBossSpawnerCraftingRecipe;
    public static boolean enableSpawnerCraftingRecipe;
-   public static boolean craftableNightStone;
-   public static boolean craftableThunderStone;
    public static boolean hardAltarRecipe;
    public static boolean replaceHauntedChest;
    public static ArrayList<String> graveNames;
@@ -76,6 +79,7 @@ public class GraveStoneConfig {
    public static boolean spawnZombieCats;
    public static boolean spawnSkeletonDogs;
    public static boolean spawnSkeletonCats;
+   public static boolean enableSkeletonPetTaming;
    public static boolean spawnSkullCrawlersAtMobsDeath;
    public static boolean spawnSkullCrawlersAtBoneBlockDestruction;
    public static boolean generateSwordGraves;
@@ -99,6 +103,8 @@ public class GraveStoneConfig {
    public static int catacombsMinRoomsCountAt4Level;
    public static int catacombsMaxRoomsCountAt4Level;
    public static boolean generatePilesOfBones;
+   public static int pileOfBonesMinDrops;
+   public static int pileOfBonesMaxDrops;
    public static boolean generateGravesInMushroomBiomes;
    public static int undertakerId;
    public static int cursePotionEffectId;
@@ -149,7 +155,10 @@ public class GraveStoneConfig {
       structuresDimensionId = config.get(CATEGORY_GRAVESTONE, "StructuresDimensionId", 0, "Allows choosing the dimension in which Gravestone structures can generate.").getInt();
       generateCatacombs = config.get(CATEGORY_GRAVESTONE, "GenerateCatacombs", true, "Enable or disable catacombs generation.").getBoolean(true);
       maxCatacombsHeight = config.get(CATEGORY_GRAVESTONE, "MaximumCatacombsGenerationHeight", 75, "Maximum ground height at which catacombs are allowed to generate.").getInt();
-      catacombsGenerationChance = config.get(CATEGORY_GRAVESTONE, "CatacombsGenerationChance", 2.5E-4D, "Chance to generate catacombs.").getDouble();
+      String[] catacombsDimensionWhitelist = config.get(CATEGORY_GRAVESTONE, "CatacombsDimensionWhitelist", new String[]{"0|0.033"}, "Dimensions where catacombs may generate, with a percent chance per newly generated chunk. Format: dimensionId|percent. Example: 0|0.033 is dimension 0 at 0.033% (about 1 chance roll per 3,030 chunks). Empty disables catacombs generation.").getStringList();
+      String[] catacombsBiomeWhitelist = config.get(CATEGORY_GRAVESTONE, "CatacombsBiomeWhitelist", new String[0], "Biomes where catacombs may generate, with a percent chance per newly generated chunk. Format: biomeSelector|percent. Selectors may be biome IDs, exact names, name:<name>, or dictionary types such as type:FOREST. A matching biome chance overrides the dimension chance; first match wins. Empty allows every non-blacklisted biome using its dimension chance.").getStringList();
+      String[] catacombsBiomeBlacklist = config.get(CATEGORY_GRAVESTONE, "CatacombsBiomeBlacklist", new String[0], "Biomes where catacombs must never generate. Uses biome IDs, exact names, name:<name>, or dictionary types such as type:WATER. Blacklist always takes precedence over both whitelists.").getStringList();
+      CatacombsGenerationConfig.configure(catacombsDimensionWhitelist, catacombsBiomeWhitelist, catacombsBiomeBlacklist);
       generateCatacombsGraveyard = config.get(CATEGORY_GRAVESTONE, "GenerateCatacombsGraveyard", true, "Enable or disable catacombs graveyard generation.").getBoolean(true);
       generateEyeboneInGraveyards = config.get(CATEGORY_GRAVESTONE, "GenerateEyeboneInGraveyards", true, "Add exactly one Chester Eyebone to a random courtyard grave outside each generated catacombs. Requires the Chester module.").getBoolean(true);
       generateEyeboneInCatacombsGrave = config.get(CATEGORY_GRAVESTONE, "GenerateEyeboneInCatacombsGrave", true, "Add exactly one Chester Eyebone to a random underground grave across all levels of each generated catacombs. Requires the Chester module.").getBoolean(true);
@@ -163,6 +172,9 @@ public class GraveStoneConfig {
       generateUndertaker = config.get(CATEGORY_GRAVESTONE, "GenerateUndertaker", true, "Enable or disable undertaker house generation in villages.").getBoolean(true);
       undertakerId = config.get(CATEGORY_GRAVESTONE, "undertakerId", 385, "Villager profession ID used by the undertaker.").getInt();
       generatePilesOfBones = config.get(CATEGORY_GRAVESTONE, "GeneratePilesOfBones", false, "Enable or disable piles of bones in catacombs. Disable to improve performance.").getBoolean(false);
+      int[] pileOfBonesDrops = parseDropRange(config.get(CATEGORY_GRAVESTONE, "PileOfBonesDrops", "0-3", "Number of bones dropped when a pile of bones is broken. Use a range such as 0-3, or one number for a fixed amount.").getString(), 0, 3);
+      pileOfBonesMinDrops = pileOfBonesDrops[0];
+      pileOfBonesMaxDrops = pileOfBonesDrops[1];
       catacombsMinRoomsCountAt1Level = config.get(CATEGORY_GRAVESTONE, "CatacombsMinRoomsCountAt1Level", 30, "Minimum room count on catacombs level 1.").getInt();
       catacombsMaxRoomsCountAt1Level = config.get(CATEGORY_GRAVESTONE, "CatacombsMaxRoomsCountAt1Level", 60, "Maximum room count on catacombs level 1.").getInt();
       catacombsMinRoomsCountAt2Level = config.get(CATEGORY_GRAVESTONE, "CatacombsMinRoomsCountAt2Level", 60, "Minimum room count on catacombs level 2.").getInt();
@@ -178,13 +190,18 @@ public class GraveStoneConfig {
       enablePlayerDeathGraves = config.get(CATEGORY_GRAVESTONE, "EnablePlayerDeathGraves", true, "Enable this module's player-death graves and inventory capture. Disable when another grave mod handles player deaths; all other Gravestone content remains enabled.").getBoolean(true);
       enableXaeroMinimapGraveWaypoints = config.get(CATEGORY_GRAVESTONE, "EnableXaeroMinimapGraveWaypoints", true, "Make Xaero's Minimap death waypoint use the exact location where the player's gravestone was placed. Disable to retain Xaero's normal death-location waypoint behavior.").getBoolean(true);
       keepArmorOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepArmorOnDeath", false, "Keep equipped vanilla armour on the player after death instead of storing it in the grave or dropping it. No copies are created.").getBoolean(false);
-      keepBaublesOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepBaublesOnDeath", true, "Keep items from allowed Baubles Expanded slots on the player after death instead of storing them in the grave or dropping them. When both slot lists are empty, every Baubles slot is allowed. The blacklist always takes precedence over the whitelist.").getBoolean(true);
+      keepBaublesOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepBaublesOnDeath", true, "Keep allowed equipped Baubles items on the player after death instead of storing them in the grave or dropping them. This controls satchel, backpack, and pouch carrier items too; their stored contents are controlled separately by the three carrier-content settings. Blacklists take precedence over all keep rules.").getBoolean(true);
       keepBaubleSlotWhitelist = config.get(CATEGORY_GRAVESTONE, "KeepBaubleSlotWhitelist", new String[0], "Baubles Expanded slot types or numeric slot indexes whose items may stay with the player after death. Examples: ring, amulet, head, or slot:4. Empty means all slots unless blacklisted.").getStringList();
       keepBaubleSlotBlacklist = config.get(CATEGORY_GRAVESTONE, "KeepBaubleSlotBlacklist", new String[]{"chester_staff"}, "Baubles Expanded slot types or numeric slot indexes whose items must not be kept by KeepBaublesOnDeath. Blacklist takes precedence over the Baubles slot whitelist. Chester's staff slot is blacklisted by default.").getStringList();
-      keepTravellersGearOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepTravellersGearOnDeath", true, "Keep equipped Traveller's Gear items on the player after death instead of storing them in the grave or dropping them. When both Traveller's Gear item lists are empty, every equipped item is kept. The blacklist always takes precedence over all keep-item whitelists.").getBoolean(true);
-      keepTravellersGearItemWhitelist = config.get(CATEGORY_GRAVESTONE, "KeepTravellersGearItemWhitelist", new String[0], "Registry names of equipped Traveller's Gear items that may stay with the player after death. Use modid:item or modid:item:metadata. Empty allows every equipped Traveller's Gear item unless blacklisted.").getStringList();
-      keepTravellersGearItemBlacklist = config.get(CATEGORY_GRAVESTONE, "KeepTravellersGearItemBlacklist", new String[0], "Registry names of equipped Traveller's Gear items that must not stay with the player after death. Use modid:item or modid:item:metadata. Blacklist takes precedence over the Traveller's Gear whitelist and KeepItemsOnDeathWhitelist. Empty blocks no items.").getStringList();
-      keepItemsOnDeathWhitelist = config.get(CATEGORY_GRAVESTONE, "KeepItemsOnDeathWhitelist", new String[0], "Registry names of items that stay with the player after death, regardless of whether they are in the main inventory, hotbar, armour, a Baubles slot, or a Traveller's Gear slot. Use modid:item or modid:item:metadata. Empty disables this rule. Traveller's Gear blacklist entries still take precedence.").getStringList();
+      keepBaubleItemWhitelist = config.get(CATEGORY_GRAVESTONE, "KeepBaubleItemWhitelist", new String[0], "Registry names of equipped Baubles items that may stay with the player after death. Use modid:item or modid:item:metadata. Empty allows every item in an allowed Baubles slot unless blacklisted.").getStringList();
+      keepBaubleItemBlacklist = config.get(CATEGORY_GRAVESTONE, "KeepBaubleItemBlacklist", new String[0], "Registry names of equipped Baubles items that must not stay with the player after death. Use modid:item or modid:item:metadata. Blacklist takes precedence over the Baubles item whitelist and KeepItemsOnDeathWhitelist. Empty blocks no items.").getStringList();
+      keepSatchelContentsOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepSatchelContentsOnDeath", false, "Keep items stored inside equipped RiftFlux satchels when the player dies. If false, contents leave the satchel and follow normal grave or drop handling; KeepBaublesOnDeath independently controls whether the satchel itself stays equipped. Works regardless of its configured Baubles slot type.").getBoolean(false);
+      keepBackpackContentsOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepBackpackContentsOnDeath", false, "Keep items stored inside equipped RiftFlux backpacks when the player dies. If false, contents leave the backpack and follow normal grave or drop handling; KeepBaublesOnDeath independently controls whether the backpack itself stays equipped. Works regardless of its configured Baubles slot type.").getBoolean(false);
+      keepPouchContentsOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepPouchContentsOnDeath", false, "Keep items stored inside equipped RiftFlux pouches when the player dies. If false, contents leave every equipped pouch and follow normal grave or drop handling; KeepBaublesOnDeath independently controls whether the pouches themselves stay equipped. Works regardless of their configured Baubles slot type.").getBoolean(false);
+      keepTravellersGearOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepTravellersGearOnDeath", true, "Keep items from allowed Traveller's Gear slots on the player after death instead of storing them in the grave or dropping them. When both slot lists are empty, every Traveller's Gear slot is allowed. The blacklist takes precedence over the slot whitelist.").getBoolean(true);
+      keepTravellersGearSlotWhitelist = config.get(CATEGORY_GRAVESTONE, "KeepTravellersGearSlotWhitelist", new String[0], "Traveller's Gear slot types or numeric slot indexes whose items may stay with the player after death. Types: cloak, shoulder, vambrace, title. Numeric examples: 0 or slot:0. Empty means all slots unless blacklisted.").getStringList();
+      keepTravellersGearSlotBlacklist = config.get(CATEGORY_GRAVESTONE, "KeepTravellersGearSlotBlacklist", new String[0], "Traveller's Gear slot types or numeric slot indexes whose items must not be kept by KeepTravellersGearOnDeath. Types: cloak, shoulder, vambrace, title. Blacklist takes precedence over the Traveller's Gear slot whitelist.").getStringList();
+      keepItemsOnDeathWhitelist = config.get(CATEGORY_GRAVESTONE, "KeepItemsOnDeathWhitelist", new String[0], "Registry names of items that stay with the player after death, regardless of whether they are in the main inventory, hotbar, armour, a Baubles slot, or a Traveller's Gear slot. Use modid:item or modid:item:metadata. Empty disables this rule. Compatibility blacklists still take precedence.").getStringList();
       keepHotbarOnDeath = config.get(CATEGORY_GRAVESTONE, "KeepHotbarOnDeath", false, "Keep all nine hotbar slots on the player after death instead of storing them in the grave or dropping them. No copies are created.").getBoolean(false);
       generatePlayerGraves = config.get(CATEGORY_GRAVESTONE, "GeneratePlayerGraves", true, "Enable or disable grave generation when players die.").getBoolean(true);
       generateVillagerGraves = config.get(CATEGORY_GRAVESTONE, "GenerateVillagerGraves", false, "Enable or disable grave generation when villagers die.").getBoolean(false);
@@ -193,7 +210,7 @@ public class GraveStoneConfig {
       generateSwordGraves = config.get(CATEGORY_GRAVESTONE, "GenerateSwordGraves", true, "Allows one sword from the player's inventory to be used as their gravestone when they die.").getBoolean(true);
       renderGravesFlowers = config.get(CATEGORY_GRAVESTONE, "RenderGravesFlowers", true, "Enable grave flower rendering. Disable to improve rendering performance.").getBoolean(true);
       vanillaRendererForSwordsGraves = config.get(CATEGORY_GRAVESTONE, "VanillaRendererForSwordsGraves", true, "Controls sword gravestone rendering mode. The vanilla renderer uses considerably more resources.").getBoolean(true);
-      chiselDurability = config.get(CATEGORY_GRAVESTONE, "ChiselDurability", 50, "Number of gravestone crafting operations the built-in chisel can perform before breaking.", 1, Integer.MAX_VALUE).getInt();
+      chiselDurability = config.get(CATEGORY_GRAVESTONE, "ChiselDurability", 50, "Maximum durability of the built-in RiftFlux chisel. Crafting consumes 1 durability, editing gravestone text consumes 2, and editing memorial text consumes 5. Minimum: 1.", 1, Integer.MAX_VALUE).getInt();
       chiselItems = config.get(CATEGORY_GRAVESTONE, "ChiselItems", new String[]{"riftflux:Chisel"}, "Items accepted as chisels in all Gravestone crafting recipes. Use modid:item or modid:item:metadata. Remove riftflux:Chisel to disable the built-in chisel in recipes.").getStringList();
       Property graveItemsCountProperty = config.get(CATEGORY_GRAVESTONE, "SavedItemsCount", 40, "Amount of inventory slots stored in a grave when a player dies. Valid range: 0-40; 40 stores all standard inventory slots.");
       graveItemsCount = graveItemsCountProperty.getInt();
@@ -235,8 +252,6 @@ public class GraveStoneConfig {
          }
       }
 
-      craftableNightStone = config.get(CATEGORY_GRAVESTONE, "CraftableNightStone", true, "Enable or disable the Night Stone crafting recipe.").getBoolean(true);
-      craftableThunderStone = config.get(CATEGORY_GRAVESTONE, "CraftableThunderStone", true, "Enable or disable the Thunder Stone crafting recipe.").getBoolean(true);
       hardAltarRecipe = config.get(CATEGORY_GRAVESTONE, "HardAltarRecipe", false, "Enable or disable the hard altar recipe.").getBoolean(false);
    }
 
@@ -245,6 +260,7 @@ public class GraveStoneConfig {
       spawnZombieCats = config.get(CATEGORY_GRAVESTONE, "SpawnZombieCats", true, "Enable or disable Zombie Cats spawning in the world.").getBoolean(true);
       spawnSkeletonDogs = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonDogs", true, "Enable or disable Skeleton Dogs spawning in the world.").getBoolean(true);
       spawnSkeletonCats = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonCats", true, "Enable or disable Skeleton Cats spawning in the world.").getBoolean(true);
+      enableSkeletonPetTaming = config.get(CATEGORY_GRAVESTONE, "EnableSkeletonPetTaming", true, "Allow Skeleton Dogs to be tamed with bones and Skeleton Cats to be tamed with raw fish. Tamed skeleton pets follow their owner, stop targeting players, do not despawn, and no longer burn in sunlight.").getBoolean(true);
       spawnSkullCrawlersAtMobsDeath = config.get(CATEGORY_GRAVESTONE, "SpawnSkullCrawlersAtMobsDeath", true, "Enable or disable Skull Crawlers spawning when mobs die.").getBoolean(true);
       spawnSkullCrawlersAtBoneBlockDestruction = config.get(CATEGORY_GRAVESTONE, "SpawnSkullCrawlersOnBoneBlockDestruction", true, "Enable or disable Skull Crawlers spawning when bone blocks are destroyed.").getBoolean(true);
    }
@@ -265,6 +281,25 @@ public class GraveStoneConfig {
       enableEnderIOSoulbound = config.get(CATEGORY_GRAVESTONE, "EnableEnderIOSoulbound", true, "Prevent items with Ender IO Soulbound enchantments from being stored in graves.").getBoolean(true);
       enableTwilightForestKeeping = config.get(CATEGORY_GRAVESTONE, "EnableTwilightForestCharmsOfKeeping", true, "Prevent affected items from being stored in graves when Twilight Forest Charms of Keeping are used.").getBoolean(true);
       enableAntiqueAtlasDeathMarkers = config.get(CATEGORY_GRAVESTONE, "EnableAntiqueAtlasDeathMarkers", true, "Add an Antique Atlas death marker when a player grave is created.").getBoolean(true);
+   }
+
+   private static int[] parseDropRange(String value, int defaultMin, int defaultMax) {
+      if (value == null) {
+         return new int[]{defaultMin, defaultMax};
+      }
+
+      String[] parts = value.trim().split("-", -1);
+      if (parts.length < 1 || parts.length > 2) {
+         return new int[]{defaultMin, defaultMax};
+      }
+
+      try {
+         int min = Math.max(0, Math.min(64, Integer.parseInt(parts[0].trim())));
+         int max = parts.length == 1 ? min : Math.max(0, Math.min(64, Integer.parseInt(parts[1].trim())));
+         return new int[]{Math.min(min, max), Math.max(min, max)};
+      } catch (NumberFormatException ignored) {
+         return new int[]{defaultMin, defaultMax};
+      }
    }
 
    private void getGravesText() {

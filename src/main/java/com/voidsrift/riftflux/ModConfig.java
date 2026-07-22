@@ -42,12 +42,14 @@ public class ModConfig {
             "riftflux.Axolotl|330|1-3|0|swamp,river",
             "riftflux.duck|660|3-4|0|river",
             "riftflux.quackling|440|1-2|0|swamp,river",
-            "riftflux.soot_sprite|800|4-8|0|magical,spooky"
+            "riftflux.soot_sprite|800|4-8|0|magical,spooky",
+            "riftflux.slingshot_skeleton|20|1-3|0"
     };
     private static final String[] DEFAULT_MOB_SPAWN_BLACKLIST = new String[]{
             "riftflux.Axolotl|||0|snowy",
             "riftflux.duck|||0|snowy",
-            "riftflux.quackling|||0|snowy"
+            "riftflux.quackling|||0|snowy",
+            "riftflux.slingshot_skeleton|||0||MushroomIsland,MushroomIslandShore"
     };
     private static final String[] DEFAULT_MOB_SPAWN_WHITELIST_ONLY_BIOMES = new String[0];
     private static final Map<String, String> RIFTFLUX_NATURAL_MOB_CONFIG_IDS = buildRiftFluxNaturalMobConfigIds();
@@ -67,6 +69,7 @@ public class ModConfig {
     };
 
     public static Configuration config;
+    public static boolean enableConfigHotReload;
     private static final int VANILLA_POTION_ID_SLOWNESS = 2;
     private static final int VANILLA_POTION_ID_CONFUSION = 9;
     private static final int VANILLA_POTION_ID_REGENERATION = 10;
@@ -164,6 +167,7 @@ public class ModConfig {
         ids.put("duck", "riftflux.duck");
         ids.put("quackling", "riftflux.quackling");
         ids.put("sootsprite", "riftflux.soot_sprite");
+        ids.put("slingshotskeleton", "riftflux.slingshot_skeleton");
         return ids;
     }
 
@@ -193,6 +197,7 @@ public class ModConfig {
     public static int jukeboxLoopDelaySeconds;
     public static int jukeboxUnknownTrackLoopAfterSeconds;
     public static String[] jukeboxTrackTimings;
+    public static String[] jukeboxAutoLoopBlacklist;
     public static boolean jukeboxRedstoneRestartEnabled;
     public static boolean pulseLockedHoppers;
 
@@ -497,12 +502,15 @@ public class ModConfig {
     public static int wheatfieldBarleyFistDropChancePercent;
     public static boolean wheatfieldBarleyOnlyDropsWhenSheared;
 
-    // Biomes O' Plenty 1.6.4 Hot Springs port
+    // Hot Springs
     public static boolean enableHotSpringsModule;
     public static int hotSpringsBiomeId;
     public static int hotSpringsBiomeWeight;
     public static boolean hotSpringsAllowVillages;
     public static String[] hotSpringsPotionEffects;
+    public static float hotSpringsSteamParticleChancePercent;
+    public static int hotSpringsSteamParticlesPerDisplayTick;
+    public static float hotSpringsSteamParticleRenderDistance;
     public static int hotSpringsSpringLakesPerChunk;
     public static int hotSpringsLavaLakesPerChunk;
     public static int hotSpringsLakeRarity;
@@ -1175,6 +1183,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int heartCrystalGenHeight;
     public static int heartCrystalGenCount;
     public static boolean heartCrystalOldModel;
+    public static boolean heartCrystalEnchantmentGlint;
     public static float heartCrystalHeartPetDropChance;
     public static boolean heartLanternAuraEnabled;
     public static float heartLanternAuraRadius;
@@ -1463,6 +1472,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     }
 
     public static void syncConfig(){
+        enableConfigHotReload = config.getBoolean(
+                "EnableConfigHotReload",
+                Configuration.CATEGORY_GENERAL,
+                false,
+                "If true, RiftFlux watches riftflux.cfg and reloads changed values during play. Off by default to avoid filesystem polling and config parsing overhead. Feature-specific hot-swap settings can still enable their own watcher."
+        );
         enableClaySoldiersModule = config.getBoolean(
                 "enableClaySoldiersModule",
                 CLAY_SOLDIERS_CATEGORY,
@@ -1933,6 +1948,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                         "Name can be an ItemRecord recordName such as cat, an item registry name such as minecraft:record_cat, or a modded item name.\n" +
                         "Durations also accept mm:ss, for example minecraft:record_cat=3:05,5.\n" +
                         "Entries here override built-in vanilla timings and can provide per-track loop delays."
+        );
+
+        jukeboxAutoLoopBlacklist = config.getStringList(
+                "JukeboxAutoLoopBlacklist",
+                "general",
+                new String[0],
+                "Music discs that should play once instead of automatically looping.\n" +
+                        "Each entry can be an ItemRecord recordName such as cat, an item registry name such as minecraft:record_cat, or a modded item name."
         );
 
         jukeboxRedstoneRestartEnabled = config.getBoolean(
@@ -5122,10 +5145,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         legendGearDashRingAirJumpManaCost = config.getFloat(
                 "dashRingAirJumpManaCost",
                 "legendgear",
-                4.0F,
+                2.0F,
                 0.0F,
                 1024.0F,
-                "Mana fatigue cost for each Dash Ring mid-air jump. 4.0 equals 2 full mana stars on the HUD."
+                "Mana fatigue cost for each Dash Ring mid-air jump. 2.0 equals 1 full mana star."
         );
 
         legendGearDescentRingManaCost = config.getFloat(
@@ -5672,6 +5695,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, use the old 3D heart crystal model."
         );
 
+        heartCrystalEnchantmentGlint = config.getBoolean(
+                "HeartCrystalEnchantmentGlint",
+                "heartcrystal",
+                false,
+                "If true, Heart Crystals use the enchantment glint in item form, when placed, and inside Heart Lanterns."
+        );
+
         heartCrystalHeartPetDropChance = config.getFloat(
                 "HeartPetDropChance",
                 "heartcrystal",
@@ -5802,7 +5832,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "EnableHotSpringsModule",
                 "hotsprings",
                 true,
-                "Master switch for the Biomes O' Plenty 1.6.4 Hot Springs biome, spring water, and bucket. Requires restart."
+                "Master switch for the Hot Springs biome, spring water, and bucket. Requires restart."
         );
 
         hotSpringsBiomeId = config.getInt(
@@ -5837,6 +5867,33 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Potion effects applied to living entities in spring water.\n" +
                         "Format per entry: potionNameOrId,level,durationSeconds\n" +
                         "Example: regeneration,3,3. Leave empty to disable spring-water effects."
+        );
+
+        hotSpringsSteamParticleChancePercent = config.getFloat(
+                "SteamParticleChancePercent",
+                "hotsprings",
+                100.0F,
+                0.0F,
+                100.0F,
+                "Chance that an exposed Hotspring Water block emits steam during each client display tick. Set to 0 to disable steam particles."
+        );
+
+        hotSpringsSteamParticlesPerDisplayTick = config.getInt(
+                "SteamParticlesPerDisplayTick",
+                "hotsprings",
+                1,
+                0,
+                32,
+                "Steam particles emitted when an exposed Hotspring Water block passes its chance roll. Higher values create denser steam; 0 disables it."
+        );
+
+        hotSpringsSteamParticleRenderDistance = config.getFloat(
+                "SteamParticleRenderDistance",
+                "hotsprings",
+                16.0F,
+                0.0F,
+                16.0F,
+                "Maximum distance in blocks from a player at which Hotspring Water emits steam. Minecraft's block display-tick system caps this at 16 blocks. Set to 0 to disable steam particles."
         );
 
         hotSpringsSpringLakesPerChunk = config.getInt(
@@ -7536,8 +7593,18 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, show raw armor values next to the overlay."
         );
 
-        persistConfigIntValue("armoroverlay", "OverlayLevels", armorOverlayLevels);
-        persistConfigIntValue("armoroverlay", "ArmorPieces", armorOverlayArmorPieces);
+        persistConfigIntValue(
+                "armoroverlay",
+                "OverlayLevels",
+                armorOverlayLevels,
+                "Max armor icon tiers: 3, 5, 10, or 20."
+        );
+        persistConfigIntValue(
+                "armoroverlay",
+                "ArmorPieces",
+                armorOverlayArmorPieces,
+                "Number of armor points to make 1 full armor icon. can be 1, 2 or 4"
+        );
 
         divineRpgDisableHaliteExtraArmorPieceRender = config.getBoolean(
                 "DisableHaliteExtraArmorPieceRender",
@@ -8809,7 +8876,9 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "StructuresDimensionId", 0, "Allows choosing the dimension in which Gravestone structures can generate.");
         config.get(category, "GenerateCatacombs", true, "Enable or disable catacombs generation.");
         config.get(category, "MaximumCatacombsGenerationHeight", 75, "Maximum ground height at which catacombs are allowed to generate.");
-        config.get(category, "CatacombsGenerationChance", 2.5E-4D, "Chance to generate catacombs.");
+        config.get(category, "CatacombsDimensionWhitelist", new String[]{"0|0.033"}, "Dimensions where catacombs may generate, with a percent chance per newly generated chunk. Format: dimensionId|percent. Example: 0|0.033 is dimension 0 at 0.033% (about 1 chance roll per 3,030 chunks). Empty disables catacombs generation.");
+        config.get(category, "CatacombsBiomeWhitelist", new String[0], "Biomes where catacombs may generate, with a percent chance per newly generated chunk. Format: biomeSelector|percent. Selectors may be biome IDs, exact names, name:<name>, or dictionary types such as type:FOREST. A matching biome chance overrides the dimension chance; first match wins. Empty allows every non-blacklisted biome using its dimension chance.");
+        config.get(category, "CatacombsBiomeBlacklist", new String[0], "Biomes where catacombs must never generate. Uses biome IDs, exact names, name:<name>, or dictionary types such as type:WATER. Blacklist always takes precedence over both whitelists.");
         config.get(category, "GenerateCatacombsGraveyard", true, "Enable or disable catacombs graveyard generation.");
         config.get(category, "GenerateEyeboneInGraveyards", true, "Add exactly one Chester Eyebone to a random courtyard grave outside each generated catacombs. Requires the Chester module.");
         config.get(category, "GenerateEyeboneInCatacombsGrave", true, "Add exactly one Chester Eyebone to a random underground grave across all levels of each generated catacombs. Requires the Chester module.");
@@ -8823,6 +8892,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "GenerateUndertaker", true, "Enable or disable undertaker house generation in villages.");
         config.get(category, "undertakerId", 385, "Villager profession ID used by the undertaker.");
         config.get(category, "GeneratePilesOfBones", false, "Enable or disable piles of bones in catacombs. Disable to improve performance.");
+        config.get(category, "PileOfBonesDrops", "0-3", "Number of bones dropped when a pile of bones is broken. Use a range such as 0-3, or one number for a fixed amount.");
         config.get(category, "CatacombsMinRoomsCountAt1Level", 30, "Minimum room count on catacombs level 1.");
         config.get(category, "CatacombsMaxRoomsCountAt1Level", 60, "Maximum room count on catacombs level 1.");
         config.get(category, "CatacombsMinRoomsCountAt2Level", 60, "Minimum room count on catacombs level 2.");
@@ -8831,16 +8901,21 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "CatacombsMaxRoomsCountAt3Level", 180, "Maximum room count on catacombs level 3.");
         config.get(category, "CatacombsMinRoomsCountAt4Level", 160, "Minimum room count on catacombs level 4.");
         config.get(category, "CatacombsMaxRoomsCountAt4Level", 320, "Maximum room count on catacombs level 4.");
+        config.get(category, "ChiselDurability", 50, "Maximum durability of the built-in RiftFlux chisel. Crafting consumes 1 durability, editing gravestone text consumes 2, and editing memorial text consumes 5. Minimum: 1.", 1, Integer.MAX_VALUE);
+        config.get(category, "ChiselItems", new String[]{"riftflux:Chisel"}, "Items accepted as chisels in all Gravestone crafting recipes. Use modid:item or modid:item:metadata. Remove riftflux:Chisel to disable the built-in chisel in recipes.");
 
         config.get(category, "CanPlaceGravesEveryWhere", true, "Allows gravestones to be placed on any type of surface.");
         config.get(category, "EnablePlayerDeathGraves", true, "Enable this module's player-death graves and inventory capture. Disable when another grave mod handles player deaths; all other Gravestone content remains enabled.");
         config.get(category, "EnableXaeroMinimapGraveWaypoints", true, "Make Xaero's Minimap death waypoint use the exact location where the player's gravestone was placed. Disable to retain Xaero's normal death-location waypoint behavior.");
         config.get(category, "KeepArmorOnDeath", false, "Keep equipped vanilla armour on the player after death instead of storing it in the grave or dropping it. No copies are created.");
         config.get(category, "KeepHotbarOnDeath", false, "Keep all nine hotbar slots on the player after death instead of storing them in the grave or dropping them. No copies are created.");
-        config.get(category, "KeepItemsOnDeathWhitelist", new String[0], "Registry names of items that stay with the player after death, regardless of whether they are in the main inventory, hotbar, armour, a Baubles slot, or a Traveller's Gear slot. Use modid:item or modid:item:metadata. Empty disables this rule. Traveller's Gear blacklist entries still take precedence.");
-        config.get(category, "KeepBaublesOnDeath", true, "Keep items from allowed Baubles Expanded slots on the player after death instead of storing them in the grave or dropping them. When both slot lists are empty, every Baubles slot is allowed. The blacklist always takes precedence over the whitelist.");
+        config.get(category, "KeepItemsOnDeathWhitelist", new String[0], "Registry names of items that stay with the player after death, regardless of whether they are in the main inventory, hotbar, armour, a Baubles slot, or a Traveller's Gear slot. Use modid:item or modid:item:metadata. Empty disables this rule. Compatibility blacklists still take precedence.");
+        config.get(category, "KeepBaublesOnDeath", true, "Keep allowed equipped Baubles items on the player after death instead of storing them in the grave or dropping them. This controls satchel, backpack, and pouch carrier items too; their stored contents are controlled separately by the three carrier-content settings. Blacklists take precedence over all keep rules.");
         config.get(category, "KeepBaubleSlotWhitelist", new String[0], "Baubles Expanded slot types or numeric slot indexes whose items may stay with the player after death. Examples: ring, amulet, head, or slot:4. Empty means all slots unless blacklisted.");
         config.get(category, "KeepBaubleSlotBlacklist", new String[]{"chester_staff"}, "Baubles Expanded slot types or numeric slot indexes whose items must not be kept by KeepBaublesOnDeath. Blacklist takes precedence over the Baubles slot whitelist. Chester's staff slot is blacklisted by default.");
+        config.get(category, "KeepSatchelContentsOnDeath", false, "Keep items stored inside equipped RiftFlux satchels when the player dies. If false, contents leave the satchel and follow normal grave or drop handling; KeepBaublesOnDeath independently controls whether the satchel itself stays equipped. Works regardless of its configured Baubles slot type.");
+        config.get(category, "KeepBackpackContentsOnDeath", false, "Keep items stored inside equipped RiftFlux backpacks when the player dies. If false, contents leave the backpack and follow normal grave or drop handling; KeepBaublesOnDeath independently controls whether the backpack itself stays equipped. Works regardless of its configured Baubles slot type.");
+        config.get(category, "KeepPouchContentsOnDeath", false, "Keep items stored inside equipped RiftFlux pouches when the player dies. If false, contents leave every equipped pouch and follow normal grave or drop handling; KeepBaublesOnDeath independently controls whether the pouches themselves stay equipped. Works regardless of their configured Baubles slot type.");
         config.get(category, "KeepTravellersGearOnDeath", true, "Keep equipped Traveller's Gear items on the player after death instead of storing them in the grave or dropping them. When both Traveller's Gear item lists are empty, every equipped item is kept. The blacklist always takes precedence over all keep-item whitelists.");
         config.get(category, "KeepTravellersGearItemWhitelist", new String[0], "Registry names of equipped Traveller's Gear items that may stay with the player after death. Use modid:item or modid:item:metadata. Empty allows every equipped Traveller's Gear item unless blacklisted.");
         config.get(category, "KeepTravellersGearItemBlacklist", new String[0], "Registry names of equipped Traveller's Gear items that must not stay with the player after death. Use modid:item or modid:item:metadata. Blacklist takes precedence over the Traveller's Gear whitelist and KeepItemsOnDeathWhitelist. Empty blocks no items.");
@@ -8870,14 +8945,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "ProtectGravesFromExplosions", true, "Prevent creepers and all other explosions from destroying gravestones.");
         config.get(category, "OnlyOwnerCanBreakGraves", false, "Allow only the player whose death created a gravestone to break it. Existing graves without owner data remain breakable.");
         config.get(category, "RestrictGraveGenerationInArea", "", "Disables player-death grave generation within configured areas. Enter dimension ID, start X, start Y, start Z, end X, end Y, and end Z separated by commas. Dimension ID is optional and defaults to 0. Separate multiple areas with semicolons.");
-        config.get(category, "CraftableNightStone", true, "Enable or disable the Night Stone crafting recipe.");
-        config.get(category, "CraftableThunderStone", true, "Enable or disable the Thunder Stone crafting recipe.");
         config.get(category, "HardAltarRecipe", false, "Enable or disable the hard altar recipe.");
 
         config.get(category, "SpawnZombieDogs", true, "Enable or disable Zombie Dogs spawning in the world.");
         config.get(category, "SpawnZombieCats", true, "Enable or disable Zombie Cats spawning in the world.");
         config.get(category, "SpawnSkeletonDogs", true, "Enable or disable Skeleton Dogs spawning in the world.");
         config.get(category, "SpawnSkeletonCats", true, "Enable or disable Skeleton Cats spawning in the world.");
+        config.get(category, "EnableSkeletonPetTaming", true, "Allow Skeleton Dogs to be tamed with bones and Skeleton Cats to be tamed with raw fish. Tamed skeleton pets follow their owner, stop targeting players, do not despawn, and no longer burn in sunlight.");
         config.get(category, "SpawnSkullCrawlersAtMobsDeath", true, "Enable or disable Skull Crawlers spawning when mobs die.");
         config.get(category, "SpawnSkullCrawlersOnBoneBlockDestruction", true, "Enable or disable Skull Crawlers spawning when bone blocks are destroyed.");
 
@@ -8898,8 +8972,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "EnableAntiqueAtlasDeathMarkers", true, "Add an Antique Atlas death marker when a player grave is created.");
     }
 
-    private static void persistConfigIntValue(String category, String key, int value) {
-        config.get(category, key, value).set(value);
+    private static void persistConfigIntValue(String category, String key, int value, String comment) {
+        config.get(category, key, value, comment).set(value);
     }
 
     private static int[] getIntRangeConfig(String category, String key, int defaultMin, int defaultMax,

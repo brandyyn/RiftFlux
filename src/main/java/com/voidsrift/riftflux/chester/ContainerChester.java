@@ -89,7 +89,7 @@ public class ContainerChester extends Container {
                     chester.posY,
                     chester.posZ,
                     "chester:chesterclose",
-                    1.0F,
+                    0.4F,
                     1.0F
             );
         }

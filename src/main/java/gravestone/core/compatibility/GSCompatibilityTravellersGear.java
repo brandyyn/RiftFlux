@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagList;
 
 public final class GSCompatibilityTravellersGear {
+   private static final String[] SLOT_TYPES = {"cloak", "shoulder", "vambrace", "title"};
    protected static boolean isInstalled;
 
    private GSCompatibilityTravellersGear() {
@@ -29,7 +30,7 @@ public final class GSCompatibilityTravellersGear {
          boolean changed = false;
          for(int slot = 0; slot < inventory.length; ++slot) {
             ItemStack stack = inventory[slot];
-            if (stack != null && shouldKeepItem(stack)) {
+            if (stack != null && shouldKeepSlot(slot, stack)) {
                GraveStoneDeathInventory.addKeptTravellersGear(keptItems, slot, stack);
                inventory[slot] = null;
                changed = true;
@@ -62,19 +63,39 @@ public final class GSCompatibilityTravellersGear {
       }
    }
 
-   private static boolean shouldKeepItem(ItemStack stack) {
-      if (GraveStoneDeathInventory.matchesConfiguredItem(stack,
-            GraveStoneConfig.keepTravellersGearItemBlacklist)) {
-         return false;
-      }
+   private static boolean shouldKeepSlot(int slot, ItemStack stack) {
       if (GraveStoneDeathInventory.isWhitelistedItem(stack)) {
          return true;
       }
-      return GraveStoneConfig.keepTravellersGearOnDeath
-            && (GraveStoneConfig.keepTravellersGearItemWhitelist == null
-                  || GraveStoneConfig.keepTravellersGearItemWhitelist.length == 0
-                  || GraveStoneDeathInventory.matchesConfiguredItem(stack,
-                        GraveStoneConfig.keepTravellersGearItemWhitelist));
+      if (!GraveStoneConfig.keepTravellersGearOnDeath) {
+         return false;
+      }
+
+      String slotType = slot >= 0 && slot < SLOT_TYPES.length ? SLOT_TYPES[slot] : "";
+      if (matchesSlotList(GraveStoneConfig.keepTravellersGearSlotBlacklist, slot, slotType)) {
+         return false;
+      }
+      return GraveStoneConfig.keepTravellersGearSlotWhitelist == null
+            || GraveStoneConfig.keepTravellersGearSlotWhitelist.length == 0
+            || matchesSlotList(GraveStoneConfig.keepTravellersGearSlotWhitelist, slot, slotType);
+   }
+
+   private static boolean matchesSlotList(String[] entries, int slot, String slotType) {
+      if (entries == null) {
+         return false;
+      }
+
+      for (String configured : entries) {
+         if (configured == null) {
+            continue;
+         }
+         String entry = configured.trim();
+         if (entry.equalsIgnoreCase(slotType) || entry.equalsIgnoreCase("travel_" + slotType)
+               || entry.equals(Integer.toString(slot)) || entry.equalsIgnoreCase("slot:" + slot)) {
+            return true;
+         }
+      }
+      return false;
    }
 
    public static void addItems(List<ItemStack> items, EntityPlayer player) {

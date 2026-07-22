@@ -17,6 +17,7 @@ import gravestone.entity.monster.EntityZombieSkullCrawler;
 import gravestone.item.corpse.CorpseHelper;
 import gravestone.item.enums.EnumCorpse;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityHorse;
@@ -25,9 +26,11 @@ import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
 
 public class GSEventsHandler {
@@ -87,6 +90,16 @@ public class GSEventsHandler {
    public void onPlayerClone(PlayerEvent.Clone event) {
       if (event.wasDeath && FMLCommonHandler.instance().getEffectiveSide().isServer()) {
          GraveStoneDeathInventory.restoreConfiguredItems(event.original, event.entityPlayer);
+      }
+   }
+
+   @SubscribeEvent(priority = EventPriority.LOWEST)
+   public void onPlayerDrops(PlayerDropsEvent event) {
+      if (FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+         for (ItemStack stack : GraveStoneDeathInventory.takeExtractedDeathItems(event.entityPlayer)) {
+            event.drops.add(new EntityItem(event.entityPlayer.worldObj, event.entityPlayer.posX,
+                  event.entityPlayer.posY, event.entityPlayer.posZ, stack));
+         }
       }
    }
 

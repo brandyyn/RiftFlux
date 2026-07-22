@@ -21,6 +21,8 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
    protected GSGraveStoneSpawn gsSpawn;
    protected ItemStack sword = null;
    protected ItemStack flower = null;
+   private boolean playerPlaced = false;
+   private long lastMobSpawnNight = Long.MIN_VALUE;
    public static final int FOG_RANGE = 30;
 
    public TileEntityGSGraveStone() {
@@ -71,6 +73,11 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
          this.age = nbtTag.getInteger("Age");
       }
 
+      this.playerPlaced = nbtTag.getBoolean("PlayerPlaced");
+      if (nbtTag.hasKey("LastMobSpawnNight")) {
+         this.lastMobSpawnNight = nbtTag.getLong("LastMobSpawnNight");
+      }
+
       this.readSwordInfo(nbtTag);
       this.readFlowerInfo(nbtTag);
    }
@@ -81,6 +88,10 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
       this.inventory.saveItems(nbtTag);
       this.gSDeathText.saveText(nbtTag);
       nbtTag.setInteger("Age", this.age);
+      nbtTag.setBoolean("PlayerPlaced", this.playerPlaced);
+      if (this.lastMobSpawnNight != Long.MIN_VALUE) {
+         nbtTag.setLong("LastMobSpawnNight", this.lastMobSpawnNight);
+      }
       this.writeSwordInfo(nbtTag);
       this.writeFlowerInfo(nbtTag);
    }
@@ -163,6 +174,24 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
 
    public EnumGraves getGraveType() {
       return EnumGraves.getByID(this.graveType);
+   }
+
+   public boolean isPlayerPlaced() {
+      return this.playerPlaced;
+   }
+
+   public void setPlayerPlaced(boolean playerPlaced) {
+      this.playerPlaced = playerPlaced;
+      this.markDirty();
+   }
+
+   public boolean hasSpawnedMobThisNight() {
+      return this.worldObj != null && this.lastMobSpawnNight == this.worldObj.getWorldTime() / 24000L;
+   }
+
+   public void markMobSpawnedThisNight() {
+      this.lastMobSpawnNight = this.worldObj.getWorldTime() / 24000L;
+      this.markDirty();
    }
 
    public boolean isEmpty() {

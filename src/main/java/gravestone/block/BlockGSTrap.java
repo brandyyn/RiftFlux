@@ -68,7 +68,7 @@ public class BlockGSTrap extends Block {
    }
 
    public boolean canSilkHarvest() {
-      return true;
+      return false;
    }
 
    public void onEntityWalking(World world, int x, int y, int z, Entity entity) {

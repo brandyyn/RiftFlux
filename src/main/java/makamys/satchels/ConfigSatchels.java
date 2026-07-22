@@ -22,6 +22,7 @@ public class ConfigSatchels {
     
     private static File configFile;
     private static WatchService watcher;
+    private static long lastConfigModified;
     
 
     public static Colour pouchBgColor;
@@ -48,6 +49,10 @@ public class ConfigSatchels {
     public static void init() {
         configFile = new File("config/riftflux.cfg");
         reparse();
+        if (!hotSwap) {
+            return;
+        }
+        lastConfigModified = configFile.lastModified();
         try {
             registerWatchService();
         } catch(IOException e) {
@@ -68,7 +73,11 @@ public class ConfigSatchels {
             if(key != null) {
                 for(WatchEvent<?> event: key.pollEvents()) {
                     if(event.context().toString().equals(configFile.getName())) {
-                        reload();
+                        long modified = configFile.lastModified();
+                        if (modified != lastConfigModified) {
+                            reload();
+                            lastConfigModified = configFile.lastModified();
+                        }
                     }
                 }
                 key.reset();
@@ -77,7 +86,9 @@ public class ConfigSatchels {
     }
     
     public static void reparse() {
-        hotSwap = ModConfig.satchelsHotSwap;
+        hotSwap = ModConfig.satchelsHotSwap
+                && !ModConfig.enableConfigHotReload
+                && !ModConfig.postProcessConfigHotSwap;
 
         pouchBgColor = getColor(ModConfig.satchelsPouchBgColor, "FFB266");
         satchelBgColor = getColor(ModConfig.satchelsSatchelBgColor, "FFBF99");

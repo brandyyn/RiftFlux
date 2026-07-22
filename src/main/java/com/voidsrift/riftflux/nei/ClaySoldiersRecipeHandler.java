@@ -194,8 +194,8 @@ public void loadUsageRecipes(String inputId, Object... ingredients) {
 
         add(out, buildShaped(stack(registryItem("disruptor"), 1, 0),
                 new ItemStack[]{
-                        stack(Blocks.soul_sand, 1, 0), stack(Items.stick, 1, 0), stack(Blocks.soul_sand, 1, 0),
-                        stack(Blocks.soul_sand, 1, 0), stack(Items.redstone, 1, 0), stack(Blocks.soul_sand, 1, 0),
+                        stack(Blocks.clay, 1, 0), stack(Items.stick, 1, 0), stack(Blocks.clay, 1, 0),
+                        stack(Blocks.clay, 1, 0), stack(Items.redstone, 1, 0), stack(Blocks.clay, 1, 0),
                         null, null, null
                 }));
 
@@ -208,22 +208,22 @@ public void loadUsageRecipes(String inputId, Object... ingredients) {
 
         add(out, buildShaped(stack(registryItem("statDisplay"), 1, 0),
                 new ItemStack[]{
-                        stack(Blocks.soul_sand, 1, 0), stack(Blocks.glass, 1, 0), stack(Blocks.soul_sand, 1, 0),
-                        stack(Blocks.soul_sand, 1, 0), stack(Items.redstone, 1, 0), stack(Blocks.soul_sand, 1, 0),
+                        stack(Blocks.clay, 1, 0), stack(Blocks.glass, 1, 0), stack(Blocks.clay, 1, 0),
+                        stack(Blocks.clay, 1, 0), stack(Items.redstone, 1, 0), stack(Blocks.clay, 1, 0),
                         null, null, null
                 }));
 
         add(out, buildShaped(stack(registryItem("statDisplay"), 1, 0),
                 new ItemStack[]{
-                        stack(Blocks.soul_sand, 1, 0), stack(Blocks.stained_glass, 1, OreDictionary.WILDCARD_VALUE), stack(Blocks.soul_sand, 1, 0),
-                        stack(Blocks.soul_sand, 1, 0), stack(Items.redstone, 1, 0), stack(Blocks.soul_sand, 1, 0),
+                        stack(Blocks.clay, 1, 0), stack(Blocks.stained_glass, 1, OreDictionary.WILDCARD_VALUE), stack(Blocks.clay, 1, 0),
+                        stack(Blocks.clay, 1, 0), stack(Items.redstone, 1, 0), stack(Blocks.clay, 1, 0),
                         null, null, null
                 }));
 
         add(out, buildShaped(stack(registryBlock("clayNexus"), 1, 0),
                 new ItemStack[]{
                         stack(Items.clay_ball, 1, 0), stack(Items.diamond, 1, 0), stack(Items.clay_ball, 1, 0),
-                        stack(Blocks.clay, 1, 0), stack(Blocks.obsidian, 1, 0), stack(Blocks.clay, 1, 0),
+                        stack(Blocks.soul_sand, 1, 0), stack(Blocks.obsidian, 1, 0), stack(Blocks.soul_sand, 1, 0),
                         stack(Blocks.obsidian, 1, 0), stack(Blocks.obsidian, 1, 0), stack(Blocks.obsidian, 1, 0)
                 }));
 

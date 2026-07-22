@@ -10,6 +10,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.PlayerStarstatsExtension;
 import net.nmccoy.legendgear.item.MagicRing;
+import net.nmccoy.legendgear.legacy.entities.EntityGrindStar;
 
 public class DashRingClientHandler {
     private static final String DASH_CLIENT_WAS_GROUNDED_KEY = "riftfluxDashClientWasGrounded";
@@ -50,12 +51,18 @@ public class DashRingClientHandler {
         }
 
         boolean requiresSprinting = LegendGear2.CONFIG_DASH_RING_AIR_JUMPS_REQUIRE_SPRINTING;
+        boolean jumpStarted = jumpPressed && !MagicRing.wasDashJumpPressed(player);
+        if (player.isSprinting()
+                && PlayerStarstatsExtension.availableMana(player) > 0.0F) {
+            player.getEntityData().setBoolean(EntityGrindStar.STARBEAM_LAUNCH_PARTICLES, true);
+            player.getEntityData().setInteger(EntityGrindStar.STARBEAM_LAUNCH_PARTICLE_START, player.ticksExisted);
+        }
+
         if (!physicallyGrounded
                 && !wasGrounded
-                && jumpPressed
+                && jumpStarted
                 && PlayerStarstatsExtension.availableMana(player) > 0.0F
-                && (!requiresSprinting || player.isSprinting())
-                && !MagicRing.wasDashJumpPressed(player)) {
+                && (!requiresSprinting || player.isSprinting())) {
             boolean preserveSprintState = player.isSprinting();
             double clientMotionX = player.motionX;
             double clientMotionZ = player.motionZ;

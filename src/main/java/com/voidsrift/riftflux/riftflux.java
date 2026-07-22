@@ -47,6 +47,7 @@ import de.sanandrew.mods.claysoldiers.util.ClaySoldiersMod;
 import zelda.Core;
 import com.zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
@@ -82,6 +83,7 @@ public class riftflux {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        ModConfig.init(event.getSuggestedConfigurationFile());
         ClaySoldiersMod.preInit(event);
         vortexContent.preInit(event);
         com.voidsrift.riftflux.placeditem.PlacedItemContent.init();
@@ -234,6 +236,9 @@ public class riftflux {
 
     @EventHandler
     public void loadComplete(FMLLoadCompleteEvent event) {
+        if (!ModConfig.reload()) {
+            FMLLog.warning("[RiftFlux] Failed to finalize config schema during game loading.");
+        }
         if (ModConfig.useSpawnTypeForMobCap) {
             SpawnTypeMobCapHandler.prewarm();
         }

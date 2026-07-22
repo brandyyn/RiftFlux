@@ -46,4 +46,8 @@ public class EntitySkeletonDog extends EntityUndeadDog {
    protected Item getDropItem() {
       return Items.bone;
    }
+
+   public boolean interact(EntityPlayer player) {
+      return this.tryTame(player, Items.bone) || super.interact(player);
+   }
 }

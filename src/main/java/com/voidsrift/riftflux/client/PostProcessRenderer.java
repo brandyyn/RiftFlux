@@ -21,8 +21,8 @@ import org.lwjgl.opengl.GLContext;
 
 @SideOnly(Side.CLIENT)
 public final class PostProcessRenderer {
-    private static final PostProcessRenderer INSTANCE = new PostProcessRenderer();
     private static final File CONFIG_FILE = new File("config/riftflux.cfg");
+    private static final PostProcessRenderer INSTANCE = new PostProcessRenderer();
     private static final int GL_FRAMEBUFFER_BINDING = 36006;
     private static final int GL_COLOR_ATTACHMENT0 = 36064;
     private static final int GL_FRAMEBUFFER_COMPLETE = 36053;
@@ -115,7 +115,7 @@ public final class PostProcessRenderer {
     private float cachedUseBloomTexture = Float.NaN;
     private float cachedBloomPass = Float.NaN;
     private long lastConfigCheckMillis;
-    private long lastConfigModified = Long.MIN_VALUE;
+    private long lastConfigModified = CONFIG_FILE.lastModified();
     private boolean shaderFailed;
     private boolean warnedNoShaderSupport;
     private boolean warnedShaderFailure;
@@ -326,7 +326,7 @@ public final class PostProcessRenderer {
     }
 
     private void refreshConfigIfChanged() {
-        if (!ModConfig.postProcessConfigHotSwap) {
+        if (!ModConfig.enableConfigHotReload && !ModConfig.postProcessConfigHotSwap) {
             return;
         }
         long now = System.currentTimeMillis();
@@ -341,6 +341,8 @@ public final class PostProcessRenderer {
         if (modified != lastConfigModified) {
             lastConfigModified = modified;
             if (ModConfig.reload()) {
+                lastConfigModified = CONFIG_FILE.lastModified();
+                makamys.satchels.ConfigSatchels.reparse();
                 warnedConfigReloadFailure = false;
             } else if (!warnedConfigReloadFailure) {
                 warnedConfigReloadFailure = true;

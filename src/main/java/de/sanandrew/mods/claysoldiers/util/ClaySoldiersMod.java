@@ -10,7 +10,6 @@ import cpw.mods.fml.common.eventhandler.EventBus;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
-import de.sanandrew.core.manpack.mod.ModCntManPack;
 import de.sanandrew.core.manpack.network.NetworkManager;
 import de.sanandrew.mods.claysoldiers.dispenser.BehaviorDisruptorDispenseItem;
 import de.sanandrew.mods.claysoldiers.dispenser.BehaviorSoldierDispenseItem;
@@ -91,10 +90,11 @@ public final class ClaySoldiersMod {
                 new BehaviorDisruptorDispenseItem()
         );
 
-        ModCntManPack.proxy = FMLCommonHandler.instance().getSide() == Side.CLIENT
-                ? new de.sanandrew.core.manpack.mod.client.ClientProxy()
+        de.sanandrew.core.manpack.mod.CommonProxy networkProxy =
+                FMLCommonHandler.instance().getSide() == Side.CLIENT
+                ? new ClaySoldiersNetworkClientProxy()
                 : new de.sanandrew.core.manpack.mod.CommonProxy();
-        NetworkManager.initPacketHandler();
+        NetworkManager.initPacketHandler(networkProxy);
     }
 
     public static void postInit(FMLPostInitializationEvent event) {

@@ -17,6 +17,7 @@ import gravestone.core.compatibility.GSCompatibilityTinkerConstruct;
 import gravestone.core.compatibility.GSCompatibilityTwilightForest;
 import gravestone.core.compatibility.GSCompatibilityTravellersGear;
 import gravestone.core.compatibility.GSCompatibilityisArsMagica;
+import gravestone.core.GraveStoneDeathInventory;
 import gravestone.core.logger.GSLogger;
 import gravestone.inventory.GraveInventory;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -194,7 +195,7 @@ public class GraveStoneHelper {
    public static void spawnMob(World world, int x, int y, int z) {
       if (GraveStoneConfig.spawnMobAtGraveDestruction && world.rand.nextInt(10) == 0) {
          TileEntityGSGraveStone tileEntity = (TileEntityGSGraveStone)world.getTileEntity(x, y, z);
-         if (tileEntity != null) {
+         if (tileEntity != null && !tileEntity.isPlayerPlaced()) {
             Entity mob = GSMobSpawn.getMobEntity(world, tileEntity.getGraveType(), x, y, z);
             if (mob != null) {
                GSMobSpawn.spawnMob(world, mob, (double)x, (double)y, (double)z, false);
@@ -345,6 +346,7 @@ public class GraveStoneHelper {
          GSCompatibilityAntiqueAtlas.placeDeathMarkerAtDeath(player);
          items.addAll(Arrays.asList(player.inventory.mainInventory));
          items.addAll(Arrays.asList(player.inventory.armorInventory));
+         GraveStoneDeathInventory.addExtractedDeathItems(items, player);
          GSCompatibilityisArsMagica.excludeSoulboundPlayerInventory(items, player);
          GSCompatibilityTwilightForest.addSlotTags(items);
          GSCompatibilityBattlegear.addItems(items, player);

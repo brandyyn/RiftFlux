@@ -9,7 +9,7 @@ import codechicken.nei.NEIClientConfig;
 import cpw.mods.fml.common.Optional;
 import cpw.mods.fml.common.FMLLog;
 
-import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import com.voidsrift.riftflux.placeablegunpowder.PlaceableGunpowderContent;
@@ -21,6 +21,8 @@ import com.voidsrift.riftflux.vortex.block.ModBlocks;
 import net.nmccoy.legendgear.LegendGear2;
 import net.nmccoy.legendgear.legacy.LegendGear;
 import gravestone.core.GSBlock;
+import de.sanandrew.mods.claysoldiers.util.RegistryBlocks;
+import de.sanandrew.mods.claysoldiers.util.RegistryItems;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,72 +32,73 @@ import java.util.Set;
 @Optional.Interface(iface = "codechicken.nei.api.IConfigureNEI", modid = "NotEnoughItems")
 public class NEIRiftFluxConfig implements IConfigureNEI {
 
-    private static void addClaySoldiersDuplicateRecipeFilter() {
+    private static void addClaySoldiersStandardRecipeFilter() {
         API.addRecipeFilter(new IRecipeFilter.IRecipeFilterProvider() {
             @Override
             public IRecipeFilter getRecipeFilter() {
                 return new IRecipeFilter() {
-                    private final Item claymanDoll = resolveClaymanDollItem();
-
                     @Override
                     public boolean matches(IRecipeHandler handler, int recipeIndex) {
-                        if (handler == null || !"codechicken.nei.recipe.ShapelessRecipeHandler".equals(handler.getClass().getName())) {
+                        if (handler == null) {
                             return true;
                         }
-                        if (claymanDoll == null) {
+                        String handlerClass = handler.getClass().getName();
+                        if (!"codechicken.nei.recipe.ShapedRecipeHandler".equals(handlerClass)
+                                && !"codechicken.nei.recipe.ShapelessRecipeHandler".equals(handlerClass)) {
                             return true;
                         }
 
-                        // Match output: 4x clayman doll
                         PositionedStack out = handler.getResultStack(recipeIndex);
                         if (out == null || out.item == null) {
                             return true;
                         }
-                        ItemStack outStack = out.item;
-                        if (outStack.getItem() != claymanDoll || outStack.stackSize != 4) {
-                            return true;
+                        if (isClaySoldiersOutput(out.item)) {
+                            return false;
                         }
 
-                        // Match inputs: exactly 2 ingredients containing one soul sand and one clay block.
-                        List<PositionedStack> in = handler.getIngredientStacks(recipeIndex);
-                        if (in == null || in.size() != 2) {
-                            return true;
-                        }
-
-                        boolean hasSoulSand = false;
-                        boolean hasClay = false;
-                        for (PositionedStack ps : in) {
-                            if (ps == null || ps.items == null || ps.items.length == 0) {
-                                continue;
-                            }
-                            for (ItemStack s : ps.items) {
-                                if (s == null) continue;
-                                if (s.getItem() == Item.getItemFromBlock(Blocks.soul_sand)) {
-                                    hasSoulSand = true;
-                                } else if (s.getItem() == Item.getItemFromBlock(Blocks.clay)) {
-                                    hasClay = true;
-                                }
-                            }
-                        }
-
-                        return !(hasSoulSand && hasClay);
+                        // The shear-blade recombination recipe is the only Clay Soldiers recipe
+                        // whose output is a vanilla item.
+                        return out.item.getItem() != Items.shears
+                                || !containsIngredient(handler.getIngredientStacks(recipeIndex), RegistryItems.shearBlade);
                     }
                 };
             }
         });
     }
 
-    private static Item resolveClaymanDollItem() {
-        try {
-            Item it = cpw.mods.fml.common.registry.GameRegistry.findItem("riftflux", "clayman_doll");
-            if (it != null) return it;
-        } catch (Throwable ignored) {}
+    private static boolean isClaySoldiersOutput(ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
+        Item item = stack.getItem();
+        return item == RegistryItems.dollSoldier
+                || item == RegistryItems.dollBrick
+                || item == RegistryItems.disruptor
+                || item == RegistryItems.disruptorHardened
+                || item == RegistryItems.shearBlade
+                || item == RegistryItems.statDisplay
+                || item == RegistryItems.dollHorseMount
+                || item == RegistryItems.dollTurtleMount
+                || item == RegistryItems.dollBunnyMount
+                || item == RegistryItems.dollGeckoMount
+                || item == Item.getItemFromBlock(RegistryBlocks.clayNexus);
+    }
 
-        try {
-            Class<?> c = Class.forName("de.sanandrew.mods.claysoldiers.util.RegistryItems");
-            return (Item) c.getField("dollSoldier").get(null);
-        } catch (Throwable ignored) {}
-        return null;
+    private static boolean containsIngredient(List<PositionedStack> ingredients, Item item) {
+        if (ingredients == null || item == null) {
+            return false;
+        }
+        for (PositionedStack positioned : ingredients) {
+            if (positioned == null || positioned.items == null) {
+                continue;
+            }
+            for (ItemStack stack : positioned.items) {
+                if (stack != null && stack.getItem() == item) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
@@ -108,7 +111,7 @@ public class NEIRiftFluxConfig implements IConfigureNEI {
                 API.registerUsageHandler(handler);
                 NEIClientConfig.handlerOrdering.put(handler.getHandlerId(), -100);
                 NEIClientConfig.handlerOrdering.put("codechicken.nei.recipe.InformationHandler", 100);
-                addClaySoldiersDuplicateRecipeFilter();
+                addClaySoldiersStandardRecipeFilter();
                 FMLLog.info("[RiftFlux] NEI plugin loaded: Clay Soldiers handler registered.");
             } catch (Throwable t) {
                 FMLLog.severe("[RiftFlux] Failed to register Clay Soldiers NEI handler: %s", t);

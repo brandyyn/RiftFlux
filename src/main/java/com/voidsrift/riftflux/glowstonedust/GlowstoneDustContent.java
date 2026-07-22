@@ -7,7 +7,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
-import net.minecraftforge.common.MinecraftForge;
 
 public final class GlowstoneDustContent {
 
@@ -28,7 +27,6 @@ public final class GlowstoneDustContent {
                 .setBlockName("glowstoneDust")
                 .setBlockTextureName("riftflux:glowstone_dust");
         GameRegistry.registerBlock(glowstoneDustBlock, "glowstone_dust");
-        MinecraftForge.EVENT_BUS.register(new GlowstoneDustEventHandler());
     }
 
     @SideOnly(Side.CLIENT)
