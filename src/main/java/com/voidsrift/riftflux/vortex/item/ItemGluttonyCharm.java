@@ -1,5 +1,7 @@
 package com.voidsrift.riftflux.vortex.item;
 
+import com.voidsrift.riftflux.vortex.proxy.GuiProxy;
+
 import baubles.api.BaubleType;
 import baubles.api.IBauble;
 import baubles.common.container.InventoryBaubles;
@@ -50,7 +52,7 @@ public class ItemGluttonyCharm extends Item implements IBauble {
    public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer player) {
       if (!world.isRemote) {
          if (ModConfig.GluttonyCharm) {
-            player.openGui(riftflux.instance, 2, world, 0, 0, 0);
+            player.openGui(riftflux.instance, GuiProxy.gluttonyCharmId, world, 0, 0, 0);
          } else {
             InventoryBaubles baubles = PlayerHandler.getPlayerBaubles(player);
 

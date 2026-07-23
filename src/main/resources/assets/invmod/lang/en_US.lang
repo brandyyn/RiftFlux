@@ -1,0 +1,81 @@
+tile.blockNexus.name=Nexus
+
+item.phaseCrystal.name=Phase Crystal
+item.riftFlux.name=Rift Flux
+
+item.nexusCatalyst.name=Nexus Catalyst
+item.infusedSword.name=Infused Sword
+item.searingBow.name=Searing Bow
+item.catalystMixture.name=Catalyst Mixture
+item.stableCatalystMixture.name=Stable Catalyst Mixture
+item.stableNexusCatalyst.name=Stable Nexus Catalyst
+item.dampingAgent.name=Damping Agent
+item.strongDampingAgent.name=Strong Damping Agent
+item.strangeBone.name=Strange Bone
+item.strongCatalyst.name=Strong Nexus Catalyst
+item.engyHammer.name=Engineer's Hammer
+nexusAdjuster.name=Nexus Adjuster
+materialProbe.name=Material Probe
+emptyTrap.name=Empty Trap
+riftTrap.name=Rift Trap (Folded)
+flameTrap.name=Flame Trap (Folded)
+item.smallRemnants.name=Small Remnants
+item.debugWand.name=Debug Wand
+
+itemGroup.invasionTab=Invasion Mod
+
+entity.riftflux.IMZombie.name=IM Zombie
+entity.riftflux.IMZombiePigman.name=IM Zombie Pigman
+entity.riftflux.IMSkeleton.name=IM Skeleton
+entity.riftflux.IMSpider.name=IM Spider
+entity.riftflux.IMPigEngy.name=IM Pigman Engineer
+entity.riftflux.IMBird.name=WIP-IM Bird
+entity.riftflux.IMThrower.name=IM Thrower
+entity.riftflux.IMWolf.name=IM Wolf
+entity.riftflux.IMCreeper.name=IM Creeper
+entity.riftflux.IMGiantBird.name=IM Vulture
+entity.riftflux.IMBoulder.name=Boulder
+entity.riftflux.IMEgg.name=IM Spider Egg
+entity.riftflux.IMTrap.name=Trap
+entity.riftflux.IMImp.name=IM Imp
+
+invmod.waila.status=Status: 
+invmod.waila.status.active=Activated
+invmod.waila.status.activating=Activating
+invmod.waila.status.deactivated=Deactivated
+invmod.waila.wavenumber=Wave: 
+
+invmod.gui.nexus.level=Level
+invmod.gui.nexus.mobskilled=mobs killed
+invmod.gui.nexus.activated=Activated!
+invmod.gui.nexus.activating=Activating...
+invmod.gui.nexus.power=Power:
+invmod.gui.nexus.areyousure=Are you sure?
+
+invmod.message.probe.rangechanged=Nexus range changed to: %s
+invmod.message.probe.cannotchangerange=Nexus is currently active! Range: %s
+invmod.message.probe.blockstrength=Block strength: %s
+
+invmod.message.nexus.hpat=Nexus is at %s HP!
+invmod.message.nexus.stableagain=Nexus rift stable again!
+invmod.message.nexus.unleashingenergy=Unleashing tapped energy...
+invmod.message.nexus.stabilizedto=Nexus rift stabilized to %s.
+invmod.message.nexus.alreadyactivated=Can't activate Nexus when already under attack!
+invmod.message.nexus.listboundplayers=Bound player(s): %s 
+invmod.message.nexus.firstwavesoon=Brace yourselves! The first wave is coming soon!
+invmod.message.nexus.nightlooming=The night looms around the Nexus...
+invmod.message.nexus.activatedandstable=Nexus activated and stable!
+invmod.message.nexus.couldnotactivate=Couldn't activate Nexus!
+invmod.message.nexus.destabilizing=Forces are destabilizing the Nexus!
+invmod.message.nexus.lifenowbound=%s life is now bound to the Nexus.
+invmod.message.nexus.severelydamaged=Nexus severely damaged!
+invmod.message.nexus.destroyed=The Nexus was DESTROYED - the mobs win!
+
+invmod.message.wave.complete=Wave %s almost complete!
+invmod.message.wave.begin=Wave %s about to begin...
+invmod.message.wave.group=A group of mobs has gathered...
+invmod.message.wave.groupsmall=A small group of mobs has gathered...
+invmod.message.wave.grouplarge=A large number of mobs is slipping through the Nexus rift!
+
+invmod.message.bone.nonearbynexus1=The wolf doesn't like this Strange Bone.
+invmod.message.bone.nonearbynexus2=Maybe a certain block is missing...

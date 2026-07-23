@@ -45,7 +45,6 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraft.block.Block;
@@ -138,7 +137,6 @@ import net.nmccoy.legendgear.potion.LegendGearPotions;
 import net.nmccoy.legendgear.ritual.RitualManager;
 
 public class LegendGear2 {
-    private static final int ENTITY_ID_BASE = 700;
     public static final String MODID = "legendgear";
     public static final String VERSION = "2.b.2.1";
     private static final int VANILLA_POTION_ID_SLOWNESS = 2;
@@ -705,14 +703,13 @@ public class LegendGear2 {
         Object modEntityOwner = com.voidsrift.riftflux.riftflux.instance != null
                 ? com.voidsrift.riftflux.riftflux.instance
                 : this;
-        int id = ENTITY_ID_BASE;
-        EntityRegistry.registerModEntity(EntityFallingStar.class, (String)"fallingStar", (int)id++, modEntityOwner, (int)128, (int)10, (boolean)true);
-        EntityRegistry.registerModEntity(EntitySpellEffect.class, (String)"entitySpellEffect", (int)id++, modEntityOwner, (int)128, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(SpellDecorator.class, (String)"spellDecorator", (int)id++, modEntityOwner, (int)128, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityThrownOrb.class, (String)"thrownOrb", (int)id++, modEntityOwner, (int)128, (int)5, (boolean)true);
-        EntityRegistry.registerModEntity(EntityMagicBoomerang.class, (String)"magicBoomerang", (int)id++, modEntityOwner, (int)128, (int)10, (boolean)true);
-        EntityRegistry.registerModEntity(EntityHeart.class, (String)"heartItem", (int)id++, modEntityOwner, (int)128, (int)10, (boolean)true);
-        EntityRegistry.registerModEntity(EntityPing.class, (String)"ping", (int)id++, modEntityOwner, (int)1024, (int)10, (boolean)true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(EntityFallingStar.class, "fallingStar", modEntityOwner, 128, 10, true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(EntitySpellEffect.class, "entitySpellEffect", modEntityOwner, 128, 1, true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(SpellDecorator.class, "spellDecorator", modEntityOwner, 128, 1, true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(EntityThrownOrb.class, "thrownOrb", modEntityOwner, 128, 5, true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(EntityMagicBoomerang.class, "magicBoomerang", modEntityOwner, 128, 10, true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(EntityHeart.class, "heartItem", modEntityOwner, 128, 10, true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(EntityPing.class, "ping", modEntityOwner, 1024, 10, true);
         GameRegistry.registerWorldGenerator((IWorldGenerator)new AzuriteGenerator(), (int)3);
         GameRegistry.registerWorldGenerator((IWorldGenerator)new CaltropsUndergroundGenerator(), (int)3);
         GameRegistry.registerWorldGenerator((IWorldGenerator)new StarwellGenerator(), (int)3);

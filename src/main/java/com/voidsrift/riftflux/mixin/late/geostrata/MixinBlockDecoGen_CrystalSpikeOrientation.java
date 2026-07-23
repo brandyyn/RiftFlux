@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.mixin.late.geostrata;
 import Reika.GeoStrata.Blocks.BlockDecoGen;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.waterlogging.RiftFluxCrystalSpikeAccess;
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedLookup;
 import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -212,16 +213,11 @@ public abstract class MixinBlockDecoGen_CrystalSpikeOrientation implements RiftF
 
     @Unique
     private static boolean riftflux$hasWaterloggingSource(IBlockAccess world, int x, int y, int z) {
-        return riftflux$isWater(world.getBlock(x, y + 1, z))
-                || riftflux$isWater(world.getBlock(x - 1, y, z))
-                || riftflux$isWater(world.getBlock(x + 1, y, z))
-                || riftflux$isWater(world.getBlock(x, y, z - 1))
-                || riftflux$isWater(world.getBlock(x, y, z + 1));
-    }
-
-    @Unique
-    private static boolean riftflux$isWater(Block block) {
-        return block == net.minecraft.init.Blocks.water || block == net.minecraft.init.Blocks.flowing_water;
+        return RiftFluxFluidloggedLookup.isFluidBlock(world.getBlock(x, y + 1, z))
+                || RiftFluxFluidloggedLookup.isFluidBlock(world.getBlock(x - 1, y, z))
+                || RiftFluxFluidloggedLookup.isFluidBlock(world.getBlock(x + 1, y, z))
+                || RiftFluxFluidloggedLookup.isFluidBlock(world.getBlock(x, y, z - 1))
+                || RiftFluxFluidloggedLookup.isFluidBlock(world.getBlock(x, y, z + 1));
     }
 
     @Unique

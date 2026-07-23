@@ -25,7 +25,6 @@ public class GraveStoneConfig {
    public static int skullCandleRenderID = RenderingRegistry.getNextAvailableRenderId();
    public static int candleRenderID = RenderingRegistry.getNextAvailableRenderId();
    public static int pileOfBonesRenderID = RenderingRegistry.getNextAvailableRenderId();
-   public static int structuresDimensionId;
    public static boolean generateCatacombs;
    public static boolean generateSingleGraves;
    public static boolean generateMemorials;
@@ -152,7 +151,6 @@ public class GraveStoneConfig {
    }
 
    private static void structures() {
-      structuresDimensionId = config.get(CATEGORY_GRAVESTONE, "StructuresDimensionId", 0, "Allows choosing the dimension in which Gravestone structures can generate.").getInt();
       generateCatacombs = config.get(CATEGORY_GRAVESTONE, "GenerateCatacombs", true, "Enable or disable catacombs generation.").getBoolean(true);
       maxCatacombsHeight = config.get(CATEGORY_GRAVESTONE, "MaximumCatacombsGenerationHeight", 75, "Maximum ground height at which catacombs are allowed to generate.").getInt();
       String[] catacombsDimensionWhitelist = config.get(CATEGORY_GRAVESTONE, "CatacombsDimensionWhitelist", new String[]{"0|0.033"}, "Dimensions where catacombs may generate, with a percent chance per newly generated chunk. Format: dimensionId|percent. Example: 0|0.033 is dimension 0 at 0.033% (about 1 chance roll per 3,030 chunks). Empty disables catacombs generation.").getStringList();
@@ -230,7 +228,7 @@ public class GraveStoneConfig {
       enableNightStone = config.get(CATEGORY_GRAVESTONE, "EnableNightStone", true, "Enable or disable the Night Stone's time-changing effect.").getBoolean(true);
       enableThunderStone = config.get(CATEGORY_GRAVESTONE, "EnableThunderStone", true, "Enable or disable the Thunder Stone's weather-changing effect.").getBoolean(true);
       showNightStoneMessage = config.get(CATEGORY_GRAVESTONE, "ShowNightStoneMessage", true, "Enable or disable messages when the Night Stone changes time.").getBoolean(true);
-      cursePotionEffectId = config.get(CATEGORY_GRAVESTONE, "CursePotionEffectId", 135, "Potion effect ID used by the Gravestone curse.").getInt();
+      cursePotionEffectId = config.get(CATEGORY_GRAVESTONE, "CursePotionEffectId", 135, "Preferred potion effect ID for the Gravestone curse. If occupied, the next free potion ID is used.").getInt();
       enableCreeperStatuesRecipes = config.get(CATEGORY_GRAVESTONE, "EnableCreeperStatuesRecipes", true, "Enable or disable creeper statue crafting recipes.").getBoolean(true);
       enableBossSpawnerCraftingRecipe = config.get(CATEGORY_GRAVESTONE, "EnableBossSpawnerCraftingRecipe", false, "Enable or disable the Wither spawner crafting recipe.").getBoolean(false);
       enableSpawnerCraftingRecipe = config.get(CATEGORY_GRAVESTONE, "EnableMonsterSpawnerCraftingRecipe", false, "Enable or disable monster spawner crafting recipes.").getBoolean(false);
@@ -256,10 +254,10 @@ public class GraveStoneConfig {
    }
 
    private static void entityConfig() {
-      spawnZombieDogs = config.get(CATEGORY_GRAVESTONE, "SpawnZombieDogs", true, "Enable or disable Zombie Dogs spawning in the world.").getBoolean(true);
-      spawnZombieCats = config.get(CATEGORY_GRAVESTONE, "SpawnZombieCats", true, "Enable or disable Zombie Cats spawning in the world.").getBoolean(true);
-      spawnSkeletonDogs = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonDogs", true, "Enable or disable Skeleton Dogs spawning in the world.").getBoolean(true);
-      spawnSkeletonCats = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonCats", true, "Enable or disable Skeleton Cats spawning in the world.").getBoolean(true);
+      spawnZombieDogs = config.get(CATEGORY_GRAVESTONE, "SpawnZombieDogs", true, "Allow Zombie Dogs to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.").getBoolean(true);
+      spawnZombieCats = config.get(CATEGORY_GRAVESTONE, "SpawnZombieCats", true, "Allow Zombie Cats to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.").getBoolean(true);
+      spawnSkeletonDogs = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonDogs", true, "Allow Skeleton Dogs to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.").getBoolean(true);
+      spawnSkeletonCats = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonCats", true, "Allow Skeleton Cats to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.").getBoolean(true);
       enableSkeletonPetTaming = config.get(CATEGORY_GRAVESTONE, "EnableSkeletonPetTaming", true, "Allow Skeleton Dogs to be tamed with bones and Skeleton Cats to be tamed with raw fish. Tamed skeleton pets follow their owner, stop targeting players, do not despawn, and no longer burn in sunlight.").getBoolean(true);
       spawnSkullCrawlersAtMobsDeath = config.get(CATEGORY_GRAVESTONE, "SpawnSkullCrawlersAtMobsDeath", true, "Enable or disable Skull Crawlers spawning when mobs die.").getBoolean(true);
       spawnSkullCrawlersAtBoneBlockDestruction = config.get(CATEGORY_GRAVESTONE, "SpawnSkullCrawlersOnBoneBlockDestruction", true, "Enable or disable Skull Crawlers spawning when bone blocks are destroyed.").getBoolean(true);

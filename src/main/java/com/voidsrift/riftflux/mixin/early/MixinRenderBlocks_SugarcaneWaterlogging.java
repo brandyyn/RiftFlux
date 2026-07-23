@@ -3,6 +3,8 @@ package com.voidsrift.riftflux.mixin.early;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.render.FullWaterBlockRenderer;
 import com.voidsrift.riftflux.client.render.WaterloggedBlockRenderAccess;
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedLookup;
+import gravestone.block.BlockGSGraveStone;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.init.Blocks;
@@ -21,19 +23,34 @@ public abstract class MixinRenderBlocks_SugarcaneWaterlogging {
 
     @Inject(method = "renderBlockByRenderType", at = @At("HEAD"), cancellable = true)
     private void riftflux$renderSugarcaneWater(Block block, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
-        if (!ModConfig.allowSugarcaneInWater || block != Blocks.reeds || this.blockAccess == null) {
+        if (!this.riftflux$usesWaterRenderPass(block) || this.blockAccess == null) {
             return;
         }
         int worldPass = ForgeHooksClient.getWorldRenderPass();
-        if (worldPass != 1) {
+        Block fluid = RiftFluxFluidloggedLookup.getSupportedFluidBlock(this.blockAccess, x, y, z);
+        if (RiftFluxFluidloggedLookup.hasStoredFluidBlock(this.blockAccess, x, y, z)) {
+            if (worldPass == 1) {
+                cir.setReturnValue(false);
+            }
+            return;
+        }
+        if (fluid == null || !fluid.canRenderInPass(worldPass)) {
+            if (worldPass == 1) {
+                cir.setReturnValue(false);
+            }
             return;
         }
         WaterloggedBlockRenderAccess waterAccess = new WaterloggedBlockRenderAccess(this.blockAccess);
-        boolean waterlogged = waterAccess.isWaterloggedAt(x, y, z);
-        if (waterlogged) {
-            cir.setReturnValue(FullWaterBlockRenderer.render((RenderBlocks) (Object) this, waterAccess, x, y, z));
-        } else {
-            cir.setReturnValue(false);
+        boolean rendered = FullWaterBlockRenderer.render((RenderBlocks) (Object) this, waterAccess, x, y, z);
+        if (worldPass == 1) {
+            cir.setReturnValue(rendered);
         }
+    }
+
+    private boolean riftflux$usesWaterRenderPass(Block block) {
+        return ModConfig.allowSugarcaneInWater && block == Blocks.reeds
+                || ModConfig.enableGravestoneModule
+                && ModConfig.waterlogGravestones
+                && block instanceof BlockGSGraveStone;
     }
 }

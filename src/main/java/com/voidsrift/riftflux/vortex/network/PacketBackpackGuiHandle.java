@@ -14,6 +14,7 @@ import com.voidsrift.riftflux.riftflux;
 import com.voidsrift.riftflux.vortex.item.ModItems;
 import com.voidsrift.riftflux.vortex.lib.container.ContainerBackpack;
 import com.voidsrift.riftflux.vortex.lib.helper.ItemHelper;
+import com.voidsrift.riftflux.vortex.proxy.GuiProxy;
 
 public class PacketBackpackGuiHandle implements IMessage, IMessageHandler<PacketBackpackGuiHandle, IMessage> {
    private int dim;
@@ -66,7 +67,7 @@ public class PacketBackpackGuiHandle implements IMessage, IMessageHandler<Packet
                         }
                   } catch (Throwable ignored) {
                   }
-                  player.openGui(riftflux.instance, 1, world, 0, 0, 0);
+                  player.openGui(riftflux.instance, GuiProxy.backpackId, world, 0, 0, 0);
                }
             } else {
                if (player.openContainer instanceof ContainerBackpack) {

@@ -26,6 +26,8 @@ import makamys.satchels.gui.GuiEquipment;
 import makamys.satchels.inventory.ContainerSatchels;
 import makamys.satchels.inventory.ContainerEquipment;
 import makamys.satchels.item.ItemPouch;
+import java.util.HashMap;
+import java.util.Map;
 import zairus.worldexplorer.core.gui.GuiStudyDesk;
 import zairus.worldexplorer.core.inventory.ContainerStudyDesk;
 import zairus.worldexplorer.core.tileentity.TileEntityDesk;
@@ -36,6 +38,28 @@ public class GuiProxy implements IGuiHandler {
    public static final int gluttonyCharmId = 2;
    private static final ChesterGuiHandler CHESTER_GUI_HANDLER = new ChesterGuiHandler();
    private static final GSGuiHandler GRAVESTONE_GUI_HANDLER = new GSGuiHandler();
+
+   static {
+      Map<Integer, String> claimedIds = new HashMap<Integer, String>();
+      claimGuiId(claimedIds, toolbeltId, "Vortex toolbelt");
+      claimGuiId(claimedIds, backpackId, "Vortex backpack");
+      claimGuiId(claimedIds, gluttonyCharmId, "Vortex gluttony charm");
+      claimGuiId(claimedIds, GuiHandler.ID_EQUIPMENT, "Satchels equipment");
+      claimGuiId(claimedIds, GuiHandler.ID_POUCH, "Satchels pouch");
+      claimGuiId(claimedIds, FurnitureGuiIds.CABINET, "Furniture cabinet");
+      claimGuiId(claimedIds, FurnitureGuiIds.BEDSIDE_CABINET, "Furniture bedside cabinet");
+      claimGuiId(claimedIds, RiftExplorerGuiIds.STUDY_DESK, "Rift Explorer study desk");
+      claimGuiId(claimedIds, ChesterContent.GUI_ID, "Chester");
+      claimGuiId(claimedIds, GSGuiHandler.GRAVE_INVENTORY_GUI_ID, "Gravestone inventory");
+      claimGuiId(claimedIds, GSGuiHandler.ALTAR_GUI_ID, "Gravestone altar");
+   }
+
+   private static void claimGuiId(Map<Integer, String> claimedIds, int id, String owner) {
+      String existing = claimedIds.put(id, owner);
+      if (existing != null) {
+         throw new IllegalStateException("RiftFlux GUI ID collision at " + id + " between " + existing + " and " + owner);
+      }
+   }
 
    public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
       Object gravestoneGui = GRAVESTONE_GUI_HANDLER.getServerGuiElement(id, player, world, x, y, z);

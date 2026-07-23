@@ -110,6 +110,10 @@ public class GSMobSpawn {
          }
       }
 
+      if (id == null) {
+         return null;
+      }
+
       EntityLiving entity = (EntityLiving)EntityList.createEntityByName(id, world);
       if (entity == null) {
          entity = getForeinMob(world, id);
@@ -132,7 +136,7 @@ public class GSMobSpawn {
          mobId = "WitherBoss";
          break;
       case SKELETON_SPAWNER:
-         mobId = skeletonSpawnerMobs.get(world.rand.nextInt(skeletonSpawnerMobs.size()));
+         mobId = getMobForSkeletonSpawner(world.rand);
          if (mobId.equals("Skeleton") && world.rand.nextInt(10) == 0) {
             EntitySkeleton skeleton = getSkeleton(world);
             skeleton.setSkeletonType(1);
@@ -141,7 +145,7 @@ public class GSMobSpawn {
          break;
       case ZOMBIE_SPAWNER:
       default:
-         mobId = zombieSpawnerMobs.get(world.rand.nextInt(zombieSpawnerMobs.size()));
+         mobId = getMobForZombieSpawner(world.rand);
       }
 
       EntityLiving entity = (EntityLiving)EntityList.createEntityByName(mobId, world);
@@ -212,9 +216,9 @@ public class GSMobSpawn {
       case HELL_MOBS:
          return HELL_MOB_ID.get(random.nextInt(HELL_MOB_ID.size()));
       case UNDEAD_DOGS:
-         return DOG_ID.get(random.nextInt(DOG_ID.size()));
+         return getEnabledPetMob(random, GraveStoneConfig.spawnZombieDogs, DOG_ID.get(0), GraveStoneConfig.spawnSkeletonDogs, DOG_ID.get(1));
       case UNDEAD_CATS:
-         return CAT_ID.get(random.nextInt(CAT_ID.size()));
+         return getEnabledPetMob(random, GraveStoneConfig.spawnZombieCats, CAT_ID.get(0), GraveStoneConfig.spawnSkeletonCats, CAT_ID.get(1));
       case DEFAULT_MOBS:
       default:
          return MOB_ID.get(random.nextInt(MOB_ID.size()));
@@ -283,15 +287,41 @@ public class GSMobSpawn {
    }
 
    public static String getMobForSkeletonSpawner(Random random) {
-      return skeletonSpawnerMobs.get(random.nextInt(skeletonSpawnerMobs.size()));
+      int variants = 4 + (GraveStoneConfig.spawnSkeletonDogs ? 1 : 0) + (GraveStoneConfig.spawnSkeletonCats ? 1 : 0);
+      int selected = random.nextInt(variants);
+      if (selected < 4) {
+         return "Skeleton";
+      }
+      if (GraveStoneConfig.spawnSkeletonDogs && selected-- == 4) {
+         return "riftflux.GSSkeletonDog";
+      }
+      return "riftflux.GSSkeletonCat";
    }
 
    public static String getMobForZombieSpawner(Random random) {
-      return zombieSpawnerMobs.get(random.nextInt(zombieSpawnerMobs.size()));
+      int variants = 4 + (GraveStoneConfig.spawnZombieDogs ? 1 : 0) + (GraveStoneConfig.spawnZombieCats ? 1 : 0);
+      int selected = random.nextInt(variants);
+      if (selected < 4) {
+         return "Zombie";
+      }
+      if (GraveStoneConfig.spawnZombieDogs && selected-- == 4) {
+         return "riftflux.GSZombieDog";
+      }
+      return "riftflux.GSZombieCat";
    }
 
    public static String getMobForStatueSpawner(Random random) {
       return catacombsStatuesMobs.get(random.nextInt(catacombsStatuesMobs.size()));
+   }
+
+   private static String getEnabledPetMob(Random random, boolean firstEnabled, String firstId, boolean secondEnabled, String secondId) {
+      if (firstEnabled && secondEnabled) {
+         return random.nextBoolean() ? firstId : secondId;
+      }
+      if (firstEnabled) {
+         return firstId;
+      }
+      return secondEnabled ? secondId : null;
    }
 
    public static void spawnCrawler(Entity entity, EntitySkullCrawler crawler) {

@@ -8,7 +8,7 @@
 package de.sanandrew.mods.claysoldiers.util;
 
 import cpw.mods.fml.client.registry.RenderingRegistry;
-import cpw.mods.fml.common.registry.EntityRegistry;
+import com.voidsrift.riftflux.entity.RiftFluxEntityRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.sanandrew.mods.claysoldiers.client.render.entity.RenderClayMan;
@@ -33,17 +33,16 @@ import net.minecraft.init.Blocks;
 
 public final class RegistryEntities {
     public static void registerEntities(Object mod) {
-        int entityId = 0;
-        EntityRegistry.registerModEntity(EntityClayMan.class, (String)"clayman", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityHorseMount.class, (String)"horsemount", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityGravelChunk.class, (String)"gravelchunk", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntitySnowChunk.class, (String)"snowchunk", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityFirechargeChunk.class, (String)"firechunk", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityEmeraldChunk.class, (String)"emeraldchunk", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityPegasusMount.class, (String)"pegasusmount", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityTurtleMount.class, (String)"turtlemount", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityBunnyMount.class, (String)"bunnymount", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
-        EntityRegistry.registerModEntity(EntityGeckoMount.class, (String)"geckomount", (int)entityId++, (Object)mod, (int)64, (int)1, (boolean)true);
+        RiftFluxEntityRegistry.registerModEntity(EntityClayMan.class, "clayman", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityHorseMount.class, "horsemount", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityGravelChunk.class, "gravelchunk", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntitySnowChunk.class, "snowchunk", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityFirechargeChunk.class, "firechunk", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityEmeraldChunk.class, "emeraldchunk", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityPegasusMount.class, "pegasusmount", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityTurtleMount.class, "turtlemount", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityBunnyMount.class, "bunnymount", mod, 64, 1, true);
+        RiftFluxEntityRegistry.registerModEntity(EntityGeckoMount.class, "geckomount", mod, 64, 1, true);
     }
 
     @SideOnly(value=Side.CLIENT)
@@ -59,4 +58,3 @@ public final class RegistryEntities {
         RenderingRegistry.registerEntityRenderingHandler(EntityGeckoMount.class, (Render)new RenderGeckoMount());
     }
 }
-

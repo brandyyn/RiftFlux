@@ -12,19 +12,19 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 public class GSGuiHandler implements IGuiHandler {
-   public static final int GRAVE_INVENTORY_GUI_ID = 0;
-   public static final int ALTAR_GUI_ID = 2;
+   public static final int GRAVE_INVENTORY_GUI_ID = 14010;
+   public static final int ALTAR_GUI_ID = 14011;
 
    public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
       switch(id) {
-      case 0: {
+      case GRAVE_INVENTORY_GUI_ID: {
          TileEntity tileEntity = world.getTileEntity(x, y, z);
          if (tileEntity instanceof TileEntityGSGraveStone) {
             return new GraveContainer(player.inventory, (TileEntityGSGraveStone)tileEntity);
          }
          break;
       }
-      case 2: {
+      case ALTAR_GUI_ID: {
          TileEntity tileEntity = world.getTileEntity(x, y, z);
          if (tileEntity instanceof TileEntityGSAltar) {
             return new AltarContainer(player.inventory, (TileEntityGSAltar)tileEntity);
@@ -37,14 +37,14 @@ public class GSGuiHandler implements IGuiHandler {
 
    public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
       switch(id) {
-      case 0: {
+      case GRAVE_INVENTORY_GUI_ID: {
          TileEntity tileEntity = world.getTileEntity(x, y, z);
          if (tileEntity instanceof TileEntityGSGraveStone) {
             return new GSGraveInventoryGui(player.inventory, (TileEntityGSGraveStone)tileEntity);
          }
          break;
       }
-      case 2: {
+      case ALTAR_GUI_ID: {
          TileEntity tileEntity = world.getTileEntity(x, y, z);
          if (tileEntity instanceof TileEntityGSAltar) {
             return new GSAltarGui(player.inventory, (TileEntityGSAltar)tileEntity);

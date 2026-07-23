@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import gravestone.block.BlockGSGraveStone;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.init.Blocks;
@@ -19,7 +20,7 @@ public abstract class MixinWorldRenderer_SugarcaneWaterRenderPass {
             require = 0
     )
     private int riftflux$getSugarcaneRenderBlockPass(Block block) {
-        if (ModConfig.allowSugarcaneInWater && block == Blocks.reeds) {
+        if (riftflux$usesWaterRenderPass(block)) {
             return 1;
         }
         return block.getRenderBlockPass();
@@ -35,9 +36,16 @@ public abstract class MixinWorldRenderer_SugarcaneWaterRenderPass {
             require = 0
     )
     private boolean riftflux$canRenderSugarcaneInWaterPass(Block block, int pass) {
-        if (ModConfig.allowSugarcaneInWater && block == Blocks.reeds) {
+        if (riftflux$usesWaterRenderPass(block)) {
             return pass == 0 || pass == 1;
         }
         return block.canRenderInPass(pass);
+    }
+
+    private static boolean riftflux$usesWaterRenderPass(Block block) {
+        return ModConfig.allowSugarcaneInWater && block == Blocks.reeds
+                || ModConfig.enableGravestoneModule
+                && ModConfig.waterlogGravestones
+                && block instanceof BlockGSGraveStone;
     }
 }

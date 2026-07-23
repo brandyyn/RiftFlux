@@ -5,11 +5,13 @@ import com.voidsrift.riftflux.chatbubbles.ChatBubbleColorManager;
 import com.voidsrift.riftflux.chester.ChesterContent;
 import com.voidsrift.riftflux.command.CommandRiftFlux;
 import com.voidsrift.riftflux.compat.thaumcraft.ThaumcraftWarpSyncCompat;
+import com.voidsrift.riftflux.compat.fluidlogged.RiftFluxFluidloggedCompat;
 import com.voidsrift.riftflux.compat.waila.RiftFluxWailaCompat;
 import com.voidsrift.riftflux.combat.torohealth.ToroHealthContent;
 import com.voidsrift.riftflux.dualhotbar.DualHotbarState;
 import com.voidsrift.riftflux.duckling.DucklingContent;
 import com.voidsrift.riftflux.inventorypets.InventoryPetsContent;
+import com.voidsrift.riftflux.invasion.InvasionContent;
 import com.voidsrift.riftflux.legendgear.LegendGearAdditionsContent;
 import com.voidsrift.riftflux.legendgear.LegendGearContent;
 import com.voidsrift.riftflux.legendgear.LegendGearLegacyContent;
@@ -111,6 +113,7 @@ public class riftflux {
         OffLawnContent.preInit(event);
         PumpkinPasturesContent.preInit(event);
         GravestoneContent.preInit(event);
+        InvasionContent.preInit(event);
         GokiStatsContent.preInit(event);
         RiftExplorerContent.preInit(event);
         MoreBowsContent.preInit(event);
@@ -131,6 +134,9 @@ public class riftflux {
         com.voidsrift.riftflux.net.RFNetwork.init();
         if (Loader.isModLoaded("Waila")) {
             RiftFluxWailaCompat.register();
+        }
+        if (Loader.isModLoaded("fluidlogged")) {
+            RiftFluxFluidloggedCompat.init();
         }
         ToroHealthContent.init(event);
         BlessingContent.init();
@@ -198,6 +204,7 @@ public class riftflux {
         OffLawnContent.init(event);
         PumpkinPasturesContent.init(event);
         GravestoneContent.init(event);
+        InvasionContent.init(event);
         GokiStatsContent.init(event);
         RiftExplorerContent.init(event);
         PalariaMobContent.init(event);
@@ -230,6 +237,7 @@ public class riftflux {
         HeartCrystalContent.postInit(event);
         AxolotlContent.postInit(event);
         GravestoneContent.postInit(event);
+        InvasionContent.postInit(event);
         GokiStatsContent.postInit(event);
         RiftExplorerContent.postInit(event);
     }
@@ -258,6 +266,7 @@ public class riftflux {
         event.registerServerCommand(CommandRiftFlux.chatBubbleSizeCommand());
         BlessingContent.serverStarting(event);
         GravestoneContent.serverStarting(event);
+        InvasionContent.serverStarting(event);
         GokiStatsContent.serverStarting(event);
     }
 

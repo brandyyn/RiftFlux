@@ -9,6 +9,7 @@ import Reika.GeoStrata.Rendering.DecoGenRenderer;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.render.FullWaterBlockRenderer;
 import com.voidsrift.riftflux.client.render.WaterloggedBlockRenderAccess;
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedLookup;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -64,7 +65,9 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
             } else {
                 this.riftflux$renderUpwardCrystalSpike(world, x, y, z, block, tessellator);
             }
-        } else if (renderPass == 1 && ModConfig.fixGeoStrataCrystalSpikeWaterlogging) {
+        }
+        if (ModConfig.fixGeoStrataCrystalSpikeWaterlogging
+                && this.riftflux$shouldRenderFluidInPass(world, x, y, z, renderPass)) {
             this.riftflux$renderWaterloggedCrystalSpike(world, x, y, z, block, renderer);
         }
         tessellator.addVertex(0.0D, 0.0D, 0.0D);
@@ -78,11 +81,21 @@ public abstract class MixinDecoGenRenderer_CrystalSpikeWater {
     private void riftflux$renderWaterloggedCrystalSpike(IBlockAccess world, int x, int y, int z, Block block,
                                                         int modelId, RenderBlocks renderer,
                                                         CallbackInfoReturnable<Boolean> cir) {
+        int renderPass = this.riftflux$getRenderPass();
         if (ModConfig.fixGeoStrataCrystalSpikeWaterlogging
-                && this.riftflux$getRenderPass() == 1
-                && riftflux$getBaseMeta(world.getBlockMetadata(x, y, z)) == 0) {
+                && riftflux$getBaseMeta(world.getBlockMetadata(x, y, z)) == 0
+                && this.riftflux$shouldRenderFluidInPass(world, x, y, z, renderPass)) {
             this.riftflux$renderWaterloggedCrystalSpike(world, x, y, z, block, renderer);
         }
+    }
+
+    @Unique
+    private boolean riftflux$shouldRenderFluidInPass(IBlockAccess world, int x, int y, int z, int renderPass) {
+        if (RiftFluxFluidloggedLookup.hasStoredFluidBlock(world, x, y, z)) {
+            return false;
+        }
+        Block fluid = RiftFluxFluidloggedLookup.getSupportedFluidBlock(world, x, y, z);
+        return fluid != null && fluid.canRenderInPass(renderPass);
     }
 
     @Unique

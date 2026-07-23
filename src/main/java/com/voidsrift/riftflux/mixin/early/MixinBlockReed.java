@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockReed;
 import net.minecraft.init.Blocks;
@@ -33,7 +34,7 @@ public abstract class MixinBlockReed {
         }
 
         Block below = world.getBlock(x, y - 1, z);
-        if (ModConfig.allowSugarcaneInWater && this.riftflux$isWater(world.getBlock(x, y, z))
+        if (ModConfig.allowSugarcaneInWater && this.riftflux$isFluid(world.getBlock(x, y, z))
                 && (below == Blocks.reeds || this.riftflux$isValidSugarcaneSupport(below))) {
             cir.setReturnValue(true);
             return;
@@ -134,7 +135,7 @@ public abstract class MixinBlockReed {
         if (!ModConfig.hangingSugarcaneGrowsWithWaterAboveSupport) {
             return;
         }
-        if (!this.riftflux$isWater(world.getBlock(x, supportY + 1, z))) {
+        if (!this.riftflux$isFluid(world.getBlock(x, supportY + 1, z))) {
             return;
         }
 
@@ -205,7 +206,7 @@ public abstract class MixinBlockReed {
     }
 
     private boolean riftflux$canGrowInto(World world, int x, int y, int z) {
-        return world.isAirBlock(x, y, z) || (ModConfig.allowSugarcaneInWater && this.riftflux$isWater(world.getBlock(x, y, z)));
+        return world.isAirBlock(x, y, z) || (ModConfig.allowSugarcaneInWater && this.riftflux$isFluid(world.getBlock(x, y, z)));
     }
 
     private int riftflux$countCaneDownward(World world, int x, int y, int z) {
@@ -243,15 +244,15 @@ public abstract class MixinBlockReed {
     }
 
     private boolean riftflux$hasVanillaAdjacentWater(World world, int x, int y, int z) {
-        return this.riftflux$isWater(world.getBlock(x - 1, y, z))
-                || this.riftflux$isWater(world.getBlock(x + 1, y, z))
-                || this.riftflux$isWater(world.getBlock(x, y, z - 1))
-                || this.riftflux$isWater(world.getBlock(x, y, z + 1));
+        return this.riftflux$isFluid(world.getBlock(x - 1, y, z))
+                || this.riftflux$isFluid(world.getBlock(x + 1, y, z))
+                || this.riftflux$isFluid(world.getBlock(x, y, z - 1))
+                || this.riftflux$isFluid(world.getBlock(x, y, z + 1));
     }
 
     private boolean riftflux$hasWaterBesideColumn(World world, int x, int minY, int maxY, int z) {
         for (int y = minY; y <= maxY; ++y) {
-            if (this.riftflux$isWater(world.getBlock(x, y, z)) || this.riftflux$hasVanillaAdjacentWater(world, x, y, z)) {
+            if (this.riftflux$isFluid(world.getBlock(x, y, z)) || this.riftflux$hasVanillaAdjacentWater(world, x, y, z)) {
                 return true;
             }
         }
@@ -261,14 +262,14 @@ public abstract class MixinBlockReed {
     private int riftflux$getTopWaterYBesideColumn(World world, int x, int minY, int maxY, int z) {
         int topWaterY = Integer.MIN_VALUE;
         for (int y = minY; y <= maxY; ++y) {
-            if (this.riftflux$isWater(world.getBlock(x, y, z)) || this.riftflux$hasVanillaAdjacentWater(world, x, y, z)) {
+            if (this.riftflux$isFluid(world.getBlock(x, y, z)) || this.riftflux$hasVanillaAdjacentWater(world, x, y, z)) {
                 topWaterY = y;
             }
         }
         return topWaterY;
     }
 
-    private boolean riftflux$isWater(Block block) {
-        return block == Blocks.water || block == Blocks.flowing_water;
+    private boolean riftflux$isFluid(Block block) {
+        return RiftFluxFluidloggedLookup.isFluidBlock(block);
     }
 }

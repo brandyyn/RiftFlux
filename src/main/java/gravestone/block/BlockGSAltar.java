@@ -4,6 +4,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import com.voidsrift.riftflux.riftflux;
 import gravestone.core.GSTabs;
+import gravestone.core.GSGuiHandler;
 import gravestone.core.Resources;
 import gravestone.tileentity.TileEntityGSAltar;
 import net.minecraft.block.Block;
@@ -11,7 +12,6 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -32,14 +32,15 @@ public class BlockGSAltar extends BlockContainer {
    }
 
    public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9) {
-      ItemStack stack = player.getCurrentEquippedItem();
-      TileEntityGSAltar tileEntity = (TileEntityGSAltar)world.getTileEntity(x, y, z);
-      if (tileEntity != null && !player.isSneaking()) {
-         player.openGui(riftflux.instance, 2, world, x, y, z);
-         return true;
-      } else {
+      TileEntity tileEntity = world.getTileEntity(x, y, z);
+      if (!(tileEntity instanceof TileEntityGSAltar) || player.isSneaking()) {
          return false;
       }
+
+      if (!world.isRemote) {
+         player.openGui(riftflux.instance, GSGuiHandler.ALTAR_GUI_ID, world, x, y, z);
+      }
+      return true;
    }
 
    public boolean renderAsNormalBlock() {

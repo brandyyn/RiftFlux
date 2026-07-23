@@ -107,6 +107,8 @@ public class ModConfig {
     public static boolean optimizeChromatiCraftRenderEventFastPaths;
     public static boolean optimizeChromatiCraftCliffsChunkGeneration;
     public static boolean disableChromatiCraftItemFabricator;
+    public static int[] chromatiCraftCrystalDimensionWhitelist;
+    public static int[] chromatiCraftCrystalDimensionBlacklist;
     public static boolean chromatiCraftNetherBedrockBreakableLikeObsidian;
     public static boolean chromatiCraftNetherStructureShieldBreakableLikeObsidian;
     public static boolean chromatiCraftNetherStructureHutEnabled;
@@ -597,6 +599,8 @@ public class ModConfig {
 
     // Embedded legacy module ports
     public static boolean enableGravestoneModule;
+    public static boolean waterlogGravestones;
+    public static boolean enableInvasionModule;
     public static boolean enableGokiStatsModule;
     public static boolean enableRiftExplorerModule;
     public static boolean enableMoreBowsModule;
@@ -1570,7 +1574,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "FixCrystalSpikeWaterlogging",
                 "geostrata",
                 true,
-                "If true, GeoStrata crystal spikes render a waterlogged surface while adjacent to water instead of cutting the water texture off at the surface. Requires restart."
+                "If true, GeoStrata crystal spikes can be liquid-logged with water, lava, Hotspring Water, and modded Forge fluids. Requires restart."
         );
 
         enableGeoStrataCeilingCrystalSpikes = config.getBoolean(
@@ -1672,6 +1676,19 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If true, prevents ChromatiCraft from registering the Item Fabricator casting recipe and its NEI recipe handler. Requires restart."
         );
+
+        chromatiCraftCrystalDimensionWhitelist = ConfigResolver.parseIntegerList(config.getStringList(
+                "CrystalDimensionWhitelist",
+                "chromaticraft",
+                new String[0],
+                "Dimension IDs where ChromatiCraft cave crystals may generate. Empty allows ChromatiCraft's default dimensions unless blacklisted."
+        ));
+        chromatiCraftCrystalDimensionBlacklist = ConfigResolver.parseIntegerList(config.getStringList(
+                "CrystalDimensionBlacklist",
+                "chromaticraft",
+                new String[0],
+                "Dimension IDs where ChromatiCraft cave crystals must never generate. Blacklist takes precedence over CrystalDimensionWhitelist."
+        ));
 
         chromatiCraftNetherBedrockBreakableLikeObsidian = config.getBoolean(
                 "NetherBedrockBreakableLikeObsidian",
@@ -6411,7 +6428,21 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "Master switch for integrated Gravestone content. Requires restart."
         );
+        waterlogGravestones = config.getBoolean(
+                "WaterlogGravestones",
+                "gravestone",
+                true,
+                "Allow gravestones to be liquid-logged with water, lava, Hotspring Water, and modded Forge fluids. Requires restart."
+        );
         registerGravestoneConfigSchema();
+
+        enableInvasionModule = config.getBoolean(
+                "EnableInvasionModule",
+                "invasion",
+                true,
+                "Master switch for integrated Invasion content. Requires restart."
+        );
+        registerInvasionConfigSchema();
 
         xaeroMinimapImmediateWaypointDelete = config.getBoolean(
                 "ImmediateWaypointDelete",
@@ -8009,7 +8040,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "AllowSugarcaneInWater",
                 "general",
                 true,
-                "If true, sugar cane can be placed into water blocks and grow into water blocks. Requires restart."
+                "If true, sugar cane can be placed into and grow through water, lava, Hotspring Water, and modded Forge fluids. Requires restart."
         );
 
         sugarcaneGeneratesOnRiverFloors = config.getBoolean(
@@ -8869,11 +8900,62 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.save();
     }
 
+    /** Registers every integrated Invasion setting in riftflux.cfg, even when the module is disabled. */
+    private static void registerInvasionConfigSchema() {
+        final String category = "invasion";
+
+        config.get(category, "update-messages-enabled", false, "Unused legacy update-notification switch retained as an Invasion setting.");
+        config.get(category, "enable-log-file", false, "Write Invasion diagnostic messages to logs/invasion_log.log.");
+        config.get(category, "mobs-drop-small-remnants", true, "Allow Invasion mobs to drop Small Remnants.");
+        config.get(category, "destructed-blocks-drop", true, "Allow blocks destroyed by Invasion mobs to drop items.");
+        config.get(category, "craft-items-enabled", true, "Enable Invasion crafting and smelting recipes.");
+        config.get(category, "debug", false, "Enable unfinished Invasion debug content.");
+        config.get(category, "guiID-Nexus", 76, "GUI ID used by the Nexus container.");
+        config.get(category, "min-days-to-attack", 2, "Minimum delay in days between continuous-mode attacks.");
+        config.get(category, "max-days-to-attack", 3, "Maximum delay in days between continuous-mode attacks.");
+        config.get(category, "night-spawns-enabled", false, "Allow Invasion mobs to spawn naturally at night.");
+        config.get(category, "night-mob-sight-range", 20, "Natural Invasion mob sight range.");
+        config.get(category, "night-mob-sense-range", 12, "Natural Invasion mob through-wall sense range.");
+        config.get(category, "night-mob-spawn-chance", 240, "Natural Invasion mob spawn weight.");
+        config.get(category, "night-mob-max-group-size", 3, "Maximum natural Invasion mob group size.");
+        config.get(category, "mob-limit-override", 70, "Global monster creature cap used when natural Invasion spawning is enabled.");
+        config.get(category, "night-mobs-burn-in-day", true, "Whether naturally spawned Invasion mobs burn in daylight.");
+
+        String[] mobNames = new String[]{
+                "IMCreeper-T1", "IMVulture-T1", "IMImp-T1", "IMPigManEngineer-T1", "IMSkeleton-T1",
+                "IMSpider-T1-Spider", "IMSpider-T1-Baby-Spider", "IMSpider-T2-Jumping-Spider",
+                "IMSpider-T2-Mother-Spider", "IMThrower-T1", "IMThrower-T2", "IMZombie-T1",
+                "IMZombie-T2", "IMZombie-T3", "IMZombiePigman-T1", "IMZombiePigman-T2", "IMZombiePigman-T3"
+        };
+        int[] mobHealth = new int[]{40, 40, 40, 40, 40, 36, 6, 36, 46, 100, 140, 40, 60, 130, 40, 60, 130};
+        for (int i = 0; i < mobNames.length; i++) {
+            config.get(category, mobNames[i] + "-invasionSpawn-health", mobHealth[i],
+                    "Health for this mob when spawned by a Nexus invasion.");
+            config.get(category, mobNames[i] + "-nightSpawn-health", mobHealth[i],
+                    "Health for this mob when spawned naturally at night.");
+        }
+
+        String[] spawnPatterns = new String[]{
+                "zombie_t1_any", "zombie_t2_any_basic", "zombie_t2_plain", "zombie_t2_tar",
+                "none", "zombie_t3_any", "zombiePigman_t1_any", "zombiePigman_t2_any",
+                "zombiePigman_t3_any", "spider_t1_any", "spider_t2_any", "pigengy_t1_any",
+                "skeleton_t1_any", "thrower_t1", "thrower_t2", "creeper_t1_basic", "imp_t1"
+        };
+        double[] spawnWeights = new double[]{0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D,
+                0.0D, 0.45D, 0.3D, 0.0D, 0.65D, 0.0D, 0.0D, 0.0D, 0.0D};
+        for (int i = 0; i < spawnPatterns.length; i++) {
+            int slot = i + 1;
+            config.get(category, "nm-spawnpool1-slot" + slot, spawnPatterns[i],
+                    "Mob pattern for natural Invasion spawn-pool slot " + slot + ".");
+            config.get(category, "nm-spawnpool1-slot" + slot + "-weight", spawnWeights[i],
+                    "Selection weight for natural Invasion spawn-pool slot " + slot + ".");
+        }
+    }
+
     /** Registers Gravestone properties during RiftFlux's primary config pass so comments are always serialized. */
     private static void registerGravestoneConfigSchema() {
         final String category = "gravestone";
 
-        config.get(category, "StructuresDimensionId", 0, "Allows choosing the dimension in which Gravestone structures can generate.");
         config.get(category, "GenerateCatacombs", true, "Enable or disable catacombs generation.");
         config.get(category, "MaximumCatacombsGenerationHeight", 75, "Maximum ground height at which catacombs are allowed to generate.");
         config.get(category, "CatacombsDimensionWhitelist", new String[]{"0|0.033"}, "Dimensions where catacombs may generate, with a percent chance per newly generated chunk. Format: dimensionId|percent. Example: 0|0.033 is dimension 0 at 0.033% (about 1 chance roll per 3,030 chunks). Empty disables catacombs generation.");
@@ -8905,6 +8987,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "ChiselItems", new String[]{"riftflux:Chisel"}, "Items accepted as chisels in all Gravestone crafting recipes. Use modid:item or modid:item:metadata. Remove riftflux:Chisel to disable the built-in chisel in recipes.");
 
         config.get(category, "CanPlaceGravesEveryWhere", true, "Allows gravestones to be placed on any type of surface.");
+        config.get(category, "WaterlogGravestones", true, "Allow gravestones to be liquid-logged with water, lava, Hotspring Water, and modded Forge fluids. Requires restart.");
         config.get(category, "EnablePlayerDeathGraves", true, "Enable this module's player-death graves and inventory capture. Disable when another grave mod handles player deaths; all other Gravestone content remains enabled.");
         config.get(category, "EnableXaeroMinimapGraveWaypoints", true, "Make Xaero's Minimap death waypoint use the exact location where the player's gravestone was placed. Disable to retain Xaero's normal death-location waypoint behavior.");
         config.get(category, "KeepArmorOnDeath", false, "Keep equipped vanilla armour on the player after death instead of storing it in the grave or dropping it. No copies are created.");
@@ -8934,7 +9017,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "EnableNightStone", true, "Enable or disable the Night Stone's time-changing effect.");
         config.get(category, "EnableThunderStone", true, "Enable or disable the Thunder Stone's weather-changing effect.");
         config.get(category, "ShowNightStoneMessage", true, "Enable or disable messages when the Night Stone changes time.");
-        config.get(category, "CursePotionEffectId", 135, "Potion effect ID used by the Gravestone curse.");
+        config.get(category, "CursePotionEffectId", 135, "Preferred potion effect ID for the Gravestone curse. If occupied, the next free potion ID is used.");
         config.get(category, "EnableCreeperStatuesRecipes", true, "Enable or disable creeper statue crafting recipes.");
         config.get(category, "EnableBossSpawnerCraftingRecipe", false, "Enable or disable the Wither spawner crafting recipe.");
         config.get(category, "EnableMonsterSpawnerCraftingRecipe", false, "Enable or disable monster spawner crafting recipes.");
@@ -8947,10 +9030,10 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "RestrictGraveGenerationInArea", "", "Disables player-death grave generation within configured areas. Enter dimension ID, start X, start Y, start Z, end X, end Y, and end Z separated by commas. Dimension ID is optional and defaults to 0. Separate multiple areas with semicolons.");
         config.get(category, "HardAltarRecipe", false, "Enable or disable the hard altar recipe.");
 
-        config.get(category, "SpawnZombieDogs", true, "Enable or disable Zombie Dogs spawning in the world.");
-        config.get(category, "SpawnZombieCats", true, "Enable or disable Zombie Cats spawning in the world.");
-        config.get(category, "SpawnSkeletonDogs", true, "Enable or disable Skeleton Dogs spawning in the world.");
-        config.get(category, "SpawnSkeletonCats", true, "Enable or disable Skeleton Cats spawning in the world.");
+        config.get(category, "SpawnZombieDogs", true, "Allow Zombie Dogs to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.");
+        config.get(category, "SpawnZombieCats", true, "Allow Zombie Cats to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.");
+        config.get(category, "SpawnSkeletonDogs", true, "Allow Skeleton Dogs to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.");
+        config.get(category, "SpawnSkeletonCats", true, "Allow Skeleton Cats to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.");
         config.get(category, "EnableSkeletonPetTaming", true, "Allow Skeleton Dogs to be tamed with bones and Skeleton Cats to be tamed with raw fish. Tamed skeleton pets follow their owner, stop targeting players, do not despawn, and no longer burn in sunlight.");
         config.get(category, "SpawnSkullCrawlersAtMobsDeath", true, "Enable or disable Skull Crawlers spawning when mobs die.");
         config.get(category, "SpawnSkullCrawlersOnBoneBlockDestruction", true, "Enable or disable Skull Crawlers spawning when bone blocks are destroyed.");
@@ -9763,6 +9846,15 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         if ("spiral".equals(key)) return chromatiCraftNetherStructureSpiralEnabled;
         if ("diorama".equals(key)) return chromatiCraftNetherStructureDioramaEnabled;
         return true;
+    }
+
+    public static boolean isChromatiCraftCrystalDimensionAllowed(int dimensionId) {
+        if (containsInt(chromatiCraftCrystalDimensionBlacklist, dimensionId)) {
+            return false;
+        }
+        return chromatiCraftCrystalDimensionWhitelist == null
+                || chromatiCraftCrystalDimensionWhitelist.length == 0
+                || containsInt(chromatiCraftCrystalDimensionWhitelist, dimensionId);
     }
 
     public static int getChromatiCraftNetherStructureYLevel(String structureName) {

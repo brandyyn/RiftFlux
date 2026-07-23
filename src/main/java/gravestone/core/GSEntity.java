@@ -47,12 +47,12 @@ public class GSEntity {
 
       RiftFluxEntityRegistry.registerModEntity(EntitySkeletonDog.class, "GSSkeletonDog", riftflux.instance, 100, 1, true);
       if (GraveStoneConfig.spawnSkeletonDogs) {
-         EntityRegistry.addSpawn(EntityZombieDog.class, 2, 1, 1, EnumCreatureType.monster, BiomeDictionary.getBiomesForType(Type.FOREST));
+         EntityRegistry.addSpawn(EntitySkeletonDog.class, 2, 1, 1, EnumCreatureType.monster, BiomeDictionary.getBiomesForType(Type.FOREST));
       }
 
       RiftFluxEntityRegistry.registerModEntity(EntitySkeletonCat.class, "GSSkeletonCat", riftflux.instance, 100, 1, true);
       if (GraveStoneConfig.spawnSkeletonCats) {
-         EntityRegistry.addSpawn(EntityZombieCat.class, 2, 1, 1, EnumCreatureType.monster, BiomeDictionary.getBiomesForType(Type.JUNGLE));
+         EntityRegistry.addSpawn(EntitySkeletonCat.class, 2, 1, 1, EnumCreatureType.monster, BiomeDictionary.getBiomesForType(Type.JUNGLE));
       }
 
       RiftFluxEntityRegistry.registerModEntity(EntitySkullCrawler.class, "GSSkullCrawler", riftflux.instance, 100, 1, true);

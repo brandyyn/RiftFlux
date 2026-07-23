@@ -2,14 +2,17 @@ package com.voidsrift.riftflux.hotsprings;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.util.ConfiguredPotionEffectHelper;
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedLookup;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
@@ -27,6 +30,15 @@ public final class BlockSpringWater extends BlockFluidClassic {
         super(fluid, Material.water);
         setBlockName("riftflux.spring_water");
         setLightOpacity(3);
+    }
+
+    @Override
+    public boolean shouldSideBeRendered(IBlockAccess world, int x, int y, int z, int side) {
+        Block loggedFluid = RiftFluxFluidloggedLookup.getSupportedFluidBlock(world, x, y, z);
+        if (side != 1 && RiftFluxFluidloggedLookup.isSameFluid(this, loggedFluid)) {
+            return false;
+        }
+        return super.shouldSideBeRendered(world, x, y, z, side);
     }
 
     @Override

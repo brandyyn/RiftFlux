@@ -17,7 +17,7 @@ public class GraveStoneWorldGenerator implements IWorldGenerator {
       int z = chunkZ * 16;
       double chance = random.nextDouble();
       boolean generatedCatacombs = CatacombsGenerator.getInstance().generate(world, random, x, z, chance, false);
-      if (world.provider.dimensionId == GraveStoneConfig.structuresDimensionId && !generatedCatacombs) {
+      if (world.provider.dimensionId == DEFAULT_DIMENSION_ID && !generatedCatacombs) {
          this.generateSurface(world, random, x, z, chance);
       }
 

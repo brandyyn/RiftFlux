@@ -23,6 +23,7 @@ public class RFLateMixins implements ILateMixinLoader {
            mixins.add("late.MixinAetherPortal");
         if(loadedMods.contains("ChromatiCraft")) {
             mixins.add("late.MixinChromaOptions");
+            mixins.add("late.chromaticraft.MixinCrystalGenerator_DimensionFilter");
             if(ModConfig.enableChromatiCraftMixin)
                 mixins.add("late.MixinProgressOverlayRenderer");
         }

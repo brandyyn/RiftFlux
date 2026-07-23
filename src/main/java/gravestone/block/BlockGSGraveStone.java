@@ -11,6 +11,7 @@ import gravestone.ModGraveStone;
 import gravestone.block.enums.EnumGraves;
 import gravestone.config.GraveStoneConfig;
 import gravestone.core.GSTabs;
+import gravestone.core.GSGuiHandler;
 import gravestone.core.logger.GSLogger;
 import gravestone.inventory.GraveInventory;
 import gravestone.tileentity.DeathMessageInfo;
@@ -461,7 +462,7 @@ public class BlockGSGraveStone extends BlockContainer {
             if (item.getItem() instanceof ItemSpade) {
                if (!world.isRemote) {
                   GSLogger.logInfoGrave(player.getCommandSenderName() + " loot grave at " + x + "/" + y + "/" + z);
-                  player.openGui(riftflux.instance, 0, world, x, y, z);
+                  player.openGui(riftflux.instance, GSGuiHandler.GRAVE_INVENTORY_GUI_ID, world, x, y, z);
                }
 
                return false;

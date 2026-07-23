@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import com.voidsrift.riftflux.riftflux;
+import com.voidsrift.riftflux.vortex.proxy.GuiProxy;
 
 public class ItemToolbelt extends Item implements IBauble {
    public IIcon icon;
@@ -45,7 +46,7 @@ public class ItemToolbelt extends Item implements IBauble {
 
    public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer player) {
       if (!world.isRemote) {
-         player.openGui(riftflux.instance, 0, world, 0, 0, 0);
+         player.openGui(riftflux.instance, GuiProxy.toolbeltId, world, 0, 0, 0);
       }
 
       return itemstack;

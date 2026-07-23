@@ -58,6 +58,13 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.enableGravestoneModule) {
             mixins.add("early.MixinSlotCrafting_GravestoneChisel");
         }
+        if (ModConfig.allowSugarcaneInWater
+                || ModConfig.fixGeoStrataCrystalSpikeWaterlogging
+                || ModConfig.enableGravestoneModule && ModConfig.waterlogGravestones) {
+            mixins.add("early.MixinBlock_LiquidloggedCollision");
+            mixins.add("early.MixinRenderBlockFluid_LiquidloggedSides");
+            mixins.add("early.MixinBlockFluidClassic_LiquidloggedQuanta");
+        }
         if (ModConfig.enableGravestoneModule
                 && cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT
                 && hasClass("codechicken.nei.NEIServerUtils")) {
@@ -392,7 +399,8 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             if (ModConfig.directionalCrossedPlantRenderingByPlacement) {
                 mixins.add("early.MixinRenderBlocks_DirectionalCrossedPlants");
             }
-            if (ModConfig.allowSugarcaneInWater || ModConfig.fixGeoStrataCrystalSpikeWaterlogging) {
+            if (ModConfig.allowSugarcaneInWater || ModConfig.fixGeoStrataCrystalSpikeWaterlogging
+                    || ModConfig.enableGravestoneModule && ModConfig.waterlogGravestones) {
                 mixins.add("early.MixinChunkCache_WaterloggedFluidAccess");
                 if (hasClass(ANGELICA_WORLD_SLICE)) {
                     mixins.add("early.angelica.MixinWorldSlice_WaterloggedFluidAccess");
@@ -402,12 +410,14 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 }
                 mixins.add("early.MixinRenderBlocks_WaterloggedFluidLookup");
             }
-            if (ModConfig.allowSugarcaneInWater) {
+            if (ModConfig.allowSugarcaneInWater
+                    || ModConfig.enableGravestoneModule && ModConfig.waterlogGravestones) {
                 mixins.add("early.MixinBlock_SugarcaneWaterRenderPass");
                 mixins.add("early.MixinWorldRenderer_SugarcaneWaterRenderPass");
                 mixins.add("early.MixinRenderBlocks_SugarcaneWaterlogging");
             }
-            if (ModConfig.allowSugarcaneInWater || ModConfig.fixGeoStrataCrystalSpikeWaterlogging) {
+            if (ModConfig.allowSugarcaneInWater || ModConfig.fixGeoStrataCrystalSpikeWaterlogging
+                    || ModConfig.enableGravestoneModule && ModConfig.waterlogGravestones) {
                 mixins.add("early.MixinWorld_SupportedFluidLookup");
             }
             mixins.add("early.MixinRenderBlocks_TorchAllFaces");

@@ -38,7 +38,6 @@ import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import iDiamondhunter.morebows.b;
 import iDiamondhunter.morebows.d;
@@ -217,8 +216,8 @@ public class MoreBows {
         OreDictionary.registerOre((String)"rodBlaze", (Item)Items.blaze_rod);
         OreDictionary.registerOre((String)"snowball", (Item)Items.snowball);
         OreDictionary.registerOre((String)"string", (Item)Items.string);
-        EntityRegistry.registerModEntity(d.class, (String)"ArrowSpawner", (int)1, (Object)var_iDiamondhunter_morebows_MoreBows_a, (int)-1, (int)Integer.MAX_VALUE, (boolean)false);
-        EntityRegistry.registerModEntity(e.class, (String)"CustomArrow", (int)2, (Object)var_iDiamondhunter_morebows_MoreBows_a, (int)64, (int)20, (boolean)true);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(d.class, "ArrowSpawner", var_iDiamondhunter_morebows_MoreBows_a, -1, Integer.MAX_VALUE, false);
+        com.voidsrift.riftflux.entity.RiftFluxEntityRegistry.registerModEntity(e.class, "CustomArrow", var_iDiamondhunter_morebows_MoreBows_a, 64, 20, true);
     }
 
     static {
