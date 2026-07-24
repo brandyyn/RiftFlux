@@ -2,6 +2,7 @@ package invmod.common.entity;
 
 import invmod.common.INotifyTask;
 import invmod.common.mod_Invasion;
+import invmod.common.InvasionDestructionPolicy;
 import invmod.common.util.Distance;
 
 import java.util.ArrayList;
@@ -143,6 +144,12 @@ public class TerrainModifier
     Block oldBlock = this.theEntity.worldObj.getBlock(entry.getXCoord(), entry.getYCoord(), entry.getZCoord());
     int oldMeta = this.theEntity.worldObj.getBlockMetadata(entry.getXCoord(), entry.getYCoord(), entry.getZCoord());
     entry.setOldBlock(oldBlock);
+    if (!InvasionDestructionPolicy.canMineBlock(this.theEntity, this.theEntity.worldObj,
+            entry.getXCoord(), entry.getYCoord(), entry.getZCoord()))
+    {
+      this.terrainFailFlag = true;
+      return false;
+    }
     if (oldBlock == mod_Invasion.blockNexus)
     {
       this.terrainFailFlag = true;

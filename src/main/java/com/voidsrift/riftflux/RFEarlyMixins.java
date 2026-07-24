@@ -431,6 +431,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityRenderer_BlackNightFog");
             mixins.add("early.MixinEntityRenderer_BetaStyleFogDistance");
             mixins.add("early.MixinWorld_BetaStyleCloudColor");
+            mixins.add("early.MixinRenderGlobal_CloudTimeFade");
             if (hasClass(ANGELICA_FOG_SERVICE)) {
                 mixins.add("early.angelica.MixinAngelicaFogService_BetaStyleFog");
             }

@@ -1,6 +1,7 @@
 package invmod.common.entity;
 
 import invmod.common.mod_Invasion;
+import invmod.common.entity.night.INightInvasionMob;
 import invmod.common.entity.ai.EntityAIAttackNexus;
 import invmod.common.entity.ai.EntityAIGoToNexus;
 import invmod.common.entity.ai.EntityAIKillEntity;
@@ -308,7 +309,9 @@ public class EntityIMSpider extends EntityIMMob implements ISpawnsOffspring {
 			EntityConstruct template = new EntityConstruct(IMEntityType.SPIDER, 1, 0, 1, 1.0F, 0, 0);
 			Entity[] offSpring = new Entity[6];
 			for (int i = 0; i < offSpring.length; i++) {
-				offSpring[i] = mod_Invasion.getMobBuilder().createMobFromConstruct(template, this.worldObj, getNexus());
+				offSpring[i] = this instanceof INightInvasionMob
+						? mod_Invasion.getMobBuilder().createNightMobFromConstruct(template, this.worldObj)
+						: mod_Invasion.getMobBuilder().createMobFromConstruct(template, this.worldObj, getNexus());
 			}
 			return offSpring;
 		}

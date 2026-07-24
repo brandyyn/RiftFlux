@@ -1,6 +1,7 @@
 package invmod.common.entity;
 
 import invmod.common.mod_Invasion;
+import invmod.common.InvasionDestructionPolicy;
 import invmod.common.nexus.TileEntityNexus;
 import invmod.common.util.ExplosionUtil;
 
@@ -302,6 +303,7 @@ public class EntityIMPrimedTNT extends EntityTNTPrimed{
 	    	            explosion.isFlaming = false;
 	    	            explosion.isSmoking = mobgriefing;
 	    	            explosion.doExplosionA();
+                InvasionDestructionPolicy.filterExplosionBlocks(this.worldObj, explosion);
 	    	            explosion.doExplosionB(true);
 	    	            //ExplosionUtil.doExplosionB(this.worldObj,explosion,false);
 //	    		}

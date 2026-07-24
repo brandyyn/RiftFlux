@@ -38,6 +38,15 @@ entity.riftflux.IMBoulder.name=Boulder
 entity.riftflux.IMEgg.name=IM Spider Egg
 entity.riftflux.IMTrap.name=Trap
 entity.riftflux.IMImp.name=IM Imp
+entity.riftflux.NightIMZombie.name=IM Zombie
+entity.riftflux.NightIMZombiePigman.name=IM Zombie Pigman
+entity.riftflux.NightIMSkeleton.name=IM Skeleton
+entity.riftflux.NightIMSpider.name=IM Spider
+entity.riftflux.NightIMPigEngy.name=IM Pigman Engineer
+entity.riftflux.NightIMThrower.name=IM Thrower
+entity.riftflux.NightIMCreeper.name=IM Creeper
+entity.riftflux.NightIMImp.name=IM Imp
+entity.riftflux.NightIMBurrower.name=IM Burrower
 
 invmod.waila.status=Status: 
 invmod.waila.status.active=Activated

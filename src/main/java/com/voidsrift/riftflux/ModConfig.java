@@ -267,6 +267,11 @@ public class ModConfig {
     public static boolean celestialFullSunriseSunsetTint;
     public static boolean celestialCloudsStayDaytimeWhite;
     public static boolean celestialCloudsStayDaytimeWhiteDuringWeather;
+    public static boolean celestialCloudTimeFade;
+    public static int celestialCloudFadeOutTime;
+    public static int celestialCloudFadeInTime;
+    public static int celestialCloudFadeOutDuration;
+    public static int celestialCloudFadeInDuration;
     public static boolean celestialFogMatchesSky;
     public static boolean celestialBetaStyleFogBiomeTint;
     public static boolean celestialBetaStyleFogBiomeTintWeatherEvent;
@@ -601,6 +606,12 @@ public class ModConfig {
     public static boolean enableGravestoneModule;
     public static boolean waterlogGravestones;
     public static boolean enableInvasionModule;
+    public static boolean invasionNightMobsDropSmallRemnants;
+    public static boolean invasionNightMobsCanMineBlocks;
+    public static boolean invasionNightMobsCanDirectlyDestroyBlocks;
+    public static boolean invasionNightMobSelfExplosionsCanDestroyBlocks;
+    public static boolean invasionNightMobThrownExplosionsCanDestroyBlocks;
+    public static String[] invasionBlockDestructionBlacklist;
     public static boolean enableGokiStatsModule;
     public static boolean enableRiftExplorerModule;
     public static boolean enableMoreBowsModule;
@@ -2672,6 +2683,44 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "celestial",
                 false,
                 "If true, CelestialCloudsStayDaytimeWhite also keeps clouds pure white during rain and thunderstorms instead of applying vanilla weather darkening."
+        );
+        celestialCloudTimeFade = config.getBoolean(
+                "CelestialCloudTimeFade",
+                "celestial",
+                false,
+                "If true, clouds fade out and return at the configured world times."
+        );
+        celestialCloudFadeOutTime = config.getInt(
+                "CelestialCloudFadeOutTime",
+                "celestial",
+                12000,
+                0,
+                23999,
+                "World time tick when clouds begin fading out."
+        );
+        celestialCloudFadeInTime = config.getInt(
+                "CelestialCloudFadeInTime",
+                "celestial",
+                23000,
+                0,
+                23999,
+                "World time tick when clouds begin fading back in."
+        );
+        celestialCloudFadeOutDuration = config.getInt(
+                "CelestialCloudFadeOutDuration",
+                "celestial",
+                1000,
+                0,
+                24000,
+                "Number of world ticks clouds take to fade out. 0 makes them disappear immediately."
+        );
+        celestialCloudFadeInDuration = config.getInt(
+                "CelestialCloudFadeInDuration",
+                "celestial",
+                1000,
+                0,
+                24000,
+                "Number of world ticks clouds take to fade in. 0 makes them reappear immediately."
         );
         celestialFogMatchesSky = config.getBoolean(
                 "CelestialFogMatchesSky",
@@ -8920,6 +8969,24 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "night-mob-max-group-size", 3, "Maximum natural Invasion mob group size.");
         config.get(category, "mob-limit-override", 70, "Global monster creature cap used when natural Invasion spawning is enabled.");
         config.get(category, "night-mobs-burn-in-day", true, "Whether naturally spawned Invasion mobs burn in daylight.");
+        invasionNightMobsDropSmallRemnants = config.getBoolean(
+                "night-mobs-drop-small-remnants", category, false,
+                "Allow the separate natural night-spawn variants to drop Small Remnants.");
+        invasionNightMobsCanMineBlocks = config.getBoolean(
+                "night-mobs-can-mine-blocks", category, false,
+                "Allow natural night-spawn variants to mine blocks with their terrain-digging AI.");
+        invasionNightMobsCanDirectlyDestroyBlocks = config.getBoolean(
+                "night-mobs-can-directly-destroy-blocks", category, false,
+                "Allow natural night-spawn variants such as Throwers to smash blocks directly.");
+        invasionNightMobSelfExplosionsCanDestroyBlocks = config.getBoolean(
+                "night-mob-self-explosions-can-destroy-blocks", category, false,
+                "Allow explosions produced by natural night-spawn mobs themselves, such as Creepers, to destroy blocks.");
+        invasionNightMobThrownExplosionsCanDestroyBlocks = config.getBoolean(
+                "night-mob-thrown-explosions-can-destroy-blocks", category, false,
+                "Allow explosive projectiles thrown by natural night-spawn mobs, including Boulders and TNT, to destroy blocks.");
+        invasionBlockDestructionBlacklist = config.getStringList(
+                "block-destruction-blacklist", category, new String[]{"betterstorage:backpack"},
+                "Blocks no Invasion mob may mine, replace, or destroy with explosions. Use modid:block.");
 
         String[] mobNames = new String[]{
                 "IMCreeper-T1", "IMVulture-T1", "IMImp-T1", "IMPigManEngineer-T1", "IMSkeleton-T1",

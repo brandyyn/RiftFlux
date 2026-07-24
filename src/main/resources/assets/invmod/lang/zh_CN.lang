@@ -38,6 +38,15 @@ entity.riftflux.IMBoulder.name=石巨人
 entity.riftflux.IMEgg.name=蜘蛛卵
 entity.riftflux.IMTrap.name=陷阱
 entity.riftflux.IMImp.name=IM小鬼
+entity.riftflux.NightIMZombie.name=IM僵尸
+entity.riftflux.NightIMZombiePigman.name=IM僵尸猪人
+entity.riftflux.NightIMSkeleton.name=IM骷髅
+entity.riftflux.NightIMSpider.name=IM蜘蛛
+entity.riftflux.NightIMPigEngy.name=IM猪人工程师
+entity.riftflux.NightIMThrower.name=IM肉山投掷者
+entity.riftflux.NightIMCreeper.name=IM苦力怕
+entity.riftflux.NightIMImp.name=IM小鬼
+entity.riftflux.NightIMBurrower.name=IM掘地者
 
 invmod.waila.status=状态: 
 invmod.waila.status.active=已激活

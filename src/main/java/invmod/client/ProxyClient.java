@@ -50,6 +50,15 @@ import invmod.common.entity.EntityIMWolf;
 import invmod.common.entity.EntityIMZombie;
 import invmod.common.entity.EntityIMZombiePigman;
 import invmod.common.entity.EntitySFX;
+import invmod.common.entity.night.EntityNightIMBurrower;
+import invmod.common.entity.night.EntityNightIMCreeper;
+import invmod.common.entity.night.EntityNightIMImp;
+import invmod.common.entity.night.EntityNightIMPigEngy;
+import invmod.common.entity.night.EntityNightIMSkeleton;
+import invmod.common.entity.night.EntityNightIMSpider;
+import invmod.common.entity.night.EntityNightIMThrower;
+import invmod.common.entity.night.EntityNightIMZombie;
+import invmod.common.entity.night.EntityNightIMZombiePigman;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -96,6 +105,15 @@ public class ProxyClient extends ProxyCommon {
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMEgg.class, new RenderEgg());
 
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMCreeper.class, new RenderIMCreeper());
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMZombie.class, new RenderIMZombie(new ModelZombie(0.0F, true), 0.5F));
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMZombiePigman.class, new RenderIMZombiePigman(new ModelZombie(0.0F, true), 0.5F));
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMSkeleton.class, new RenderIMSkeleton(new ModelIMSkeleton(), 0.5F));
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMSpider.class, new RenderSpiderIM());
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMPigEngy.class, new RenderPigEngy(new ModelBiped(), 0.5F));
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMImp.class, new RenderImp(new ModelImp(), 0.3F));
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMThrower.class, new RenderThrower(new ModelThrower(), 1.5F));
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMBurrower.class, new RenderBurrower());
+		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMCreeper.class, new RenderIMCreeper());
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMBird.class, new RenderB());
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMGiantBird.class, new RenderGiantBird());
 	}

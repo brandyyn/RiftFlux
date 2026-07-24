@@ -1,6 +1,7 @@
 package invmod.common.util;
 
 import invmod.common.mod_Invasion;
+import invmod.common.InvasionDestructionPolicy;
 
 import java.util.Iterator;
 
@@ -16,6 +17,7 @@ public class ExplosionUtil {
 
 	public static void doExplosionB(World world,Explosion explosion,boolean p_77279_1_)
 	  {
+		InvasionDestructionPolicy.filterExplosionBlocks(world, explosion);
 		world.playSoundEffect(explosion.explosionX, explosion.explosionY, explosion.explosionZ, "random.explode", 4.0F, (1.0F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F) * 0.7F);
 
 	      if (explosion.explosionSize >= 2.0F && explosion.isSmoking)

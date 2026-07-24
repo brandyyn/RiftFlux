@@ -38,6 +38,15 @@ entity.riftflux.IMBoulder.name=Felsbrocken
 entity.riftflux.IMEgg.name=IM Spinnenei
 entity.riftflux.IMTrap.name=Falle
 entity.riftflux.IMImp.name=IM Kobold
+entity.riftflux.NightIMZombie.name=IM Zombie
+entity.riftflux.NightIMZombiePigman.name=IM Zombie Pigman
+entity.riftflux.NightIMSkeleton.name=IM Skelett
+entity.riftflux.NightIMSpider.name=IM Spinne
+entity.riftflux.NightIMPigEngy.name=IM Zombie Pigman-Ingenieur
+entity.riftflux.NightIMThrower.name=IM Werfer
+entity.riftflux.NightIMCreeper.name=IM Creeper
+entity.riftflux.NightIMImp.name=IM Kobold
+entity.riftflux.NightIMBurrower.name=IM Gräber
 
 invmod.waila.status=Status: 
 invmod.waila.status.active=Aktiviert

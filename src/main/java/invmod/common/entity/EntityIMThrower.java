@@ -2,6 +2,7 @@ package invmod.common.entity;
 
 import invmod.common.INotifyTask;
 import invmod.common.mod_Invasion;
+import invmod.common.InvasionDestructionPolicy;
 import invmod.common.entity.ai.EntityAIAttackNexus;
 import invmod.common.entity.ai.EntityAIGoToNexus;
 import invmod.common.entity.ai.EntityAIRandomBoulder;
@@ -58,7 +59,7 @@ public class EntityIMThrower extends EntityIMMob
 		setMaxHealthAndHealth(mod_Invasion.getMobHealth(this));
 		setName("Thrower");
 		setDestructiveness(2);
-		setSize(1.8F, 1.95F);
+		setSize(1.62F, 1.755F);
 		setAI();
 		
 		DataWatcher dataWatcher = getDataWatcher();
@@ -177,7 +178,7 @@ public class EntityIMThrower extends EntityIMMob
 			setMaxHealthAndHealth(mod_Invasion.getMobHealth(this));
 			setName("Thrower");
 			setDestructiveness(2);
-			setSize(1.8F, 1.95F);
+			setSize(1.62F, 1.755F);
 			setAI();
 			
 		} else if (tier == 2) {
@@ -187,7 +188,7 @@ public class EntityIMThrower extends EntityIMMob
 			setMaxHealthAndHealth(mod_Invasion.getMobHealth(this));
 			setName("Big Thrower");
 			setDestructiveness(4);
-			setSize(2F, 2F);
+			setSize(1.8F, 1.8F);
 			setAI();
 		}
 		
@@ -298,9 +299,12 @@ public class EntityIMThrower extends EntityIMMob
 
 	protected void tryDestroyBlock(int x, int y, int z) {
 		Block block = this.worldObj.getBlock(x, y, z);
+		if (!InvasionDestructionPolicy.canDirectlyDestroyBlock(this, this.worldObj, x, y, z)) {
+			return;
+		}
 		//if ((block != null) && ((isNexusBound()) || (this.j != null))) {
 		if ((block != null) || (this.j != null)) {
-			if ((block == mod_Invasion.blockNexus) && (this.attackTime == 0) && (x == this.targetNexus.getXCoord()) && (y == this.targetNexus.getYCoord()) && (z == this.targetNexus.getZCoord())) {
+			if ((block == mod_Invasion.blockNexus) && (this.targetNexus != null) && (this.attackTime == 0) && (x == this.targetNexus.getXCoord()) && (y == this.targetNexus.getYCoord()) && (z == this.targetNexus.getZCoord())) {
 				this.targetNexus.attackNexus(5);
 				this.attackTime = 60;
 			} else if (block != mod_Invasion.blockNexus) {

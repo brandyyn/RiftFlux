@@ -20,6 +20,15 @@ import invmod.common.entity.EntityIMTrap;
 import invmod.common.entity.EntityIMWolf;
 import invmod.common.entity.EntityIMZombie;
 import invmod.common.entity.EntityIMZombiePigman;
+import invmod.common.entity.night.EntityNightIMBurrower;
+import invmod.common.entity.night.EntityNightIMCreeper;
+import invmod.common.entity.night.EntityNightIMImp;
+import invmod.common.entity.night.EntityNightIMPigEngy;
+import invmod.common.entity.night.EntityNightIMSkeleton;
+import invmod.common.entity.night.EntityNightIMSpider;
+import invmod.common.entity.night.EntityNightIMThrower;
+import invmod.common.entity.night.EntityNightIMZombie;
+import invmod.common.entity.night.EntityNightIMZombiePigman;
 import invmod.common.item.ItemCatalystMixture;
 import invmod.common.item.ItemDampingAgent;
 import invmod.common.item.ItemDebugWand;
@@ -100,7 +109,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
-import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
@@ -291,8 +299,6 @@ public class mod_Invasion
 
 	public void load(FMLInitializationEvent event) 
 	{
-		NetworkRegistry.INSTANCE.registerGuiHandler(riftflux.instance, guiHandler);
-		
 		//removed along VersionChecker
 		//new ThreadGetData();
 		//Register to receive subscribed events
@@ -475,6 +481,15 @@ public class mod_Invasion
 		RiftFluxEntityRegistry.registerModEntity(EntityIMBolt.class, "IMBolt", riftflux.instance, 36, 5, false);
 		RiftFluxEntityRegistry.registerModEntity(EntityIMTrap.class, "IMTrap", riftflux.instance, 36, 5, false);
 		RiftFluxEntityRegistry.registerModEntity(EntityIMPrimedTNT.class, "IMPrimedTNT", riftflux.instance, 36, 4, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMZombie.class, "NightIMZombie", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMSkeleton.class, "NightIMSkeleton", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMSpider.class, "NightIMSpider", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMPigEngy.class, "NightIMPigEngy", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMCreeper.class, "NightIMCreeper", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMImp.class, "NightIMImp", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMZombiePigman.class, "NightIMZombiePigman", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMThrower.class, "NightIMThrower", riftflux.instance, 128, 1, true);
+		RiftFluxEntityRegistry.registerModEntity(EntityNightIMBurrower.class, "NightIMBurrower", riftflux.instance, 128, 1, true);
 
 		if (debugMode) 
 		{
@@ -505,6 +520,26 @@ public class mod_Invasion
 		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 15, "riftflux.IMZombiePigman", "Zombie Pigman T1", CustomTags.IMZombiePigman_T1(), 0xEB8E91, 0x49652F));
 		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 16, "riftflux.IMZombiePigman", "Zombie Pigman T2", CustomTags.IMZombiePigman_T2(), 0xEB8E91, 0x49652F));
 		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 17, "riftflux.IMZombiePigman", "Zombie Pigman T3", CustomTags.IMZombiePigman_T3(), 0xEB8E91, 0x49652F));
+
+		// Separate natural-night entity eggs. Tier/flavour NBT is retained, but night mob names intentionally omit tier labels.
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 19, "riftflux.NightIMZombie", "Zombie", CustomTags.IMZombie_T1(), 0x6B753F, 0x281B0A));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 20, "riftflux.NightIMZombie", "Zombie", CustomTags.IMZombie_T2(), 0x497533, 0x7C7C7C));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 21, "riftflux.NightIMZombie", "Tar Zombie", CustomTags.IMZombie_T2_tar(), 0x3A4225, 0x191C13));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 22, "riftflux.NightIMZombie", "Zombie Brute", CustomTags.IMZombie_T3(), 0x586146, 0x1E4639));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 23, "riftflux.NightIMSkeleton", "Skeleton", new NBTTagCompound(), 0x9B9B9B, 0x797979));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 24, "riftflux.NightIMSpider", "Spider", new NBTTagCompound(), 0x504A3E, 0xA4121C));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 25, "riftflux.NightIMSpider", "Spider Baby", CustomTags.IMSpider_T1_baby(), 0x504A3E, 0xA4121C));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 26, "riftflux.NightIMSpider", "Jumping Spider", CustomTags.IMSpider_T2(), 0x444167, 0x0A0328));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 27, "riftflux.NightIMSpider", "Mother Spider", CustomTags.IMSpider_T2_mother(), 0x444167, 0x0A0328));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 28, "riftflux.NightIMCreeper", "Creeper", new NBTTagCompound(), 0x238F1F, 0xA5AAA6));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 29, "riftflux.NightIMPigEngy", "Pigman Engineer", new NBTTagCompound(), 0xEC9695, 0x420000));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 30, "riftflux.NightIMThrower", "Thrower", new NBTTagCompound(), 0x545F37, 0x1D2D3E));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 31, "riftflux.NightIMThrower", "Thrower", CustomTags.IMThrower_T2(), 0x5303814, 0x632808));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 32, "riftflux.NightIMImp", "Imp", new NBTTagCompound(), 0xB40113, 0xFF0000));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 33, "riftflux.NightIMZombiePigman", "Zombie Pigman", CustomTags.IMZombiePigman_T1(), 0xEB8E91, 0x49652F));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 34, "riftflux.NightIMZombiePigman", "Zombie Pigman", CustomTags.IMZombiePigman_T2(), 0xEB8E91, 0x49652F));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 35, "riftflux.NightIMZombiePigman", "Zombie Pigman", CustomTags.IMZombiePigman_T3(), 0xEB8E91, 0x49652F));
+		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 36, "riftflux.NightIMBurrower", "Burrower", new NBTTagCompound(), 0x4B3A2A, 0x8B6B47));
         
         if (debugMode)
         {   
@@ -789,7 +824,7 @@ public class mod_Invasion
 		int numberOfMobs = world.rand.nextInt(nightMobMaxGroupSize) + 1;
 		Entity[] entities = new Entity[numberOfMobs];
 		for (int i = 0; i < numberOfMobs; i++) {
-			EntityIMLiving mob = getMobBuilder().createMobFromConstruct(((IEntityIMPattern) mobPool.selectNext()).generateEntityConstruct(), world, null);
+			EntityIMLiving mob = getMobBuilder().createNightMobFromConstruct(((IEntityIMPattern) mobPool.selectNext()).generateEntityConstruct(), world);
 			mob.setEntityIndependent();
 			//also set in entityLiving constructor, is needed for AI to function properly, I believe
 			mob.setAggroRange(getNightMobSightRange());

@@ -5,6 +5,8 @@ import invmod.common.INotifyTask;
 import invmod.common.IPathfindable;
 import invmod.common.SparrowAPI;
 import invmod.common.mod_Invasion;
+import com.voidsrift.riftflux.ModConfig;
+import invmod.common.entity.night.INightInvasionMob;
 import invmod.common.nexus.INexusAccess;
 import invmod.common.util.CoordsInt;
 import invmod.common.util.Distance;
@@ -1142,7 +1144,10 @@ public abstract class EntityIMLiving extends EntityCreature implements IMob, IPa
 
 	@Override
 	protected void dropFewItems(boolean flag, int amount) {
-		if (mod_Invasion.getMobsDropSmallRemnants()) {				
+		boolean dropRemnants = this instanceof INightInvasionMob
+				? ModConfig.invasionNightMobsDropSmallRemnants
+				: mod_Invasion.getMobsDropSmallRemnants();
+		if (dropRemnants) {
 			if (this.rand.nextInt(4) == 0) {
 				entityDropItem(new ItemStack(mod_Invasion.itemSmallRemnants, 1), 0.0F);
 			}

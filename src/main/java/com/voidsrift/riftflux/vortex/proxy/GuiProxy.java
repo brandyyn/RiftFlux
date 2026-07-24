@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.vortex.proxy;
 import com.voidsrift.riftflux.chester.ChesterContent;
 import com.voidsrift.riftflux.chester.ChesterGuiHandler;
 import com.voidsrift.riftflux.furniture.FurnitureGuiIds;
+import com.voidsrift.riftflux.invasion.InvasionContent;
 import com.voidsrift.riftflux.furniture.client.gui.GuiBedsideCabinet;
 import com.voidsrift.riftflux.furniture.client.gui.GuiCabinet;
 import com.voidsrift.riftflux.furniture.container.ContainerBedsideCabinet;
@@ -12,6 +13,7 @@ import com.voidsrift.riftflux.furniture.tileentity.TileEntityCabinet;
 import com.voidsrift.riftflux.riftexplorer.RiftExplorerGuiIds;
 import cpw.mods.fml.common.network.IGuiHandler;
 import gravestone.core.GSGuiHandler;
+import invmod.common.mod_Invasion;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -38,6 +40,7 @@ public class GuiProxy implements IGuiHandler {
    public static final int gluttonyCharmId = 2;
    private static final ChesterGuiHandler CHESTER_GUI_HANDLER = new ChesterGuiHandler();
    private static final GSGuiHandler GRAVESTONE_GUI_HANDLER = new GSGuiHandler();
+   private static final invmod.common.GuiHandler INVASION_GUI_HANDLER = new invmod.common.GuiHandler();
 
    static {
       Map<Integer, String> claimedIds = new HashMap<Integer, String>();
@@ -52,6 +55,9 @@ public class GuiProxy implements IGuiHandler {
       claimGuiId(claimedIds, ChesterContent.GUI_ID, "Chester");
       claimGuiId(claimedIds, GSGuiHandler.GRAVE_INVENTORY_GUI_ID, "Gravestone inventory");
       claimGuiId(claimedIds, GSGuiHandler.ALTAR_GUI_ID, "Gravestone altar");
+      if (InvasionContent.isEnabled()) {
+         claimGuiId(claimedIds, mod_Invasion.getGuiIdNexus(), "Invasion nexus");
+      }
    }
 
    private static void claimGuiId(Map<Integer, String> claimedIds, int id, String owner) {
@@ -65,6 +71,12 @@ public class GuiProxy implements IGuiHandler {
       Object gravestoneGui = GRAVESTONE_GUI_HANDLER.getServerGuiElement(id, player, world, x, y, z);
       if (gravestoneGui != null) {
          return gravestoneGui;
+      }
+      if (InvasionContent.isEnabled()) {
+         Object invasionGui = INVASION_GUI_HANDLER.getServerGuiElement(id, player, world, x, y, z);
+         if (invasionGui != null) {
+            return invasionGui;
+         }
       }
       switch(id) {
       case 0:
@@ -108,6 +120,12 @@ public class GuiProxy implements IGuiHandler {
       Object gravestoneGui = GRAVESTONE_GUI_HANDLER.getClientGuiElement(id, player, world, x, y, z);
       if (gravestoneGui != null) {
          return gravestoneGui;
+      }
+      if (InvasionContent.isEnabled()) {
+         Object invasionGui = INVASION_GUI_HANDLER.getClientGuiElement(id, player, world, x, y, z);
+         if (invasionGui != null) {
+            return invasionGui;
+         }
       }
       switch(id) {
       case 0:
