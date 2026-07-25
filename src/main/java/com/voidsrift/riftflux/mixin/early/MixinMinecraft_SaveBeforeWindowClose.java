@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.integrated.IntegratedServer;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +23,8 @@ public abstract class MixinMinecraft_SaveBeforeWindowClose {
             )
     )
     private void riftflux$saveBeforeWindowClose(CallbackInfo ci) {
+        IsometricPhotoModeController.instance().onShutdown();
+
         Minecraft minecraft = (Minecraft)(Object)this;
         if (riftflux$savingBeforeClose || !minecraft.isIntegratedServerRunning()) {
             return;

@@ -922,6 +922,54 @@ public abstract class EntityIMLiving extends EntityCreature implements IMob, IPa
 	}
 
 	@Override
+	public String getCommandSenderName() {
+		if (hasCustomNameTag()) {
+			return getCustomNameTag();
+		}
+
+		String displayName = this.name;
+		if (displayName == null || displayName.length() == 0) {
+			displayName = super.getCommandSenderName();
+		}
+		if (displayName.startsWith("IM ")) {
+			displayName = displayName.substring(3);
+		} else if (displayName.startsWith("IM")) {
+			displayName = displayName.substring(2);
+		}
+		displayName = displayName.replace('-', ' ');
+
+		if (!(this instanceof INightInvasionMob)) {
+			int tier = getVisibleTier();
+			if (tier > 0) {
+				displayName += " T" + tier;
+			}
+		}
+		return displayName;
+	}
+
+	private int getVisibleTier() {
+		String internalName = toString();
+		int marker = internalName.lastIndexOf("-T");
+		if (marker < 0) {
+			marker = internalName.lastIndexOf(" T");
+		}
+		if (marker >= 0) {
+			int start = marker + 2;
+			int end = start;
+			while (end < internalName.length() && Character.isDigit(internalName.charAt(end))) {
+				end++;
+			}
+			if (end > start) {
+				try {
+					return Integer.parseInt(internalName.substring(start, end));
+				} catch (NumberFormatException ignored) {
+				}
+			}
+		}
+		return getTier();
+	}
+
+	@Override
 	public int getGender() {
 		return this.gender;
 	}

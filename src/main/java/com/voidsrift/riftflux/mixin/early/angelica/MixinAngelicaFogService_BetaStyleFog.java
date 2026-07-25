@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Pseudo
-@Mixin(targets = "com.gtnewhorizons.angelica.glsm.AngelicaFogService", remap = false)
+@Mixin(targets = "com.gtnewhorizons.angelica.client.rendering.AngelicaFogService", remap = false)
 public abstract class MixinAngelicaFogService_BetaStyleFog {
 
     @Inject(method = "getFogColor", at = @At("HEAD"), cancellable = true, require = 0)

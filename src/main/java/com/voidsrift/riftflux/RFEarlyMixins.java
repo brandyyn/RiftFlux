@@ -17,7 +17,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
     private static final String ANGELICA_INCOMPATIBLE_TWEAKER =
             "com.gtnewhorizons.angelica.loading.fml.tweakers.IncompatibleModsDisablerTweaker";
     private static final String ANGELICA_FOG_SERVICE =
-            "com.gtnewhorizons.angelica.glsm.AngelicaFogService";
+            "com.gtnewhorizons.angelica.client.rendering.AngelicaFogService";
     private static final String ANGELICA_RENDER_SECTION_MANAGER =
             "com.gtnewhorizons.angelica.rendering.celeritas.AngelicaRenderSectionManager";
     private static final String ANGELICA_CHUNK_RENDERER =
@@ -26,6 +26,8 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             "com.gtnewhorizons.angelica.rendering.celeritas.CeleritasWorldRenderer";
     private static final String ANGELICA_WORLD_SLICE =
             "com.gtnewhorizons.angelica.rendering.celeritas.world.WorldSlice";
+    private static final String ANGELICA_CHUNK_BUILDER_MESHING_TASK =
+            "com.gtnewhorizons.angelica.rendering.celeritas.AngelicaChunkBuilderMeshingTask";
     private static final String MCPATCHER_SKY_RENDERER =
             "com.prupe.mcpatcher.sky.SkyRenderer";
     private static final String FLUIDLOGGED_FL_UTIL =
@@ -432,6 +434,13 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityRenderer_BetaStyleFogDistance");
             mixins.add("early.MixinWorld_BetaStyleCloudColor");
             mixins.add("early.MixinRenderGlobal_CloudTimeFade");
+            if (hasClass("com.gtnewhorizons.angelica.render.CloudRenderer")) {
+                mixins.add("early.angelica.MixinAngelicaCloudRenderer_CloudTimeFade");
+            }
+            if (hasClass("com.gtnewhorizons.angelica.hudcaching.HUDCaching")) {
+                mixins.add("accessor.angelica.DisplayListManagerInvoker");
+                mixins.add("early.angelica.MixinAngelicaHUDCaching_DisplayListSafety");
+            }
             if (hasClass(ANGELICA_FOG_SERVICE)) {
                 mixins.add("early.angelica.MixinAngelicaFogService_BetaStyleFog");
             }
@@ -494,6 +503,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
                 }
                 if (hasClass(BEDDIUM_SIMPLE_CHUNK_BUILDER_MESHING_TASK)) {
                     mixins.add("early.beddium.MixinBeddiumSimpleChunkBuilderMeshingTask_PhotoModeEdges");
+                }
+                if (hasClass(ANGELICA_CHUNK_BUILDER_MESHING_TASK)) {
+                    mixins.add("early.angelica.MixinAngelicaChunkBuilderMeshingTask_PhotoModeEdges");
                 }
                 if (hasClass("org.embeddedt.embeddium.impl.render.viewport.frustum.SimpleFrustum")) {
                     mixins.add("early.angelica.MixinEmbeddiumSimpleFrustum_PhotoMode");
@@ -611,6 +623,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         // vortex mixins (always enabled)
         mixins.add("early.vortex.MixinArmorProperties");
         mixins.add("early.vortex.MixinBlockLiquid");
+        if (!hasClass("mega.fluidlogged.api.FLBlockAccess")) {
+            mixins.add("early.vortex.MixinBlockLiquid_FlowDecay");
+        }
         mixins.add("early.vortex.MixinChestGenHooksRandomGlint");
         mixins.add("early.vortex.MixinContainer");
         mixins.add("early.vortex.MixinEnchantmentHelper");

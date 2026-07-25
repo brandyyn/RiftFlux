@@ -74,6 +74,10 @@ public class MobBuilder
       mob = thrower;
       break;
     case BURROWER:
+      if (!mod_Invasion.isDebug()) {
+        mod_Invasion.log("Ignored debug-only Burrower mob construct");
+        break;
+      }
       EntityIMBurrower burrower = nightMob ? new EntityNightIMBurrower(world, nexus) : new EntityIMBurrower(world, nexus);
       mob = burrower;
       break;

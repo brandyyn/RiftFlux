@@ -1,5 +1,8 @@
 package com.voidsrift.riftflux.client.photomode;
 
+import com.gtnewhorizons.angelica.glsm.GLStateManager;
+import com.gtnewhorizons.angelica.proxy.ClientProxy;
+import me.jellysquid.mods.sodium.client.gui.SodiumGameOptions;
 import org.lwjgl.opengl.GL11;
 
 import java.lang.reflect.Field;
@@ -7,93 +10,72 @@ import java.lang.reflect.Method;
 
 public final class AngelicaPhotoModeCompat {
 
-    private static final String ANGELICA_MOD = "com.gtnewhorizons.angelica.AngelicaMod";
-    private static final String GL_STATE_MANAGER = "com.gtnewhorizons.angelica.glsm.GLStateManager";
-    private static final String BOOLEAN_STATE_STACK = "com.gtnewhorizons.angelica.glsm.stacks.BooleanStateStack";
     private static final String BEDDIUM_FOG_GL = "com.ventooth.beddium.modules.TerrainRendering.fog.FogGL";
     private static final String BEDDIUM_FOG_STATE = "com.ventooth.beddium.modules.TerrainRendering.fog.FogState";
 
     private static boolean initialized;
-    private static boolean glStateAvailable;
     private static boolean beddiumFogAvailable;
-    private static boolean optionsAvailable;
     private static boolean optionOverridesCaptured;
-    private static Method disableFogMethod;
-    private static Method getFogModeMethod;
     private static Method beddiumGlDisableMethod;
-    private static Method optionsMethod;
-    private static Method setEnabledMethod;
     private static Field beddiumFogEnabledField;
-    private static Field advancedField;
-    private static Field performanceField;
-    private static Field useParticleCullingField;
-    private static Field useEntityCullingField;
     private static boolean previousParticleCulling;
     private static boolean previousEntityCulling;
+    private static boolean previousCompactVertexFormat;
 
     private AngelicaPhotoModeCompat() {
     }
 
-    public static void enablePhotoModeOverrides() {
-        ensureInitialized();
-        if (!optionsAvailable) {
-            return;
-        }
-
+    public static boolean enablePhotoModeOverrides() {
         try {
-            Object options = optionsMethod.invoke(null);
-            Object advanced = advancedField.get(options);
-            Object performance = performanceField.get(options);
+            SodiumGameOptions options = ClientProxy.options();
+            if (options == null || options.advanced == null || options.performance == null) {
+                return false;
+            }
 
             if (!optionOverridesCaptured) {
-                previousParticleCulling = useParticleCullingField.getBoolean(advanced);
-                if (useEntityCullingField != null) {
-                    previousEntityCulling = useEntityCullingField.getBoolean(performance);
-                }
+                previousParticleCulling = options.advanced.useParticleCulling;
+                previousEntityCulling = options.performance.useEntityCulling;
+                previousCompactVertexFormat = options.performance.useCompactVertexFormat;
                 optionOverridesCaptured = true;
             }
 
-            useParticleCullingField.setBoolean(advanced, false);
-            if (useEntityCullingField != null) {
-                useEntityCullingField.setBoolean(performance, false);
-            }
+            boolean compactVertexFormatChanged = options.performance.useCompactVertexFormat;
+            options.advanced.useParticleCulling = false;
+            options.performance.useEntityCulling = false;
+            options.performance.useCompactVertexFormat = false;
+            return compactVertexFormatChanged;
         } catch (Throwable ignored) {
+            return false;
         }
     }
 
-    public static void disablePhotoModeOverrides() {
-        ensureInitialized();
-        if (!optionsAvailable || !optionOverridesCaptured) {
-            return;
+    public static boolean disablePhotoModeOverrides() {
+        if (!optionOverridesCaptured) {
+            return false;
         }
 
+        boolean compactVertexFormatChanged = false;
         try {
-            Object options = optionsMethod.invoke(null);
-            Object advanced = advancedField.get(options);
-            Object performance = performanceField.get(options);
-
-            useParticleCullingField.setBoolean(advanced, previousParticleCulling);
-            if (useEntityCullingField != null) {
-                useEntityCullingField.setBoolean(performance, previousEntityCulling);
+            SodiumGameOptions options = ClientProxy.options();
+            if (options != null && options.advanced != null && options.performance != null) {
+                options.advanced.useParticleCulling = previousParticleCulling;
+                options.performance.useEntityCulling = previousEntityCulling;
+                compactVertexFormatChanged =
+                        options.performance.useCompactVertexFormat != previousCompactVertexFormat;
+                options.performance.useCompactVertexFormat = previousCompactVertexFormat;
             }
         } catch (Throwable ignored) {
         } finally {
             optionOverridesCaptured = false;
         }
+        return compactVertexFormatChanged;
     }
 
     public static void enforceNoFog() {
         ensureInitialized();
 
         try {
-            if (glStateAvailable) {
-                disableFogMethod.invoke(null);
-
-                Object fogMode = getFogModeMethod.invoke(null);
-                if (fogMode != null) {
-                    setEnabledMethod.invoke(fogMode, Boolean.FALSE);
-                }
-            }
+            GLStateManager.disableFog();
         } catch (Throwable ignored) {
         }
 
@@ -119,19 +101,6 @@ public final class AngelicaPhotoModeCompat {
         initialized = true;
         try {
             ClassLoader loader = AngelicaPhotoModeCompat.class.getClassLoader();
-            Class<?> glStateManagerClass = Class.forName(GL_STATE_MANAGER, false, loader);
-            Class<?> booleanStateStackClass = Class.forName(BOOLEAN_STATE_STACK, false, loader);
-
-            disableFogMethod = glStateManagerClass.getMethod("disableFog");
-            getFogModeMethod = glStateManagerClass.getMethod("getFogMode");
-            setEnabledMethod = booleanStateStackClass.getMethod("setEnabled", Boolean.TYPE);
-            glStateAvailable = true;
-        } catch (Throwable ignored) {
-            glStateAvailable = false;
-        }
-
-        try {
-            ClassLoader loader = AngelicaPhotoModeCompat.class.getClassLoader();
             Class<?> fogGlClass = Class.forName(BEDDIUM_FOG_GL, false, loader);
             Class<?> fogStateClass = Class.forName(BEDDIUM_FOG_STATE, false, loader);
 
@@ -142,30 +111,5 @@ public final class AngelicaPhotoModeCompat {
             beddiumFogAvailable = false;
         }
 
-        try {
-            ClassLoader loader = AngelicaPhotoModeCompat.class.getClassLoader();
-            Class<?> angelicaModClass = Class.forName(ANGELICA_MOD, false, loader);
-            optionsMethod = angelicaModClass.getMethod("options");
-
-            Object options = optionsMethod.invoke(null);
-            Class<?> optionsClass = options.getClass();
-            advancedField = optionsClass.getField("advanced");
-            performanceField = optionsClass.getField("performance");
-
-            Object advanced = advancedField.get(options);
-            Object performance = performanceField.get(options);
-            Class<?> advancedClass = advanced.getClass();
-            Class<?> performanceClass = performance.getClass();
-
-            useParticleCullingField = advancedClass.getField("useParticleCulling");
-            try {
-                useEntityCullingField = performanceClass.getField("useEntityCulling");
-            } catch (Throwable ignored) {
-                useEntityCullingField = null;
-            }
-            optionsAvailable = true;
-        } catch (Throwable ignored) {
-            optionsAvailable = false;
-        }
     }
 }

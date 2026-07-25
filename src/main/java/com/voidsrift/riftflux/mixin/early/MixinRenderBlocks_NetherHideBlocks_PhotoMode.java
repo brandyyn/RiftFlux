@@ -4,8 +4,9 @@ import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import com.voidsrift.riftflux.client.photomode.PhotoModeBlockRenderContext;
 import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
+import com.voidsrift.riftflux.mixin.accessor.angelica.WorldSliceAccessor;
 import com.voidsrift.riftflux.util.RFTessellatorCompat;
-import java.lang.reflect.Field;
+import com.voidsrift.riftflux.waterlogging.RiftFluxFluidloggedLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -34,8 +35,6 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
 
     private static final String RIFTFLUX_NETHERLICIOUS_BRITTLE_BEDROCK_CLASS =
             "DelirusCrux.Netherlicious.Common.Blocks.BrittleBedrock";
-    private static final String ANGELICA_WORLD_SLICE_CLASS =
-            "com.gtnewhorizons.angelica.rendering.celeritas.world.WorldSlice";
 
     @Shadow
     public IBlockAccess blockAccess;
@@ -153,13 +152,29 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             int z,
             int side
     ) {
+        if (side >= 2
+                && side <= 5
+                && this.riftflux$isLiquidBlock(block)
+                && IsometricPhotoModeController.instance().isActive()) {
+            if (PhotoModeBlockRenderContext.shouldForceHorizontalNeighbor(x, y, z)) {
+                return false;
+            }
+
+            Minecraft minecraft = Minecraft.getMinecraft();
+            World realWorld = minecraft == null ? null : minecraft.theWorld;
+            if (realWorld != null
+                    && realWorld.blockExists(x, y, z)
+                    && RiftFluxFluidloggedLookup.isSameFluid(
+                            block,
+                            RiftFluxFluidloggedLookup.getFluidOrBlock(realWorld, x, y, z)
+                    )) {
+                return false;
+            }
+        }
+
         boolean shouldRender = block.shouldSideBeRendered(access, x, y, z, side);
         if (shouldRender || access == null || side < 2 || side > 5) {
             return shouldRender;
-        }
-
-        if (this.riftflux$isLiquidBlock(block) && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, y, z)) {
-            return true;
         }
 
         if (!this.riftflux$isLavaBlock(block) || !this.riftflux$isNetherPhotoModeHideActive()) {
@@ -184,18 +199,6 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             int y,
             int z
     ) {
-        if (access != null
-                && this.riftflux$isLiquidBlock(block)
-                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(access, x, y, z)) {
-            int sourceBrightness = block.getMixedBrightnessForBlock(
-                    access,
-                    PhotoModeBlockRenderContext.x(),
-                    PhotoModeBlockRenderContext.y(),
-                    PhotoModeBlockRenderContext.z()
-            );
-            return this.riftflux$hasSkyLight() ? 0x00F00000 | sourceBrightness & 0x000000F0 : sourceBrightness;
-        }
-
         if (!this.riftflux$isLavaBlock(block)
                 || !this.riftflux$isNetherPhotoModeHideActive()
                 || access == null
@@ -218,14 +221,6 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             Material material,
             CallbackInfoReturnable<Float> cir
     ) {
-        if (material != null
-                && material.isLiquid()
-                && this.blockAccess != null
-                && this.riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(this.blockAccess, x, y, z)) {
-            cir.setReturnValue(1.0F);
-            return;
-        }
-
         if (material != Material.lava
                 || !this.riftflux$isNetherPhotoModeHideActive()
                 || this.blockAccess == null
@@ -261,7 +256,7 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
                     && (world.provider.isHellWorld || world.provider.dimensionId == -1);
         }
 
-        if (this.riftflux$isWorldSliceInstance(access)) {
+        if (access instanceof WorldSliceAccessor) {
             World world = this.riftflux$getWorldSliceWorld(access);
             return world != null
                     && world.provider != null
@@ -491,19 +486,6 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
         return block != null && block.getMaterial() != null && block.getMaterial().isLiquid();
     }
 
-    private boolean riftflux$shouldRenderNonNetherPhotoModeLiquidEdge(IBlockAccess access, int x, int y, int z) {
-        return access != null
-                && (PhotoModeBlockRenderContext.isOutsideHorizontalRenderGrid(x, z)
-                || PhotoModeBlockRenderContext.shouldForceHorizontalLiquidEdge(x, y, z))
-                && !this.riftflux$isNetherBlockAccess(access);
-    }
-
-    private boolean riftflux$hasSkyLight() {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        World world = minecraft == null ? null : minecraft.theWorld;
-        return world == null || world.provider == null || !world.provider.hasNoSky;
-    }
-
     private boolean riftflux$hasSecondaryExposureNeighbor(
             IBlockAccess access,
             int sourceX,
@@ -572,7 +554,7 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
             return this.riftflux$isChunkCacheCutoff((ChunkCache) access, x, y, z);
         }
 
-        if (this.riftflux$isWorldSliceInstance(access)) {
+        if (access instanceof WorldSliceAccessor) {
             return this.riftflux$isWorldSliceCutoff(access, x, y, z);
         }
 
@@ -607,61 +589,18 @@ public abstract class MixinRenderBlocks_NetherHideBlocks_PhotoMode {
         return false;
     }
 
-    private boolean riftflux$isWorldSliceInstance(IBlockAccess access) {
-        if (access == null) {
-            return false;
-        }
-
-        Class<?> type = access.getClass();
-        while (type != null) {
-            if (ANGELICA_WORLD_SLICE_CLASS.equals(type.getName())) {
-                return true;
-            }
-            type = type.getSuperclass();
-        }
-        return false;
-    }
-
     private World riftflux$getWorldSliceWorld(IBlockAccess access) {
-        try {
-            Object worldObject = this.riftflux$readField(access, "world");
-            return worldObject instanceof World ? (World) worldObject : null;
-        } catch (Throwable ignored) {
-            return null;
-        }
+        return ((WorldSliceAccessor) access).riftflux$getWorld();
     }
 
     private boolean riftflux$isWorldSliceCutoff(IBlockAccess access, int x, int y, int z) {
-        try {
-            Object volumeObject = this.riftflux$readField(access, "volume");
-            if (!(volumeObject instanceof StructureBoundingBox)) {
-                return true;
-            }
-            StructureBoundingBox volume = (StructureBoundingBox) volumeObject;
-            if (!volume.isVecInside(x, y, z)) {
-                return true;
-            }
-
-            World world = this.riftflux$getWorldSliceWorld(access);
-            return world == null || !world.blockExists(x, y, z);
-        } catch (Throwable ignored) {
+        StructureBoundingBox volume = ((WorldSliceAccessor) access).riftflux$getVolume();
+        if (volume == null || !volume.isVecInside(x, y, z)) {
             return true;
         }
-    }
 
-    private Object riftflux$readField(Object instance, String fieldName) throws IllegalAccessException, NoSuchFieldException {
-        Class<?> type = instance.getClass();
-        while (type != null) {
-            try {
-                Field field = type.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                return field.get(instance);
-            } catch (NoSuchFieldException ignored) {
-                type = type.getSuperclass();
-            }
-        }
-
-        throw new NoSuchFieldException(fieldName);
+        World world = this.riftflux$getWorldSliceWorld(access);
+        return world == null || !world.blockExists(x, y, z);
     }
 
 }

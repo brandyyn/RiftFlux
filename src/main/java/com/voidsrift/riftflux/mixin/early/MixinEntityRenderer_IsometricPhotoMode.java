@@ -133,17 +133,10 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
             require = 0
     )
     private void riftflux$renderCloudsWithPerspective(EntityRenderer entityRenderer, RenderGlobal renderGlobal, float partialTicks) {
-        if (!IsometricPhotoModeController.instance().isActive()) {
-            this.renderCloudsCheck(renderGlobal, partialTicks);
+        if (IsometricPhotoModeController.instance().isActive()) {
             return;
         }
-
-        this.riftflux$pushPerspectiveProjection(partialTicks, false);
-        try {
-            this.renderCloudsCheck(renderGlobal, partialTicks);
-        } finally {
-            this.riftflux$popPerspectiveProjection();
-        }
+        this.renderCloudsCheck(renderGlobal, partialTicks);
     }
 
     @Redirect(

@@ -2,6 +2,7 @@ package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.client.PostProcessRenderer;
+import com.voidsrift.riftflux.client.blockhighlight.BlockHighlightRenderer;
 import com.voidsrift.riftflux.client.chatbubbles.ChatBubblesClient;
 import com.voidsrift.riftflux.client.worldtooltips.WorldTooltipClient;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -19,6 +20,7 @@ public abstract class MixinEntityRenderer_PostProcessBeforeHud {
     private void riftflux$beginPersistentPostProcessTarget(float partialTicks, long finishTimeNano, CallbackInfo ci) {
         ChatBubblesClient.beginDeferredRenderFrame();
         WorldTooltipClient.beginDeferredRenderFrame();
+        BlockHighlightRenderer.beginDeferredRenderFrame();
         PostProcessRenderer.beginWorldRender(partialTicks);
     }
 
@@ -36,6 +38,7 @@ public abstract class MixinEntityRenderer_PostProcessBeforeHud {
         if (!ModConfig.postProcessBloomAffectsHeldItem) {
             ChatBubblesClient.renderDeferred();
             WorldTooltipClient.renderDeferred();
+            BlockHighlightRenderer.renderDeferred();
         }
 
         boolean customHandRendered = ForgeHooksClient.renderFirstPersonHand(renderGlobal, partialTicks, renderPass);
@@ -63,6 +66,7 @@ public abstract class MixinEntityRenderer_PostProcessBeforeHud {
         if (ModConfig.postProcessBloomAffectsHeldItem) {
             ChatBubblesClient.renderDeferred();
             WorldTooltipClient.renderDeferred();
+            BlockHighlightRenderer.renderDeferred();
         }
         PostProcessRenderer.renderBeforeHud(partialTicks);
     }

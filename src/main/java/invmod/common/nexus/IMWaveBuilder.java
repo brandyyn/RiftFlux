@@ -618,8 +618,6 @@ public class IMWaveBuilder
     throwerT1.addTier(1, 1.0F);
     EntityPattern throwerT2 = new EntityPattern(IMEntityType.THROWER);
     throwerT2.addTier(2, 1.0F);
-    EntityPattern burrower = new EntityPattern(IMEntityType.BURROWER);
-    burrower.addTier(1, 1.0F);
     EntityPattern creeper = new EntityPattern(IMEntityType.CREEPER);
     creeper.addTier(1, 1.0F);
     EntityPattern imp = new EntityPattern(IMEntityType.IMP);
@@ -641,7 +639,11 @@ public class IMWaveBuilder
     commonPatterns.put("skeleton_t1_any", skeletonT1Any);
     commonPatterns.put("thrower_t1", throwerT1);
     commonPatterns.put("thrower_t2", throwerT2);
-    commonPatterns.put("burrower", burrower);
+    if (mod_Invasion.isDebug()) {
+      EntityPattern burrower = new EntityPattern(IMEntityType.BURROWER);
+      burrower.addTier(1, 1.0F);
+      commonPatterns.put("burrower", burrower);
+    }
     commonPatterns.put("creeper_t1_basic", creeper);
     commonPatterns.put("imp_t1", imp);
   }

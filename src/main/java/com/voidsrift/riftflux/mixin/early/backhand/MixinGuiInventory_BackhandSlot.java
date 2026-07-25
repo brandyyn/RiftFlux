@@ -6,6 +6,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import com.voidsrift.riftflux.ModConfig;
+
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Container;
@@ -25,6 +27,9 @@ public abstract class MixinGuiInventory_BackhandSlot extends GuiContainer {
             remap = false
     )
     private void rf$drawBackhandSlotAligned(int x, int y) {
+        if (!ModConfig.renderBackhandSlot) {
+            return;
+        }
         int drawX = x;
         int drawY = y;
         Slot backhandSlot = findBackhandSlot();

@@ -106,6 +106,9 @@ public class RFLateMixins implements ILateMixinLoader {
         if (loadedMods.contains("XaeroMinimap")) {
             mixins.add("late.xaero.minimap.MixinInternet");
             if (FMLLaunchHandler.side() == Side.CLIENT) {
+                if (ModConfig.enableIsometricPhotoMode) {
+                    mixins.add("late.xaero.minimap.MixinWaypointsIngameRenderer_IsometricPhotoMode");
+                }
                 if (ModConfig.xaeroMinimapImmediateWaypointDelete) {
                     mixins.add("late.xaero.minimap.MixinGuiWaypoints_ImmediateDelete");
                 }

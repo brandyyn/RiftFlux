@@ -56,6 +56,7 @@ public class EntityIMThrower extends EntityIMMob
 		this.experienceValue = 20;
 		this.clearingPoint = false;
 		this.tier=1;
+		this.metaChanged = world.isRemote ? (byte) 1 : (byte) 0;
 		setMaxHealthAndHealth(mod_Invasion.getMobHealth(this));
 		setName("Thrower");
 		setDestructiveness(2);

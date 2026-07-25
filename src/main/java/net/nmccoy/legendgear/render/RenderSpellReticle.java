@@ -14,6 +14,7 @@
  */
 package net.nmccoy.legendgear.render;
 
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -114,6 +115,10 @@ public class RenderSpellReticle {
 
     @SubscribeEvent
     public void renderWorldLastEvent(RenderWorldLastEvent event) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            return;
+        }
+
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.thePlayer == null) {
             return;

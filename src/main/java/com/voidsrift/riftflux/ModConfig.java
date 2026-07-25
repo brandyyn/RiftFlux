@@ -1319,6 +1319,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int chatBubblesMessageLifetimeSeconds;
     public static int chatBubblesMaxLineLength;
     public static boolean enableChatSelectionCopy;
+    public static boolean renderBackhandSlot;
     public static boolean enableIsometricPhotoMode;
     public static double isometricPhotoModeMaxZoomOut;
     public static float isometricPhotoModeHoldRotateDegreesPerTick;
@@ -1398,6 +1399,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static String[] customPaintingEntries;
 
     public static boolean enableNewBlockHighlight;
+    public static boolean blockHighlightRenderAfterPostProcessing;
+    public static float blockHighlightBloomStrengthPercent;
 
     public static float THICKNESS;
 
@@ -2483,6 +2486,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "client",
                 true,
                 "Allow click-drag selection in chat and copy the exact visible text, including clickable command output."
+        );
+
+        renderBackhandSlot = config.getBoolean(
+                "RenderBackhandSlot",
+                "client",
+                true,
+                "Render the Backhand offhand slot background in supported inventory screens. "
+                        + "Disabling this only hides the slot background; the slot remains usable."
         );
 
         enableIsometricPhotoMode = config.getBoolean(
@@ -8345,6 +8356,25 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         enableNewBlockHighlight = config.get("client", "enableNewBlockHighlight", true,
                         "If true, replaces the original block highlight with a white pulsating cuboid highlight.")
                 .getBoolean(true);
+
+        blockHighlightRenderAfterPostProcessing = config.get(
+                POST_PROCESSING_CATEGORY,
+                "BlockHighlightRenderAfterPostProcessing",
+                false,
+                "If true, renders the custom block highlight after world bloom so bloom does not affect it. "
+                        + "Supports live updates when EnablePostProcessingConfigHotSwap is enabled."
+        ).getBoolean(false);
+
+        blockHighlightBloomStrengthPercent = config.getFloat(
+                "BlockHighlightBloomStrengthPercent",
+                POST_PROCESSING_CATEGORY,
+                6.6F,
+                0.0F,
+                100.0F,
+                "How much world bloom affects the custom block highlight. 0 = none, 100 = full. "
+                        + "BlockHighlightRenderAfterPostProcessing overrides this to 0. "
+                        + "Supports live updates when EnablePostProcessingConfigHotSwap is enabled."
+        );
 
         THICKNESS = config.getFloat(
                 "BlockHighlightThickness",

@@ -83,7 +83,29 @@ public abstract class MixinWorldRenderer_PhotoModeBlockFaceCulling {
             return false;
         }
 
-        PhotoModeBlockRenderContext.begin(x, y, z, minX, maxXExclusive, minZ, maxZExclusive);
+        int outerSideMask = 0;
+        if (x == minX) {
+            outerSideMask |= 1 << 4;
+        }
+        if (x == maxXExclusive - 1) {
+            outerSideMask |= 1 << 5;
+        }
+        if (z == minZ) {
+            outerSideMask |= 1 << 2;
+        }
+        if (z == maxZExclusive - 1) {
+            outerSideMask |= 1 << 3;
+        }
+        PhotoModeBlockRenderContext.begin(
+                x,
+                y,
+                z,
+                minX,
+                maxXExclusive,
+                minZ,
+                maxZExclusive,
+                outerSideMask
+        );
         return true;
     }
 

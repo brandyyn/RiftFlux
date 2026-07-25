@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
@@ -64,6 +65,11 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
             require = 0
     )
     private void rf$applySunExposurePreColor(float red, float green, float blue, float alpha) {
+        if (IsometricPhotoModeController.instance().isActive()) {
+            this.rf$celestialSkyAlpha = 0.0F;
+            GL11.glColor4f(red, green, blue, 0.0F);
+            return;
+        }
         this.rf$celestialSkyAlpha = alpha;
         ResourceLocation sunTexture = this.rf$resolveSunTexture();
         this.rf$cachedSunTexture = sunTexture;
@@ -96,6 +102,10 @@ public abstract class MixinRenderGlobal_CelestialEventTextures {
     )
     private ResourceLocation rf$redirectMoonTexture() {
         ResourceLocation moonTexture = this.rf$resolveMoonTexture();
+        if (IsometricPhotoModeController.instance().isActive()) {
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.0F);
+            return moonTexture;
+        }
         float compensation = rf$isEventTexture(moonTexture, rf$defaultMoon)
                 ? ModConfig.postProcessMoonEventExposureCompensationPercent
                 : ModConfig.postProcessMoonExposureCompensationPercent;

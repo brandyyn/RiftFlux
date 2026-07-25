@@ -381,18 +381,26 @@ public class mod_Invasion
 	private void loadHealthConfig()
 	{
 		String[] mobNames = new String[] {
-			"IMCreeper-T1", "IMVulture-T1", "IMImp-T1", "IMPigManEngineer-T1", "IMSkeleton-T1",
+			"IMCreeper-T1", "IMImp-T1", "IMPigManEngineer-T1", "IMSkeleton-T1",
 			"IMSpider-T1-Spider", "IMSpider-T1-Baby-Spider", "IMSpider-T2-Jumping-Spider",
 			"IMSpider-T2-Mother-Spider", "IMThrower-T1", "IMThrower-T2", "IMZombie-T1",
 			"IMZombie-T2", "IMZombie-T3", "IMZombiePigman-T1", "IMZombiePigman-T2", "IMZombiePigman-T3"
 		};
-		int[] defaultHealth = new int[] { 40, 40, 40, 40, 40, 36, 6, 36, 46, 100, 140, 40, 60, 130, 40, 60, 130 };
+		int[] defaultHealth = new int[] { 40, 40, 40, 40, 36, 6, 36, 46, 100, 140, 40, 60, 130, 40, 60, 130 };
 		for (int i = 0; i < mobNames.length; i++) {
-			String invasionKey = mobNames[i] + "-invasionSpawn-health";
-			String nightKey = mobNames[i] + "-nightSpawn-health";
-			mobHealthInvasion.put(invasionKey, configInvasion.getPropertyValueInt(invasionKey, defaultHealth[i]));
-			mobHealthNightspawn.put(nightKey, configInvasion.getPropertyValueInt(nightKey, defaultHealth[i]));
+			loadMobHealth(mobNames[i], defaultHealth[i]);
 		}
+		if (debugMode) {
+			loadMobHealth("IMVulture-T1", 40);
+		}
+	}
+
+	private void loadMobHealth(String mobName, int defaultHealth)
+	{
+		String invasionKey = mobName + "-invasionSpawn-health";
+		String nightKey = mobName + "-nightSpawn-health";
+		mobHealthInvasion.put(invasionKey, configInvasion.getPropertyValueInt(invasionKey, defaultHealth));
+		mobHealthNightspawn.put(nightKey, configInvasion.getPropertyValueInt(nightKey, defaultHealth));
 	}
 	//load Creativetab
 	protected void loadCreativeTabs()
@@ -489,13 +497,12 @@ public class mod_Invasion
 		RiftFluxEntityRegistry.registerModEntity(EntityNightIMImp.class, "NightIMImp", riftflux.instance, 128, 1, true);
 		RiftFluxEntityRegistry.registerModEntity(EntityNightIMZombiePigman.class, "NightIMZombiePigman", riftflux.instance, 128, 1, true);
 		RiftFluxEntityRegistry.registerModEntity(EntityNightIMThrower.class, "NightIMThrower", riftflux.instance, 128, 1, true);
-		RiftFluxEntityRegistry.registerModEntity(EntityNightIMBurrower.class, "NightIMBurrower", riftflux.instance, 128, 1, true);
 
 		if (debugMode) 
 		{
-			
 			RiftFluxEntityRegistry.registerModEntity(EntityIMBird.class, "IMBird", riftflux.instance, 128, 1, true);
 			RiftFluxEntityRegistry.registerModEntity(EntityIMGiantBird.class, "IMGiantBird", riftflux.instance, 128, 1, true);
+			RiftFluxEntityRegistry.registerModEntity(EntityNightIMBurrower.class, "NightIMBurrower", riftflux.instance, 128, 1, true);
 		}
         
         //spawneggs' needed things and dispenser behavior
@@ -539,12 +546,12 @@ public class mod_Invasion
 		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 33, "riftflux.NightIMZombiePigman", "Zombie Pigman", CustomTags.IMZombiePigman_T1(), 0xEB8E91, 0x49652F));
 		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 34, "riftflux.NightIMZombiePigman", "Zombie Pigman", CustomTags.IMZombiePigman_T2(), 0xEB8E91, 0x49652F));
 		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 35, "riftflux.NightIMZombiePigman", "Zombie Pigman", CustomTags.IMZombiePigman_T3(), 0xEB8E91, 0x49652F));
-		SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 36, "riftflux.NightIMBurrower", "Burrower", new NBTTagCompound(), 0x4B3A2A, 0x8B6B47));
-        
-        if (debugMode)
-        {   
+		if (debugMode)
+		{
 			SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 18, "riftflux.IMGiantBird", "Vulture T1", new NBTTagCompound(), 0x2B2B2B, 0xEA7EDC));
-        }
+			SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 36, "riftflux.NightIMBurrower", "Burrower", new NBTTagCompound(), 0x4B3A2A, 0x8B6B47));
+			SpawnEggRegistry.registerSpawnEgg(new SpawnEggInfo((short) 37, "riftflux.IMBird", "Bird T1", new NBTTagCompound(), 0x2B2B2B, 0xEA7EDC));
+		}
 
 		
 		//preload Textures
@@ -563,14 +570,16 @@ public class mod_Invasion
 		proxy.preloadTexture("/mods/invmod/textures/boulder.png");
 		proxy.preloadTexture("/mods/invmod/textures/trap.png");
 		proxy.preloadTexture("/mods/invmod/textures/testmodel.png");
-		proxy.preloadTexture("/mods/invmod/textures/burrower.png");
 		proxy.preloadTexture("/mods/invmod/textures/spideregg.png");
 		proxy.preloadTexture("/mods/invmod/textures/imp.png");
 		
-		proxy.preloadTexture("/mods/invmod/textures/vulture.png");
-		
 		//Animations and rendering
-		proxy.loadAnimations();
+		if (debugMode)
+		{
+			proxy.preloadTexture("/mods/invmod/textures/burrower.png");
+			proxy.preloadTexture("/mods/invmod/textures/vulture.png");
+			proxy.loadAnimations();
+		}
 		proxy.registerEntityRenderers();
 	}
 
@@ -646,7 +655,13 @@ public class mod_Invasion
 			{
 				pool1Patterns[i] = configInvasion.getPropertyValueString("nm-spawnpool1-slot" + (1 + i), DEFAULT_NIGHT_MOB_PATTERN_1_SLOTS[i]);
 				pool1Weights[i] = configInvasion.getPropertyValueFloat("nm-spawnpool1-slot" + (1 + i) + "-weight", DEFAULT_NIGHT_MOB_PATTERN_1_SLOT_WEIGHTS[i]);
-				
+
+				if (!debugMode && "burrower".equals(pool1Patterns[i]))
+				{
+					log("Ignored debug-only pattern in night spawn slot " + (i + 1));
+					continue;
+				}
+
 				if (IMWaveBuilder.isPatternNameValid(pool1Patterns[i])) 
 				{
 					log("Added entry for pattern 1 slot " + (i + 1));

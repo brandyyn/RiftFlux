@@ -51,6 +51,11 @@ public abstract class MixinMinecraft_IsometricPhotoMode {
         IsometricPhotoModeController.instance().onWorldChange();
     }
 
+    @Inject(method = "shutdown", at = @At("HEAD"))
+    private void riftflux$disablePhotoModeBeforeShutdown(CallbackInfo ci) {
+        IsometricPhotoModeController.instance().onShutdown();
+    }
+
     @Redirect(
             method = "runTick",
             at = @At(

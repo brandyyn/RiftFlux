@@ -1,5 +1,6 @@
 package com.voidsrift.riftflux.client;
 
+import com.gtnewhorizons.angelica.glsm.DisplayListManager;
 import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -161,6 +162,9 @@ public final class PostProcessRenderer {
         if (persistentWorldRenderActive) {
             finishPersistentWorldRender(partialTicks);
         }
+        if (isDisplayListRecording()) {
+            return;
+        }
         refreshConfigIfChanged();
         Minecraft mc = Minecraft.getMinecraft();
         if (!ModConfig.enablePostProcessPersistentRenderTarget || persistentWorldFailed
@@ -238,6 +242,7 @@ public final class PostProcessRenderer {
         Minecraft mc = Minecraft.getMinecraft();
         return mc != null
                 && mc.theWorld != null
+                && !isDisplayListRecording()
                 && ModConfig.enablePostProcessing
                 && ModConfig.postProcessBloomStrengthPercent > 0.0F
                 && ModConfig.isPostProcessingDimensionAllowed(mc.theWorld.provider.dimensionId)
@@ -263,6 +268,9 @@ public final class PostProcessRenderer {
     }
 
     private void renderFrame(float partialTicks, boolean applyColorGrade, boolean applyBloom, boolean celestialOnly, String stageName, boolean configRefreshed, boolean finalOutput) {
+        if (isDisplayListRecording()) {
+            return;
+        }
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.renderViewEntity == null || mc.displayWidth <= 0 || mc.displayHeight <= 0) {
             return;
@@ -703,6 +711,14 @@ public final class PostProcessRenderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
     }
 
+    private static boolean isDisplayListRecording() {
+        try {
+            return DisplayListManager.isRecording();
+        } catch (LinkageError ignored) {
+            return false;
+        }
+    }
+
     private void renderBloomPass(float partialTicks, boolean celestialOnly) {
         int program = getBloomProgram();
         if (program > 0) {
@@ -910,7 +926,8 @@ public final class PostProcessRenderer {
                         "    return mix(original, color, gradeMask);\n" +
                         "}\n" +
                         "vec3 bloomSample(vec2 uv) {\n" +
-                        "    vec3 raw = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0))).rgb;\n" +
+                        "    vec4 sceneSample = texture2D(uScene, clamp(uv, vec2(0.0), vec2(1.0)));\n" +
+                        "    vec3 raw = sceneSample.rgb;\n" +
                         "    float bright = max(max(raw.r, raw.g), raw.b);\n" +
                         "    if (uCelestialOnly > 0.5) {\n" +
                         "        float blueLead = raw.b - max(raw.r, raw.g);\n" +
@@ -933,7 +950,10 @@ public final class PostProcessRenderer {
                         "    excess *= excess;\n" +
                         "    vec3 normalBloom = excess * gate * depthBoost;\n" +
                         "    vec3 normalLinear = pow(clamp(normalBloom, vec3(0.0), vec3(1.0)), vec3(2.2));\n" +
-                        "    return clamp(normalLinear, vec3(0.0), vec3(1.0));\n" +
+                        "    float highlightMarker = step(0.015, sceneSample.a) * (1.0 - step(0.125, sceneSample.a));\n" +
+                        "    float highlightBloomScale = clamp((sceneSample.a - 0.02) / 0.10, 0.0, 1.0);\n" +
+                        "    float sourceBloomScale = mix(1.0, highlightBloomScale, highlightMarker);\n" +
+                        "    return clamp(normalLinear * sourceBloomScale, vec3(0.0), vec3(1.0));\n" +
                         "}\n" +
                         "void main() {\n" +
                         "    vec2 uv = vTexCoord;\n" +

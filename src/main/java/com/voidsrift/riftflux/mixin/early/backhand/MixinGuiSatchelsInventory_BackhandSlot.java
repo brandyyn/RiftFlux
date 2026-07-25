@@ -7,6 +7,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.voidsrift.riftflux.ModConfig;
+
 import makamys.satchels.gui.GuiSatchelsInventory;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Container;
@@ -25,6 +27,9 @@ public abstract class MixinGuiSatchelsInventory_BackhandSlot extends GuiContaine
             at = @At("TAIL")
     )
     private void rf$drawBackhandSlot(float partialTicks, int mouseX, int mouseY, CallbackInfo ci) {
+        if (!ModConfig.renderBackhandSlot) {
+            return;
+        }
         Slot backhandSlot = findBackhandSlot();
         if (backhandSlot == null) {
             return;

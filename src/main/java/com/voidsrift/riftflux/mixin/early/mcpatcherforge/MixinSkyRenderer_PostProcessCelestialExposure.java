@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early.mcpatcherforge;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,7 +35,7 @@ public abstract class MixinSkyRenderer_PostProcessCelestialExposure {
             ResourceLocation requested,
             CallbackInfoReturnable<ResourceLocation> cir
     ) {
-        if (!active || !ModConfig.enablePostProcessing) {
+        if (!active) {
             return;
         }
 
@@ -47,6 +48,14 @@ public abstract class MixinSkyRenderer_PostProcessCelestialExposure {
                 || riftflux$sameConfiguredTexture(requested, ModConfig.celestialMoonEventTexture);
 
         if (!sun && !moon) {
+            return;
+        }
+
+        if (IsometricPhotoModeController.instance().isActive()) {
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.0F);
+            return;
+        }
+        if (!ModConfig.enablePostProcessing) {
             return;
         }
 

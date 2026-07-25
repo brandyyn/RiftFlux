@@ -179,7 +179,9 @@ public final class IsometricPhotoModeController {
         this.playerControlled = false;
         this.centerOnPlayer();
 
-        AngelicaPhotoModeCompat.enablePhotoModeOverrides();
+        if (AngelicaPhotoModeCompat.enablePhotoModeOverrides()) {
+            this.reloadRenderers();
+        }
         this.mc.renderViewEntity = this.cameraEntity;
         this.mc.gameSettings.thirdPersonView = 0;
         this.mc.gameSettings.hideGUI = true;
@@ -206,6 +208,17 @@ public final class IsometricPhotoModeController {
         this.deactivate(true, false);
     }
 
+    public void onShutdown() {
+        if (!this.active && !this.clientStateCaptured) {
+            this.clearState();
+            return;
+        }
+
+        this.restoreClientState(true);
+        AngelicaPhotoModeCompat.disablePhotoModeOverrides();
+        this.clearState();
+    }
+
     public void tick() {
         if (!this.active) {
             return;
@@ -229,7 +242,9 @@ public final class IsometricPhotoModeController {
         this.cameraEntity.onUpdate();
         this.mc.gameSettings.thirdPersonView = 0;
         this.mc.gameSettings.hideGUI = true;
-        AngelicaPhotoModeCompat.enablePhotoModeOverrides();
+        if (AngelicaPhotoModeCompat.enablePhotoModeOverrides()) {
+            this.reloadRenderers();
+        }
         AngelicaPhotoModeCompat.enforceNoFog();
         this.tickControlStatusMessage();
         this.tickAnimation();
@@ -660,7 +675,29 @@ public final class IsometricPhotoModeController {
             return false;
         }
 
-        PhotoModeBlockRenderContext.begin(x, y, z, minX, maxXExclusive, minZ, maxZExclusive);
+        int outerSideMask = 0;
+        if (x == minX) {
+            outerSideMask |= 1 << 4;
+        }
+        if (x == maxXExclusive - 1) {
+            outerSideMask |= 1 << 5;
+        }
+        if (z == minZ) {
+            outerSideMask |= 1 << 2;
+        }
+        if (z == maxZExclusive - 1) {
+            outerSideMask |= 1 << 3;
+        }
+        PhotoModeBlockRenderContext.begin(
+                x,
+                y,
+                z,
+                minX,
+                maxXExclusive,
+                minZ,
+                maxZExclusive,
+                outerSideMask
+        );
         return true;
     }
 
@@ -1213,9 +1250,10 @@ public final class IsometricPhotoModeController {
             return;
         }
 
+        boolean photoModeWasActive = this.active;
         this.restoreClientState(restorePreviousPerspective);
-        AngelicaPhotoModeCompat.disablePhotoModeOverrides();
-        if (reloadRenderers) {
+        boolean compactVertexFormatRestored = AngelicaPhotoModeCompat.disablePhotoModeOverrides();
+        if (photoModeWasActive || reloadRenderers || compactVertexFormatRestored) {
             this.reloadRenderers();
         }
         this.clearState();

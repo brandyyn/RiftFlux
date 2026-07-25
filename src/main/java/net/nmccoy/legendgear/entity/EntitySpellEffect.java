@@ -286,7 +286,7 @@ implements IEntityAdditionalSpawnData {
     }
 
     public static enum SpellType {
-        Twinkle(Spell.Element.Star),
+        Twinkle(Spell.Element.Star, 10, EntitySpellEffect.access$000()),
         OrbExplosion(Spell.Element.Explosion, 2, EntitySpellEffect.access$000()){
 
             @Override

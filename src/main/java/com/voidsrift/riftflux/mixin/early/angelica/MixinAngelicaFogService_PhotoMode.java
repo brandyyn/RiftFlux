@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Pseudo
-@Mixin(targets = "com.gtnewhorizons.angelica.glsm.AngelicaFogService", remap = false, priority = 2000)
+@Mixin(targets = "com.gtnewhorizons.angelica.client.rendering.AngelicaFogService", remap = false, priority = 2000)
 public abstract class MixinAngelicaFogService_PhotoMode {
 
     @Inject(

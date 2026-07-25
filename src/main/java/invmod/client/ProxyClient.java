@@ -59,6 +59,7 @@ import invmod.common.entity.night.EntityNightIMSpider;
 import invmod.common.entity.night.EntityNightIMThrower;
 import invmod.common.entity.night.EntityNightIMZombie;
 import invmod.common.entity.night.EntityNightIMZombiePigman;
+import invmod.common.mod_Invasion;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -95,7 +96,6 @@ public class ProxyClient extends ProxyCommon {
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMPigEngy.class, new RenderPigEngy(new ModelBiped(), 0.5F));
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMImp.class, new RenderImp(new ModelImp(), 0.3F));
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMThrower.class, new RenderThrower(new ModelThrower(), 1.5F));
-		RenderingRegistry.registerEntityRenderingHandler(EntityIMBurrower.class, new RenderBurrower());
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMWolf.class, new RenderIMWolf());
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMBoulder.class, new RenderBoulder());
 		RenderingRegistry.registerEntityRenderingHandler(EntityIMTrap.class, new RenderTrap(new ModelTrap()));
@@ -112,10 +112,13 @@ public class ProxyClient extends ProxyCommon {
 		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMPigEngy.class, new RenderPigEngy(new ModelBiped(), 0.5F));
 		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMImp.class, new RenderImp(new ModelImp(), 0.3F));
 		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMThrower.class, new RenderThrower(new ModelThrower(), 1.5F));
-		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMBurrower.class, new RenderBurrower());
 		RenderingRegistry.registerEntityRenderingHandler(EntityNightIMCreeper.class, new RenderIMCreeper());
-		RenderingRegistry.registerEntityRenderingHandler(EntityIMBird.class, new RenderB());
-		RenderingRegistry.registerEntityRenderingHandler(EntityIMGiantBird.class, new RenderGiantBird());
+		if (mod_Invasion.isDebug()) {
+			RenderingRegistry.registerEntityRenderingHandler(EntityIMBurrower.class, new RenderBurrower());
+			RenderingRegistry.registerEntityRenderingHandler(EntityNightIMBurrower.class, new RenderBurrower());
+			RenderingRegistry.registerEntityRenderingHandler(EntityIMBird.class, new RenderB());
+			RenderingRegistry.registerEntityRenderingHandler(EntityIMGiantBird.class, new RenderGiantBird());
+		}
 	}
 
 	public void loadAnimations() {

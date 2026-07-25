@@ -34,4 +34,5 @@ public abstract class MixinEmbeddiumRenderSectionManager_PhotoMode {
     ) {
         renderer.render(matrices, commandList, renderLists, pass, occlusionCamera, camera);
     }
+
 }

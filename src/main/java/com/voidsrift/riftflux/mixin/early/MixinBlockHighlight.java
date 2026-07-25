@@ -1,123 +1,39 @@
 package com.voidsrift.riftflux.mixin.early;
 
+import com.voidsrift.riftflux.client.blockhighlight.BlockHighlightRenderer;
 import net.nmccoy.legendgear.block.CaltropsBlock;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.World;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.voidsrift.riftflux.ModConfig;
 
 /**
- * RiftFlux custom block outline.
- *
- * Angelica/Iris wraps {@code RenderGlobal#drawSelectionBox} in an outline pass (begin/end). If we cancel the
- * method, Iris never gets to run its matching "end" call and will crash with a re-entrancy/state error.
- *
- * To keep the visual style identical while staying compatible, we:
- *  - render our outline at the very start of the method (same GL state as before)
- *  - DO NOT cancel the method
- *  - suppress vanilla's outlined AABB call so we don't get a double outline
- *
- * We also use a high mixin priority so this runs before Angelica's own HEAD injections.
+ * Angelica/Iris wraps drawSelectionBox in a balanced outline pass. Keep the
+ * vanilla method running, render RiftFlux's replacement, and suppress only
+ * vanilla's outlined AABB call.
  */
 @Mixin(value = RenderGlobal.class, priority = 2000)
 public abstract class MixinBlockHighlight {
 
-    /** Uniform polygon offset so the outline sits on top consistently. */
-    private static final float POLY_FACTOR = -2.0e-3f;
-    private static final float POLY_UNITS  = -2.0e-3f;
-
     @Inject(method = "drawSelectionBox", at = @At("HEAD"))
-    private void rf$continuousBeams(EntityPlayer player, MovingObjectPosition mop, int pass, float pt, CallbackInfo ci) {
-        if (pass != 0 || mop == null || mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
-
-        World w = player.worldObj;
-        int bx = mop.blockX, by = mop.blockY, bz = mop.blockZ;
-        Block b = w.getBlock(bx, by, bz);
-        if (b == null || b.getMaterial() == Material.air) return;
-
-        b.setBlockBoundsBasedOnState(w, bx, by, bz);
-
-        double px = player.lastTickPosX + (player.posX - player.lastTickPosX) * pt;
-        double py = player.lastTickPosY + (player.posY - player.lastTickPosY) * pt;
-        double pz = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * pt;
-
-        AxisAlignedBB box = b.getSelectedBoundingBoxFromPool(w, bx, by, bz);
-        if (box == null) return;
-
-        // Pulse (alpha only)
-        float alpha = ModConfig.ALPHA_BASE;
-        if (ModConfig.PULSE_ENABLED) {
-            double t = (Minecraft.getSystemTime() % 100000L) / 1000.0D;
-            double s = 0.5D - 0.5D * Math.cos(t * (Math.PI * 2D) * ModConfig.PULSE_SPEED_HZ);
-            alpha = ModConfig.ALPHA_BASE * (0.45F + 0.55F * (float)s);
-        }
-
-        // GL state
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDisable(GL11.GL_CULL_FACE);
-
-        // PASS 1: depth + stencil prefill (no color)
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_STENCIL_TEST);
-        GL11.glStencilMask(0xFF);
-        GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT);
-        GL11.glStencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
-        GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
-
-        GL11.glColorMask(false, false, false, false);
-        GL11.glDepthMask(true);
-        GL11.glDepthFunc(GL11.GL_LEQUAL);
-
-        GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
-        GL11.glPolygonOffset(POLY_FACTOR, POLY_UNITS);
-
-        drawEdgeBeamsContinuous(box.getOffsetBoundingBox(-px, -py, -pz), ModConfig.THICKNESS);
-
-        // PASS 2: shade only the frontmost fragments we just wrote
-        GL11.glColorMask(true, true, true, true);
-        GL11.glDepthMask(false);
-        GL11.glDepthFunc(GL11.GL_EQUAL);
-        GL11.glStencilFunc(GL11.GL_EQUAL, 1, 0xFF);
-        GL11.glStencilMask(0x00);
-
-        GL11.glEnable(GL11.GL_BLEND);
-        OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        GL11.glColor4f(1F, 1F, 1F, alpha);
-
-        GL11.glPolygonOffset(POLY_FACTOR, POLY_UNITS);
-        drawEdgeBeamsContinuous(box.getOffsetBoundingBox(-px, -py, -pz), ModConfig.THICKNESS);
-
-        // Restore
-        GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
-        GL11.glDisable(GL11.GL_STENCIL_TEST);
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glDepthMask(true);
-        GL11.glDepthFunc(GL11.GL_LEQUAL);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glColor4f(1F, 1F, 1F, 1F);
-
+    private void riftflux$renderBlockHighlight(
+            EntityPlayer player,
+            MovingObjectPosition hit,
+            int renderPass,
+            float partialTicks,
+            CallbackInfo ci
+    ) {
+        BlockHighlightRenderer.renderOrDefer(player, hit, renderPass, partialTicks);
     }
-    /**
-     * Prevent vanilla from drawing its thin outlined AABB (we draw our own style instead).
-     * Keeping the rest of {@code drawSelectionBox} running is important for Angelica/Iris outline pass balance.
-     */
+
     @Redirect(
             method = "drawSelectionBox",
             at = @At(
@@ -126,8 +42,7 @@ public abstract class MixinBlockHighlight {
             ),
             require = 0
     )
-    private void rf$skipVanillaOutlinedAabb(AxisAlignedBB aabb, int color) {
-        // no-op
+    private void riftflux$skipVanillaOutlinedAabb(AxisAlignedBB box, int color) {
     }
 
     @Redirect(
@@ -137,7 +52,14 @@ public abstract class MixinBlockHighlight {
                     target = "Lnet/minecraft/client/renderer/RenderBlocks;renderBlockUsingTexture(Lnet/minecraft/block/Block;IIILnet/minecraft/util/IIcon;)V"
             )
     )
-    private void rf$renderCaltropsDamageBox(RenderBlocks renderer, Block block, int x, int y, int z, IIcon icon) {
+    private void riftflux$renderCaltropsDamageBox(
+            RenderBlocks renderer,
+            Block block,
+            int x,
+            int y,
+            int z,
+            IIcon icon
+    ) {
         if (!(block instanceof CaltropsBlock)) {
             renderer.renderBlockUsingTexture(block, x, y, z, icon);
             return;
@@ -155,64 +77,5 @@ public abstract class MixinBlockHighlight {
         renderer.renderStandardBlock(block, x, y, z);
         renderer.clearOverrideBlockTexture();
         block.setBlockBoundsForItemRender();
-    }
-
-    /** 12 rectangular prisms centered on original edges, EXTENDED through corners → no seams. */
-    private static void drawEdgeBeamsContinuous(AxisAlignedBB a, float thickness) {
-        final Tessellator t = Tessellator.instance;
-        t.startDrawingQuads();
-
-        double x1=a.minX, y1=a.minY, z1=a.minZ;
-        double x2=a.maxX, y2=a.maxY, z2=a.maxZ;
-
-        // Half-thickness (in/out). Clamp to avoid degenerate beams on tiny AABBs.
-        double h = Math.max(1.0e-5D, Math.min(thickness * 0.5D,
-                Math.min((x2 - x1) * 0.5D, Math.min((y2 - y1) * 0.5D, (z2 - z1) * 0.5D))));
-
-        // To guarantee no microscopic cracks, extend beams slightly past corners.
-        final double EPS = 1.0e-5D;
-
-        // X-oriented beams: full length + tiny overshoot → meet vertical beams seamlessly
-        box(t, x1 - h - EPS, y1 - h,      z1 - h,      x2 + h + EPS, y1 + h,      z1 + h);      // bottom north
-        box(t, x1 - h - EPS, y1 - h,      z2 - h,      x2 + h + EPS, y1 + h,      z2 + h);      // bottom south
-        box(t, x1 - h - EPS, y2 - h,      z1 - h,      x2 + h + EPS, y2 + h,      z1 + h);      // top north
-        box(t, x1 - h - EPS, y2 - h,      z2 - h,      x2 + h + EPS, y2 + h,      z2 + h);      // top south
-
-        // Z-oriented beams
-        box(t, x1 - h,      y1 - h,      z1 - h - EPS, x1 + h,      y1 + h,      z2 + h + EPS); // bottom west
-        box(t, x2 - h,      y1 - h,      z1 - h - EPS, x2 + h,      y1 + h,      z2 + h + EPS); // bottom east
-        box(t, x1 - h,      y2 - h,      z1 - h - EPS, x1 + h,      y2 + h,      z2 + h + EPS); // top west
-        box(t, x2 - h,      y2 - h,      z1 - h - EPS, x2 + h,      y2 + h,      z2 + h + EPS); // top east
-
-        // Y-oriented beams
-        box(t, x1 - h,      y1 - h - EPS, z1 - h,      x1 + h,      y2 + h + EPS, z1 + h);      // NW vertical
-        box(t, x2 - h,      y1 - h - EPS, z1 - h,      x2 + h,      y2 + h + EPS, z1 + h);      // NE vertical
-        box(t, x2 - h,      y1 - h - EPS, z2 - h,      x2 + h,      y2 + h + EPS, z2 + h);      // SE vertical
-        box(t, x1 - h,      y1 - h - EPS, z2 - h,      x1 + h,      y2 + h + EPS, z2 + h);      // SW vertical
-        t.draw();
-    }
-
-    /** Simple six-faced rectangular prism. */
-    private static void box(Tessellator t,
-                            double minX, double minY, double minZ,
-                            double maxX, double maxY, double maxZ) {
-        // -X
-        t.addVertex(minX, minY, minZ); t.addVertex(minX, maxY, minZ);
-        t.addVertex(minX, maxY, maxZ); t.addVertex(minX, minY, maxZ);
-        // +X
-        t.addVertex(maxX, minY, minZ); t.addVertex(maxX, minY, maxZ);
-        t.addVertex(maxX, maxY, maxZ); t.addVertex(maxX, maxY, minZ);
-        // -Y
-        t.addVertex(minX, minY, minZ); t.addVertex(minX, minY, maxZ);
-        t.addVertex(maxX, minY, maxZ); t.addVertex(maxX, minY, minZ);
-        // +Y
-        t.addVertex(minX, maxY, minZ); t.addVertex(maxX, maxY, minZ);
-        t.addVertex(maxX, maxY, maxZ); t.addVertex(minX, maxY, maxZ);
-        // -Z
-        t.addVertex(minX, minY, minZ); t.addVertex(maxX, minY, minZ);
-        t.addVertex(maxX, maxY, minZ); t.addVertex(minX, maxY, minZ);
-        // +Z
-        t.addVertex(minX, minY, maxZ); t.addVertex(minX, maxY, maxZ);
-        t.addVertex(maxX, maxY, maxZ); t.addVertex(maxX, minY, maxZ);
     }
 }

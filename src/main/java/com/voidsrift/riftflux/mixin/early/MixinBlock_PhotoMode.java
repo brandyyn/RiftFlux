@@ -3,7 +3,7 @@ package com.voidsrift.riftflux.mixin.early;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
 import com.voidsrift.riftflux.client.photomode.PhotoModeBlockRenderContext;
 import com.voidsrift.riftflux.mixin.accessor.ChunkCacheAccessor;
-import java.lang.reflect.Field;
+import com.voidsrift.riftflux.mixin.accessor.angelica.WorldSliceAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.IBlockAccess;
@@ -18,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(net.minecraft.block.Block.class)
 public abstract class MixinBlock_PhotoMode {
-    private static final String ANGELICA_WORLD_SLICE_CLASS =
-            "com.gtnewhorizons.angelica.rendering.celeritas.world.WorldSlice";
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
     private void riftflux$disableFaceCullingInPhotoMode(IBlockAccess world, int x, int y, int z, int side, CallbackInfoReturnable<Boolean> cir) {
@@ -183,7 +181,7 @@ public abstract class MixinBlock_PhotoMode {
             return this.riftflux$isChunkCacheCutoff((ChunkCache) access, x, y, z);
         }
 
-        if (this.riftflux$isWorldSliceInstance(access)) {
+        if (access instanceof WorldSliceAccessor) {
             return this.riftflux$isWorldSliceCutoff(access, x, y, z);
         }
 
@@ -218,51 +216,14 @@ public abstract class MixinBlock_PhotoMode {
         return false;
     }
 
-    private boolean riftflux$isWorldSliceInstance(IBlockAccess access) {
-        Class<?> type = access.getClass();
-        while (type != null) {
-            if (ANGELICA_WORLD_SLICE_CLASS.equals(type.getName())) {
-                return true;
-            }
-            type = type.getSuperclass();
-        }
-        return false;
-    }
-
     private boolean riftflux$isWorldSliceCutoff(IBlockAccess access, int x, int y, int z) {
-        try {
-            Object volumeObject = this.riftflux$readField(access, "volume");
-            if (!(volumeObject instanceof StructureBoundingBox)) {
-                return true;
-            }
-            StructureBoundingBox volume = (StructureBoundingBox) volumeObject;
-            if (!volume.isVecInside(x, y, z)) {
-                return true;
-            }
-
-            Object worldObject = this.riftflux$readField(access, "world");
-            if (!(worldObject instanceof World)) {
-                return true;
-            }
-
-            return !((World) worldObject).blockExists(x, y, z);
-        } catch (Throwable ignored) {
+        WorldSliceAccessor accessor = (WorldSliceAccessor) access;
+        StructureBoundingBox volume = accessor.riftflux$getVolume();
+        if (volume == null || !volume.isVecInside(x, y, z)) {
             return true;
         }
-    }
 
-    private Object riftflux$readField(Object instance, String fieldName) throws IllegalAccessException, NoSuchFieldException {
-        Class<?> type = instance.getClass();
-        while (type != null) {
-            try {
-                Field field = type.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                return field.get(instance);
-            } catch (NoSuchFieldException ignored) {
-                type = type.getSuperclass();
-            }
-        }
-
-        throw new NoSuchFieldException(fieldName);
+        World world = accessor.riftflux$getWorld();
+        return world == null || !world.blockExists(x, y, z);
     }
 }

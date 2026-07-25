@@ -8,11 +8,59 @@ public final class PhotoModeBlockRenderContext {
     }
 
     public static void begin(int x, int y, int z, int minX, int maxXExclusive, int minZ, int maxZExclusive) {
-        STATE.set(new State(x, y, z, minX, maxXExclusive, minZ, maxZExclusive, true, 0));
+        STATE.set(new State(x, y, z, minX, maxXExclusive, minZ, maxZExclusive, true, 0, 0));
+    }
+
+    public static void begin(
+            int x,
+            int y,
+            int z,
+            int minX,
+            int maxXExclusive,
+            int minZ,
+            int maxZExclusive,
+            int horizontalSideMask
+    ) {
+        begin(
+                x,
+                y,
+                z,
+                minX,
+                maxXExclusive,
+                minZ,
+                maxZExclusive,
+                horizontalSideMask,
+                0
+        );
+    }
+
+    public static void begin(
+            int x,
+            int y,
+            int z,
+            int minX,
+            int maxXExclusive,
+            int minZ,
+            int maxZExclusive,
+            int horizontalSideMask,
+            int liquidSideMask
+    ) {
+        STATE.set(new State(
+                x,
+                y,
+                z,
+                minX,
+                maxXExclusive,
+                minZ,
+                maxZExclusive,
+                true,
+                horizontalSideMask,
+                liquidSideMask
+        ));
     }
 
     public static void beginForcedSides(int x, int y, int z, int horizontalSideMask) {
-        STATE.set(new State(x, y, z, 0, 0, 0, 0, false, horizontalSideMask));
+        STATE.set(new State(x, y, z, 0, 0, 0, 0, false, horizontalSideMask, 0));
     }
 
     public static void end() {
@@ -50,6 +98,11 @@ public final class PhotoModeBlockRenderContext {
         return state != null && side >= 2 && side <= 5 && (state.horizontalSideMask & (1 << side)) != 0;
     }
 
+    public static boolean shouldForceHorizontalLiquidSide(int side) {
+        State state = STATE.get();
+        return state != null && side >= 2 && side <= 5 && (state.liquidSideMask & (1 << side)) != 0;
+    }
+
     public static boolean shouldUseSourceBrightness(int x, int y, int z) {
         State state = STATE.get();
         if (state == null) {
@@ -73,10 +126,10 @@ public final class PhotoModeBlockRenderContext {
             return false;
         }
 
-        return (state.horizontalSideMask & (1 << 2)) != 0 && state.x == x && state.z - 1 == z
-                || (state.horizontalSideMask & (1 << 3)) != 0 && state.x == x && state.z + 1 == z
-                || (state.horizontalSideMask & (1 << 4)) != 0 && state.x - 1 == x && state.z == z
-                || (state.horizontalSideMask & (1 << 5)) != 0 && state.x + 1 == x && state.z == z;
+        return (state.liquidSideMask & (1 << 2)) != 0 && state.x == x && state.z - 1 == z
+                || (state.liquidSideMask & (1 << 3)) != 0 && state.x == x && state.z + 1 == z
+                || (state.liquidSideMask & (1 << 4)) != 0 && state.x - 1 == x && state.z == z
+                || (state.liquidSideMask & (1 << 5)) != 0 && state.x + 1 == x && state.z == z;
     }
 
     public static boolean shouldForceHorizontalLiquidEdge(int x, int y, int z) {
@@ -85,16 +138,16 @@ public final class PhotoModeBlockRenderContext {
             return false;
         }
 
-        return (state.horizontalSideMask & (1 << 2)) != 0
+        return (state.liquidSideMask & (1 << 2)) != 0
                 && state.z - 1 == z
                 && (state.x == x || state.x + 1 == x)
-                || (state.horizontalSideMask & (1 << 3)) != 0
+                || (state.liquidSideMask & (1 << 3)) != 0
                 && state.z + 1 == z
                 && (state.x == x || state.x + 1 == x)
-                || (state.horizontalSideMask & (1 << 4)) != 0
+                || (state.liquidSideMask & (1 << 4)) != 0
                 && state.x - 1 == x
                 && (state.z == z || state.z + 1 == z)
-                || (state.horizontalSideMask & (1 << 5)) != 0
+                || (state.liquidSideMask & (1 << 5)) != 0
                 && state.x + 1 == x
                 && (state.z == z || state.z + 1 == z);
     }
@@ -124,7 +177,7 @@ public final class PhotoModeBlockRenderContext {
         private final int maxZExclusive;
         private final boolean hasRenderGrid;
         private final int horizontalSideMask;
-
+        private final int liquidSideMask;
         private State(
                 int x,
                 int y,
@@ -134,7 +187,8 @@ public final class PhotoModeBlockRenderContext {
                 int minZ,
                 int maxZExclusive,
                 boolean hasRenderGrid,
-                int horizontalSideMask
+                int horizontalSideMask,
+                int liquidSideMask
         ) {
             this.x = x;
             this.y = y;
@@ -145,6 +199,7 @@ public final class PhotoModeBlockRenderContext {
             this.maxZExclusive = maxZExclusive;
             this.hasRenderGrid = hasRenderGrid;
             this.horizontalSideMask = horizontalSideMask;
+            this.liquidSideMask = liquidSideMask;
         }
     }
 }

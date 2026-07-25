@@ -17,4 +17,5 @@ public abstract class MixinAngelicaChunkRenderer_PhotoMode {
             cir.setReturnValue(Boolean.FALSE);
         }
     }
+
 }

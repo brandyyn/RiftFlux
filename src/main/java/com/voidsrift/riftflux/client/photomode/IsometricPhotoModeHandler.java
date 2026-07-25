@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -159,6 +160,11 @@ public final class IsometricPhotoModeHandler {
             controller.adjustZoom(event.dwheel);
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public void onRenderWorldLast(RenderWorldLastEvent event) {
+        PhotoModeLiquidBoundaryRenderer.render(event);
     }
 
     @SubscribeEvent
