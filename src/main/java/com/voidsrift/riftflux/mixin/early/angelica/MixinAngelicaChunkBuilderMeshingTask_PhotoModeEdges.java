@@ -48,9 +48,6 @@ public abstract class MixinAngelicaChunkBuilderMeshingTask_PhotoModeEdges {
     @Unique
     private AngelicaPhotoModeRenderGrid.Bounds riftflux$horizontalGridBounds;
 
-    @Unique
-    private long riftflux$buildGridVersion;
-
     @Inject(
             method = "execute(Lorg/embeddedt/embeddium/impl/render/chunk/compile/ChunkBuildContext;"
                     + "Lorg/embeddedt/embeddium/impl/util/task/CancellationToken;)"
@@ -58,7 +55,7 @@ public abstract class MixinAngelicaChunkBuilderMeshingTask_PhotoModeEdges {
             at = @At("HEAD"),
             require = 1
     )
-    private void riftflux$capturePhotoBoundaryVersion(
+    private void riftflux$resetPhotoBoundaryState(
             CallbackInfoReturnable<ChunkBuildOutput> cir
     ) {
         this.riftflux$computedHorizontalGridBounds = false;
@@ -67,24 +64,6 @@ public abstract class MixinAngelicaChunkBuilderMeshingTask_PhotoModeEdges {
         this.riftflux$maxChunkX = 0;
         this.riftflux$minChunkZ = 1;
         this.riftflux$maxChunkZ = 0;
-        this.riftflux$buildGridVersion = AngelicaPhotoModeRenderGrid.getVersion();
-    }
-
-    @Inject(
-            method = "execute(Lorg/embeddedt/embeddium/impl/render/chunk/compile/ChunkBuildContext;"
-                    + "Lorg/embeddedt/embeddium/impl/util/task/CancellationToken;)"
-                    + "Lorg/embeddedt/embeddium/impl/render/chunk/compile/ChunkBuildOutput;",
-            at = @At("RETURN"),
-            cancellable = true,
-            require = 1
-    )
-    private void riftflux$discardMeshBuiltForOldPhotoBoundary(
-            CallbackInfoReturnable<ChunkBuildOutput> cir
-    ) {
-        if (IsometricPhotoModeController.instance().isActive()
-                && this.riftflux$buildGridVersion != AngelicaPhotoModeRenderGrid.getVersion()) {
-            cir.setReturnValue(null);
-        }
     }
 
     @Redirect(

@@ -11,7 +11,7 @@ public final class AngelicaPhotoModeRenderGrid {
     private static long nextVersion;
     private static Bounds candidateBounds;
     private static int stableCandidateFrames;
-    private static final int REQUIRED_STABLE_FRAMES = 1;
+    private static final int REQUIRED_STABLE_FRAMES = 3;
 
     private AngelicaPhotoModeRenderGrid() {
     }

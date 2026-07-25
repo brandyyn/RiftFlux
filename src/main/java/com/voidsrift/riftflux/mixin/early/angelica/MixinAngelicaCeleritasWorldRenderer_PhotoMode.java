@@ -53,9 +53,6 @@ public abstract class MixinAngelicaCeleritasWorldRenderer_PhotoMode {
         }
 
         for (RenderSection section : manager.getAllRenderSections()) {
-            if (!section.isBuilt() || !section.hasAnythingToRender()) {
-                continue;
-            }
             int chunkX = section.getChunkX();
             int chunkZ = section.getChunkZ();
             if (this.riftflux$isChangedBoundarySection(chunkX, chunkZ, current, changedSides)

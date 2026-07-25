@@ -150,12 +150,28 @@ public final class PhotoModeLiquidBoundaryRenderer {
         if (!world.blockExists(x, 64, z)) {
             return;
         }
-        for (int y = 0; y < 256; y++) {
+        Block liquidAbove = null;
+        int surfaceBrightness = 0;
+        for (int y = 255; y >= 0; y--) {
             Block block = RiftFluxFluidloggedLookup.getFluidOrBlock(world, x, y, z);
             if (block == null || block.getMaterial() == null || !block.getMaterial().isLiquid()) {
+                liquidAbove = null;
                 continue;
             }
-            BoundaryFace face = createFace(world, renderBlocks, block, x, y, z, side);
+            if (liquidAbove == null || !RiftFluxFluidloggedLookup.isSameFluid(block, liquidAbove)) {
+                surfaceBrightness = block.getMixedBrightnessForBlock(world, x, y, z);
+            }
+            liquidAbove = block;
+            BoundaryFace face = createFace(
+                    world,
+                    renderBlocks,
+                    block,
+                    x,
+                    y,
+                    z,
+                    side,
+                    surfaceBrightness
+            );
             if (face != null) {
                 faces.add(face);
             }
@@ -169,7 +185,8 @@ public final class PhotoModeLiquidBoundaryRenderer {
             int x,
             int y,
             int z,
-            int side
+            int side,
+            int brightness
     ) {
         IIcon icon = block.getIcon(side, world.getBlockMetadata(x, y, z));
         if (icon == null) {
@@ -179,10 +196,6 @@ public final class PhotoModeLiquidBoundaryRenderer {
         double[] heights = getHeights(world, renderBlocks, block, x, y, z);
         int color = block.colorMultiplier(world, x, y, z);
         float sideShade = side < 4 ? 0.8F : 0.6F;
-        int brightness = block.getMixedBrightnessForBlock(world, x, y, z);
-        if (world.provider == null || !world.provider.hasNoSky) {
-            brightness = 0x00F00000 | brightness & 0x000000F0;
-        }
         return new BoundaryFace(
                 x,
                 y,
@@ -206,10 +219,36 @@ public final class PhotoModeLiquidBoundaryRenderer {
     private static double[] getHeights(World world, RenderBlocks renderBlocks, Block block, int x, int y, int z) {
         if (block instanceof BlockFluidBase) {
             BlockFluidBase fluid = (BlockFluidBase) block;
-            float center = RenderBlockFluid.instance.getFluidHeightForRender(world, x, y, z, fluid);
-            if (center == 1.0F) {
-                return new double[]{1.0D, 1.0D, 1.0D, 1.0D};
+            RenderBlockFluid renderer = RenderBlockFluid.instance;
+            float center = renderer.getFluidHeightForRender(world, x, y, z, fluid);
+            if (center != 1.0F) {
+                float northWest = renderer.getFluidHeightAverage(new float[]{
+                        renderer.getFluidHeightForRender(world, x - 1, y, z - 1, fluid),
+                        renderer.getFluidHeightForRender(world, x - 1, y, z, fluid),
+                        renderer.getFluidHeightForRender(world, x, y, z - 1, fluid),
+                        center
+                });
+                float southWest = renderer.getFluidHeightAverage(new float[]{
+                        renderer.getFluidHeightForRender(world, x - 1, y, z, fluid),
+                        renderer.getFluidHeightForRender(world, x - 1, y, z + 1, fluid),
+                        renderer.getFluidHeightForRender(world, x, y, z + 1, fluid),
+                        center
+                });
+                float southEast = renderer.getFluidHeightAverage(new float[]{
+                        renderer.getFluidHeightForRender(world, x, y, z + 1, fluid),
+                        renderer.getFluidHeightForRender(world, x + 1, y, z, fluid),
+                        renderer.getFluidHeightForRender(world, x + 1, y, z + 1, fluid),
+                        center
+                });
+                float northEast = renderer.getFluidHeightAverage(new float[]{
+                        renderer.getFluidHeightForRender(world, x, y, z - 1, fluid),
+                        renderer.getFluidHeightForRender(world, x + 1, y, z - 1, fluid),
+                        renderer.getFluidHeightForRender(world, x + 1, y, z, fluid),
+                        center
+                });
+                return new double[]{northWest, southWest, southEast, northEast};
             }
+            return new double[]{center, center, center, center};
         }
         if (block instanceof BlockLiquid) {
             return new double[]{
