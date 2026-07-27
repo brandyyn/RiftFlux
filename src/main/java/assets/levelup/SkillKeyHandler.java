@@ -23,7 +23,7 @@ import net.minecraft.client.settings.KeyBinding;
 
 public final class SkillKeyHandler {
     public static final SkillKeyHandler INSTANCE = new SkillKeyHandler();
-    private final KeyBinding keys = new KeyBinding("LvlUpGUI", 38, "key.categories.gui");
+    private final KeyBinding keys = new KeyBinding("Class Skills", 38, "RiftFlux");
 
     private SkillKeyHandler() {
         ClientRegistry.registerKeyBinding((KeyBinding)this.keys);
@@ -34,10 +34,9 @@ public final class SkillKeyHandler {
         if (this.keys.getIsKeyPressed() && Minecraft.getMinecraft().currentScreen == null && Minecraft.getMinecraft().thePlayer != null) {
             if (LevelUpHUD.canShowSkills()) {
                 Minecraft.getMinecraft().displayGuiScreen((GuiScreen)new GuiSkills());
-            } else if (LevelUpHUD.canSelectClass()) {
+            } else if (LevelUpHUD.canOpenClassSkillsMenu()) {
                 Minecraft.getMinecraft().displayGuiScreen((GuiScreen)new GuiClasses());
             }
         }
     }
 }
-

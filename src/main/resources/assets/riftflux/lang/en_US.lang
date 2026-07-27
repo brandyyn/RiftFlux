@@ -309,3 +309,7 @@ entity.riftflux.pegasusmount.name=Pegasus
 entity.riftflux.turtlemount.name=Turtle
 entity.riftflux.bunnymount.name=Bunny
 entity.riftflux.geckomount.name=Gecko
+gui.riftflux.inventoryShortcut.photoMode=Pictobox
+gui.riftflux.inventoryShortcut.gokiStats=Personal Skills
+gui.riftflux.inventoryShortcut.levelUp=Class Skills
+gui.riftflux.inventoryShortcut.waypoints=Waypoints

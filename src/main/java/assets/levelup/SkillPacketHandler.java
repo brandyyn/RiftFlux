@@ -44,7 +44,7 @@ public final class SkillPacketHandler {
     }
 
     private void handleClassChange(byte newClass, EntityPlayerMP entityPlayerMP) {
-        if (newClass >= 0) {
+        if (ClassBonus.isValidClass(newClass) && LevelUpHUD.canSelectClass(entityPlayerMP)) {
             PlayerExtendedProperties.from((EntityPlayer)entityPlayerMP).setPlayerClass(newClass);
             FMLEventHandler.INSTANCE.loadPlayer((EntityPlayer)entityPlayerMP);
         }
@@ -112,6 +112,7 @@ public final class SkillPacketHandler {
             }
             buf.writeBoolean(dat[i].getBoolean());
         }
+        LevelUpTuning.writeTo(buf);
         FMLProxyPacket pkt = new FMLProxyPacket(buf, CHAN[3]);
         pkt.setTarget(Side.CLIENT);
         return pkt;
@@ -132,6 +133,6 @@ public final class SkillPacketHandler {
             properties[i].set(buf.readBoolean());
         }
         LevelUp.instance.useServerProperties();
+        LevelUpTuning.readFrom(buf);
     }
 }
-

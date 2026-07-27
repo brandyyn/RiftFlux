@@ -57,6 +57,7 @@ package assets.levelup;
 import assets.levelup.LevelUp;
 import assets.levelup.PlayerExtendedProperties;
 import com.google.common.collect.Sets;
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -136,10 +137,20 @@ public final class PlayerEventHandler {
                 event.newSpeed = event.newSpeed * itemstack.func_150997_a(event.block) / 3.0f;
             }
         }
-        if (event.block instanceof BlockStone || event.block == Blocks.cobblestone || event.block == Blocks.obsidian || event.block instanceof BlockOre) {
-            event.newSpeed += (float)(PlayerEventHandler.getSkill(event.entityPlayer, 0) / 5) * 0.2f;
+        if (event.block instanceof BlockStone
+                || event.block == Blocks.cobblestone
+                || event.block == Blocks.obsidian
+                || event.block instanceof BlockOre
+                || ores.contains(event.block)) {
+            event.newSpeed += (float)LevelUpTuning.steps(
+                    PlayerEventHandler.getSkill(event.entityPlayer, 0),
+                    ModConfig.levelUpMiningSpeedPointsPerStep
+            ) * ModConfig.levelUpMiningSpeedIncreasePerStep;
         } else if (event.block.getMaterial() == Material.wood) {
-            event.newSpeed += (float)(PlayerEventHandler.getSkill(event.entityPlayer, 3) / 5) * 0.2f;
+            event.newSpeed += (float)LevelUpTuning.steps(
+                    PlayerEventHandler.getSkill(event.entityPlayer, 3),
+                    ModConfig.levelUpWoodSpeedPointsPerStep
+            ) * ModConfig.levelUpWoodSpeedIncreasePerStep;
         }
     }
 
@@ -217,14 +228,15 @@ public final class PlayerEventHandler {
                 if (!event.isSilkTouching) {
                     LevelUp.incrementOreCounter(event.harvester, blockToCounter.get(event.block));
                 }
-                if (random.nextDouble() <= (double)skill / 200.0) {
+                if (ModConfig.levelUpMiningBonusDropCount > 0
+                        && LevelUpTuning.rollPerPoint(random, skill, ModConfig.levelUpMiningOreBonusChancePerPointPercent)) {
                     ItemStack bonusDrop = null;
                     for (ItemStack stack : event.drops) {
                         if (stack == null || stack.getItem() == null || stack.stackSize <= 0) {
                             continue;
                         }
                         bonusDrop = stack.copy();
-                        bonusDrop.stackSize = 1;
+                        bonusDrop.stackSize = ModConfig.levelUpMiningBonusDropCount;
                         break;
                     }
 
@@ -233,7 +245,7 @@ public final class PlayerEventHandler {
                         if (ID != null) {
                             int qutity = event.block.quantityDropped(event.blockMetadata, 0, random);
                             if (qutity > 0) {
-                                bonusDrop = new ItemStack(ID, Math.min(1, qutity), event.block.damageDropped(event.blockMetadata));
+                                bonusDrop = new ItemStack(ID, ModConfig.levelUpMiningBonusDropCount, event.block.damageDropped(event.blockMetadata));
                             }
                         }
                     }
@@ -247,7 +259,8 @@ public final class PlayerEventHandler {
                 }
             } else if (event.block instanceof BlockLog) {
                 int skill = PlayerEventHandler.getSkill(event.harvester, 3);
-                if (random.nextDouble() <= (double)skill / 150.0) {
+                if (ModConfig.levelUpWoodBonusPlankCount > 0
+                        && LevelUpTuning.rollPerPoint(random, skill, ModConfig.levelUpWoodPlankChancePerPointPercent)) {
                     ItemStack planks = null;
                     for (ItemStack stack : event.drops) {
                         if (stack == null || event.block != Block.getBlockFromItem((Item)stack.getItem())) continue;
@@ -255,22 +268,36 @@ public final class PlayerEventHandler {
                         break;
                     }
                     if (planks != null) {
+                        planks.stackSize = ModConfig.levelUpWoodBonusPlankCount;
                         event.drops.add(planks);
                     }
                 }
-                if (random.nextDouble() <= (double)skill / 150.0) {
-                    event.drops.add(new ItemStack(Items.stick, 2));
+                if (ModConfig.levelUpWoodBonusStickCount > 0
+                        && LevelUpTuning.rollPerPoint(random, skill, ModConfig.levelUpWoodStickChancePerPointPercent)) {
+                    event.drops.add(new ItemStack(Items.stick, ModConfig.levelUpWoodBonusStickCount));
+                }
+            } else if (event.block instanceof BlockGravel) {
+                int skill = PlayerEventHandler.getSkill(event.harvester, 11);
+                if (ModConfig.levelUpDiggingFlintCount > 0
+                        && LevelUpTuning.rollPerStep(
+                                random,
+                                skill,
+                                ModConfig.levelUpDiggingFlintPointsPerStep,
+                                ModConfig.levelUpDiggingFlintChancePerStepPercent
+                        )) {
+                    this.removeFromList(event.drops, event.block);
+                    event.drops.add(new ItemStack(Items.flint, ModConfig.levelUpDiggingFlintCount));
                 }
             } else if (event.block.getMaterial() == Material.ground) {
                 int skill = PlayerEventHandler.getSkill(event.harvester, 11);
-                if (random.nextFloat() <= (float)skill / 200.0f) {
+                if (LevelUpTuning.rollPerPoint(random, skill, ModConfig.levelUpDiggingLootChancePerPointPercent)) {
                     ItemStack[] aitemstack4 = digLoot;
-                    float f = random.nextFloat();
-                    if (f <= 0.002f) {
+                    float lootRoll = random.nextFloat() * 100.0F;
+                    if (lootRoll <= ModConfig.levelUpDiggingDiamondLootChancePercent) {
                         aitemstack4 = digLoot3;
-                    } else if (f <= 0.1f) {
+                    } else if (lootRoll <= ModConfig.levelUpDiggingValuableLootChancePercent) {
                         aitemstack4 = digLoot2;
-                    } else if (f <= 0.4f) {
+                    } else if (lootRoll <= ModConfig.levelUpDiggingToolLootChancePercent) {
                         aitemstack4 = digLoot1;
                     }
                     this.removeFromList(event.drops, event.block);
@@ -282,17 +309,11 @@ public final class PlayerEventHandler {
                         toDrop.setItemDamage(random.nextInt(80) + 20);
                     } else {
                         for (int i1 = 0; i1 < size - 1; ++i1) {
-                            if (!(random.nextFloat() < 0.5f)) continue;
+                            if (!LevelUpTuning.roll(random, ModConfig.levelUpDiggingExtraStackItemChancePercent)) continue;
                             event.drops.add(toDrop.copy());
                         }
                     }
                     event.drops.add(toDrop);
-                }
-            } else if (event.block instanceof BlockGravel) {
-                int skill = PlayerEventHandler.getSkill(event.harvester, 11);
-                if (random.nextInt(10) < skill / 5) {
-                    this.removeFromList(event.drops, event.block);
-                    event.drops.add(new ItemStack(Items.flint));
                 }
             }
         }
@@ -348,7 +369,13 @@ public final class PlayerEventHandler {
     private void doCropDrops(BlockEvent.BreakEvent event) {
         Random random = event.getPlayer().getRNG();
         int skill = PlayerEventHandler.getSkill(event.getPlayer(), 9);
-        if (random.nextInt(10) < skill / 5) {
+        if (ModConfig.levelUpFarmingBonusDropCount > 0
+                && LevelUpTuning.rollPerStep(
+                        random,
+                        skill,
+                        ModConfig.levelUpFarmingBonusDropPointsPerStep,
+                        ModConfig.levelUpFarmingBonusDropChancePerStepPercent
+                )) {
             Item ID = event.block.getItemDropped(event.blockMetadata, random, 0);
             if (ID == null) {
                 if (event.block == Blocks.pumpkin_stem) {
@@ -358,7 +385,13 @@ public final class PlayerEventHandler {
                 }
             }
             if (ID != null) {
-                event.world.spawnEntityInWorld((Entity)new EntityItem(event.world, (double)event.x, (double)event.y, (double)event.z, new ItemStack(ID, 1, event.block.damageDropped(event.blockMetadata))));
+                event.world.spawnEntityInWorld((Entity)new EntityItem(
+                        event.world,
+                        (double)event.x,
+                        (double)event.y,
+                        (double)event.z,
+                        new ItemStack(ID, ModConfig.levelUpFarmingBonusDropCount, event.block.damageDropped(event.blockMetadata))
+                ));
             }
         }
     }
@@ -383,14 +416,39 @@ public final class PlayerEventHandler {
 
     @SubscribeEvent
     public void onOreRegister(OreDictionary.OreRegisterEvent event) {
-        Block ore;
-        if (event.Name.startsWith("ore") && event.Ore != null && event.Ore.getItem() != null && (ore = Block.getBlockFromItem((Item)event.Ore.getItem())) != Blocks.air && !(ore instanceof BlockOre) && !(ore instanceof BlockRedstoneOre)) {
+        if (event.Name.startsWith("ore")) {
+            addOre(event.Ore);
+        }
+    }
+
+    public static void refreshRegisteredOres() {
+        for (String name : OreDictionary.getOreNames()) {
+            if (!name.startsWith("ore")) {
+                continue;
+            }
+            for (ItemStack stack : OreDictionary.getOres(name)) {
+                addOre(stack);
+            }
+        }
+    }
+
+    private static void addOre(ItemStack stack) {
+        if (stack == null || stack.getItem() == null) {
+            return;
+        }
+        Block ore = Block.getBlockFromItem((Item)stack.getItem());
+        if (ore != Blocks.air && !(ore instanceof BlockOre) && !(ore instanceof BlockRedstoneOre)) {
             ores.add(ore);
         }
     }
 
     public static int getFishingLoot(EntityPlayer player) {
-        if (player.getRNG().nextDouble() > (double)(PlayerEventHandler.getSkill(player, 10) / 5) * 0.05) {
+        if (!LevelUpTuning.rollPerStep(
+                player.getRNG(),
+                PlayerEventHandler.getSkill(player, 10),
+                ModConfig.levelUpFishingLootPointsPerStep,
+                ModConfig.levelUpFishingLootChancePerStepPercent
+        )) {
             return -1;
         }
         return player.getRNG().nextInt(lootList.length);

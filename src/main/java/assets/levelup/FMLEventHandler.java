@@ -89,21 +89,49 @@ public final class FMLEventHandler {
             ItemStack stack;
             TileEntityFurnace furnace;
             EntityPlayer player = event.player;
-            if (!player.worldObj.isRemote && player.openContainer instanceof ContainerFurnace && (furnace = ((ContainerFurnace)player.openContainer).tileFurnace) != null && furnace.isBurning() && furnace.canSmelt() && (stack = furnace.getStackInSlot(0)) != null && (bonus = stack.getItem().getItemUseAction(stack) == EnumAction.eat ? FMLEventHandler.getSkill(player, 7) : FMLEventHandler.getSkill(player, 4)) > 10 && (time = player.getRNG().nextInt(bonus / 10)) != 0 && furnace.furnaceCookTime + time < 200) {
-                furnace.furnaceCookTime += time;
+            if (!player.worldObj.isRemote
+                    && player.openContainer instanceof ContainerFurnace
+                    && (furnace = ((ContainerFurnace)player.openContainer).tileFurnace) != null
+                    && furnace.isBurning()
+                    && furnace.canSmelt()
+                    && (stack = furnace.getStackInSlot(0)) != null) {
+                boolean cooking = stack.getItem().getItemUseAction(stack) == EnumAction.eat;
+                bonus = FMLEventHandler.getSkill(player, cooking ? 7 : 4);
+                int speedRange = LevelUpTuning.steps(
+                        bonus,
+                        cooking ? ModConfig.levelUpCookingSpeedPointsPerStep : ModConfig.levelUpSmeltingSpeedPointsPerStep
+                ) * (cooking ? ModConfig.levelUpCookingSpeedExtraTicksPerStep : ModConfig.levelUpSmeltingSpeedExtraTicksPerStep);
+                if (speedRange > 1
+                        && (time = player.getRNG().nextInt(speedRange)) != 0
+                        && furnace.furnaceCookTime + time < 200) {
+                    furnace.furnaceCookTime += time;
+                }
             }
             PlayerExtendedProperties properties = PlayerExtendedProperties.from(player);
             boolean hasClass = PlayerExtendedProperties.getPlayerClass(player) != 0;
-            if ((hasClass || ModConfig.levelUpEarnSkillPointsBeforeClassChoice) && (diff = PlayerEventHandler.xpPerLevel * (double)(player.experienceLevel - 4) + (double)(hasClass ? ClassBonus.getBonusPoints() : 0) - (double)properties.getSkillPoints()) >= 1.0) {
+            if ((hasClass || ModConfig.levelUpEarnSkillPointsBeforeClassChoice) && (diff = PlayerEventHandler.xpPerLevel * (double)(player.experienceLevel - 4) + (double)(hasClass ? ClassBonus.getTotalBonus(PlayerExtendedProperties.getPlayerClass(player)) : 0) - (double)properties.getSkillPoints()) >= 1.0) {
                 properties.addToSkill("XP", (int)Math.floor(diff));
             }
-            if (!player.worldObj.isRemote && player.getCurrentEquippedItem() != null && player.getCurrentEquippedItem().getItem() instanceof ItemHoe && (skill = FMLEventHandler.getSkill(player, 9)) != 0 && player.getRNG().nextFloat() <= (float)skill / 2500.0f) {
-                this.growCropsAround(player.worldObj, skill / 4, player);
+            if (!player.worldObj.isRemote
+                    && player.getCurrentEquippedItem() != null
+                    && player.getCurrentEquippedItem().getItem() instanceof ItemHoe
+                    && (skill = FMLEventHandler.getSkill(player, 9)) != 0
+                    && LevelUpTuning.rollPerPoint(player.getRNG(), skill, ModConfig.levelUpFarmingGrowthChancePerPointPercent)) {
+                this.growCropsAround(
+                        player.worldObj,
+                        skill / Math.max(1, ModConfig.levelUpFarmingGrowthRangePointsPerBlock),
+                        player
+                );
             }
             IAttributeInstance atinst = player.getEntityAttribute(SharedMonsterAttributes.movementSpeed);
             skill = FMLEventHandler.getSkill(player, 6);
             if (skill != 0) {
-                AttributeModifier mod = new AttributeModifier(speedID, "SprintingSkillSpeed", (double)((float)skill / 100.0f), 2);
+                AttributeModifier mod = new AttributeModifier(
+                        speedID,
+                        "SprintingSkillSpeed",
+                        (double)((float)skill * ModConfig.levelUpAthleticsSprintSpeedPercentPerPoint / 100.0F),
+                        2
+                );
                 if (player.isSprinting()) {
                     if (atinst.getModifier(speedID) == null) {
                         atinst.applyModifier(mod);
@@ -112,11 +140,20 @@ public final class FMLEventHandler {
                     atinst.removeModifier(mod);
                 }
                 if (player.fallDistance > 0.0f) {
-                    player.fallDistance *= 1.0f - (float)(skill / 5) / 100.0f;
+                    float reduction = (float)LevelUpTuning.steps(
+                            skill,
+                            ModConfig.levelUpAthleticsFallReductionPointsPerStep
+                    ) * ModConfig.levelUpAthleticsFallReductionPercentPerStep / 100.0F;
+                    player.fallDistance *= Math.max(0.0F, 1.0F - reduction);
                 }
             }
             if ((skill = FMLEventHandler.getSkill(player, 8)) != 0) {
-                AttributeModifier mod = new AttributeModifier(sneakID, "SneakingSkillSpeed", (double)((float)(2 * skill) / 100.0f), 2);
+                AttributeModifier mod = new AttributeModifier(
+                        sneakID,
+                        "SneakingSkillSpeed",
+                        (double)((float)skill * ModConfig.levelUpSneakingSpeedPercentPerPoint / 100.0F),
+                        2
+                );
                 if (player.isSneaking()) {
                     if (atinst.getModifier(sneakID) == null) {
                         atinst.applyModifier(mod);
@@ -169,13 +206,25 @@ public final class FMLEventHandler {
             Random random = event.player.getRNG();
             ItemStack add = null;
             if (event.smelting.getItemUseAction() == EnumAction.eat) {
-                if (random.nextFloat() <= (float)FMLEventHandler.getSkill(event.player, 7) / 200.0f) {
+                if (ModConfig.levelUpCookingBonusYieldExtraCopies > 0
+                        && LevelUpTuning.rollPerPoint(
+                                random,
+                                FMLEventHandler.getSkill(event.player, 7),
+                                ModConfig.levelUpCookingBonusYieldChancePerPointPercent
+                        )) {
                     add = event.smelting.copy();
+                    add.stackSize *= ModConfig.levelUpCookingBonusYieldExtraCopies;
                 }
-            } else if (random.nextFloat() <= (float)FMLEventHandler.getSkill(event.player, 4) / 200.0f) {
+            } else if (ModConfig.levelUpSmeltingBonusYieldExtraCopies > 0
+                    && LevelUpTuning.rollPerPoint(
+                            random,
+                            FMLEventHandler.getSkill(event.player, 4),
+                            ModConfig.levelUpSmeltingBonusYieldChancePerPointPercent
+                    )) {
                 add = event.smelting.copy();
+                add.stackSize *= ModConfig.levelUpSmeltingBonusYieldExtraCopies;
             }
-            if ((entityitem = ForgeHooks.onPlayerTossEvent((EntityPlayer)event.player, (ItemStack)add, (boolean)true)) != null) {
+            if (add != null && (entityitem = ForgeHooks.onPlayerTossEvent((EntityPlayer)event.player, (ItemStack)add, (boolean)true)) != null) {
                 entityitem.delayBeforeCanPickup = 0;
                 entityitem.func_145797_a(event.player.getCommandSenderName());
             }

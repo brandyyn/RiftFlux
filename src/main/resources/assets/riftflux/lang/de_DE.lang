@@ -5,3 +5,7 @@ entity.riftflux.GSSkeletonCat.name=Skelettkatze
 entity.riftflux.GSSkullCrawler.name=Totenkopfkriecher
 entity.riftflux.GSWitherSkullCrawler.name=Witherkopfkriecher
 entity.riftflux.GSZombieSkullCrawler.name=Zombiekopfkriecher
+gui.riftflux.inventoryShortcut.photoMode=Pictobox
+gui.riftflux.inventoryShortcut.gokiStats=Persönliche Fähigkeiten
+gui.riftflux.inventoryShortcut.levelUp=Klassenfertigkeiten
+gui.riftflux.inventoryShortcut.waypoints=Wegpunkte

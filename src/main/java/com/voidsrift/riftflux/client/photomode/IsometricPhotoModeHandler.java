@@ -21,8 +21,6 @@ public final class IsometricPhotoModeHandler {
     private static final String CATEGORY = "RiftFlux";
     private static final KeyBinding TOGGLE_PHOTO_MODE = new KeyBinding("Isometric Photo Mode", Keyboard.KEY_P, CATEGORY);
     private static final KeyBinding TOGGLE_PLAYER_CONTROL = new KeyBinding("Photo Mode Player Control", Keyboard.KEY_C, CATEGORY);
-    private static final KeyBinding ROTATE_UP = new KeyBinding("Photo Mode Rotate Up", Keyboard.KEY_UP, CATEGORY);
-    private static final KeyBinding ROTATE_DOWN = new KeyBinding("Photo Mode Rotate Down", Keyboard.KEY_DOWN, CATEGORY);
     private static final int HOLD_ROTATE_DELAY_TICKS = 3;
     private static boolean registered;
 
@@ -40,8 +38,6 @@ public final class IsometricPhotoModeHandler {
 
         ClientRegistry.registerKeyBinding(TOGGLE_PHOTO_MODE);
         ClientRegistry.registerKeyBinding(TOGGLE_PLAYER_CONTROL);
-        ClientRegistry.registerKeyBinding(ROTATE_UP);
-        ClientRegistry.registerKeyBinding(ROTATE_DOWN);
 
         IsometricPhotoModeHandler handler = new IsometricPhotoModeHandler();
         FMLCommonHandler.instance().bus().register(handler);
@@ -253,9 +249,9 @@ public final class IsometricPhotoModeHandler {
     }
 
     private int getVerticalRotationDirection() {
-        boolean rotateUpDown = this.isKeyBindingDown(ROTATE_DOWN)
+        boolean rotateUpDown = Keyboard.isKeyDown(Keyboard.KEY_DOWN)
                 || this.isSneakMovementComboDown(this.mc.gameSettings.keyBindBack);
-        boolean rotateDownDown = this.isKeyBindingDown(ROTATE_UP)
+        boolean rotateDownDown = Keyboard.isKeyDown(Keyboard.KEY_UP)
                 || this.isSneakMovementComboDown(this.mc.gameSettings.keyBindForward);
 
         if (rotateUpDown == rotateDownDown) {

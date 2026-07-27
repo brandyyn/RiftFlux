@@ -14,7 +14,7 @@ import goki.stats.client.gui.GuiStats;
 @SideOnly(Side.CLIENT)
 public final class GokiStatsClientHooks {
     private static final String CATEGORY = "RiftFlux";
-    private static final KeyBinding STATS_MENU = new KeyBinding("Open Stats Menu", 21, CATEGORY);
+    private static final KeyBinding STATS_MENU = new KeyBinding("Personal Skills", 21, CATEGORY);
     private static boolean registered;
 
     private GokiStatsClientHooks() {

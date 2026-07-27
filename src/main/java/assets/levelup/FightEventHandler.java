@@ -52,7 +52,10 @@ public final class FightEventHandler {
             float meleeSneakAttackDamageMultiplier = Math.max(0.0f, ModConfig.levelUpMeleeSneakAttackDamageMultiplier);
             if (damagesource instanceof EntityDamageSourceIndirect) {
                 if (!damagesource.damageType.equals("arrow")) {
-                    i *= 1.0f + (float)BowEventHandler.getArcherSkill(entityplayer) / 100.0f;
+                    i *= 1.0F
+                            + (float)BowEventHandler.getArcherSkill(entityplayer)
+                            * ModConfig.levelUpArcheryProjectileDamagePercentPerPoint
+                            / 100.0F;
                 }
                 if (rangedSneakAttackBonusEnabled
                         && rangedSneakAttackDamageMultiplier > 0.0f
@@ -71,10 +74,17 @@ public final class FightEventHandler {
             } else {
                 if (entityplayer.getCurrentEquippedItem() != null) {
                     j = this.getSwordSkill(entityplayer);
-                    if (entityplayer.getRNG().nextDouble() <= (double)j / 200.0) {
-                        i *= 2.0f;
+                    if (LevelUpTuning.rollPerPoint(
+                            entityplayer.getRNG(),
+                            j,
+                            ModConfig.levelUpSwordCritChancePerPointPercent
+                    )) {
+                        i *= ModConfig.levelUpSwordCritDamageMultiplier;
                     }
-                    i *= 1.0f + (float)(j / 5) / 20.0f;
+                    i *= 1.0F
+                            + (float)LevelUpTuning.steps(j, ModConfig.levelUpSwordDamagePointsPerStep)
+                            * ModConfig.levelUpSwordDamagePercentPerStep
+                            / 100.0F;
                 }
                 if (meleeSneakAttackBonusEnabled
                         && meleeSneakAttackDamageMultiplier > 0.0f
@@ -95,10 +105,19 @@ public final class FightEventHandler {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
             j = this.getDefenseSkill(player);
             if (!damagesource.isUnblockable()) {
-                i *= 1.0f - (float)(j / 5) / 20.0f;
+                float reduction = (float)LevelUpTuning.steps(
+                        j,
+                        ModConfig.levelUpDefenseReductionPointsPerStep
+                ) * ModConfig.levelUpDefenseReductionPercentPerStep / 100.0F;
+                i *= Math.max(0.0F, 1.0F - reduction);
             }
-            if (player.isBlocking() && player.getRNG().nextFloat() < (float)j / 100.0f) {
-                i *= 0.0f;
+            if (player.isBlocking()
+                    && LevelUpTuning.rollPerPoint(
+                            player.getRNG(),
+                            j,
+                            ModConfig.levelUpDefenseSuperBlockChancePerPointPercent
+                    )) {
+                i *= ModConfig.levelUpDefenseSuperBlockDamageMultiplier;
             }
         }
         event.ammount = i;
@@ -146,7 +165,13 @@ public final class FightEventHandler {
         if (entityLiving == null || player == null) {
             return false;
         }
-        if (FightEventHandler.getDistance(entityLiving, (EntityLivingBase)player) > 256.0f - (float)(PlayerExtendedProperties.from(player).getSkillFromIndex("Sneaking") / 5) * 12.8f) {
+        float baseSightRange = ModConfig.levelUpSneakingBaseMobSightRange;
+        float sightDistanceSquared = baseSightRange * baseSightRange
+                - (float)LevelUpTuning.steps(
+                        PlayerExtendedProperties.from(player).getSkillFromIndex("Sneaking"),
+                        ModConfig.levelUpSneakingSightReductionPointsPerStep
+                ) * ModConfig.levelUpSneakingSightRangeReductionPerStep;
+        if (FightEventHandler.getDistance(entityLiving, (EntityLivingBase)player) > Math.max(0.0F, sightDistanceSquared)) {
             return false;
         }
         return entityLiving.canEntityBeSeen((Entity)player) && FightEventHandler.entityIsFacing((EntityLivingBase)player, entityLiving);

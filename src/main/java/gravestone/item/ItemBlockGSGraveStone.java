@@ -28,6 +28,21 @@ public class ItemBlockGSGraveStone extends ItemBlock {
       return 0;
    }
 
+   @Override
+   public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side,
+                               float hitX, float hitY, float hitZ, int metadata) {
+      if (!world.setBlock(x, y, z, this.field_150939_a, metadata, 1)) {
+         return false;
+      }
+
+      if (world.getBlock(x, y, z) == this.field_150939_a) {
+         this.field_150939_a.onBlockPlacedBy(world, x, y, z, player, stack);
+         this.field_150939_a.onPostBlockPlaced(world, x, y, z, metadata);
+         world.markBlockForUpdate(x, y, z);
+      }
+      return true;
+   }
+
    public String getUnlocalizedName(ItemStack itemStack) {
       EnumGraves graveType;
       if (itemStack.stackTagCompound != null && itemStack.stackTagCompound.hasKey("GraveType")) {

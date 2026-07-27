@@ -1,7 +1,7 @@
 package com.voidsrift.riftflux.mixin.early.angelica;
 
-import com.voidsrift.riftflux.client.sky.CloudTimeFadeHelper;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeController;
+import com.voidsrift.riftflux.client.sky.CloudTimeFadeHelper;
 import net.minecraft.client.Minecraft;
 import org.embeddedt.embeddium.impl.gl.shader.GlProgram;
 import org.embeddedt.embeddium.impl.gl.shader.GlShader;
@@ -28,7 +28,7 @@ public abstract class MixinAngelicaCloudRenderer_CloudTimeFade {
     private int riftflux$cloudOpacityUniformLocation = -1;
 
     @Inject(method = "render(IF)Z", at = @At("HEAD"), cancellable = true)
-    private void riftflux$skipFullyTransparentClouds(
+    private void riftflux$skipHiddenClouds(
             int cloudTicks,
             float partialTicks,
             CallbackInfoReturnable<Boolean> cir
@@ -88,4 +88,5 @@ public abstract class MixinAngelicaCloudRenderer_CloudTimeFade {
             GL20.glUniform1f(this.riftflux$cloudOpacityUniformLocation, opacity);
         }
     }
+
 }

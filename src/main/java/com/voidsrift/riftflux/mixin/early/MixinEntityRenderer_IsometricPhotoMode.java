@@ -39,9 +39,6 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
     protected abstract float getFOVModifier(float partialTicks, boolean useFovSetting);
 
     @Shadow
-    protected abstract void renderCloudsCheck(RenderGlobal renderGlobal, float partialTicks);
-
-    @Shadow
     public abstract void setupOverlayRendering();
 
     @Redirect(
@@ -122,21 +119,6 @@ public abstract class MixinEntityRenderer_IsometricPhotoMode {
         } finally {
             this.riftflux$popPerspectiveProjection();
         }
-    }
-
-    @Redirect(
-            method = "renderWorld(FJ)V",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/EntityRenderer;renderCloudsCheck(Lnet/minecraft/client/renderer/RenderGlobal;F)V"
-            ),
-            require = 0
-    )
-    private void riftflux$renderCloudsWithPerspective(EntityRenderer entityRenderer, RenderGlobal renderGlobal, float partialTicks) {
-        if (IsometricPhotoModeController.instance().isActive()) {
-            return;
-        }
-        this.renderCloudsCheck(renderGlobal, partialTicks);
     }
 
     @Redirect(

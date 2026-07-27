@@ -118,6 +118,7 @@ public final class LevelUp {
         boolean legacyRecipes = ModConfig.levelUpEnableLegacyRecipes;
         boolean itemRecipesEnabled = ModConfig.levelUpEnableItemRecipes;
         this.useServerProperties();
+        LevelUpTuning.applyLocalConfig();
         List<String> blackList = Arrays.asList(ModConfig.levelUpFarmingBlacklist);
         FMLEventHandler.INSTANCE.addCropsToBlackList(blackList);
         if (config.hasChanged()) {
@@ -187,6 +188,7 @@ public final class LevelUp {
         }
         FMLCommonHandler.instance().bus().register((Object)FMLEventHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register((Object)new PlayerEventHandler());
+        PlayerEventHandler.refreshRegisteredOres();
     }
 
     private void initClientProperties() {
@@ -210,7 +212,7 @@ public final class LevelUp {
         String limitedBonus = "This is a bonus related to a few classes";
         this.serverProperties = new Property[]{
                 config.get("LevelUp", "MaxPointsPerSkill", ModConfig.levelUpMaxPointsPerSkill, "Minimum is 1"),
-                config.get("LevelUp", "BonusPointsForClasses", ModConfig.levelUpBonusPointsForClasses, "Points given when choosing a class, allocated automatically.\n Minimum is 0, Maximum is max points per skill times 2"),
+                config.get("LevelUp", "BonusPointsForClasses", ModConfig.levelUpBonusPointsForClasses, "Legacy class-bonus total. ClassSkillBonuses controls actual starting skills."),
                 config.get("LevelUp", "XpGainPerLevel", ModConfig.levelUpXpGainPerLevel, "Minimum is 0"),
                 config.get("LevelUp", "SkillPointsLostOnDeathPercent", ModConfig.levelUpSkillPointsLostOnDeathPercent, "How much skill points are lost on death, in percent.").setMinValue(0).setMaxValue(100),
                 config.get("LevelUp", "UseOldSpeedDirtAndGravelDigging", ModConfig.levelUpUseOldSpeedDirtAndGravelDigging),
@@ -308,22 +310,19 @@ public final class LevelUp {
     }
 
     public static void giveBonusFightingXP(EntityPlayer player) {
-        byte pClass;
-        if (bonusFightingXP && ((pClass = PlayerExtendedProperties.getPlayerClass(player)) == 2 || pClass == 5 || pClass == 8 || pClass == 11)) {
+        if (bonusFightingXP && ClassBonus.hasBonusSource(PlayerExtendedProperties.getPlayerClass(player), ClassBonus.BonusType.COMBAT)) {
             player.addExperience(2);
         }
     }
 
     public static void giveBonusCraftingXP(EntityPlayer player) {
-        byte pClass;
-        if (bonusCraftingXP && ((pClass = PlayerExtendedProperties.getPlayerClass(player)) == 3 || pClass == 6 || pClass == 9 || pClass == 12)) {
+        if (bonusCraftingXP && ClassBonus.hasBonusSource(PlayerExtendedProperties.getPlayerClass(player), ClassBonus.BonusType.CRAFTING)) {
             LevelUp.runBonusCounting(player, 1);
         }
     }
 
     public static void giveBonusMiningXP(EntityPlayer player) {
-        byte pClass;
-        if (bonusMiningXP && ((pClass = PlayerExtendedProperties.getPlayerClass(player)) == 1 || pClass == 4 || pClass == 7 || pClass == 10)) {
+        if (bonusMiningXP && ClassBonus.hasBonusSource(PlayerExtendedProperties.getPlayerClass(player), ClassBonus.BonusType.MINING)) {
             LevelUp.runBonusCounting(player, 0);
         }
     }

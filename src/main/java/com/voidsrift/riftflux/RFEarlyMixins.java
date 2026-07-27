@@ -193,8 +193,17 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinItemInWorldManager_LegacyBreakProgress");
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            if (ModConfig.enableBeta18SwampColors) {
+                mixins.add("early.MixinBiomeGenSwamp_Beta18Colors");
+            }
+            if (ModConfig.enableBeta18SwampWaterColor) {
+                mixins.add("early.MixinBiomeGenBase_Beta18SwampWater");
+            }
             if (ModConfig.fixUnderwaterMobDarkening) {
                 mixins.add("early.MixinEntity_RiftFluxUnderwaterBrightness");
+            }
+            if (ModConfig.enableInvasionModule) {
+                mixins.add("early.MixinRendererLivingEntity_InvasionNormals");
             }
             if (ModConfig.enablePostProcessing) {
                 mixins.add("early.MixinEntityRenderer_PostProcessBeforeHud");
@@ -434,6 +443,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityRenderer_BetaStyleFogDistance");
             mixins.add("early.MixinWorld_BetaStyleCloudColor");
             mixins.add("early.MixinRenderGlobal_CloudTimeFade");
+            mixins.add("early.MixinEntityRenderer_CloudRendering");
             if (hasClass("com.gtnewhorizons.angelica.render.CloudRenderer")) {
                 mixins.add("early.angelica.MixinAngelicaCloudRenderer_CloudTimeFade");
             }

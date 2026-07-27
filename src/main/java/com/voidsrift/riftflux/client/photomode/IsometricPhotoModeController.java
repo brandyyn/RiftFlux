@@ -43,6 +43,7 @@ public final class IsometricPhotoModeController {
     private static final double RENDERED_DEPTH_CAMERA_EPSILON = 1.0E-4D;
     private static final float RENDERED_DEPTH_ANGLE_EPSILON = 0.25F;
     private static final double ZOOM_STEP_FACTOR = 0.9D;
+    private static final double CUTAWAY_ZOOM_STEP = 0.1D;
     private static final double ZOOM_SMOOTHING_FACTOR = 0.35D;
     private static final double ZOOM_SMOOTHING_EPSILON = 1.0E-3D;
     private static final float ROTATION_ANIMATION_TICKS = 12.0F;
@@ -75,6 +76,10 @@ public final class IsometricPhotoModeController {
     private double previousOrthographicViewHeight = DEFAULT_ORTHOGRAPHIC_VIEW_HEIGHT;
     private double orthographicViewHeight = DEFAULT_ORTHOGRAPHIC_VIEW_HEIGHT;
     private double targetOrthographicViewHeight = DEFAULT_ORTHOGRAPHIC_VIEW_HEIGHT;
+    private double terrainCutawayRequiredReach = INITIAL_CAMERA_DISTANCE + 2.0D;
+    private double terrainCutawayProgress;
+    private double targetTerrainCutawayProgress;
+    private boolean terrainCutawayReachCaptured;
     private int terrainRefreshToken;
     private float currentYaw;
     private float currentPitch = DEFAULT_PITCH;
@@ -155,11 +160,15 @@ public final class IsometricPhotoModeController {
         this.pitch = DEFAULT_PITCH;
         this.orthographicViewHeight = this.clamp(
                 DEFAULT_ORTHOGRAPHIC_VIEW_HEIGHT,
-                MIN_ORTHOGRAPHIC_VIEW_HEIGHT,
+                this.getMinOrthographicViewHeight(),
                 this.getMaxOrthographicViewHeight()
         );
         this.previousOrthographicViewHeight = this.orthographicViewHeight;
         this.targetOrthographicViewHeight = this.orthographicViewHeight;
+        this.terrainCutawayRequiredReach = INITIAL_CAMERA_DISTANCE + 2.0D;
+        this.terrainCutawayProgress = 0.0D;
+        this.targetTerrainCutawayProgress = 0.0D;
+        this.terrainCutawayReachCaptured = false;
         this.orbitDistance = INITIAL_CAMERA_DISTANCE;
         this.targetYaw = DIAGONAL_YAWS[this.yawIndex];
         this.currentYaw = this.targetYaw;
@@ -386,14 +395,32 @@ public final class IsometricPhotoModeController {
         double nextTarget = this.targetOrthographicViewHeight;
         for (int index = 0; index < steps; index++) {
             if (scrollDelta > 0) {
-                nextTarget *= ZOOM_STEP_FACTOR;
+                if (ModConfig.isometricPhotoModeAllowZoomThroughBlocks
+                        && nextTarget <= MIN_ORTHOGRAPHIC_VIEW_HEIGHT + ZOOM_SMOOTHING_EPSILON) {
+                    this.targetTerrainCutawayProgress = this.clamp(
+                            this.targetTerrainCutawayProgress + CUTAWAY_ZOOM_STEP,
+                            0.0D,
+                            1.0D
+                    );
+                } else {
+                    nextTarget = Math.max(MIN_ORTHOGRAPHIC_VIEW_HEIGHT, nextTarget * ZOOM_STEP_FACTOR);
+                }
             } else {
-                nextTarget /= ZOOM_STEP_FACTOR;
+                if (ModConfig.isometricPhotoModeAllowZoomThroughBlocks
+                        && this.targetTerrainCutawayProgress > 0.0D) {
+                    this.targetTerrainCutawayProgress = this.clamp(
+                            this.targetTerrainCutawayProgress - CUTAWAY_ZOOM_STEP,
+                            0.0D,
+                            1.0D
+                    );
+                } else {
+                    nextTarget /= ZOOM_STEP_FACTOR;
+                }
             }
         }
         this.targetOrthographicViewHeight = this.clamp(
                 nextTarget,
-                MIN_ORTHOGRAPHIC_VIEW_HEIGHT,
+                this.getMinOrthographicViewHeight(),
                 this.getMaxOrthographicViewHeight()
         );
         this.requestTerrainRefresh();
@@ -413,6 +440,10 @@ public final class IsometricPhotoModeController {
         this.startPitch = this.currentPitch;
         this.rotationProgress = 1.0F;
         this.orbitDistance = INITIAL_CAMERA_DISTANCE;
+        this.terrainCutawayRequiredReach = INITIAL_CAMERA_DISTANCE + 2.0D;
+        this.terrainCutawayProgress = 0.0D;
+        this.targetTerrainCutawayProgress = 0.0D;
+        this.terrainCutawayReachCaptured = false;
         this.invalidatePivotTarget();
         this.applyCameraState();
         this.syncCameraRenderState();
@@ -476,6 +507,31 @@ public final class IsometricPhotoModeController {
         double progress = this.clamp((double) partialTicks, 0.0D, 1.0D);
         return this.previousOrthographicViewHeight
                 + (this.orthographicViewHeight - this.previousOrthographicViewHeight) * progress;
+    }
+
+    public float getTerrainCutawayRadius() {
+        if (!this.isActive() || !ModConfig.isometricPhotoModeAllowZoomThroughBlocks
+                || this.terrainCutawayProgress <= 0.0D) {
+            this.terrainCutawayRequiredReach = Math.max(
+                    INITIAL_CAMERA_DISTANCE + 2.0D,
+                    this.orbitDistance + 2.0D
+            );
+            this.terrainCutawayReachCaptured = false;
+            return 0.0F;
+        }
+
+        if (!this.terrainCutawayReachCaptured) {
+            double requiredReach = Math.max(INITIAL_CAMERA_DISTANCE + 2.0D, this.orbitDistance + 2.0D);
+            if (this.hasRenderedDepthPivot) {
+                double dx = this.renderedDepthPivotX - this.renderedDepthCameraX;
+                double dy = this.renderedDepthPivotY - this.renderedDepthCameraY;
+                double dz = this.renderedDepthPivotZ - this.renderedDepthCameraZ;
+                requiredReach = Math.max(requiredReach, Math.sqrt(dx * dx + dy * dy + dz * dz) + 2.0D);
+            }
+            this.terrainCutawayRequiredReach = requiredReach;
+            this.terrainCutawayReachCaptured = true;
+        }
+        return (float) (this.terrainCutawayRequiredReach * this.terrainCutawayProgress);
     }
 
     public void renderControlStatusOverlay(float partialTicks) {
@@ -802,11 +858,17 @@ public final class IsometricPhotoModeController {
 
     private double getMaxOrthographicViewHeight() {
         double configuredMax = ModConfig.isometricPhotoModeMaxZoomOut;
-        if (configuredMax < MIN_ORTHOGRAPHIC_VIEW_HEIGHT || Double.isNaN(configuredMax) || Double.isInfinite(configuredMax)) {
+        if (configuredMax < this.getMinOrthographicViewHeight()
+                || Double.isNaN(configuredMax)
+                || Double.isInfinite(configuredMax)) {
             return FALLBACK_MAX_ORTHOGRAPHIC_VIEW_HEIGHT;
         }
 
         return configuredMax;
+    }
+
+    private double getMinOrthographicViewHeight() {
+        return MIN_ORTHOGRAPHIC_VIEW_HEIGHT;
     }
 
     private void tickAnimation() {
@@ -815,6 +877,7 @@ public final class IsometricPhotoModeController {
         }
 
         this.tickZoomAnimation();
+        this.tickTerrainCutawayAnimation();
         this.previousRotationProgress = this.rotationProgress;
         if (this.rotationProgress < 1.0F) {
             this.rotationProgress = Math.min(1.0F, this.rotationProgress + 1.0F / ROTATION_ANIMATION_TICKS);
@@ -846,7 +909,29 @@ public final class IsometricPhotoModeController {
         this.requestTerrainRefresh();
     }
 
+    private void tickTerrainCutawayAnimation() {
+        if (!ModConfig.isometricPhotoModeAllowZoomThroughBlocks) {
+            this.targetTerrainCutawayProgress = 0.0D;
+        }
+
+        double delta = this.targetTerrainCutawayProgress - this.terrainCutawayProgress;
+        if (Math.abs(delta) <= ZOOM_SMOOTHING_EPSILON) {
+            this.terrainCutawayProgress = this.targetTerrainCutawayProgress;
+        } else {
+            this.terrainCutawayProgress += delta * ZOOM_SMOOTHING_FACTOR;
+        }
+        if (this.terrainCutawayProgress <= 0.0D && this.targetTerrainCutawayProgress <= 0.0D) {
+            this.terrainCutawayProgress = 0.0D;
+            this.terrainCutawayReachCaptured = false;
+        }
+    }
+
     private void beginRotationTween(float startYawValue, float startPitchValue) {
+        this.terrainCutawayRequiredReach = Math.max(
+                INITIAL_CAMERA_DISTANCE + 2.0D,
+                this.orbitDistance + 2.0D
+        );
+        this.terrainCutawayReachCaptured = false;
         this.currentYaw = startYawValue;
         this.currentPitch = startPitchValue;
         this.startYaw = this.currentYaw;
@@ -1286,6 +1371,10 @@ public final class IsometricPhotoModeController {
         this.previousOrthographicViewHeight = DEFAULT_ORTHOGRAPHIC_VIEW_HEIGHT;
         this.orthographicViewHeight = DEFAULT_ORTHOGRAPHIC_VIEW_HEIGHT;
         this.targetOrthographicViewHeight = DEFAULT_ORTHOGRAPHIC_VIEW_HEIGHT;
+        this.terrainCutawayRequiredReach = INITIAL_CAMERA_DISTANCE + 2.0D;
+        this.terrainCutawayProgress = 0.0D;
+        this.targetTerrainCutawayProgress = 0.0D;
+        this.terrainCutawayReachCaptured = false;
         this.orbitDistance = INITIAL_CAMERA_DISTANCE;
         this.terrainRefreshToken = 0;
         this.currentYaw = 0.0F;

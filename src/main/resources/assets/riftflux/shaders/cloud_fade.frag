@@ -1,12 +1,12 @@
 #version 330 core
 
-in vec4 v_Color;
-in vec2 v_TexCoord0;
-in float v_FogCoord;
+in vec2 v_UV;
+in vec3 v_EyePos;
+in float v_Factor;
 
-uniform sampler2D u_CloudTexture;
-uniform vec3 u_ColorMultiplier;
-uniform vec4 u_FogParams;
+uniform sampler2D u_Tex;
+uniform vec4 u_ColorMult;
+uniform vec4 u_FogParams; // linear: x=-1/(end-start), y=end/(end-start); exp/exp2: z=density; w=mode
 uniform vec4 u_FogColor;
 uniform bool u_FogEnabled;
 uniform float u_Opacity;
@@ -14,18 +14,23 @@ uniform float u_Opacity;
 out vec4 fragColor;
 
 void main() {
-    vec4 texColor = texture(u_CloudTexture, v_TexCoord0);
-    vec4 color = v_Color * texColor;
-    color.rgb *= u_ColorMultiplier;
-
-    // Preserve Angelica's original cloud silhouette before applying scheduled opacity.
-    if (color.a < 0.1) {
-        discard;
-    }
+    vec4 texel = texture(u_Tex, v_UV);
+    if (texel.a < 0.1) discard;
+    vec4 color = texel * u_ColorMult;
+    color.rgb *= v_Factor;
 
     if (u_FogEnabled) {
-        float f = clamp(v_FogCoord * u_FogParams.x + u_FogParams.y, 0.0, 1.0);
-        color.rgb = mix(u_FogColor.rgb, color.rgb, f);
+        float fogCoord = length(v_EyePos);
+        float f;
+        if (u_FogParams.w == 0.0) {
+            f = fogCoord * u_FogParams.x + u_FogParams.y;
+        } else if (u_FogParams.w == 1.0) {
+            f = exp(-u_FogParams.z * fogCoord);
+        } else {
+            float d = u_FogParams.z * fogCoord;
+            f = exp(-d * d);
+        }
+        color.rgb = mix(u_FogColor.rgb, color.rgb, clamp(f, 0.0, 1.0));
     }
 
     color.a *= u_Opacity;

@@ -18,10 +18,18 @@ public final class CloudTimeFadeHelper {
         double sinceFadeOut = positiveModulo(timeOfDay - ModConfig.celestialCloudFadeOutTime, DAY_TICKS);
         double sinceFadeIn = positiveModulo(timeOfDay - ModConfig.celestialCloudFadeInTime, DAY_TICKS);
 
+        float opacity;
         if (sinceFadeOut < sinceFadeIn) {
-            return 1.0F - fadeProgress(sinceFadeOut, ModConfig.celestialCloudFadeOutDuration);
+            opacity = 1.0F - fadeProgress(sinceFadeOut, ModConfig.celestialCloudFadeOutDuration);
+        } else {
+            opacity = fadeProgress(sinceFadeIn, ModConfig.celestialCloudFadeInDuration);
         }
-        return fadeProgress(sinceFadeIn, ModConfig.celestialCloudFadeInDuration);
+
+        float minimumOpacity = Math.max(
+                0.0F,
+                Math.min(1.0F, ModConfig.celestialCloudMinimumOpacityPercent / 100.0F)
+        );
+        return minimumOpacity + opacity * (1.0F - minimumOpacity);
     }
 
     private static float fadeProgress(double elapsed, int duration) {
@@ -35,12 +43,12 @@ public final class CloudTimeFadeHelper {
         if (progress >= 1.0D) {
             return 1.0F;
         }
-        float value = (float) progress;
-        return value * value * (3.0F - 2.0F * value);
+        return (float) progress;
     }
 
     private static double positiveModulo(double value, double modulus) {
         double result = value % modulus;
         return result < 0.0D ? result + modulus : result;
     }
+
 }

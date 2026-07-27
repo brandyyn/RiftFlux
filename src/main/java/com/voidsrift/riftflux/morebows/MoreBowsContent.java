@@ -161,7 +161,7 @@ public final class MoreBowsContent {
                 " DC", "A C", " DC", 'C', "string", 'A', "ingotIron", 'D', "bowIron"
         }));
         GameRegistry.addRecipe((IRecipe) new ShapedOreRecipe(stoneBow, new Object[]{
-                " DC", "ABC", " DC", 'A', "stickWood", 'C', "string", 'D', "stone", 'B', "bow"
+                " DC", "ABC", " DC", 'A', "stickWood", 'C', "string", 'D', "stone", 'B', Items.bow
         }));
     }
 

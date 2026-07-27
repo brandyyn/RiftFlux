@@ -49,7 +49,7 @@ extends Gui {
             if (!LevelUp.renderExpBar && (skillXP = PlayerExtendedProperties.from(LevelUp.proxy.getPlayer()).getSkillFromIndex("XP")) > 0) {
                 left.add(StatCollector.translateToLocalFormatted((String)"hud.skill.text1", (Object[])new Object[]{skillXP}));
             }
-            left.add(StatCollector.translateToLocalFormatted((String)"hud.skill.text2", (Object[])new Object[]{StatCollector.translateToLocal((String)("class" + playerClass + ".name"))}));
+            left.add(StatCollector.translateToLocalFormatted((String)"hud.skill.text2", (Object[])new Object[]{ClassBonus.getClassName(playerClass)}));
         } else if (LevelUpHUD.canSelectClass() && !LevelUp.renderExpBar) {
             left.add(StatCollector.translateToLocal((String)"hud.skill.select"));
         }
@@ -70,15 +70,17 @@ extends Gui {
     @SubscribeEvent
     public void onFOV(FOVUpdateEvent event) {
         if (!LevelUp.changeFOV && !event.entity.isUsingItem()) {
-            int skill = 0;
+            float speedPercent = 0.0F;
             if (event.entity.isSneaking()) {
-                skill = 2 * FMLEventHandler.getSkill((EntityPlayer)event.entity, 8);
+                speedPercent = (float)FMLEventHandler.getSkill((EntityPlayer)event.entity, 8)
+                        * ModConfig.levelUpSneakingSpeedPercentPerPoint;
             } else if (event.entity.isSprinting()) {
-                skill = FMLEventHandler.getSkill((EntityPlayer)event.entity, 6);
+                speedPercent = (float)FMLEventHandler.getSkill((EntityPlayer)event.entity, 6)
+                        * ModConfig.levelUpAthleticsSprintSpeedPercentPerPoint;
             }
-            if (skill > 0) {
+            if (speedPercent > 0.0F) {
                 event.newfov -= 0.5f;
-                event.newfov *= 1.0f / (1.0f + (float)skill / 100.0f);
+                event.newfov *= 1.0f / (1.0f + speedPercent / 100.0f);
                 event.newfov += 0.5f;
             }
         }
@@ -97,13 +99,17 @@ extends Gui {
         if (text != null) {
             int x = (res.getScaledWidth() - Minecraft.getMinecraft().fontRenderer.getStringWidth(text)) / 2;
             int y = res.getScaledHeight() - 29;
-            int col = Color.HSBtoRGB(PULSE_HUE, 1.0f, this.getPulseBrightness()) & 0xFFFFFF;
+            int col = getPulseColor();
             Minecraft.getMinecraft().fontRenderer.drawString(text, x, y, col);
         }
         Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.icons);
     }
 
-    private float getPulseBrightness() {
+    public static int getPulseColor() {
+        return Color.HSBtoRGB(PULSE_HUE, 1.0f, getPulseBrightness()) & 0xFFFFFF;
+    }
+
+    private static float getPulseBrightness() {
         float speed = ModConfig.levelUpHudPulseSpeedHz;
         if (speed <= 0.0f) {
             return MAX_PULSE_BRIGHTNESS;
@@ -115,11 +121,23 @@ extends Gui {
     }
 
     public static boolean canSelectClass() {
-        if (LevelUp.proxy.getPlayer().experienceLevel >= 4) {
+        return canSelectClass(LevelUp.proxy.getPlayer());
+    }
+
+    public static boolean canSelectClass(EntityPlayer player) {
+        if (player == null) {
+            return false;
+        }
+        int requiredLevel = ModConfig.levelUpClassSelectionLevel;
+        if (player.experienceLevel >= requiredLevel) {
             return true;
         }
-        int points = PlayerExtendedProperties.from(LevelUp.proxy.getPlayer()).getSkillPoints();
-        return (double)points > 4.0 * PlayerEventHandler.xpPerLevel || points > ClassBonus.getBonusPoints();
+        int points = PlayerExtendedProperties.from(player).getSkillPoints();
+        return (double)points >= (double)requiredLevel * PlayerEventHandler.xpPerLevel;
+    }
+
+    public static boolean canOpenClassSkillsMenu() {
+        return ModConfig.levelUpOpenClassSkillsMenuAtAnyLevel || canSelectClass();
     }
 
     public static boolean canShowSkills() {

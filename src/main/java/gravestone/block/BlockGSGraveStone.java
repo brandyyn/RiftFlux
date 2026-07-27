@@ -124,7 +124,7 @@ public class BlockGSGraveStone extends BlockContainer {
       }
 
       int metadata = GraveStoneHelper.getMetadataBasedOnRotation(direction);
-      world.setBlockMetadataWithNotify(x, y, z, metadata, 2);
+      world.setBlockMetadataWithNotify(x, y, z, metadata, 0);
       TileEntityGSGraveStone tileEntity = (TileEntityGSGraveStone)world.getTileEntity(x, y, z);
       if (tileEntity != null) {
          tileEntity.setPlayerPlaced(true);
@@ -737,6 +737,9 @@ public class BlockGSGraveStone extends BlockContainer {
          nbt.setString("DeathText", deathInfo.getDeathMessage());
          nbt.setString("KillerName", deathInfo.getKillerNameForTE());
          nbt.setBoolean("Enchanted", isMagic);
+         if (isMagic && GraveStoneConfig.randomizeEnchantedGravestoneGlintColors) {
+            nbt.setInteger(EnchantHelper.CUSTOM_GLINT_TAG, rand.nextInt(16));
+         }
       nbt.setInteger("Age", age);
       if (entity instanceof EntityPlayer) {
          EntityPlayer player = (EntityPlayer)entity;

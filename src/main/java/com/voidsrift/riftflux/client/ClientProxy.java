@@ -13,6 +13,7 @@ import com.voidsrift.riftflux.fence.FenceOverrideClientState;
 import com.voidsrift.riftflux.client.chatcopy.ChatSelectionManager;
 import com.voidsrift.riftflux.client.chatbubbles.ChatBubblesClient;
 import com.voidsrift.riftflux.client.photomode.IsometricPhotoModeHandler;
+import com.voidsrift.riftflux.client.inventory.InventoryShortcutHandler;
 import com.voidsrift.riftflux.client.sky.CelestialFogEventClientState;
 import com.voidsrift.riftflux.client.sky.FogDistanceGradientRenderer;
 import com.voidsrift.riftflux.glowstonedust.GlowstoneDustContent;
@@ -168,6 +169,7 @@ public class ClientProxy extends CommonProxy {
         if (ModConfig.enableIsometricPhotoMode) {
             IsometricPhotoModeHandler.bootstrap();
         }
+        InventoryShortcutHandler.bootstrap();
         if (ModConfig.enableChatSelectionCopy) {
             ChatSelectionManager.bootstrap();
         }

@@ -29,6 +29,15 @@ extends GuiScreen {
     private final int[] skills = new int[ClassBonus.skillNames.length];
     private int[] skillsPrev = null;
     byte cl = (byte)-1;
+    private final GuiScreen parentScreen;
+
+    public GuiSkills() {
+        this(null);
+    }
+
+    public GuiSkills(GuiScreen parentScreen) {
+        this.parentScreen = parentScreen;
+    }
 
     protected void actionPerformed(GuiButton guibutton) {
         int step = isShiftKeyDown() ? 2 : 1;
@@ -38,8 +47,10 @@ extends GuiScreen {
             this.mc.setIngameFocus();
         } else if (guibutton.id == 100) {
             this.closedWithButton = false;
-            this.mc.displayGuiScreen(null);
-            this.mc.setIngameFocus();
+            this.mc.displayGuiScreen(this.parentScreen);
+            if (this.parentScreen == null) {
+                this.mc.setIngameFocus();
+            }
         } else if (guibutton.id < 21) {
             int availablePoints = this.getSkillOffset(this.skills.length - 1);
             int skillIndex = guibutton.id - 1;
@@ -74,21 +85,22 @@ extends GuiScreen {
                 l -= 20;
             }
             if (!((GuiButton)button).mousePressed(this.mc, i, j)) continue;
-            s = StatCollector.translateToLocal((String)("skill" + l + ".tooltip1"));
-            s1 = StatCollector.translateToLocal((String)("skill" + l + ".tooltip2"));
+            s = LevelUpTuning.getSkillTooltip(l - 1, 1);
+            s1 = LevelUpTuning.getSkillTooltip(l - 1, 2);
         }
         if (this.cl < 0) {
             this.cl = PlayerExtendedProperties.getPlayerClass((EntityPlayer)this.mc.thePlayer);
         }
         if (this.cl > 0) {
-            this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocalFormatted((String)"hud.skill.text2", (Object[])new Object[]{StatCollector.translateToLocal((String)("class" + this.cl + ".name"))}), this.width / 2, 2, 0xFFFFFF);
+            this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocalFormatted((String)"hud.skill.text2", (Object[])new Object[]{ClassBonus.getClassName(this.cl)}), this.width / 2, this.getTop(), 0xFFFFFF);
         }
+        int top = this.getTop();
         for (int x = 0; x < 6; ++x) {
-            this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocal((String)("skill" + (x + 1) + ".name")) + ": " + this.getSkillOffset(x), this.width / 2 - 80, 20 + 32 * x, 0xFFFFFF);
-            this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocal((String)("skill" + (x + 7) + ".name")) + ": " + this.getSkillOffset(x + 6), this.width / 2 + 80, 20 + 32 * x, 0xFFFFFF);
+            this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocal((String)("skill" + (x + 1) + ".name")) + ": " + this.getSkillOffset(x), this.width / 2 - 80, top + 20 + 30 * x, 0xFFFFFF);
+            this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocal((String)("skill" + (x + 7) + ".name")) + ": " + this.getSkillOffset(x + 6), this.width / 2 + 80, top + 20 + 30 * x, 0xFFFFFF);
         }
-        this.drawCenteredString(this.fontRendererObj, s, this.width / 2, this.height / 6 + 168, 0xFFFFFF);
-        this.drawCenteredString(this.fontRendererObj, s1, this.width / 2, this.height / 6 + 180, 0xFFFFFF);
+        this.drawCenteredString(this.fontRendererObj, s, this.width / 2, top + 190, 0xFFFFFF);
+        this.drawCenteredString(this.fontRendererObj, s1, this.width / 2, top + 202, 0xFFFFFF);
         super.drawScreen(i, j, f);
     }
 
@@ -96,14 +108,19 @@ extends GuiScreen {
         this.closedWithButton = false;
         this.buttonList.clear();
         this.updateSkillList();
-        this.buttonList.add(new GuiButton(0, this.width / 2 + 96, this.height / 6 + 168, 96, 20, StatCollector.translateToLocal((String)"gui.done")));
-        this.buttonList.add(new GuiButton(100, this.width / 2 - 192, this.height / 6 + 168, 96, 20, StatCollector.translateToLocal((String)"gui.cancel")));
+        int top = this.getTop();
+        this.buttonList.add(new GuiButton(0, this.width / 2 + 96, top + 220, 96, 20, StatCollector.translateToLocal((String)"gui.done")));
+        this.buttonList.add(new GuiButton(100, this.width / 2 - 192, top + 220, 96, 20, StatCollector.translateToLocal((String)"gui.cancel")));
         for (int index = 0; index < 6; ++index) {
-            this.buttonList.add(new GuiButton(1 + index, this.width / 2 + 44 - 80, 15 + 32 * index, 20, 20, "+"));
-            this.buttonList.add(new GuiButton(7 + index, this.width / 2 + 44 + 80, 15 + 32 * index, 20, 20, "+"));
-            this.buttonList.add(new GuiButton(21 + index, this.width / 2 - 64 - 80, 15 + 32 * index, 20, 20, "-"));
-            this.buttonList.add(new GuiButton(27 + index, this.width / 2 - 64 + 80, 15 + 32 * index, 20, 20, "-"));
+            this.buttonList.add(new GuiButton(1 + index, this.width / 2 + 44 - 80, top + 15 + 30 * index, 20, 20, "+"));
+            this.buttonList.add(new GuiButton(7 + index, this.width / 2 + 44 + 80, top + 15 + 30 * index, 20, 20, "+"));
+            this.buttonList.add(new GuiButton(21 + index, this.width / 2 - 64 - 80, top + 15 + 30 * index, 20, 20, "-"));
+            this.buttonList.add(new GuiButton(27 + index, this.width / 2 - 64 + 80, top + 15 + 30 * index, 20, 20, "-"));
         }
+    }
+
+    private int getTop() {
+        return Math.max(0, (this.height - 240) / 2);
     }
 
     public void onGuiClosed() {

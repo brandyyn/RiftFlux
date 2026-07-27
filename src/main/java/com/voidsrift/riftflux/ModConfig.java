@@ -22,6 +22,7 @@ public class ModConfig {
     private static final String MOB_SPAWNING_CATEGORY = "mobspawning";
     private static final String POST_PROCESSING_CATEGORY = "post processing";
     private static final String CLAY_SOLDIERS_CATEGORY = "claysoldiers";
+    private static final String ISOMETRIC_PHOTO_MODE_CATEGORY = "Isometric Photo Mode";
     private static final String[] DEFAULT_MOB_SPAWN_WHITELIST = new String[]{
             "riftflux.DemonEye|300|1-3|0",
             "riftflux.Cyclops|77|1|0",
@@ -272,6 +273,7 @@ public class ModConfig {
     public static int celestialCloudFadeInTime;
     public static int celestialCloudFadeOutDuration;
     public static int celestialCloudFadeInDuration;
+    public static float celestialCloudMinimumOpacityPercent;
     public static boolean celestialFogMatchesSky;
     public static boolean celestialBetaStyleFogBiomeTint;
     public static boolean celestialBetaStyleFogBiomeTintWeatherEvent;
@@ -341,6 +343,60 @@ public class ModConfig {
     public static double dssBarTransparencyPercent;
     public static boolean enableLevelUpModule;
     public static boolean levelUpAllowHud;
+    public static boolean levelUpOpenClassSkillsMenuAtAnyLevel;
+    public static int levelUpClassSelectionLevel;
+    public static String[] levelUpClassSkillBonuses;
+    public static float levelUpMiningOreBonusChancePerPointPercent;
+    public static int levelUpMiningBonusDropCount;
+    public static int levelUpMiningSpeedPointsPerStep;
+    public static float levelUpMiningSpeedIncreasePerStep;
+    public static float levelUpSwordCritChancePerPointPercent;
+    public static float levelUpSwordCritDamageMultiplier;
+    public static int levelUpSwordDamagePointsPerStep;
+    public static float levelUpSwordDamagePercentPerStep;
+    public static float levelUpDefenseSuperBlockChancePerPointPercent;
+    public static float levelUpDefenseSuperBlockDamageMultiplier;
+    public static int levelUpDefenseReductionPointsPerStep;
+    public static float levelUpDefenseReductionPercentPerStep;
+    public static float levelUpWoodPlankChancePerPointPercent;
+    public static int levelUpWoodBonusPlankCount;
+    public static float levelUpWoodStickChancePerPointPercent;
+    public static int levelUpWoodBonusStickCount;
+    public static int levelUpWoodSpeedPointsPerStep;
+    public static float levelUpWoodSpeedIncreasePerStep;
+    public static float levelUpSmeltingBonusYieldChancePerPointPercent;
+    public static int levelUpSmeltingBonusYieldExtraCopies;
+    public static int levelUpSmeltingSpeedPointsPerStep;
+    public static int levelUpSmeltingSpeedExtraTicksPerStep;
+    public static float levelUpArcheryProjectileSpeedPercentPerPoint;
+    public static float levelUpArcheryProjectileDamagePercentPerPoint;
+    public static int levelUpArcheryDrawSpeedPointsPerTick;
+    public static float levelUpAthleticsSprintSpeedPercentPerPoint;
+    public static int levelUpAthleticsFallReductionPointsPerStep;
+    public static float levelUpAthleticsFallReductionPercentPerStep;
+    public static float levelUpCookingBonusYieldChancePerPointPercent;
+    public static int levelUpCookingBonusYieldExtraCopies;
+    public static int levelUpCookingSpeedPointsPerStep;
+    public static int levelUpCookingSpeedExtraTicksPerStep;
+    public static float levelUpSneakingSpeedPercentPerPoint;
+    public static float levelUpSneakingBaseMobSightRange;
+    public static int levelUpSneakingSightReductionPointsPerStep;
+    public static float levelUpSneakingSightRangeReductionPerStep;
+    public static float levelUpFarmingGrowthChancePerPointPercent;
+    public static int levelUpFarmingGrowthRangePointsPerBlock;
+    public static int levelUpFarmingBonusDropPointsPerStep;
+    public static float levelUpFarmingBonusDropChancePerStepPercent;
+    public static int levelUpFarmingBonusDropCount;
+    public static int levelUpFishingLootPointsPerStep;
+    public static float levelUpFishingLootChancePerStepPercent;
+    public static float levelUpDiggingLootChancePerPointPercent;
+    public static float levelUpDiggingToolLootChancePercent;
+    public static float levelUpDiggingValuableLootChancePercent;
+    public static float levelUpDiggingDiamondLootChancePercent;
+    public static float levelUpDiggingExtraStackItemChancePercent;
+    public static int levelUpDiggingFlintPointsPerStep;
+    public static float levelUpDiggingFlintChancePerStepPercent;
+    public static int levelUpDiggingFlintCount;
     public static boolean levelUpRenderHudTopLeft;
     public static boolean levelUpRenderHudExpBar;
     public static boolean levelUpChangeFovWithSpeed;
@@ -1288,6 +1344,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean allowChatOnDeathScreen;
     public static boolean allowChatOnPauseScreen;
     public static boolean enableBetaLeavesLook;
+    public static boolean enableBeta18SwampColors;
+    public static boolean enableBeta18SwampWaterColor;
     public static boolean enableChatBubblesModule;
     public static boolean chatBubblesShowOwnMessages;
     public static boolean chatBubblesShowBackground;
@@ -1320,7 +1378,29 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static int chatBubblesMaxLineLength;
     public static boolean enableChatSelectionCopy;
     public static boolean renderBackhandSlot;
+    public static boolean inventoryShortcutsHotSwap;
+    public static boolean inventoryPhotoModeIconEnabled;
+    public static int inventoryPhotoModeIconX;
+    public static int inventoryPhotoModeIconY;
+    public static int inventoryPhotoModeTextX;
+    public static int inventoryPhotoModeTextY;
+    public static boolean inventoryGokiStatsIconEnabled;
+    public static int inventoryGokiStatsIconX;
+    public static int inventoryGokiStatsIconY;
+    public static int inventoryGokiStatsTextX;
+    public static int inventoryGokiStatsTextY;
+    public static boolean inventoryLevelUpIconEnabled;
+    public static int inventoryLevelUpIconX;
+    public static int inventoryLevelUpIconY;
+    public static int inventoryLevelUpTextX;
+    public static int inventoryLevelUpTextY;
+    public static boolean inventoryWaypointsIconEnabled;
+    public static int inventoryWaypointsIconX;
+    public static int inventoryWaypointsIconY;
+    public static int inventoryWaypointsTextX;
+    public static int inventoryWaypointsTextY;
     public static boolean enableIsometricPhotoMode;
+    public static boolean isometricPhotoModeAllowZoomThroughBlocks;
     public static double isometricPhotoModeMaxZoomOut;
     public static float isometricPhotoModeHoldRotateDegreesPerTick;
     public static boolean isometricPhotoModeHideNetherNetherrackAndBedrock;
@@ -2371,6 +2451,20 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, uses beta-style leaf interior shading while keeping normal leaf shadows below trees. Requires restart."
         );
 
+        enableBeta18SwampColors = config.getBoolean(
+                "EnableBeta18SwampColors",
+                "client",
+                true,
+                "If true, swamp grass and foliage use their Minecraft Beta 1.8 colors. Requires restart."
+        );
+
+        enableBeta18SwampWaterColor = config.getBoolean(
+                "EnableBeta18SwampWaterColor",
+                "client",
+                true,
+                "If true, swamp water uses its Minecraft Beta 1.8 color. Requires restart."
+        );
+
         enableChatBubblesModule = config.getBoolean(
                 "EnableChatBubblesModule",
                 "chatbubbles",
@@ -2496,16 +2590,182 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                         + "Disabling this only hides the slot background; the slot remains usable."
         );
 
+        inventoryShortcutsHotSwap = config.getBoolean(
+                "EnableHotSwap",
+                "Inventory Shortcuts",
+                false,
+                "Reload inventory shortcut enable and position values while the game is running."
+        );
+        inventoryPhotoModeIconEnabled = config.getBoolean(
+                "PhotoModeIconEnabled",
+                "Inventory Shortcuts",
+                true,
+                "Show the Photo Mode shortcut icon in the player inventory."
+        );
+        inventoryPhotoModeIconX = config.getInt(
+                "PhotoModeIconX",
+                "Inventory Shortcuts",
+                -26,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Photo Mode icon X offset from the middle of the screen."
+        );
+        inventoryPhotoModeIconY = config.getInt(
+                "PhotoModeIconY",
+                "Inventory Shortcuts",
+                -8,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Photo Mode icon Y offset from the middle of the screen."
+        );
+        inventoryPhotoModeTextX = config.getInt(
+                "PhotoModeTextX",
+                "Inventory Shortcuts",
+                4,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Photo Mode hover text X offset from the icon's top-left corner."
+        );
+        inventoryPhotoModeTextY = config.getInt(
+                "PhotoModeTextY",
+                "Inventory Shortcuts",
+                -56,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Photo Mode hover text Y offset from the icon's top-left corner."
+        );
+        inventoryGokiStatsIconEnabled = config.getBoolean(
+                "GokiStatsIconEnabled",
+                "Inventory Shortcuts",
+                true,
+                "Show the Goki Stats shortcut icon in the player inventory."
+        );
+        inventoryGokiStatsIconX = config.getInt(
+                "GokiStatsIconX",
+                "Inventory Shortcuts",
+                -8,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Goki Stats icon X offset from the middle of the screen."
+        );
+        inventoryGokiStatsIconY = config.getInt(
+                "GokiStatsIconY",
+                "Inventory Shortcuts",
+                -8,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Goki Stats icon Y offset from the middle of the screen."
+        );
+        inventoryGokiStatsTextX = config.getInt(
+                "GokiStatsTextX",
+                "Inventory Shortcuts",
+                4,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Goki Stats hover text X offset from the icon's top-left corner."
+        );
+        inventoryGokiStatsTextY = config.getInt(
+                "GokiStatsTextY",
+                "Inventory Shortcuts",
+                -56,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Goki Stats hover text Y offset from the icon's top-left corner."
+        );
+        inventoryLevelUpIconEnabled = config.getBoolean(
+                "LevelUpIconEnabled",
+                "Inventory Shortcuts",
+                true,
+                "Show the Level Up shortcut icon in the player inventory."
+        );
+        inventoryLevelUpIconX = config.getInt(
+                "LevelUpIconX",
+                "Inventory Shortcuts",
+                10,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Level Up icon X offset from the middle of the screen."
+        );
+        inventoryLevelUpIconY = config.getInt(
+                "LevelUpIconY",
+                "Inventory Shortcuts",
+                -8,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Level Up icon Y offset from the middle of the screen."
+        );
+        inventoryLevelUpTextX = config.getInt(
+                "LevelUpTextX",
+                "Inventory Shortcuts",
+                4,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Level Up hover text X offset from the icon's top-left corner."
+        );
+        inventoryLevelUpTextY = config.getInt(
+                "LevelUpTextY",
+                "Inventory Shortcuts",
+                -56,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Level Up hover text Y offset from the icon's top-left corner."
+        );
+        inventoryWaypointsIconEnabled = config.getBoolean(
+                "WaypointsIconEnabled",
+                "Inventory Shortcuts",
+                true,
+                "Show the Xaero's Minimap Waypoints shortcut icon in the player inventory when Xaero's Minimap is installed."
+        );
+        inventoryWaypointsIconX = config.getInt(
+                "WaypointsIconX",
+                "Inventory Shortcuts",
+                28,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Waypoints icon X offset from the middle of the screen."
+        );
+        inventoryWaypointsIconY = config.getInt(
+                "WaypointsIconY",
+                "Inventory Shortcuts",
+                -8,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Waypoints icon Y offset from the middle of the screen."
+        );
+        inventoryWaypointsTextX = config.getInt(
+                "WaypointsTextX",
+                "Inventory Shortcuts",
+                4,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Waypoints hover text X offset from the icon's top-left corner."
+        );
+        inventoryWaypointsTextY = config.getInt(
+                "WaypointsTextY",
+                "Inventory Shortcuts",
+                -56,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                "Waypoints hover text Y offset from the icon's top-left corner."
+        );
+
         enableIsometricPhotoMode = config.getBoolean(
                 "EnableIsometricPhotoMode",
-                "client",
+                ISOMETRIC_PHOTO_MODE_CATEGORY,
                 true,
                 "Master toggle for the isometric photo mode feature and its keybind/mixins."
         );
 
+        isometricPhotoModeAllowZoomThroughBlocks = config.getBoolean(
+                "IsometricPhotoModeAllowZoomThroughBlocks",
+                ISOMETRIC_PHOTO_MODE_CATEGORY,
+                false,
+                "Use extra zoom input to remove foreground terrain without changing isometric photo mode framing. [WIP]"
+        );
+
         isometricPhotoModeMaxZoomOut = config.getFloat(
                 "IsometricPhotoModeMaxZoomOut",
-                "client",
+                ISOMETRIC_PHOTO_MODE_CATEGORY,
                 256.0F,
                 4.0F,
                 4096.0F,
@@ -2514,7 +2774,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
         isometricPhotoModeHoldRotateDegreesPerTick = config.getFloat(
                 "IsometricPhotoModeHoldRotateDegreesPerTick",
-                "client",
+                ISOMETRIC_PHOTO_MODE_CATEGORY,
                 3.3F,
                 0.05F,
                 10.0F,
@@ -2523,7 +2783,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
         isometricPhotoModeHideNetherNetherrackAndBedrock = config.getBoolean(
                 "IsometricPhotoModeHideNetherNetherrackAndBedrock",
-                "client",
+                ISOMETRIC_PHOTO_MODE_CATEGORY,
                 true,
                 "If true, netherrack and bedrock are hidden while isometric photo mode is active in the Nether."
         );
@@ -2732,6 +2992,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 0,
                 24000,
                 "Number of world ticks clouds take to fade in. 0 makes them reappear immediately."
+        );
+        celestialCloudMinimumOpacityPercent = config.getFloat(
+                "CelestialCloudMinimumOpacityPercent",
+                "celestial",
+                17.0F,
+                0.0F,
+                100.0F,
+                "Minimum cloud opacity during the period between fading out and fading back in, in percent. The default 1 prevents Angelica from abruptly removing zero-alpha clouds."
         );
         celestialFogMatchesSky = config.getBoolean(
                 "CelestialFogMatchesSky",
@@ -3229,6 +3497,260 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 true,
                 "If anything from the LevelUp HUD should be rendered on screen at all."
         );
+        levelUpOpenClassSkillsMenuAtAnyLevel = config.getBoolean(
+                "OpenClassSkillsMenuAtAnyLevel",
+                "LevelUp",
+                true,
+                "Allow players without a class to open and browse the Class Skills menu at any experience level. "
+                        + "Class selection remains locked until normal LevelUp eligibility is reached."
+        );
+        levelUpClassSelectionLevel = config.getInt(
+                "ClassSelectionLevel",
+                "LevelUp",
+                5,
+                0,
+                Integer.MAX_VALUE,
+                "Experience level required to select a LevelUp class. Accumulated pre-class skill points "
+                        + "can also satisfy the equivalent number of levels."
+        );
+        levelUpClassSkillBonuses = config.getStringList(
+                "ClassSkillBonuses",
+                "LevelUp",
+                new String[]{
+                        "Miner=Bonus:Mining,Mining:10,Digging:5,Smelting:5",
+                        "Warrior=Bonus:Combat,Sword:10,Defense:5,Archery:5",
+                        "Artisan=Bonus:Crafting,Smelting:10,WoodCutting:5,Cooking:5",
+                        "Spelunker=Bonus:Mining,Defense:10,Athletics:5,Mining:5",
+                        "Scout=Bonus:Combat,Archery:10,Sneaking:5,Athletics:5",
+                        "Farmer=Bonus:Crafting,Farming:10,Fishing:5,WoodCutting:5",
+                        "Archaeologist=Bonus:Mining,Digging:10,WoodCutting:5,Mining:5",
+                        "Assassin=Bonus:Combat,Sneaking:10,Sword:5,Archery:5",
+                        "Lumberjack=Bonus:Crafting,WoodCutting:10,Defense:5,Athletics:5",
+                        "Hermit=Bonus:Mining,Cooking:10,Digging:5,Mining:5",
+                        "Zealot=Bonus:Combat,Athletics:10,Sword:5,Defense:5",
+                        "Fisherman=Bonus:Crafting,Fishing:10,Cooking:5,WoodCutting:5",
+                        "Freelancer=Bonus:None,XP:20",
+                        "Rift Explorer=Bonus:None,Athletics:10,Sword:5,Defense:5,XP:5",
+                        "Rift Demon=Bonus:None,XP:33",
+                        "Adventurer=Bonus:Mining+Combat+Crafting,Mining:5,Sword:5",
+                        "Blacksmith=Bonus:Mining+Crafting,Smelting:10,Mining:5,Defense:5",
+                        "Swashbuckler=Bonus:Combat,Digging:10,Sneaking:10,Athletics:10",
+                        "Privateer=Bonus:Combat+Crafting,Sword:10,Fishing:5,Athletics:5",
+                        "Alchemist=Bonus:Crafting,Smelting:10,Cooking:10,Farming:10",
+                        "Ghost=Bonus:Combat,Athletics:15,Sneaking:15",
+                        "Sunshine=Bonus:None,Cooking:30"
+                },
+                "Defines every class, its extra-XP sources, and starting skills. Add another list entry to add another class. "
+                        + "Format: Class=Bonus:type+type,Skill:amount,Skill:amount. Bonus types: Mining, Combat, Crafting, None. "
+                        + "Join multiple bonus sources with +, such as Bonus:Mining+Crafting. "
+                        + "Valid skills: Mining, Sword, Defense, WoodCutting, Smelting, Archery, Athletics, "
+                        + "Cooking, Sneaking, Farming, Fishing, Digging, XP. Class order becomes its saved numeric ID; "
+                        + "do not reorder or remove classes after players have selected them."
+        );
+        levelUpMiningOreBonusChancePerPointPercent = config.getFloat(
+                "MiningOreBonusChancePerPointPercent", "LevelUp", 0.5F, 0.0F, 100.0F,
+                "Extra-ore drop chance added by each Mining point, in percent."
+        );
+        levelUpMiningBonusDropCount = config.getInt(
+                "MiningBonusDropCount", "LevelUp", 1, 0, Integer.MAX_VALUE,
+                "Number of extra ore items produced when Mining's bonus-drop roll succeeds."
+        );
+        levelUpMiningSpeedPointsPerStep = config.getInt(
+                "MiningSpeedPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Mining points required for each mining-speed increase step."
+        );
+        levelUpMiningSpeedIncreasePerStep = config.getFloat(
+                "MiningSpeedIncreasePerStep", "LevelUp", 0.2F, 0.0F, Float.MAX_VALUE,
+                "Break-speed value added by each completed Mining speed step."
+        );
+        levelUpSwordCritChancePerPointPercent = config.getFloat(
+                "SwordCritChancePerPointPercent", "LevelUp", 0.5F, 0.0F, 100.0F,
+                "Critical-hit chance added by each Sword point, in percent."
+        );
+        levelUpSwordCritDamageMultiplier = config.getFloat(
+                "SwordCritDamageMultiplier", "LevelUp", 2.0F, 0.0F, Float.MAX_VALUE,
+                "Damage multiplier used when Sword's critical-hit roll succeeds."
+        );
+        levelUpSwordDamagePointsPerStep = config.getInt(
+                "SwordDamagePointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Sword points required for each normal-damage increase step."
+        );
+        levelUpSwordDamagePercentPerStep = config.getFloat(
+                "SwordDamagePercentPerStep", "LevelUp", 5.0F, 0.0F, Float.MAX_VALUE,
+                "Normal melee damage added by each completed Sword step, in percent."
+        );
+        levelUpDefenseSuperBlockChancePerPointPercent = config.getFloat(
+                "DefenseSuperBlockChancePerPointPercent", "LevelUp", 1.0F, 0.0F, 100.0F,
+                "Super-block chance added by each Defense point while blocking, in percent."
+        );
+        levelUpDefenseSuperBlockDamageMultiplier = config.getFloat(
+                "DefenseSuperBlockDamageMultiplier", "LevelUp", 0.0F, 0.0F, Float.MAX_VALUE,
+                "Incoming damage multiplier when Defense's super-block roll succeeds."
+        );
+        levelUpDefenseReductionPointsPerStep = config.getInt(
+                "DefenseReductionPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Defense points required for each normal damage-reduction step."
+        );
+        levelUpDefenseReductionPercentPerStep = config.getFloat(
+                "DefenseReductionPercentPerStep", "LevelUp", 5.0F, 0.0F, 100.0F,
+                "Blockable incoming damage removed by each completed Defense step, in percent."
+        );
+        levelUpWoodPlankChancePerPointPercent = config.getFloat(
+                "WoodCuttingPlankChancePerPointPercent", "LevelUp", 0.6666667F, 0.0F, 100.0F,
+                "Bonus-plank chance added by each WoodCutting point, in percent."
+        );
+        levelUpWoodBonusPlankCount = config.getInt(
+                "WoodCuttingBonusPlankCount", "LevelUp", 2, 0, Integer.MAX_VALUE,
+                "Number of bonus planks produced by WoodCutting's plank roll."
+        );
+        levelUpWoodStickChancePerPointPercent = config.getFloat(
+                "WoodCuttingStickChancePerPointPercent", "LevelUp", 0.6666667F, 0.0F, 100.0F,
+                "Bonus-stick chance added by each WoodCutting point, in percent."
+        );
+        levelUpWoodBonusStickCount = config.getInt(
+                "WoodCuttingBonusStickCount", "LevelUp", 2, 0, Integer.MAX_VALUE,
+                "Number of bonus sticks produced by WoodCutting's stick roll."
+        );
+        levelUpWoodSpeedPointsPerStep = config.getInt(
+                "WoodCuttingSpeedPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "WoodCutting points required for each chopping-speed increase step."
+        );
+        levelUpWoodSpeedIncreasePerStep = config.getFloat(
+                "WoodCuttingSpeedIncreasePerStep", "LevelUp", 0.2F, 0.0F, Float.MAX_VALUE,
+                "Break-speed value added by each completed WoodCutting speed step."
+        );
+        levelUpSmeltingBonusYieldChancePerPointPercent = config.getFloat(
+                "SmeltingBonusYieldChancePerPointPercent", "LevelUp", 0.5F, 0.0F, 100.0F,
+                "Bonus smelting-output chance added by each Smelting point, in percent."
+        );
+        levelUpSmeltingBonusYieldExtraCopies = config.getInt(
+                "SmeltingBonusYieldExtraCopies", "LevelUp", 1, 0, Integer.MAX_VALUE,
+                "Extra copies of the completed smelting output produced after a successful roll."
+        );
+        levelUpSmeltingSpeedPointsPerStep = config.getInt(
+                "SmeltingSpeedPointsPerStep", "LevelUp", 10, 1, Integer.MAX_VALUE,
+                "Smelting points required to expand the random furnace-speed boost by one step."
+        );
+        levelUpSmeltingSpeedExtraTicksPerStep = config.getInt(
+                "SmeltingSpeedExtraTicksPerStep", "LevelUp", 1, 0, Integer.MAX_VALUE,
+                "Extra furnace cook ticks added to the random range per completed Smelting speed step."
+        );
+        levelUpArcheryProjectileSpeedPercentPerPoint = config.getFloat(
+                "ArcheryProjectileSpeedPercentPerPoint", "LevelUp", 1.0F, 0.0F, Float.MAX_VALUE,
+                "Projectile velocity added by each Archery point, in percent."
+        );
+        levelUpArcheryProjectileDamagePercentPerPoint = config.getFloat(
+                "ArcheryProjectileDamagePercentPerPoint", "LevelUp", 1.0F, 0.0F, Float.MAX_VALUE,
+                "Non-arrow ranged damage added by each Archery point, in percent."
+        );
+        levelUpArcheryDrawSpeedPointsPerTick = config.getInt(
+                "ArcheryDrawSpeedPointsPerTick", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Archery points required to remove one tick from bow use duration."
+        );
+        levelUpAthleticsSprintSpeedPercentPerPoint = config.getFloat(
+                "AthleticsSprintSpeedPercentPerPoint", "LevelUp", 1.0F, 0.0F, Float.MAX_VALUE,
+                "Sprinting speed added by each Athletics point, in percent."
+        );
+        levelUpAthleticsFallReductionPointsPerStep = config.getInt(
+                "AthleticsFallReductionPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Athletics points required for each fall-distance reduction step."
+        );
+        levelUpAthleticsFallReductionPercentPerStep = config.getFloat(
+                "AthleticsFallReductionPercentPerStep", "LevelUp", 1.0F, 0.0F, 100.0F,
+                "Fall distance removed by each completed Athletics step, in percent."
+        );
+        levelUpCookingBonusYieldChancePerPointPercent = config.getFloat(
+                "CookingBonusYieldChancePerPointPercent", "LevelUp", 0.5F, 0.0F, 100.0F,
+                "Bonus cooking-output chance added by each Cooking point, in percent."
+        );
+        levelUpCookingBonusYieldExtraCopies = config.getInt(
+                "CookingBonusYieldExtraCopies", "LevelUp", 1, 0, Integer.MAX_VALUE,
+                "Extra copies of the completed cooking output produced after a successful roll."
+        );
+        levelUpCookingSpeedPointsPerStep = config.getInt(
+                "CookingSpeedPointsPerStep", "LevelUp", 10, 1, Integer.MAX_VALUE,
+                "Cooking points required to expand the random furnace-speed boost by one step."
+        );
+        levelUpCookingSpeedExtraTicksPerStep = config.getInt(
+                "CookingSpeedExtraTicksPerStep", "LevelUp", 1, 0, Integer.MAX_VALUE,
+                "Extra furnace cook ticks added to the random range per completed Cooking speed step."
+        );
+        levelUpSneakingSpeedPercentPerPoint = config.getFloat(
+                "SneakingSpeedPercentPerPoint", "LevelUp", 2.0F, 0.0F, Float.MAX_VALUE,
+                "Sneaking movement speed added by each Sneaking point, in percent."
+        );
+        levelUpSneakingBaseMobSightRange = config.getFloat(
+                "SneakingBaseMobSightRange", "LevelUp", 16.0F, 0.0F, Float.MAX_VALUE,
+                "Base mob sight range used by the Sneaking skill, in blocks."
+        );
+        levelUpSneakingSightReductionPointsPerStep = config.getInt(
+                "SneakingSightReductionPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Sneaking points required for each mob-sight reduction step."
+        );
+        levelUpSneakingSightRangeReductionPerStep = config.getFloat(
+                "SneakingSightRangeSquaredReductionPerStep", "LevelUp", 12.8F, 0.0F, Float.MAX_VALUE,
+                "Squared mob sight-distance removed by each completed Sneaking sight-reduction step."
+        );
+        levelUpFarmingGrowthChancePerPointPercent = config.getFloat(
+                "FarmingGrowthChancePerPointPercent", "LevelUp", 0.04F, 0.0F, 100.0F,
+                "Chance per server tick to grow nearby crops, added by each Farming point, in percent."
+        );
+        levelUpFarmingGrowthRangePointsPerBlock = config.getInt(
+                "FarmingGrowthRangePointsPerBlock", "LevelUp", 4, 1, Integer.MAX_VALUE,
+                "Farming points required for each block of crop-growth range."
+        );
+        levelUpFarmingBonusDropPointsPerStep = config.getInt(
+                "FarmingBonusDropPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Farming points required for each crop bonus-drop chance step."
+        );
+        levelUpFarmingBonusDropChancePerStepPercent = config.getFloat(
+                "FarmingBonusDropChancePerStepPercent", "LevelUp", 10.0F, 0.0F, 100.0F,
+                "Crop bonus-drop chance added by each completed Farming step, in percent."
+        );
+        levelUpFarmingBonusDropCount = config.getInt(
+                "FarmingBonusDropCount", "LevelUp", 1, 0, Integer.MAX_VALUE,
+                "Number of bonus crop items produced after a successful Farming roll."
+        );
+        levelUpFishingLootPointsPerStep = config.getInt(
+                "FishingLootPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Fishing points required for each special-loot chance step."
+        );
+        levelUpFishingLootChancePerStepPercent = config.getFloat(
+                "FishingLootChancePerStepPercent", "LevelUp", 5.0F, 0.0F, 100.0F,
+                "Special fishing-loot chance added by each completed Fishing step, in percent."
+        );
+        levelUpDiggingLootChancePerPointPercent = config.getFloat(
+                "DiggingLootChancePerPointPercent", "LevelUp", 0.5F, 0.0F, 100.0F,
+                "Buried-loot chance added by each Digging point, in percent."
+        );
+        levelUpDiggingToolLootChancePercent = config.getFloat(
+                "DiggingToolLootChancePercent", "LevelUp", 40.0F, 0.0F, 100.0F,
+                "Cumulative chance that successful Digging loot comes from the tool tier."
+        );
+        levelUpDiggingValuableLootChancePercent = config.getFloat(
+                "DiggingValuableLootChancePercent", "LevelUp", 10.0F, 0.0F, 100.0F,
+                "Cumulative chance that successful Digging loot comes from the valuable tier."
+        );
+        levelUpDiggingDiamondLootChancePercent = config.getFloat(
+                "DiggingDiamondLootChancePercent", "LevelUp", 0.2F, 0.0F, 100.0F,
+                "Cumulative chance that successful Digging loot comes from the diamond tier."
+        );
+        levelUpDiggingExtraStackItemChancePercent = config.getFloat(
+                "DiggingExtraStackItemChancePercent", "LevelUp", 50.0F, 0.0F, 100.0F,
+                "Chance for each extra item in a buried-loot stack to be retained, in percent."
+        );
+        levelUpDiggingFlintPointsPerStep = config.getInt(
+                "DiggingFlintPointsPerStep", "LevelUp", 5, 1, Integer.MAX_VALUE,
+                "Digging points required for each gravel-to-flint chance step."
+        );
+        levelUpDiggingFlintChancePerStepPercent = config.getFloat(
+                "DiggingFlintChancePerStepPercent", "LevelUp", 10.0F, 0.0F, 100.0F,
+                "Gravel-to-flint chance added by each completed Digging step, in percent."
+        );
+        levelUpDiggingFlintCount = config.getInt(
+                "DiggingFlintCount", "LevelUp", 1, 0, Integer.MAX_VALUE,
+                "Number of flint items produced after a successful Digging gravel roll."
+        );
         levelUpRenderHudTopLeft = config.getBoolean(
                 "RenderHudOnTopLeft",
                 "LevelUp",
@@ -3311,7 +3833,8 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 20,
                 0,
                 Integer.MAX_VALUE,
-                "Skill points granted automatically when choosing a class."
+                "Legacy class-bonus total retained for compatibility. "
+                        + "ClassSkillBonuses controls the actual per-class starting skills."
         );
         levelUpXpGainPerLevel = config.get(
                 "LevelUp",

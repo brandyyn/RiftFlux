@@ -52,6 +52,7 @@ public class GraveStoneConfig {
    public static boolean generateVillagerGraves;
    public static boolean generatePetGraves;
    public static boolean renderGravesFlowers;
+   public static boolean randomizeEnchantedGravestoneGlintColors;
    public static boolean vanillaRendererForSwordsGraves;
    public static boolean generateGravesInLava;
    public static int graveItemsCount;
@@ -207,6 +208,7 @@ public class GraveStoneConfig {
       generateGravesInLava = config.get(CATEGORY_GRAVESTONE, "GenerateGravesInLava", true, "Enable or disable grave generation when an entity dies in lava.").getBoolean(true);
       generateSwordGraves = config.get(CATEGORY_GRAVESTONE, "GenerateSwordGraves", true, "Allows one sword from the player's inventory to be used as their gravestone when they die.").getBoolean(true);
       renderGravesFlowers = config.get(CATEGORY_GRAVESTONE, "RenderGravesFlowers", true, "Enable grave flower rendering. Disable to improve rendering performance.").getBoolean(true);
+      randomizeEnchantedGravestoneGlintColors = config.get(CATEGORY_GRAVESTONE, "RandomizeEnchantedGravestoneGlintColors", true, "Give each newly generated enchanted gravestone one random glint colour instead of the default purple. Existing gravestones and gravestones with an explicitly selected Glint Rune colour are unchanged.").getBoolean(true);
       vanillaRendererForSwordsGraves = config.get(CATEGORY_GRAVESTONE, "VanillaRendererForSwordsGraves", true, "Controls sword gravestone rendering mode. The vanilla renderer uses considerably more resources.").getBoolean(true);
       chiselDurability = config.get(CATEGORY_GRAVESTONE, "ChiselDurability", 50, "Maximum durability of the built-in RiftFlux chisel. Crafting consumes 1 durability, editing gravestone text consumes 2, and editing memorial text consumes 5. Minimum: 1.", 1, Integer.MAX_VALUE).getInt();
       chiselItems = config.get(CATEGORY_GRAVESTONE, "ChiselItems", new String[]{"riftflux:Chisel"}, "Items accepted as chisels in all Gravestone crafting recipes. Use modid:item or modid:item:metadata. Remove riftflux:Chisel to disable the built-in chisel in recipes.").getStringList();

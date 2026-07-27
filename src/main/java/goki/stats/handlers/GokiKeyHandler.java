@@ -20,7 +20,7 @@ import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.settings.KeyBinding;
 
 public class GokiKeyHandler {
-    public static KeyBinding statsMenu = new KeyBinding("Open Stats Menu", 21, "Goki Stats");
+    public static KeyBinding statsMenu = new KeyBinding("Personal Skills", 21, "Goki Stats");
     public static KeyBinding compatibilityMenu = new KeyBinding("Open Stats Compatibility Helper", 35, "Goki Stats");
 
     public GokiKeyHandler() {
@@ -38,4 +38,3 @@ public class GokiKeyHandler {
         }
     }
 }
-

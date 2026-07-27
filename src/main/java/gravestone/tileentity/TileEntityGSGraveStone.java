@@ -36,6 +36,15 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
       this.inventory = new GraveInventory(this);
    }
 
+   @Override
+   public void setEnchanted(boolean isEnchanted) {
+      super.setEnchanted(isEnchanted);
+      if (isEnchanted && GraveStoneConfig.randomizeEnchantedGravestoneGlintColors && !this.hasCustomGlint()) {
+         Random random = this.worldObj == null ? new Random() : this.worldObj.rand;
+         this.setCustomGlint(random.nextInt(16));
+      }
+   }
+
    public void updateEntity() {
       this.gsSpawn.updateEntity();
       if (this.worldObj.isRemote && GraveStoneConfig.isFogEnabled && GSTickEventHandler.getFogTicCount() == 0) {

@@ -13,6 +13,7 @@
 package assets.levelup;
 
 import assets.levelup.PlayerExtendedProperties;
+import com.voidsrift.riftflux.ModConfig;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.player.EntityPlayer;
@@ -33,9 +34,13 @@ public final class BowEventHandler {
             int archer;
             EntityArrow arrow = (EntityArrow)event.entity;
             if (arrow.shootingEntity instanceof EntityPlayer && (archer = BowEventHandler.getArcherSkill((EntityPlayer)arrow.shootingEntity)) != 0) {
-                arrow.motionX *= (double)(1.0f + (float)archer / 100.0f);
-                arrow.motionY *= (double)(1.0f + (float)archer / 100.0f);
-                arrow.motionZ *= (double)(1.0f + (float)archer / 100.0f);
+                double multiplier = 1.0D
+                        + (double)archer
+                        * (double)ModConfig.levelUpArcheryProjectileSpeedPercentPerPoint
+                        / 100.0D;
+                arrow.motionX *= multiplier;
+                arrow.motionY *= multiplier;
+                arrow.motionZ *= multiplier;
             }
         }
     }
@@ -43,8 +48,14 @@ public final class BowEventHandler {
     @SubscribeEvent(priority=EventPriority.LOW)
     public void onBowUse(PlayerUseItemEvent.Start event) {
         int archer;
-        if (event.item != null && event.item.getMaxStackSize() == 1 && event.item.getItemUseAction() == EnumAction.bow && (archer = BowEventHandler.getArcherSkill(event.entityPlayer)) != 0 && event.duration > archer / 5) {
-            event.duration -= archer / 5;
+        if (event.item != null
+                && event.item.getMaxStackSize() == 1
+                && event.item.getItemUseAction() == EnumAction.bow
+                && (archer = BowEventHandler.getArcherSkill(event.entityPlayer)) != 0) {
+            int ticks = LevelUpTuning.steps(archer, ModConfig.levelUpArcheryDrawSpeedPointsPerTick);
+            if (event.duration > ticks) {
+                event.duration -= ticks;
+            }
         }
     }
 
@@ -52,4 +63,3 @@ public final class BowEventHandler {
         return PlayerExtendedProperties.getSkillFromIndex(player, 5);
     }
 }
-
