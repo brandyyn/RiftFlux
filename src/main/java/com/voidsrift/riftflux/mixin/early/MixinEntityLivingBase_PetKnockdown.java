@@ -2,12 +2,15 @@ package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.pets.PetKnockdown;
+import com.voidsrift.riftflux.pets.PetKnockdownCarry;
+import com.voidsrift.riftflux.pets.PetKnockdownRotationAccess;
 import com.voidsrift.riftflux.pets.PetKnockdownTimeout;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -18,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityLivingBase.class)
-public abstract class MixinEntityLivingBase_PetKnockdown {
+public abstract class MixinEntityLivingBase_PetKnockdown implements PetKnockdownRotationAccess {
 
     @Shadow
     protected boolean isJumping;
@@ -40,6 +43,14 @@ public abstract class MixinEntityLivingBase_PetKnockdown {
     @Unique
     private double riftflux$knockdownZ;
 
+    @Inject(method = "canBeCollidedWith()Z", at = @At("HEAD"), cancellable = true)
+    private void riftflux$ignoreCarriedPetHitbox(CallbackInfoReturnable<Boolean> cir) {
+        EntityLivingBase self = (EntityLivingBase) (Object) this;
+        if (PetKnockdownCarry.isCarried(self)) {
+            cir.setReturnValue(Boolean.FALSE);
+        }
+    }
+
     @ModifyVariable(
             method = "setHealth(F)V",
             at = @At("HEAD"),
@@ -54,6 +65,16 @@ public abstract class MixinEntityLivingBase_PetKnockdown {
             return PetKnockdown.KNOCKDOWN_HEALTH;
         }
         return health;
+    }
+
+    @ModifyVariable(
+            method = "setRevengeTarget(Lnet/minecraft/entity/EntityLivingBase;)V",
+            at = @At("HEAD"),
+            argsOnly = true,
+            ordinal = 0
+    )
+    private EntityLivingBase riftflux$rejectKnockedDownRevengeTarget(EntityLivingBase target) {
+        return target != null && PetKnockdown.isKnockedDown(target) ? null : target;
     }
 
     @Inject(
@@ -85,11 +106,32 @@ public abstract class MixinEntityLivingBase_PetKnockdown {
         riftflux$holdKnockedDownPet();
     }
 
+    @Inject(method = "updateRidden()V", at = @At("RETURN"))
+    private void riftflux$lockCarriedKnockdownRotation(CallbackInfo ci) {
+        EntityLivingBase self = (EntityLivingBase) (Object) this;
+        if (PetKnockdown.isKnockedDown(self) && PetKnockdownCarry.isCarried(self)) {
+            this.riftflux$lockKnockdownRotation(self);
+        }
+    }
+
     private void riftflux$holdKnockedDownPet() {
         EntityLivingBase self = (EntityLivingBase) (Object) this;
         if (!PetKnockdown.isKnockedDown(self)) {
+            if (PetKnockdownCarry.hasState(self)) {
+                PetKnockdownCarry.clearState(self);
+            }
             this.riftflux$knockdownRotationLocked = false;
             return;
+        }
+
+        if (!ModConfig.enablePetKnockdownPickupAndThrow
+                && PetKnockdownCarry.hasState(self)) {
+            PetKnockdownCarry.clearState(self);
+        }
+        if (PetKnockdownCarry.isThrown(self)
+                && (self.onGround || (self.isCollidedVertically && self.motionY <= 0.0D))) {
+            this.riftflux$keepThrowLandingRotation(self);
+            PetKnockdownCarry.settleThrown(self);
         }
 
         this.riftflux$lockKnockdownRotation(self);
@@ -98,22 +140,30 @@ public abstract class MixinEntityLivingBase_PetKnockdown {
         self.limbSwing = 0.0F;
         self.limbSwingAmount = 0.0F;
         self.prevLimbSwingAmount = 0.0F;
-        self.motionX = 0.0D;
-        self.motionY = 0.0D;
-        self.motionZ = 0.0D;
         this.isJumping = false;
 
-        self.setPosition(
-                this.riftflux$knockdownX,
-                this.riftflux$knockdownY,
-                this.riftflux$knockdownZ
-        );
-        self.prevPosX = this.riftflux$knockdownX;
-        self.prevPosY = this.riftflux$knockdownY;
-        self.prevPosZ = this.riftflux$knockdownZ;
-        self.lastTickPosX = this.riftflux$knockdownX;
-        self.lastTickPosY = this.riftflux$knockdownY;
-        self.lastTickPosZ = this.riftflux$knockdownZ;
+        boolean carried = PetKnockdownCarry.isCarried(self);
+        boolean thrown = PetKnockdownCarry.isThrown(self);
+        if (carried) {
+            self.motionX = 0.0D;
+            self.motionY = 0.0D;
+            self.motionZ = 0.0D;
+        } else if (!thrown) {
+            self.motionX = 0.0D;
+            self.motionY = 0.0D;
+            self.motionZ = 0.0D;
+            self.setPosition(
+                    this.riftflux$knockdownX,
+                    this.riftflux$knockdownY,
+                    this.riftflux$knockdownZ
+            );
+            self.prevPosX = this.riftflux$knockdownX;
+            self.prevPosY = this.riftflux$knockdownY;
+            self.prevPosZ = this.riftflux$knockdownZ;
+            self.lastTickPosX = this.riftflux$knockdownX;
+            self.lastTickPosY = this.riftflux$knockdownY;
+            self.lastTickPosZ = this.riftflux$knockdownZ;
+        }
 
         if (self instanceof EntityLiving) {
             EntityLiving living = (EntityLiving) self;
@@ -166,6 +216,29 @@ public abstract class MixinEntityLivingBase_PetKnockdown {
         self.prevRotationYawHead = this.riftflux$knockdownHeadYaw;
         self.renderYawOffset = this.riftflux$knockdownBodyYaw;
         self.prevRenderYawOffset = this.riftflux$knockdownBodyYaw;
+    }
+
+    @Unique
+    private void riftflux$keepThrowLandingRotation(EntityLivingBase self) {
+        if (ModConfig.spinThrownKnockedDownPets) {
+            float completedSpin =
+                    (float) self.ticksExisted * ModConfig.thrownKnockedDownPetSpinSpeed;
+            this.riftflux$knockdownBodyYaw = MathHelper.wrapAngleTo180_float(
+                    this.riftflux$knockdownBodyYaw - completedSpin
+            );
+            this.riftflux$knockdownYaw = this.riftflux$knockdownBodyYaw;
+            this.riftflux$knockdownHeadYaw = this.riftflux$knockdownBodyYaw;
+        }
+        this.riftflux$knockdownX = self.posX;
+        this.riftflux$knockdownY = self.posY;
+        this.riftflux$knockdownZ = self.posZ;
+        this.riftflux$knockdownRotationLocked = true;
+        this.riftflux$lockKnockdownRotation(self);
+    }
+
+    @Override
+    public float riftflux$getKnockdownBodyYaw() {
+        return this.riftflux$knockdownBodyYaw;
     }
 
     @Inject(method = "writeEntityToNBT(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))

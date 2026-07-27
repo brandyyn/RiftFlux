@@ -1017,6 +1017,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
             "minecraft:coal@1",
             "riftflux:star_candy"
     };
+    private static final String[] DEFAULT_PERRY_NAMES = new String[]{
+            "Agent D",
+            "Perry",
+            "Perry the Platypus"
+    };
 
     private static final String[] OLD_DEFAULT_LEGACY_MYSTIC_SHRUB_DROP_ENTRIES = new String[]{
             "heartPickup*1|0.2",
@@ -1059,11 +1064,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     // Axolotl module
     public static boolean enableAxolotlModule;
     public static float axolotlMaxHealth;
+    public static float axolotlPerryNaturalVariantChancePercent;
+    public static String[] axolotlPerryNames;
 
     // Ghibli module
     public static boolean enableDucklingModule;
     public static boolean ghibliStarCandyRecipeEnabled;
     public static float ducklingAgentDNaturalVariantChancePercent;
+    public static String[] ducklingAgentDNames;
     public static float ghibliSootSpriteCoalOreSpawnChancePercent;
     public static int ghibliSootSpriteCoalOreMinSpawns;
     public static int ghibliSootSpriteCoalOreMaxSpawns;
@@ -1467,6 +1475,12 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
     public static boolean showPetKnockdownParticles;
     public static float petKnockdownParticleHeightOffset;
     public static boolean silenceKnockedDownPets;
+    public static boolean enablePetKnockdownPickupAndThrow;
+    public static boolean spinThrownKnockedDownPets;
+    public static float thrownKnockedDownPetSpinSpeed;
+    public static boolean enablePrimedTntPickupAndThrow;
+    public static boolean spinThrownPrimedTnt;
+    public static float thrownPrimedTntSpinSpeed;
     public static boolean showPetKnockdownDizzyStars;
     public static boolean rotatePetKnockdownDizzyStars;
     public static float petKnockdownDizzyStarHeightOffset;
@@ -8021,6 +8035,22 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "Base max health for axolotls."
         );
 
+        axolotlPerryNaturalVariantChancePercent = config.getFloat(
+                "PerryNaturalVariantChancePercent",
+                "axolotl",
+                1.0F,
+                0.0F,
+                100.0F,
+                "Percent chance for a naturally/randomly generated axolotl to use the Perry variant as its real stored variant. Perry axolotls keep the skin even after renaming."
+        );
+
+        axolotlPerryNames = config.getStringList(
+                "PerryNames",
+                "axolotl",
+                DEFAULT_PERRY_NAMES,
+                "Custom names that make an axolotl render with the Perry skin. Matching ignores case and surrounding whitespace. Leave empty to disable name-based Perry skins."
+        );
+
         enableDucklingModule = config.getBoolean(
                 "EnableGhibliModule",
                 "ghibli",
@@ -8042,6 +8072,13 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 0.0F,
                 100.0F,
                 "Percent chance for a naturally/randomly generated duck to use the Agent D variant as its real stored variant. Agent D ducks keep the skin even after renaming."
+        );
+
+        ducklingAgentDNames = config.getStringList(
+                "DuckAgentDNames",
+                "ghibli",
+                DEFAULT_PERRY_NAMES,
+                "Custom names that make a duck render with the Agent D skin. Matching ignores case and surrounding whitespace. Leave empty to disable name-based Agent D skins."
         );
 
         ghibliSootSpriteCoalOreSpawnChancePercent = config.getFloat(
@@ -8930,6 +8967,52 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "pets",
                 true,
                 "If true, knocked-down pets cannot emit ambient, hurt, step, or other entity sounds."
+        );
+
+        enablePetKnockdownPickupAndThrow = config.getBoolean(
+                "enablePetKnockdownPickupAndThrow",
+                "pets",
+                true,
+                "If true, empty-hand right-click picks up a knocked-down mob and another right-click throws it."
+        );
+
+        spinThrownKnockedDownPets = config.getBoolean(
+                "spinThrownKnockedDownPets",
+                "pets",
+                true,
+                "If true, knocked-down mobs visibly spin while airborne after being thrown. They stop spinning when they land."
+        );
+
+        thrownKnockedDownPetSpinSpeed = config.getFloat(
+                "thrownKnockedDownPetSpinSpeed",
+                "pets",
+                72.0F,
+                0.0F,
+                360.0F,
+                "Thrown knocked-down mob spin speed in degrees per tick. Minecraft normally runs at 20 ticks per second."
+        );
+
+        enablePrimedTntPickupAndThrow = config.getBoolean(
+                "enablePrimedTntPickupAndThrow",
+                "general",
+                true,
+                "If true, empty-hand right-click picks up primed vanilla or modded EntityTNTPrimed entities and another right-click throws them."
+        );
+
+        spinThrownPrimedTnt = config.getBoolean(
+                "spinThrownPrimedTnt",
+                "general",
+                true,
+                "If true, thrown primed TNT spins while airborne and stops when it lands."
+        );
+
+        thrownPrimedTntSpinSpeed = config.getFloat(
+                "thrownPrimedTntSpinSpeed",
+                "general",
+                72.0F,
+                0.0F,
+                360.0F,
+                "Thrown primed TNT spin speed in degrees per tick. Minecraft normally runs at 20 ticks per second."
         );
 
         showPetKnockdownDizzyStars = config.getBoolean(

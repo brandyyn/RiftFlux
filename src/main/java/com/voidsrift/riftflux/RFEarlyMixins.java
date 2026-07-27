@@ -169,6 +169,8 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinEntityLivingBase_PetInvincibility");
         }
         mixins.add("early.MixinEntity_PetKnockdownMovement");
+        mixins.add("early.MixinEntity_TntCarry");
+        mixins.add("early.MixinEntityTNTPrimed_TntCarryInteraction");
         mixins.add("early.MixinEntityLivingBase_PetKnockdown");
         mixins.add("early.MixinEntityLiving_PetKnockdownAI");
         mixins.add("early.MixinEntityLivingBase_PetOwnerMeleeProtection");
@@ -202,6 +204,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinRender_NameTagBackground");
             mixins.add("early.MixinRendererLivingEntity_NameTagBloomExclusion");
             mixins.add("early.MixinRendererLivingEntity_PetKnockdown");
+            mixins.add("early.MixinRenderTNTPrimed_ThrownSpin");
             if (ModConfig.enableBeta18SwampColors) {
                 mixins.add("early.MixinBiomeGenSwamp_Beta18Colors");
             }

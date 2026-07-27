@@ -27,6 +27,7 @@ public class ItemAxolotlSpawnEgg extends Item {
         ForgeDirection direction = ForgeDirection.getOrientation(side);
         EntityAxolotl axolotl = new EntityAxolotl(world);
         axolotl.setVariant(AxolotlVariant.getRandomVariant(world.rand));
+        axolotl.setPerrySkin(EntityAxolotl.rollPerrySkin(world.rand));
         axolotl.setLocationAndAngles(
                 x + direction.offsetX + 0.5D,
                 y + direction.offsetY + 0.2D,

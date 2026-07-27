@@ -1,12 +1,18 @@
 package com.voidsrift.riftflux.client;
 
+import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.entity.PrimedTntCarry;
 import com.voidsrift.riftflux.net.MsgBombCarryUse;
 import com.voidsrift.riftflux.net.RFNetwork;
+import com.voidsrift.riftflux.pets.PetKnockdown;
+import com.voidsrift.riftflux.pets.PetKnockdownCarry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityTNTPrimed;
 import net.nmccoy.legendgear.legacy.entities.EntityBomb;
 import org.lwjgl.input.Mouse;
 
@@ -37,14 +43,25 @@ public class BombCarryClientHandler {
         boolean usePressed = Mouse.isButtonDown(1);
         if (usePressed
                 && !this.wasUsePressed
-                && mc.thePlayer.riddenByEntity instanceof EntityBomb
+                && isSupportedCarriedEntity(mc.thePlayer.riddenByEntity)
                 && RFNetwork.CH != null) {
-            MovingObjectPosition hit = mc.objectMouseOver;
-            if (hit == null || hit.typeOfHit == MovingObjectPosition.MovingObjectType.MISS) {
-                RFNetwork.CH.sendToServer(new MsgBombCarryUse(mc.thePlayer.riddenByEntity.getEntityId()));
-            }
+            RFNetwork.CH.sendToServer(new MsgBombCarryUse(mc.thePlayer.riddenByEntity.getEntityId()));
         }
 
         this.wasUsePressed = usePressed;
+    }
+
+    private static boolean isSupportedCarriedEntity(Entity entity) {
+        if (entity instanceof EntityBomb) {
+            return true;
+        }
+        if (entity instanceof EntityTNTPrimed) {
+            return ModConfig.enablePrimedTntPickupAndThrow
+                    && PrimedTntCarry.isCarried((EntityTNTPrimed) entity);
+        }
+        return entity instanceof EntityLivingBase
+                && ModConfig.enablePetKnockdownPickupAndThrow
+                && PetKnockdownCarry.isCarried((EntityLivingBase) entity)
+                && PetKnockdown.isKnockedDown((EntityLivingBase) entity);
     }
 }

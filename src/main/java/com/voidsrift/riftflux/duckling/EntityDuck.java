@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.duckling;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
 import com.voidsrift.riftflux.net.sync.IEntitySyncData;
+import com.voidsrift.riftflux.util.ConfiguredNameMatcher;
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.EntityAgeable;
@@ -235,14 +236,7 @@ public class EntityDuck extends EntityAnimal implements IAnimatable, IEntitySync
     }
 
     private boolean hasAgentDName() {
-        String name = this.getCommandSenderName();
-        if (name == null) {
-            return false;
-        }
-        String trimmed = name.trim();
-        return "agent d".equalsIgnoreCase(trimmed)
-                || "perry".equalsIgnoreCase(trimmed)
-                || "perry the platypus".equalsIgnoreCase(trimmed);
+        return ConfiguredNameMatcher.matches(this.getCommandSenderName(), ModConfig.ducklingAgentDNames);
     }
 
     public float getHeadRotationOffset(float partialTicks) {

@@ -3,6 +3,7 @@ package com.voidsrift.riftflux.axolotl;
 import com.voidsrift.riftflux.ModConfig;
 import com.voidsrift.riftflux.net.sync.EntitySyncHelper;
 import com.voidsrift.riftflux.net.sync.IEntitySyncData;
+import com.voidsrift.riftflux.util.ConfiguredNameMatcher;
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
@@ -46,6 +47,7 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
     private static final int VARIANT_MASK = 31;
     private static final int FROM_BUCKET_FLAG = 32;
     private static final int PLAYING_DEAD_FLAG = 64;
+    private static final int PERRY_SKIN_FLAG = 128;
 
     private int playingDeadTicks;
     private int swimCruiseTicks;
@@ -359,10 +361,14 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
         if (spawnData instanceof AxolotlSpawnData) {
             axolotlData = (AxolotlSpawnData) spawnData;
         } else {
-            axolotlData = new AxolotlSpawnData(AxolotlVariant.getRandomVariant(this.rand));
+            axolotlData = new AxolotlSpawnData(
+                    AxolotlVariant.getRandomVariant(this.rand),
+                    rollPerrySkin(this.rand)
+            );
             spawnData = axolotlData;
         }
         this.setVariant(axolotlData.variant);
+        this.setPerrySkin(axolotlData.perrySkin);
         return spawnData;
     }
 
@@ -422,6 +428,7 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
         tag.setByte("AxolotlVariant", (byte) this.getVariant().getId());
         tag.setBoolean("FromBucket", this.isFromBucket());
         tag.setInteger("PlayDeadTicks", this.playingDeadTicks);
+        tag.setBoolean("PerrySkin", this.hasStoredPerrySkin());
     }
 
     @Override
@@ -431,6 +438,7 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
         this.setFromBucket(tag.getBoolean("FromBucket"));
         this.playingDeadTicks = Math.max(0, tag.getInteger("PlayDeadTicks"));
         this.setPlayingDead(this.playingDeadTicks > 0);
+        this.setPerrySkin(tag.getBoolean("PerrySkin"));
     }
 
     @Override
@@ -457,6 +465,30 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
 
     public AxolotlVariant getVariant() {
         return AxolotlVariant.byId(this.getPackedState() & VARIANT_MASK);
+    }
+
+    public boolean hasPerrySkin() {
+        return this.hasStoredPerrySkin()
+                || ConfiguredNameMatcher.matches(this.getCommandSenderName(), ModConfig.axolotlPerryNames);
+    }
+
+    public boolean hasStoredPerrySkin() {
+        return (this.getPackedState() & PERRY_SKIN_FLAG) != 0;
+    }
+
+    public void setPerrySkin(boolean perrySkin) {
+        int state = this.getPackedState();
+        if (perrySkin) {
+            state |= PERRY_SKIN_FLAG;
+        } else {
+            state &= ~PERRY_SKIN_FLAG;
+        }
+        this.setPackedState(state);
+    }
+
+    public static boolean rollPerrySkin(java.util.Random rand) {
+        return rand != null
+                && rand.nextFloat() * 100.0F < ModConfig.axolotlPerryNaturalVariantChancePercent;
     }
 
     public void setVariant(AxolotlVariant variant) {
@@ -807,9 +839,11 @@ public class EntityAxolotl extends EntityTameable implements IEntitySyncData, IE
 
     private static final class AxolotlSpawnData implements IEntityLivingData {
         private final AxolotlVariant variant;
+        private final boolean perrySkin;
 
-        private AxolotlSpawnData(AxolotlVariant variant) {
+        private AxolotlSpawnData(AxolotlVariant variant, boolean perrySkin) {
             this.variant = variant;
+            this.perrySkin = perrySkin;
         }
     }
 }

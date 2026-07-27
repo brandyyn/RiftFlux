@@ -41,6 +41,6 @@ public enum AxolotlVariant {
     }
 
     public static AxolotlVariant getRandomVariant(Random rand) {
-        return BY_ID[rand.nextInt(BY_ID.length)];
+        return rand == null ? LUCY : BY_ID[rand.nextInt(BY_ID.length)];
     }
 }

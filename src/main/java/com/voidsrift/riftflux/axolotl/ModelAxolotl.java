@@ -6,8 +6,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
 
 public class ModelAxolotl extends ModelBase {
+    private final boolean renderPerryHatOnly;
     private final ModelRenderer body;
     private final ModelRenderer head;
+    private final ModelRenderer perryHatBrim;
+    private final ModelRenderer perryHatCrown;
     private final ModelRenderer tail;
     private final ModelRenderer topGills;
     private final ModelRenderer leftGills;
@@ -18,6 +21,11 @@ public class ModelAxolotl extends ModelBase {
     private final ModelRenderer leftFrontLeg;
 
     public ModelAxolotl() {
+        this(false);
+    }
+
+    ModelAxolotl(boolean renderPerryHatOnly) {
+        this.renderPerryHatOnly = renderPerryHatOnly;
         this.textureWidth = 64;
         this.textureHeight = 64;
 
@@ -30,6 +38,16 @@ public class ModelAxolotl extends ModelBase {
         this.head.addBox(-4.0F, -3.0F, -5.0F, 8, 5, 5, 0.001F);
         this.head.setRotationPoint(0.0F, 0.0F, -9.0F);
         this.body.addChild(this.head);
+
+        this.perryHatBrim = new ModelRenderer(this, 13, 28);
+        this.perryHatBrim.addBox(-3.0F, -1.0F, -1.0F, 6, 1, 7, 0.001F);
+        this.perryHatBrim.setRotationPoint(0.0F, -3.0F, -5.0F);
+        this.head.addChild(this.perryHatBrim);
+
+        this.perryHatCrown = new ModelRenderer(this, 29, 16);
+        this.perryHatCrown.addBox(-2.0F, -2.0F, 0.0F, 4, 2, 5, 0.001F);
+        this.perryHatCrown.setRotationPoint(0.0F, -4.0F, -5.0F);
+        this.head.addChild(this.perryHatCrown);
 
         this.topGills = new ModelRenderer(this, 3, 37);
         this.topGills.addBox(-4.0F, -3.0F, 0.0F, 8, 3, 0, 0.001F);
@@ -70,12 +88,33 @@ public class ModelAxolotl extends ModelBase {
         this.tail.addBox(0.0F, -3.0F, 0.0F, 0, 5, 12);
         this.tail.setRotationPoint(0.0F, 0.0F, 1.0F);
         this.body.addChild(this.tail);
+
+        if (this.renderPerryHatOnly) {
+            this.body.cubeList.clear();
+            this.head.cubeList.clear();
+            this.topGills.showModel = false;
+            this.leftGills.showModel = false;
+            this.rightGills.showModel = false;
+            this.rightHindLeg.showModel = false;
+            this.leftHindLeg.showModel = false;
+            this.rightFrontLeg.showModel = false;
+            this.leftFrontLeg.showModel = false;
+            this.tail.showModel = false;
+        } else {
+            this.perryHatBrim.showModel = false;
+            this.perryHatCrown.showModel = false;
+        }
     }
 
     @Override
     public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
                        float netHeadYaw, float headPitch, float scale) {
         this.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, entity);
+        boolean showPerryHat = this.renderPerryHatOnly
+                && entity instanceof EntityAxolotl
+                && ((EntityAxolotl) entity).hasPerrySkin();
+        this.perryHatBrim.showModel = showPerryHat;
+        this.perryHatCrown.showModel = showPerryHat;
         this.body.render(scale);
     }
 
