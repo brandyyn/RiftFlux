@@ -3,6 +3,7 @@ package gravestone.entity.monster;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gravestone.core.Resources;
+import gravestone.config.GraveStoneConfig;
 import gravestone.entity.ai.EntityAIAttackLivingHorse;
 import java.util.Random;
 import net.minecraft.block.Block;
@@ -12,7 +13,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackOnCollide;
 import net.minecraft.entity.ai.EntityAIMoveThroughVillage;
 import net.minecraft.entity.ai.EntityAIMoveTowardsRestriction;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
+import net.minecraft.entity.ai.EntityAITargetNonTamed;
 import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.passive.EntityHorse;
@@ -47,11 +48,11 @@ public class EntityZombieCat extends EntityUndeadCat {
       this.tasks.addTask(3, new EntityAIAttackOnCollide(this, EntityOcelot.class, 1.0D, true));
       this.tasks.addTask(4, new EntityAIAttackLivingHorse(this, 1.0D, false));
       this.tasks.addTask(5, new EntityAIMoveThroughVillage(this, 1.0D, false));
-      this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityVillager.class, 0, false));
-      this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityWolf.class, 0, false));
-      this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityOcelot.class, 0, false));
-      this.targetTasks.addTask(4, new EntityAINearestAttackableTarget(this, EntityChicken.class, 0, false));
-      this.targetTasks.addTask(4, new EntityAINearestAttackableTarget(this, EntityHorse.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityVillager.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityWolf.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityOcelot.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityChicken.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityHorse.class, 0, false));
    }
 
    protected void applyEntityAttributes() {
@@ -125,6 +126,14 @@ public class EntityZombieCat extends EntityUndeadCat {
 
    protected Item getDropItem() {
       return Items.rotten_flesh;
+   }
+
+   public boolean interact(EntityPlayer player) {
+      return this.tryTame(player, Items.fish) || super.interact(player);
+   }
+
+   protected boolean isTamingEnabled() {
+      return GraveStoneConfig.enableZombiePetTaming;
    }
 
    public int getSkin() {

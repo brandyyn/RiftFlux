@@ -108,7 +108,9 @@ public class TileEntityGSGraveStoneRenderer extends TileEntityGSRenderer {
 
       if (tileEntity.isSwordGrave()) {
          if (GraveStoneConfig.vanillaRendererForSwordsGraves) {
+            GL11.glPushMatrix();
             this.renderSword(tileEntity);
+            GL11.glPopMatrix();
          } else {
             this.bindTextureByName(swordsTextureMap.get(tileEntity.getSword().getItem()));
             if (tileEntity.isEnchanted()) {
@@ -124,9 +126,10 @@ public class TileEntityGSGraveStoneRenderer extends TileEntityGSRenderer {
             renderStaticModel(MODELS_MAP.get(graveType));
          }
 
-         if (tileEntity.hasFlower() && GraveStoneConfig.renderGravesFlowers) {
-            this.renderFlower(tileEntity);
-         }
+      }
+
+      if (tileEntity.hasFlower() && GraveStoneConfig.renderGravesFlowers) {
+         this.renderFlower(tileEntity);
       }
 
       GL11.glPopMatrix();

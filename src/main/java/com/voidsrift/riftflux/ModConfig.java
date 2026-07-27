@@ -345,6 +345,7 @@ public class ModConfig {
     public static boolean levelUpAllowHud;
     public static boolean levelUpOpenClassSkillsMenuAtAnyLevel;
     public static int levelUpClassSelectionLevel;
+    public static int levelUpClassSelectionRows;
     public static String[] levelUpClassSkillBonuses;
     public static float levelUpMiningOreBonusChancePerPointPercent;
     public static int levelUpMiningBonusDropCount;
@@ -1458,6 +1459,30 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
 
     public static boolean invincibleRideableEntities;
 
+    public static boolean enablePetKnockdownSystem;
+    public static boolean petKnockdownAllOwnedMobs;
+    public static String[] petKnockdownMobWhitelist;
+    public static String[] petKnockdownMobBlacklist;
+    public static boolean showPetKnockdownRedTint;
+    public static boolean showPetKnockdownParticles;
+    public static float petKnockdownParticleHeightOffset;
+    public static boolean silenceKnockedDownPets;
+    public static boolean showPetKnockdownDizzyStars;
+    public static boolean rotatePetKnockdownDizzyStars;
+    public static float petKnockdownDizzyStarHeightOffset;
+    public static boolean enablePetKnockdownTimeout;
+    public static int petKnockdownTimeoutSeconds;
+    public static String[] petKnockdownTimeoutOverrides;
+    public static String[] petKnockdownTimeoutMobWhitelist;
+    public static String[] petKnockdownTimeoutMobBlacklist;
+    public static boolean showPetKnockdownTimeoutAboveHead;
+    public static boolean showPetKnockdownTimeoutTextBackground;
+    public static float petKnockdownReviveTextHeightOffset;
+    public static boolean showEntityNameTagBackground;
+    public static boolean enablePetOwnerMeleeProtection;
+    public static boolean petOwnerMeleeProtectionAllOwnedMobs;
+    public static String[] petOwnerMeleeProtectionMobWhitelist;
+    public static String[] petOwnerMeleeProtectionMobBlacklist;
     public static boolean teleportOwnedPetsFromUnloadedChunks;
     public static float teleportOwnedPetsMinimumDistance;
     public static boolean preventLeadsBreaking;
@@ -3512,6 +3537,14 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 Integer.MAX_VALUE,
                 "Experience level required to select a LevelUp class. Accumulated pre-class skill points "
                         + "can also satisfy the equivalent number of levels."
+        );
+        levelUpClassSelectionRows = config.getInt(
+                "ClassSelectionRows",
+                "LevelUp",
+                4,
+                1,
+                32,
+                "Maximum number of horizontal class-button rows shown on each class selection page."
         );
         levelUpClassSkillBonuses = config.getStringList(
                 "ClassSkillBonuses",
@@ -8835,13 +8868,203 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
                 "If true, any entity currently being ridden by a player is completely invincible."
         );
 
+        enablePetKnockdownSystem = config.getBoolean(
+                "enablePetKnockdownSystem",
+                "pets",
+                true,
+                "If true, tamed player-owned pets can never die. At 1 health they become knocked down:\n" +
+                        "immune to damage, unable to move or attack, unable to follow-owner teleport, and rendered lying down.\n" +
+                        "Any healing that raises health above 1 immediately revives the pet."
+        );
+
+        petKnockdownAllOwnedMobs = config.getBoolean(
+                "petKnockdownAllOwnedMobs",
+                "pets",
+                false,
+                "If true, knockdown protection also applies to any IEntityOwnable mob with a live player owner.\n" +
+                        "If false, only tamed EntityTameable and EntityHorse pets with an owner are protected."
+        );
+
+        petKnockdownMobWhitelist = config.getStringList(
+                "petKnockdownMobWhitelist",
+                "pets",
+                new String[0],
+                "Entities allowed to use pet knockdown protection. Entries force matching mobs to be eligible even if they are not ownable or tamed.\n" +
+                        "Empty uses the normal owned/tamed pet rules.\n" +
+                        "Accepts registered entity ids, simple class names, or full class names. Examples: Wolf, EntityWolf, net.minecraft.entity.passive.EntityWolf."
+        );
+
+        petKnockdownMobBlacklist = config.getStringList(
+                "petKnockdownMobBlacklist",
+                "pets",
+                new String[0],
+                "Entities that must never use pet knockdown protection. Uses the same entry format as petKnockdownMobWhitelist.\n" +
+                        "Blacklist always takes precedence over whitelist."
+        );
+
+        showPetKnockdownRedTint = config.getBoolean(
+                "showPetKnockdownRedTint",
+                "pets",
+                false,
+                "If true, knocked-down pets render with the vanilla death red tint. Set false to remove the tint."
+        );
+
+        showPetKnockdownParticles = config.getBoolean(
+                "showPetKnockdownParticles",
+                "pets",
+                false,
+                "If true, knocked-down pets emit slowness-colored potion particles. Set false to remove them."
+        );
+
+        petKnockdownParticleHeightOffset = config.getFloat(
+                "petKnockdownParticleHeightOffset",
+                "pets",
+                0.0F,
+                -16.0F,
+                16.0F,
+                "Vertical offset in blocks for knocked-down pet particles. Positive values raise them; negative values lower them."
+        );
+
+        silenceKnockedDownPets = config.getBoolean(
+                "silenceKnockedDownPets",
+                "pets",
+                true,
+                "If true, knocked-down pets cannot emit ambient, hurt, step, or other entity sounds."
+        );
+
+        showPetKnockdownDizzyStars = config.getBoolean(
+                "showPetKnockdownDizzyStars",
+                "pets",
+                true,
+                "If true, knocked-down pets display spinning pickup-star sprites orbiting above them."
+        );
+
+        rotatePetKnockdownDizzyStars = config.getBoolean(
+                "rotatePetKnockdownDizzyStars",
+                "pets",
+                false,
+                "If true, each knocked-down pet star spins as a texture. The stars still orbit when this is false."
+        );
+
+        petKnockdownDizzyStarHeightOffset = config.getFloat(
+                "petKnockdownDizzyStarHeightOffset",
+                "pets",
+                -0.2F,
+                -16.0F,
+                16.0F,
+                "Height in blocks above the mob's normal top position for knocked-down dizzy stars."
+        );
+
+        enablePetKnockdownTimeout = config.getBoolean(
+                "enablePetKnockdownTimeout",
+                "pets",
+                true,
+                "If true, configured knocked-down pets die when their revive timer expires."
+        );
+
+        petKnockdownTimeoutSeconds = config.getInt(
+                "petKnockdownTimeoutSeconds",
+                "pets",
+                3600,
+                0,
+                31536000,
+                "Global revive timeout in seconds. Default is 3600 seconds (1 hour). Set to 0 for no global timeout.\n" +
+                        "Positive per-mob overrides can still enable timers when this is 0."
+        );
+
+        petKnockdownTimeoutOverrides = config.getStringList(
+                "petKnockdownTimeoutOverrides",
+                "pets",
+                new String[0],
+                "Optional per-mob revive timers. Format: entitySelector|seconds. First matching entry wins.\n" +
+                        "Selectors accept registered entity ids, simple class names, or full class names.\n" +
+                        "Examples: Wolf|3600, ZombieMinion|30. A value of 0 disables the timer for that mob."
+        );
+
+        petKnockdownTimeoutMobWhitelist = config.getStringList(
+                "petKnockdownTimeoutMobWhitelist",
+                "pets",
+                new String[0],
+                "Entities allowed to use the knockdown timeout. Empty allows every knocked-down pet."
+        );
+
+        petKnockdownTimeoutMobBlacklist = config.getStringList(
+                "petKnockdownTimeoutMobBlacklist",
+                "pets",
+                new String[0],
+                "Entities that never expire while knocked down. Uses the same selectors as petKnockdownTimeoutMobWhitelist.\n" +
+                        "Blacklist always takes precedence over whitelist and per-mob overrides."
+        );
+
+        showPetKnockdownTimeoutAboveHead = config.getBoolean(
+                "showPetKnockdownTimeoutAboveHead",
+                "pets",
+                true,
+                "If true, clients render the remaining revive time above timed knocked-down pets."
+        );
+
+        showPetKnockdownTimeoutTextBackground = config.getBoolean(
+                "showPetKnockdownTimeoutTextBackground",
+                "pets",
+                false,
+                "If true, revive countdown text has a translucent black background. Disabled by default."
+        );
+
+        petKnockdownReviveTextHeightOffset = config.getFloat(
+                "petKnockdownReviveTextHeightOffset",
+                "pets",
+                0.77F,
+                -2.0F,
+                10.0F,
+                "Vertical offset in blocks above the pet's full height for the revive countdown text."
+        );
+
+        showEntityNameTagBackground = config.getBoolean(
+                "showEntityNameTagBackground",
+                "pets",
+                false,
+                "If false, removes the translucent black background from vanilla entity and player nametags."
+        );
+
+        enablePetOwnerMeleeProtection = config.getBoolean(
+                "enablePetOwnerMeleeProtection",
+                "pets",
+                true,
+                "If true, players cannot directly melee damage pets they own. Projectiles and attacks from other players are unaffected."
+        );
+
+        petOwnerMeleeProtectionAllOwnedMobs = config.getBoolean(
+                "petOwnerMeleeProtectionAllOwnedMobs",
+                "pets",
+                true,
+                "If true, owner melee protection applies to any IEntityOwnable mob owned by the attacking player.\n" +
+                        "If false, only tamed EntityTameable mobs and tamed EntityHorse mobs are protected."
+        );
+
+        petOwnerMeleeProtectionMobWhitelist = config.getStringList(
+                "petOwnerMeleeProtectionMobWhitelist",
+                "pets",
+                new String[0],
+                "Entities allowed to use owner melee protection. Empty allows every eligible pet.\n" +
+                        "Accepts registered entity ids, simple class names, or full class names. Examples: Wolf, EntityHorse, net.minecraft.entity.passive.EntityWolf."
+        );
+
+        petOwnerMeleeProtectionMobBlacklist = config.getStringList(
+                "petOwnerMeleeProtectionMobBlacklist",
+                "pets",
+                new String[0],
+                "Entities that owners may still melee damage. Uses the same entry format as petOwnerMeleeProtectionMobWhitelist.\n" +
+                        "Blacklist always takes precedence over whitelist."
+        );
+
         teleportOwnedPetsFromUnloadedChunks = config.getBoolean(
                 "teleportOwnedPetsFromUnloadedChunks",
                 "general",
                 true,
                 "If true, tamed player-owned EntityTameable pets that are not sitting or leashed " +
                         "will snap to a safe spot near their owner before their old chunk unloads.\n" +
-                        "This helps pets keep up after long-distance teleports in the same dimension."
+                        "This helps pets keep up after long-distance teleports in the same dimension.\n" +
+                        "Knocked-down pets never use this recovery teleport."
         );
 
         teleportOwnedPetsMinimumDistance = config.getFloat(
@@ -9627,7 +9850,11 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "GeneratePetGraves", true, "Enable or disable grave generation when pets such as dogs, cats, and horses die.");
         config.get(category, "GenerateGravesInLava", true, "Enable or disable grave generation when an entity dies in lava.");
         config.get(category, "GenerateSwordGraves", true, "Allows one sword from the player's inventory to be used as their gravestone when they die.");
+        config.get(category, "ConvertGrassToDirtBelowGraves", false, "Convert grass and mycelium directly beneath a newly placed or generated gravestone into dirt. Disable to preserve the original ground block.");
+        config.get(category, "PreventGraveDirtFromGrowingGrass", true, "Keep dirt beneath a gravestone from growing into grass or mycelium while the gravestone remains. Works independently from ConvertGrassToDirtBelowGraves, so graves placed on existing grass can leave it unchanged.");
+        config.get(category, "AllowFlowersOnAllGraves", true, "Allow supported vanilla and modded flowers to be placed or generated on every gravestone type, including horizontal, statue, and sword graves.");
         config.get(category, "RenderGravesFlowers", true, "Enable grave flower rendering. Disable to improve rendering performance.");
+        config.get(category, "RandomizeEnchantedGravestoneGlintColors", true, "Give each newly generated enchanted gravestone one random glint colour instead of the default purple. Existing gravestones and gravestones with an explicitly selected Glint Rune colour are unchanged.");
         config.get(category, "VanillaRendererForSwordsGraves", true, "Controls sword gravestone rendering mode. The vanilla renderer uses considerably more resources.");
         config.get(category, "SavedItemsCount", 40, "Amount of inventory slots stored in a grave when a player dies. Valid range: 0-40; 40 stores all standard inventory slots.");
         config.get(category, "SpawnRate", 1000, "Amount of ticks between mob spawn attempts by graves. Must be greater than 600.");
@@ -9655,6 +9882,7 @@ public static String[] riftExplorerSlingshotCaptureMobBlacklist;
         config.get(category, "SpawnSkeletonDogs", true, "Allow Skeleton Dogs to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.");
         config.get(category, "SpawnSkeletonCats", true, "Allow Skeleton Cats to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.");
         config.get(category, "EnableSkeletonPetTaming", true, "Allow Skeleton Dogs to be tamed with bones and Skeleton Cats to be tamed with raw fish. Tamed skeleton pets follow their owner, stop targeting players, do not despawn, and no longer burn in sunlight.");
+        config.get(category, "EnableZombiePetTaming", true, "Allow Zombie Dogs to be tamed with bones and Zombie Cats to be tamed with raw fish. Tamed zombie pets use normal pet ownership, sitting, following, owner defence, persistence, sunlight immunity, and RiftFlux pet knockdown behavior.");
         config.get(category, "SpawnSkullCrawlersAtMobsDeath", true, "Enable or disable Skull Crawlers spawning when mobs die.");
         config.get(category, "SpawnSkullCrawlersOnBoneBlockDestruction", true, "Enable or disable Skull Crawlers spawning when bone blocks are destroyed.");
 

@@ -168,6 +168,12 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if (ModConfig.invincibleOwnedMobs ) {
             mixins.add("early.MixinEntityLivingBase_PetInvincibility");
         }
+        mixins.add("early.MixinEntity_PetKnockdownMovement");
+        mixins.add("early.MixinEntityLivingBase_PetKnockdown");
+        mixins.add("early.MixinEntityLiving_PetKnockdownAI");
+        mixins.add("early.MixinEntityLivingBase_PetOwnerMeleeProtection");
+        mixins.add("early.MixinEntityTameable_PetKnockdown");
+        mixins.add("early.MixinEntityWolf_PetKnockdownAnimation");
         if (ModConfig.preventLeadsBreaking) {
             mixins.add("early.MixinEntityLiving_NoLeadBreaking");
         }
@@ -193,6 +199,9 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("early.MixinItemInWorldManager_LegacyBreakProgress");
         }
         if (cpw.mods.fml.relauncher.FMLLaunchHandler.side() == cpw.mods.fml.relauncher.Side.CLIENT) {
+            mixins.add("early.MixinRender_NameTagBackground");
+            mixins.add("early.MixinRendererLivingEntity_NameTagBloomExclusion");
+            mixins.add("early.MixinRendererLivingEntity_PetKnockdown");
             if (ModConfig.enableBeta18SwampColors) {
                 mixins.add("early.MixinBiomeGenSwamp_Beta18Colors");
             }
@@ -400,6 +409,7 @@ public class RFEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoader {
             mixins.add("accessor.ModelBoxAccessor");
             mixins.add("accessor.PlayerControllerMPAccessor");
             mixins.add("accessor.ChunkCacheAccessor");
+            mixins.add("accessor.MinecraftAccessor");
             if (hasClass(ANGELICA_WORLD_SLICE)) {
                 mixins.add("accessor.angelica.WorldSliceAccessor");
             }

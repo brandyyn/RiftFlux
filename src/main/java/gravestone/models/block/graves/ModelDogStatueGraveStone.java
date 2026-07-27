@@ -24,7 +24,7 @@ public class ModelDogStatueGraveStone extends ModelGraveStone {
       float f1 = 13.5F;
       this.wolfHeadMain = new ModelRenderer(this, 0, 0);
       this.wolfHeadMain.addBox(-3.0F, -3.0F, -2.0F, 6, 6, 4, f);
-      this.wolfHeadMain.setRotationPoint(-1.0F, f1, -7.0F);
+      this.wolfHeadMain.setRotationPoint(-0.5F, f1, -7.0F);
       this.wolfBody = new ModelRenderer(this, 18, 14);
       this.wolfBody.addBox(-4.0F, -2.0F, -3.0F, 6, 9, 6, f);
       this.wolfBody.setRotationPoint(0.0F, 14.0F, 2.0F);

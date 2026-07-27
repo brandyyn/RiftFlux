@@ -22,6 +22,7 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
    protected ItemStack sword = null;
    protected ItemStack flower = null;
    private boolean playerPlaced = false;
+   private boolean preserveDirtBelow;
    private long lastMobSpawnNight = Long.MIN_VALUE;
    public static final int FOG_RANGE = 30;
 
@@ -83,6 +84,7 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
       }
 
       this.playerPlaced = nbtTag.getBoolean("PlayerPlaced");
+      this.preserveDirtBelow = nbtTag.getBoolean("PreserveDirtBelow");
       if (nbtTag.hasKey("LastMobSpawnNight")) {
          this.lastMobSpawnNight = nbtTag.getLong("LastMobSpawnNight");
       }
@@ -98,6 +100,7 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
       this.gSDeathText.saveText(nbtTag);
       nbtTag.setInteger("Age", this.age);
       nbtTag.setBoolean("PlayerPlaced", this.playerPlaced);
+      nbtTag.setBoolean("PreserveDirtBelow", this.preserveDirtBelow);
       if (this.lastMobSpawnNight != Long.MIN_VALUE) {
          nbtTag.setLong("LastMobSpawnNight", this.lastMobSpawnNight);
       }
@@ -194,6 +197,15 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
       this.markDirty();
    }
 
+   public boolean shouldPreserveDirtBelow() {
+      return this.preserveDirtBelow;
+   }
+
+   public void setPreserveDirtBelow(boolean preserveDirtBelow) {
+      this.preserveDirtBelow = preserveDirtBelow;
+      this.markDirty();
+   }
+
    public boolean hasSpawnedMobThisNight() {
       return this.worldObj != null && this.lastMobSpawnNight == this.worldObj.getWorldTime() / 24000L;
    }
@@ -267,7 +279,11 @@ public class TileEntityGSGraveStone extends TileEntityGSGrave {
 
    public void setRandomFlower(Random random) {
       if (random.nextInt(4) == 0) {
-         ItemStack flower = new ItemStack(GraveStoneHelper.FLOWERS.get(random.nextInt(GraveStoneHelper.FLOWERS.size())), 1);
+         java.util.List<ItemStack> flowers = GraveStoneHelper.getRegisteredGraveFlowers();
+         if (flowers.isEmpty()) {
+            return;
+         }
+         ItemStack flower = flowers.get(random.nextInt(flowers.size())).copy();
          if (GraveStoneHelper.canFlowerBePlaced(this.worldObj, this.xCoord, this.yCoord, this.zCoord, flower, this)) {
             this.setFlower(flower);
          }

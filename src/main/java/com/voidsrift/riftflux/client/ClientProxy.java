@@ -229,6 +229,8 @@ public class ClientProxy extends CommonProxy {
             MinecraftForge.EVENT_BUS.register(new ChromatiCraftItemFabricatorTooltipHandler());
         }
         MinecraftForge.EVENT_BUS.register(new MovementSpeedFovLimitHandler());
+        PetKnockdownTimeoutRenderer.bootstrap();
+        PetKnockdownDizzyStarRenderer.bootstrap();
         MinecraftForge.EVENT_BUS.register(new UniversalDurabilityTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new RiftExplorerSlingshotAmmoTooltipHandler());
         MinecraftForge.EVENT_BUS.register(new IceRodPlacementPreviewRenderer());

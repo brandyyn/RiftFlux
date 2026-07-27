@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.pets.PetKnockdown;
 import java.util.List;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.passive.EntityTameable;
@@ -58,6 +59,9 @@ public abstract class MixinChunk_TeleportOwnedPetsOnUnload {
     @Unique
     private boolean riftflux$shouldRecoverToOwner(EntityTameable pet, EntityLivingBase owner, double minDistance) {
         if (pet == null || pet.isDead || owner == null || owner.isDead) {
+            return false;
+        }
+        if (PetKnockdown.isKnockedDown(pet)) {
             return false;
         }
         if (!pet.isTamed() || pet.isSitting() || pet.getLeashed()) {

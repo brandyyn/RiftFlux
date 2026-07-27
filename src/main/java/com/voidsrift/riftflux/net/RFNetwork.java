@@ -108,5 +108,8 @@ public final class RFNetwork {
         // Exact integrated Gravestone location for client waypoint mods (ID 27)
         CH.registerMessage(MsgGravestoneLocation.Handler.class, MsgGravestoneLocation.class, 27, Side.CLIENT);
 
+        // Knocked-down pet revive timeout sync (ID 28)
+        CH.registerMessage(MsgSyncPetKnockdownTimeout.Handler.class, MsgSyncPetKnockdownTimeout.class, 28, Side.CLIENT);
+
     }
 }

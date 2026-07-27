@@ -1,6 +1,7 @@
 package gravestone.entity.monster;
 
 import gravestone.core.Resources;
+import gravestone.config.GraveStoneConfig;
 import net.minecraft.block.Block;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackOnCollide;
@@ -49,5 +50,9 @@ public class EntitySkeletonDog extends EntityUndeadDog {
 
    public boolean interact(EntityPlayer player) {
       return this.tryTame(player, Items.bone) || super.interact(player);
+   }
+
+   protected boolean isTamingEnabled() {
+      return GraveStoneConfig.enableSkeletonPetTaming;
    }
 }

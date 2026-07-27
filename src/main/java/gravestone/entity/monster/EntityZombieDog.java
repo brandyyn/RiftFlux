@@ -1,6 +1,7 @@
 package gravestone.entity.monster;
 
 import gravestone.core.Resources;
+import gravestone.config.GraveStoneConfig;
 import gravestone.entity.ai.EntityAIAttackLivingHorse;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
@@ -8,7 +9,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackOnCollide;
 import net.minecraft.entity.ai.EntityAIMoveThroughVillage;
 import net.minecraft.entity.ai.EntityAIMoveTowardsRestriction;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
+import net.minecraft.entity.ai.EntityAITargetNonTamed;
 import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.passive.EntityOcelot;
@@ -42,11 +43,11 @@ public class EntityZombieDog extends EntityUndeadDog {
       this.tasks.addTask(4, new EntityAIAttackLivingHorse(this, 1.0D, false));
       this.tasks.addTask(4, new EntityAIAttackOnCollide(this, EntitySheep.class, 1.0D, false));
       this.tasks.addTask(5, new EntityAIMoveThroughVillage(this, 1.0D, false));
-      this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityVillager.class, 0, false));
-      this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityWolf.class, 0, false));
-      this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityOcelot.class, 0, false));
-      this.targetTasks.addTask(4, new EntityAINearestAttackableTarget(this, EntityHorse.class, 0, false));
-      this.targetTasks.addTask(4, new EntityAINearestAttackableTarget(this, EntitySheep.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityVillager.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityWolf.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityOcelot.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityHorse.class, 0, false));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntitySheep.class, 0, false));
    }
 
    protected void applyEntityAttributes() {
@@ -78,6 +79,14 @@ public class EntityZombieDog extends EntityUndeadDog {
 
    protected Item getDropItem() {
       return Items.rotten_flesh;
+   }
+
+   public boolean interact(EntityPlayer player) {
+      return this.tryTame(player, Items.bone) || super.interact(player);
+   }
+
+   protected boolean isTamingEnabled() {
+      return GraveStoneConfig.enableZombiePetTaming;
    }
 
    public void onKillEntity(EntityLivingBase entityLiving) {

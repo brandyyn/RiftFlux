@@ -406,7 +406,7 @@ public class EntityIMThrower extends EntityIMMob
 	@Override
 	protected void dropFewItems(boolean flag, int bonus) {
 		super.dropFewItems(flag, bonus);
-		if (mod_Invasion.getMobsDropSmallRemnants()) {
+		if (shouldDropSmallRemnants()) {
 			entityDropItem(new ItemStack(mod_Invasion.itemSmallRemnants, 1), 0.0F);
 		}
 	}

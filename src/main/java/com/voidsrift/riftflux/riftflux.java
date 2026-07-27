@@ -163,6 +163,7 @@ public class riftflux {
         final SyncEventHandler syncEventHandler = new SyncEventHandler();
         MinecraftForge.EVENT_BUS.register(syncEventHandler);
         FMLCommonHandler.instance().bus().register(syncEventHandler);
+        MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.pets.PetKnockdownTimeoutEvents());
         ChatBubbleColorManager.bootstrapServer();
         MinecraftForge.EVENT_BUS.register(new com.voidsrift.riftflux.util.RFPlantContextEvents());
         final com.voidsrift.riftflux.server.ChestLaunchEvents chestLaunchEvents =

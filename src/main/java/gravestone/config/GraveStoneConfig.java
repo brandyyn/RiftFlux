@@ -52,6 +52,9 @@ public class GraveStoneConfig {
    public static boolean generateVillagerGraves;
    public static boolean generatePetGraves;
    public static boolean renderGravesFlowers;
+   public static boolean convertGrassToDirtBelowGraves;
+   public static boolean preventGraveDirtFromGrowingGrass;
+   public static boolean allowFlowersOnAllGraves;
    public static boolean randomizeEnchantedGravestoneGlintColors;
    public static boolean vanillaRendererForSwordsGraves;
    public static boolean generateGravesInLava;
@@ -80,6 +83,7 @@ public class GraveStoneConfig {
    public static boolean spawnSkeletonDogs;
    public static boolean spawnSkeletonCats;
    public static boolean enableSkeletonPetTaming;
+   public static boolean enableZombiePetTaming;
    public static boolean spawnSkullCrawlersAtMobsDeath;
    public static boolean spawnSkullCrawlersAtBoneBlockDestruction;
    public static boolean generateSwordGraves;
@@ -208,6 +212,9 @@ public class GraveStoneConfig {
       generateGravesInLava = config.get(CATEGORY_GRAVESTONE, "GenerateGravesInLava", true, "Enable or disable grave generation when an entity dies in lava.").getBoolean(true);
       generateSwordGraves = config.get(CATEGORY_GRAVESTONE, "GenerateSwordGraves", true, "Allows one sword from the player's inventory to be used as their gravestone when they die.").getBoolean(true);
       renderGravesFlowers = config.get(CATEGORY_GRAVESTONE, "RenderGravesFlowers", true, "Enable grave flower rendering. Disable to improve rendering performance.").getBoolean(true);
+      convertGrassToDirtBelowGraves = config.get(CATEGORY_GRAVESTONE, "ConvertGrassToDirtBelowGraves", true, "Convert grass and mycelium directly beneath a newly placed or generated gravestone into dirt. Disable to preserve the original ground block.").getBoolean(true);
+      preventGraveDirtFromGrowingGrass = config.get(CATEGORY_GRAVESTONE, "PreventGraveDirtFromGrowingGrass", false, "Keep dirt beneath a gravestone from growing into grass or mycelium while the gravestone remains. Works independently from ConvertGrassToDirtBelowGraves, so graves placed on existing grass can leave it unchanged.").getBoolean(false);
+      allowFlowersOnAllGraves = config.get(CATEGORY_GRAVESTONE, "AllowFlowersOnAllGraves", false, "Allow supported vanilla and modded flowers to be placed or generated on every gravestone type, including horizontal, statue, and sword graves.").getBoolean(false);
       randomizeEnchantedGravestoneGlintColors = config.get(CATEGORY_GRAVESTONE, "RandomizeEnchantedGravestoneGlintColors", true, "Give each newly generated enchanted gravestone one random glint colour instead of the default purple. Existing gravestones and gravestones with an explicitly selected Glint Rune colour are unchanged.").getBoolean(true);
       vanillaRendererForSwordsGraves = config.get(CATEGORY_GRAVESTONE, "VanillaRendererForSwordsGraves", true, "Controls sword gravestone rendering mode. The vanilla renderer uses considerably more resources.").getBoolean(true);
       chiselDurability = config.get(CATEGORY_GRAVESTONE, "ChiselDurability", 50, "Maximum durability of the built-in RiftFlux chisel. Crafting consumes 1 durability, editing gravestone text consumes 2, and editing memorial text consumes 5. Minimum: 1.", 1, Integer.MAX_VALUE).getInt();
@@ -261,6 +268,7 @@ public class GraveStoneConfig {
       spawnSkeletonDogs = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonDogs", true, "Allow Skeleton Dogs to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.").getBoolean(true);
       spawnSkeletonCats = config.get(CATEGORY_GRAVESTONE, "SpawnSkeletonCats", true, "Allow Skeleton Cats to spawn naturally, from gravestones, and from Gravestone spawners. Does not disable spawn eggs or remove existing entities. Requires restart.").getBoolean(true);
       enableSkeletonPetTaming = config.get(CATEGORY_GRAVESTONE, "EnableSkeletonPetTaming", true, "Allow Skeleton Dogs to be tamed with bones and Skeleton Cats to be tamed with raw fish. Tamed skeleton pets follow their owner, stop targeting players, do not despawn, and no longer burn in sunlight.").getBoolean(true);
+      enableZombiePetTaming = config.get(CATEGORY_GRAVESTONE, "EnableZombiePetTaming", true, "Allow Zombie Dogs to be tamed with bones and Zombie Cats to be tamed with raw fish. Tamed zombie pets use normal pet ownership, sitting, following, owner defence, persistence, sunlight immunity, and RiftFlux pet knockdown behavior.").getBoolean(true);
       spawnSkullCrawlersAtMobsDeath = config.get(CATEGORY_GRAVESTONE, "SpawnSkullCrawlersAtMobsDeath", true, "Enable or disable Skull Crawlers spawning when mobs die.").getBoolean(true);
       spawnSkullCrawlersAtBoneBlockDestruction = config.get(CATEGORY_GRAVESTONE, "SpawnSkullCrawlersOnBoneBlockDestruction", true, "Enable or disable Skull Crawlers spawning when bone blocks are destroyed.").getBoolean(true);
    }

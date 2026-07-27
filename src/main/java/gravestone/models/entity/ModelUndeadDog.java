@@ -68,19 +68,36 @@ public class ModelUndeadDog extends ModelBase {
    public void setLivingAnimations(EntityLivingBase entityLiving, float par2, float par3, float par4) {
       EntityUndeadDog undeadDog = (EntityUndeadDog)entityLiving;
       this.wolfTail.rotateAngleY = MathHelper.cos(par2 * 0.6662F) * 1.4F * par3;
-      this.wolfBody.setRotationPoint(0.0F, 14.0F, 2.0F);
-      this.wolfBody.rotateAngleX = ((float)Math.PI / 2F);
-      this.wolfMane.setRotationPoint(-1.0F, 14.0F, -3.0F);
-      this.wolfMane.rotateAngleX = this.wolfBody.rotateAngleX;
-      this.wolfTail.setRotationPoint(-1.0F, 12.0F, 8.0F);
-      this.wolfLeg1.setRotationPoint(-2.5F, 16.0F, 7.0F);
-      this.wolfLeg2.setRotationPoint(0.5F, 16.0F, 7.0F);
-      this.wolfLeg3.setRotationPoint(-2.5F, 16.0F, -4.0F);
-      this.wolfLeg4.setRotationPoint(0.5F, 16.0F, -4.0F);
-      this.wolfLeg1.rotateAngleX = MathHelper.cos(par2 * 0.6662F) * 1.4F * par3;
-      this.wolfLeg2.rotateAngleX = MathHelper.cos(par2 * 0.6662F + (float)Math.PI) * 1.4F * par3;
-      this.wolfLeg3.rotateAngleX = MathHelper.cos(par2 * 0.6662F + (float)Math.PI) * 1.4F * par3;
-      this.wolfLeg4.rotateAngleX = MathHelper.cos(par2 * 0.6662F) * 1.4F * par3;
+      if (undeadDog.isSitting()) {
+         this.wolfMane.setRotationPoint(-1.0F, 16.0F, -3.0F);
+         this.wolfMane.rotateAngleX = ((float)Math.PI * 2F / 5F);
+         this.wolfMane.rotateAngleY = 0.0F;
+         this.wolfBody.setRotationPoint(0.0F, 18.0F, 0.0F);
+         this.wolfBody.rotateAngleX = ((float)Math.PI / 4F);
+         this.wolfTail.setRotationPoint(-1.0F, 21.0F, 6.0F);
+         this.wolfLeg1.setRotationPoint(-2.5F, 22.0F, 2.0F);
+         this.wolfLeg1.rotateAngleX = ((float)Math.PI * 3F / 2F);
+         this.wolfLeg2.setRotationPoint(0.5F, 22.0F, 2.0F);
+         this.wolfLeg2.rotateAngleX = ((float)Math.PI * 3F / 2F);
+         this.wolfLeg3.rotateAngleX = 5.811947F;
+         this.wolfLeg3.setRotationPoint(-2.49F, 17.0F, -4.0F);
+         this.wolfLeg4.rotateAngleX = 5.811947F;
+         this.wolfLeg4.setRotationPoint(0.51F, 17.0F, -4.0F);
+      } else {
+         this.wolfBody.setRotationPoint(0.0F, 14.0F, 2.0F);
+         this.wolfBody.rotateAngleX = ((float)Math.PI / 2F);
+         this.wolfMane.setRotationPoint(-1.0F, 14.0F, -3.0F);
+         this.wolfMane.rotateAngleX = this.wolfBody.rotateAngleX;
+         this.wolfTail.setRotationPoint(-1.0F, 12.0F, 8.0F);
+         this.wolfLeg1.setRotationPoint(-2.5F, 16.0F, 7.0F);
+         this.wolfLeg2.setRotationPoint(0.5F, 16.0F, 7.0F);
+         this.wolfLeg3.setRotationPoint(-2.5F, 16.0F, -4.0F);
+         this.wolfLeg4.setRotationPoint(0.5F, 16.0F, -4.0F);
+         this.wolfLeg1.rotateAngleX = MathHelper.cos(par2 * 0.6662F) * 1.4F * par3;
+         this.wolfLeg2.rotateAngleX = MathHelper.cos(par2 * 0.6662F + (float)Math.PI) * 1.4F * par3;
+         this.wolfLeg3.rotateAngleX = MathHelper.cos(par2 * 0.6662F + (float)Math.PI) * 1.4F * par3;
+         this.wolfLeg4.rotateAngleX = MathHelper.cos(par2 * 0.6662F) * 1.4F * par3;
+      }
    }
 
    public void setRotationAngles(float par1, float par2, float par3, float par4, float par5, float par6, Entity entity) {

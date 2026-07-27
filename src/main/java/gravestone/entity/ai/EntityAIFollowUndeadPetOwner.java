@@ -26,6 +26,7 @@ public class EntityAIFollowUndeadPetOwner extends EntityAIBase {
       }
       EntityPlayer possibleOwner = this.pet.getOwner();
       if (possibleOwner == null || possibleOwner.isDead
+            || this.pet.isSitting()
             || this.pet.getDistanceSqToEntity(possibleOwner) < (double)this.startDistanceSquared) {
          return false;
       }
@@ -34,7 +35,7 @@ public class EntityAIFollowUndeadPetOwner extends EntityAIBase {
    }
 
    public boolean continueExecuting() {
-      return this.owner != null && !this.owner.isDead && this.pet.isTameBehaviorActive()
+      return this.owner != null && !this.owner.isDead && this.pet.isTameBehaviorActive() && !this.pet.isSitting()
             && !this.pet.getNavigator().noPath()
             && this.pet.getDistanceSqToEntity(this.owner) > (double)this.stopDistanceSquared;
    }

@@ -10,6 +10,7 @@ public abstract class EntityUndeadDog extends EntityUndeadPet {
 
    public EntityUndeadDog(World world) {
       super(world);
+      this.setSize(0.6F, 0.8F);
    }
 
    protected void updateAITick() {

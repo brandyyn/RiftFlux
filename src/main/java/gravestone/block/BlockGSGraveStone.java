@@ -519,6 +519,13 @@ public class BlockGSGraveStone extends BlockContainer {
 
    public void onBlockAdded(World world, int x, int y, int z) {
       super.onBlockAdded(world, x, y, z);
+      TileEntityGSGraveStone grave = (TileEntityGSGraveStone)world.getTileEntity(x, y, z);
+      Block ground = world.getBlock(x, y - 1, z);
+      if (grave != null) {
+         grave.setPreserveDirtBelow(ground == Blocks.dirt
+                 || GraveStoneConfig.convertGrassToDirtBelowGraves
+                    && (ground == Blocks.grass || ground == Blocks.mycelium));
+      }
       GraveStoneHelper.replaceGround(world, x, y - 1, z);
    }
 
@@ -532,6 +539,14 @@ public class BlockGSGraveStone extends BlockContainer {
    }
 
    public void onNeighborBlockChange(World world, int x, int y, int z, Block block) {
+      if (GraveStoneConfig.preventGraveDirtFromGrowingGrass) {
+         TileEntityGSGraveStone grave = (TileEntityGSGraveStone)world.getTileEntity(x, y, z);
+         Block ground = world.getBlock(x, y - 1, z);
+         if (grave != null && grave.shouldPreserveDirtBelow()
+                 && (ground == Blocks.grass || ground == Blocks.mycelium)) {
+            world.setBlock(x, y - 1, z, Blocks.dirt);
+         }
+      }
       if (!world.isSideSolid(x, y - 1, z, ForgeDirection.DOWN, true)) {
          if (GraveStoneConfig.onlyPlayersCanBreakGraves || GraveStoneConfig.protectGravesFromExplosions) {
             return;

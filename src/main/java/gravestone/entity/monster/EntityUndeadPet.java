@@ -5,20 +5,25 @@ import cpw.mods.fml.relauncher.SideOnly;
 import gravestone.config.GraveStoneConfig;
 import gravestone.entity.ai.EntityAIFollowUndeadPetOwner;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAILeapAtTarget;
 import net.minecraft.entity.ai.EntityAILookIdle;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
+import net.minecraft.entity.ai.EntityAIOwnerHurtByTarget;
+import net.minecraft.entity.ai.EntityAIOwnerHurtTarget;
 import net.minecraft.entity.ai.EntityAISwimming;
+import net.minecraft.entity.ai.EntityAITargetNonTamed;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
-import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.passive.EntityOcelot;
+import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
@@ -30,27 +35,28 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
-public abstract class EntityUndeadPet extends EntityMob {
-   private static final int TAMED_DATA_WATCHER = 20;
-   private static final int OWNER_DATA_WATCHER = 21;
+public abstract class EntityUndeadPet extends EntityTameable {
    protected ResourceLocation texture = null;
 
    public EntityUndeadPet(World world) {
       super(world);
+      this.experienceValue = 5;
       this.getNavigator().setAvoidsWater(true);
-      this.tasks.addTask(1, new EntityAISwimming(this));
+      this.tasks.addTask(0, new EntityAISwimming(this));
+      this.tasks.addTask(1, this.aiSit);
       this.tasks.addTask(5, new EntityAIFollowUndeadPetOwner(this, 1.1D, 4.0F, 2.0F));
       this.tasks.addTask(7, new EntityAILeapAtTarget(this, 0.3F));
       this.tasks.addTask(7, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
       this.tasks.addTask(7, new EntityAILookIdle(this));
-      this.targetTasks.addTask(1, new EntityAIHurtByTarget(this, true));
-      this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityPlayer.class, 0, true));
+      this.targetTasks.addTask(1, new EntityAIOwnerHurtByTarget(this));
+      this.targetTasks.addTask(2, new EntityAIOwnerHurtTarget(this));
+      this.targetTasks.addTask(3, new EntityAIHurtByTarget(this, true));
+      this.targetTasks.addTask(4, new EntityAITargetNonTamed(this, EntityPlayer.class, 0, true));
    }
 
-   protected void entityInit() {
-      super.entityInit();
-      this.dataWatcher.addObject(TAMED_DATA_WATCHER, (byte)0);
-      this.dataWatcher.addObject(OWNER_DATA_WATCHER, "");
+   protected void applyEntityAttributes() {
+      super.applyEntityAttributes();
+      this.getAttributeMap().registerAttribute(SharedMonsterAttributes.attackDamage).setBaseValue(2.0D);
    }
 
    @SideOnly(Side.CLIENT)
@@ -67,14 +73,14 @@ public abstract class EntityUndeadPet extends EntityMob {
    }
 
    public boolean attackEntityAsMob(Entity entity) {
-      if (this.isTameBehaviorActive() && entity instanceof EntityPlayer) {
+      if (this.isTameBehaviorActive() && entity == this.getOwner()) {
          return false;
       }
       return entity.attackEntityFrom(DamageSource.causeMobDamage(this), 3.0F);
    }
 
    public void setAttackTarget(EntityLivingBase target) {
-      if (this.isTameBehaviorActive() && target instanceof EntityPlayer) {
+      if (this.isTameBehaviorActive() && target == this.getOwner()) {
          return;
       }
       super.setAttackTarget(target);
@@ -95,7 +101,7 @@ public abstract class EntityUndeadPet extends EntityMob {
    }
 
    protected boolean tryTame(EntityPlayer player, Item tamingItem) {
-      if (!GraveStoneConfig.enableSkeletonPetTaming || this.isTamed()) {
+      if (!this.isTamingEnabled() || this.isTamed()) {
          return false;
       }
 
@@ -114,7 +120,9 @@ public abstract class EntityUndeadPet extends EntityMob {
       if (!this.worldObj.isRemote) {
          if (this.rand.nextInt(3) == 0) {
             this.setTamed(true);
-            this.setOwnerName(player.getCommandSenderName());
+            this.func_152115_b(player.getUniqueID().toString());
+            this.aiSit.setSitting(false);
+            this.setSitting(false);
             this.setAttackTarget(null);
             this.getNavigator().clearPathEntity();
             this.extinguish();
@@ -127,59 +135,38 @@ public abstract class EntityUndeadPet extends EntityMob {
       return true;
    }
 
-   public boolean isTamed() {
-      return this.dataWatcher.getWatchableObjectByte(TAMED_DATA_WATCHER) != 0;
-   }
-
-   public void setTamed(boolean tamed) {
-      this.dataWatcher.updateObject(TAMED_DATA_WATCHER, (byte)(tamed ? 1 : 0));
-   }
-
-   public String getOwnerName() {
-      return this.dataWatcher.getWatchableObjectString(OWNER_DATA_WATCHER);
-   }
-
-   public void setOwnerName(String ownerName) {
-      this.dataWatcher.updateObject(OWNER_DATA_WATCHER, ownerName == null ? "" : ownerName);
-   }
-
+   @Override
    public EntityPlayer getOwner() {
-      String ownerName = this.getOwnerName();
-      return ownerName.isEmpty() ? null : this.worldObj.getPlayerEntityByName(ownerName);
+      EntityLivingBase owner = super.getOwner();
+      return owner instanceof EntityPlayer ? (EntityPlayer)owner : null;
    }
 
    public boolean isTameBehaviorActive() {
-      return GraveStoneConfig.enableSkeletonPetTaming && this.isTamed();
+      return this.isTamingEnabled() && this.isTamed();
    }
 
-   public void writeEntityToNBT(NBTTagCompound nbt) {
-      super.writeEntityToNBT(nbt);
-      nbt.setBoolean("Tamed", this.isTamed());
-      nbt.setString("Owner", this.getOwnerName());
-   }
+   protected abstract boolean isTamingEnabled();
 
-   public void readEntityFromNBT(NBTTagCompound nbt) {
-      super.readEntityFromNBT(nbt);
-      this.setTamed(nbt.getBoolean("Tamed"));
-      this.setOwnerName(nbt.getString("Owner"));
-   }
-
-   @SideOnly(Side.CLIENT)
-   public void handleHealthUpdate(byte state) {
-      if (state == 7 || state == 6) {
-         String particle = state == 7 ? "heart" : "smoke";
-         for(int i = 0; i < 7; ++i) {
-            double motionX = this.rand.nextGaussian() * 0.02D;
-            double motionY = this.rand.nextGaussian() * 0.02D;
-            double motionZ = this.rand.nextGaussian() * 0.02D;
-            this.worldObj.spawnParticle(particle, this.posX + (double)(this.rand.nextFloat() * this.width * 2.0F)
-                  - (double)this.width, this.posY + 0.5D + (double)(this.rand.nextFloat() * this.height),
-                  this.posZ + (double)(this.rand.nextFloat() * this.width * 2.0F) - (double)this.width,
-                  motionX, motionY, motionZ);
+   public boolean interact(EntityPlayer player) {
+      if (this.isTameBehaviorActive() && this.func_152114_e(player)) {
+         if (!this.worldObj.isRemote) {
+            boolean sitting = !this.isSitting();
+            this.aiSit.setSitting(sitting);
+            this.setSitting(sitting);
+            this.setAttackTarget(null);
+            this.getNavigator().clearPathEntity();
          }
-      } else {
-         super.handleHealthUpdate(state);
+         return true;
       }
+      return super.interact(player);
+   }
+
+   public boolean isBreedingItem(ItemStack stack) {
+      return false;
+   }
+
+   public EntityAgeable createChild(EntityAgeable mate) {
+      return null;
    }
 
    public EnumCreatureAttribute getCreatureAttribute() {

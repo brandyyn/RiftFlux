@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
@@ -55,6 +56,8 @@ import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 public class GraveStoneHelper {
@@ -105,7 +108,8 @@ public class GraveStoneHelper {
    public static final EnumGraves[] HORSE_QUARTZ_GRAVES = new EnumGraves[]{EnumGraves.QUARTZ_HORSE_STATUE};
    public static final EnumGraves[] HORSE_ICE_GRAVES = new EnumGraves[]{EnumGraves.ICE_HORSE_STATUE};
    public static final List<Block> FLOWERS_GROUND = Arrays.asList(Blocks.grass, Blocks.dirt);
-   public static final List<BlockFlower> FLOWERS = Arrays.asList(Blocks.yellow_flower, Blocks.red_flower);
+   private static final List<ItemStack> FLOWERS = new ArrayList<ItemStack>();
+   private static boolean flowersInitialized;
    public static final List<EnumGraves> FLOWER_GRAVES = Arrays.asList(EnumGraves.WOODEN_VERTICAL_PLATE, EnumGraves.WOODEN_CROSS, EnumGraves.SANDSTONE_VERTICAL_PLATE, EnumGraves.SANDSTONE_CROSS, EnumGraves.STONE_VERTICAL_PLATE, EnumGraves.STONE_CROSS, EnumGraves.MOSSY_VERTICAL_PLATE, EnumGraves.MOSSY_CROSS, EnumGraves.IRON_VERTICAL_PLATE, EnumGraves.IRON_CROSS, EnumGraves.GOLDEN_VERTICAL_PLATE, EnumGraves.GOLDEN_CROSS, EnumGraves.DIAMOND_VERTICAL_PLATE, EnumGraves.DIAMOND_CROSS, EnumGraves.EMERALD_VERTICAL_PLATE, EnumGraves.EMERALD_CROSS, EnumGraves.LAPIS_VERTICAL_PLATE, EnumGraves.LAPIS_CROSS, EnumGraves.REDSTONE_VERTICAL_PLATE, EnumGraves.REDSTONE_CROSS, EnumGraves.OBSIDIAN_VERTICAL_PLATE, EnumGraves.OBSIDIAN_CROSS, EnumGraves.QUARTZ_VERTICAL_PLATE, EnumGraves.QUARTZ_CROSS, EnumGraves.ICE_VERTICAL_PLATE, EnumGraves.ICE_CROSS);
 
    private GraveStoneHelper() {
@@ -185,6 +189,9 @@ public class GraveStoneHelper {
    }
 
    public static void replaceGround(World world, int x, int y, int z) {
+      if (!GraveStoneConfig.convertGrassToDirtBelowGraves) {
+         return;
+      }
       Block botBlock = world.getBlock(x, y, z);
       if (botBlock.equals(Blocks.grass) || botBlock.equals(Blocks.mycelium)) {
          world.setBlock(x, y, z, Blocks.dirt);
@@ -529,8 +536,59 @@ public class GraveStoneHelper {
    public static boolean canFlowerBePlaced(World world, int x, int y, int z, ItemStack item, TileEntityGSGraveStone te) {
       Block flower = item == null ? Blocks.air : Block.getBlockFromItem(item.getItem());
       return isSupportedGraveFlower(item)
-              && flower.canBlockStay(world, x, y, z)
+              && (flower.canBlockStay(world, x, y, z)
+                  || world.getBlock(x, y - 1, z).canSustainPlant(
+                      world, x, y - 1, z, ForgeDirection.UP, (IPlantable)flower))
               && canFlowerBePlacedOnGrave(te);
+   }
+
+   public static synchronized List<ItemStack> getRegisteredGraveFlowers() {
+      if (!flowersInitialized) {
+         flowersInitialized = true;
+         addFlowerCandidate(new ItemStack(Blocks.yellow_flower));
+         for (int metadata = 0; metadata < 9; ++metadata) {
+            addFlowerCandidate(new ItemStack(Blocks.red_flower, 1, metadata));
+         }
+
+         for (Object registered : Block.blockRegistry) {
+            if (registered instanceof Block) {
+               Block block = (Block)registered;
+               Item item = Item.getItemFromBlock(block);
+               if (item != null && (block instanceof BlockFlower || block instanceof IPlantable)) {
+                  addFlowerCandidate(new ItemStack(item, 1, 0));
+               }
+            }
+         }
+
+         for (String oreName : OreDictionary.getOreNames()) {
+            if (oreName.toLowerCase(Locale.ROOT).startsWith("flower")) {
+               for (ItemStack flower : OreDictionary.getOres(oreName)) {
+                  if (flower != null) {
+                     ItemStack candidate = flower.copy();
+                     candidate.stackSize = 1;
+                     if (candidate.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
+                        candidate.setItemDamage(0);
+                     }
+                     addFlowerCandidate(candidate);
+                  }
+               }
+            }
+         }
+      }
+      return FLOWERS;
+   }
+
+   private static void addFlowerCandidate(ItemStack candidate) {
+      if (!isSupportedGraveFlower(candidate)) {
+         return;
+      }
+      for (ItemStack existing : FLOWERS) {
+         if (existing.getItem() == candidate.getItem()
+               && existing.getItemDamage() == candidate.getItemDamage()) {
+            return;
+         }
+      }
+      FLOWERS.add(candidate);
    }
 
    public static boolean isSupportedGraveFlower(ItemStack stack) {
@@ -545,7 +603,8 @@ public class GraveStoneHelper {
    }
 
    public static boolean canFlowerBePlacedOnGrave(TileEntityGSGraveStone te) {
-      return !te.isSwordGrave() && FLOWER_GRAVES.contains(te.getGraveType());
+      return GraveStoneConfig.allowFlowersOnAllGraves
+              || !te.isSwordGrave() && FLOWER_GRAVES.contains(te.getGraveType());
    }
 
    public static ArrayList<EnumGraves> getPlayerGraveTypes(World world, int x, int z) {

@@ -124,6 +124,25 @@ public class ModelUndeadCat extends ModelBase {
          this.undeadCatTail.rotateAngleX = ((float)Math.PI / 2F);
          this.undeadCatTail2.rotateAngleX = ((float)Math.PI / 2F);
          this.field_78163_i = 2;
+      } else if (undeadCat.isSitting()) {
+         this.undeadCatBody.rotateAngleX = ((float)Math.PI / 4F);
+         this.undeadCatBody.rotationPointY += -4.0F;
+         this.undeadCatBody.rotationPointZ += 5.0F;
+         this.undeadCatHead.rotationPointY += -3.3F;
+         ++this.undeadCatHead.rotationPointZ;
+         this.undeadCatTail.rotationPointY += 8.0F;
+         this.undeadCatTail.rotationPointZ += -2.0F;
+         this.undeadCatTail2.rotationPointY += 2.0F;
+         this.undeadCatTail2.rotationPointZ += -0.8F;
+         this.undeadCatTail.rotateAngleX = 1.7278761F;
+         this.undeadCatTail2.rotateAngleX = 2.670354F;
+         this.undeadCatFrontLeftLeg.rotateAngleX = this.undeadCatFrontRightLeg.rotateAngleX = -0.15707964F;
+         this.undeadCatFrontLeftLeg.rotationPointY = this.undeadCatFrontRightLeg.rotationPointY = 15.8F;
+         this.undeadCatFrontLeftLeg.rotationPointZ = this.undeadCatFrontRightLeg.rotationPointZ = -7.0F;
+         this.undeadCatBackLeftLeg.rotateAngleX = this.undeadCatBackRightLeg.rotateAngleX = -((float)Math.PI / 2F);
+         this.undeadCatBackLeftLeg.rotationPointY = this.undeadCatBackRightLeg.rotationPointY = 21.0F;
+         this.undeadCatBackLeftLeg.rotationPointZ = this.undeadCatBackRightLeg.rotationPointZ = 1.0F;
+         this.field_78163_i = 3;
       } else {
          this.field_78163_i = 1;
       }

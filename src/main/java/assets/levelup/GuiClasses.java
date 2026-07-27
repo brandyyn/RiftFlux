@@ -147,7 +147,8 @@ public final class GuiClasses extends GuiScreen {
     }
 
     private int getClassesPerPage() {
-        int rows = Math.max(1, (this.height - 60) / ROW_SPACING);
+        int rowsThatFit = Math.max(1, (this.height - 60) / ROW_SPACING);
+        int rows = Math.min(Math.max(1, ModConfig.levelUpClassSelectionRows), rowsThatFit);
         return this.getColumns() * rows;
     }
 

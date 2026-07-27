@@ -1,6 +1,7 @@
 package com.voidsrift.riftflux.mixin.early;
 
 import com.voidsrift.riftflux.ModConfig;
+import com.voidsrift.riftflux.pets.PetKnockdown;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityOwnable;
@@ -35,7 +36,9 @@ public abstract class MixinEntityLivingBase_PetInvincibility {
         }
 
         // === 1) Rideable entities: anything currently ridden by a player ===
-        if (ModConfig.invincibleRideableEntities && self.riddenByEntity instanceof EntityPlayer) {
+        if (ModConfig.invincibleRideableEntities
+                && self.riddenByEntity instanceof EntityPlayer
+                && !PetKnockdown.isProtectedPet(self)) {
             // Any mob / mount being ridden by a player is invincible
             cir.setReturnValue(false);
             cir.cancel();
@@ -45,6 +48,11 @@ public abstract class MixinEntityLivingBase_PetInvincibility {
         // === 2) Owned mobs / pets ===
         if (!ModConfig.invincibleOwnedMobs) {
             return; // feature disabled
+        }
+
+        // Knockdown replaces old full invincibility for pets it protects.
+        if (PetKnockdown.isProtectedPet(self)) {
+            return;
         }
 
         // Only care about entities that are "ownable"
